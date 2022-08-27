@@ -1,0 +1,74 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13-alpine
+    container_name: ${PROJECT}_db
+    volumes:
+      - ./database:/database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - PGDATA=./database/postgresql/data/pgdata
+    restart: always
+    networks:
+      - local
+  common:
+    image: ${PROJECT}_base:${GIT_LOCAL_BRANCH}
+    container_name: ${PROJECT}_common
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: "yarn watch:common"
+    volumes:
+      - ./node_modules:/node_modules
+      - ./packages:/packages
+  api:
+    image: ${PROJECT}_base:${GIT_LOCAL_BRANCH}
+    container_name: ${PROJECT}_api
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: "yarn watch:api"
+    volumes:
+      - ./node_modules:/node_modules
+      - ./apps/api:/apps/api
+      - ./packages:/packages
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_HOST=db
+      - BUILD_ID=${COMMIT_SHA}
+      - BUILD_INFO=${LAST_COMMIT_MESSAGE}
+    depends_on:
+      - db
+      - common
+    networks:
+      - local
+
+  web:
+    image: ${PROJECT}_base:${GIT_LOCAL_BRANCH}
+    container_name: ${PROJECT}_web
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: "yarn watch:web"
+    volumes:
+      - ./node_modules:/node_modules
+      - ./apps/web:/apps/web
+      - ./packages:/packages
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+      - RUNTIME_ENV=local
+    depends_on:
+      - api
+networks:
+  local:
+    driver: bridge

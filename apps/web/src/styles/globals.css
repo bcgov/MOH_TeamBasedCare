@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  overflow-y: scroll;
+}
+
+html,
+body,
+#__next {
+  height: 100%;
+  background-color: rgb(243 244 246);
+}
+
+@layer base {
+  @font-face {
+    font-family: BCSans;
+    src: url('./fonts/BCSans-Regular.woff') format('woff');
+  }
+  @font-face {
+    font-family: BCSans;
+    font-weight: 700;
+    src: url('./fonts/BCSans-Bold.woff') format('woff');
+  }
+}
+
+@media (min-width: 768px) {
+  .bar-separator > *:not(:last-child):after {
+    content: '|';
+    margin: 0 0.5rem;
+    color: #fff;
+  }
+}
+
+::-webkit-scrollbar {
+  height: 7px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  border-radius: 5px;
+}

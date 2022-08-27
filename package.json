@@ -1,0 +1,66 @@
+{
+  "name": "tbcm",
+  "private": true,
+  "description": "Team based care mapping app packages",
+  "engines": {
+    "node": ">=16.15.1"
+  },
+  "scripts": {
+    "format:staged": "yarn pretty-quick --staged",
+    "format:check": "yarn prettier --check .",
+    "format:write": "yarn prettier --write .",
+    "lint": "echo 'Linting all packages' && wsrun --parallel --exclude-missing lint",
+    "build-common": "echo 'Building all common packages packages' && wsrun --stages --exclude @tbcm/api --exclude @tbcm/web --exclude-missing build",
+    "build": "echo 'Building packages' && wsrun --stages --exclude-missing build",
+    "check": "run-p 'lint' 'format:check'",
+    "prepare": "husky install",
+    "watch:common": "wsrun --stages --exclude-missing watch",
+    "watch:api": "yarn workspace @tbcm/api start:debug:local",
+    "watch:web": "yarn workspace @tbcm/web dev",
+    "watch": "run-p 'watch:common' 'watch:api' 'watch:web'",
+    "start:api:local": "yarn workspace @tbcm/api start:local",
+    "start:web:local": "yarn workspace @tbcm/web start",
+    "start:local": "run-p 'start:api:local' 'start:web:local'",
+    "start:cypress": "yarn workspace @tbcm/web cypress",
+    "open:cypress": "yarn workspace @tbcm/web open:cypress",
+    "test": "echo 'Running tests' && wsrun --parallel --exclude-missing test",
+    "test:seed": "scripts/seed-test-data.sh",
+    "test:e2e": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn start:cypress'",
+    "test:pa11y": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn workspace @tbcm/accessibility start'"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "devDependencies": {
+    "@tsconfig/node14": "1.0.1",
+    "@typescript-eslint/eslint-plugin": "5.0.0",
+    "@typescript-eslint/parser": "5.0.0",
+    "eslint-config-prettier": "8.3.0",
+    "husky": "7.0.4",
+    "nodemon": "2.0.15",
+    "npm-run-all": "4.1.5",
+    "prettier": "2.4.1",
+    "pretty-quick": "3.1.2",
+    "start-server-and-test": "1.14.0",
+    "ts-loader": "9.2.3",
+    "ts-node": "10.0.0",
+    "tsconfig-paths": "3.10.1",
+    "typescript": "4.3.5",
+    "wsrun": "5.2.4"
+  },
+  "dependencies": {
+    "@types/papaparse": "5.3.2",
+    "dayjs": "1.11.0",
+    "papaparse": "5.3.1",
+    "react-dropzone": "12.0.4",
+    "swr": "1.3.0"
+  },
+  "lint-staged": {
+    "*.{tsx,ts}": [
+      "prettier --write",
+      "eslint --cache --fix"
+    ]
+  },
+  "packageManager": "yarn@3.2.3"
+}
