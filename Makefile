@@ -16,6 +16,7 @@ export POSTGRES_DATABASE ?= tbcm
 # Git
 export COMMIT_SHA:=$(shell git rev-parse --short=7 HEAD)
 export LAST_COMMIT_MESSAGE:=$(shell git log -1 --oneline --decorate=full --no-color --format="%h, %cn, %f, %D" | sed 's/->/:/')
+export GIT_LOCAL_BRANCH:=$(shell git rev-parse --abbrev-ref HEAD)
 
 # TF Token
 export TFCTK:=$(shell cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token')
@@ -158,7 +159,7 @@ local-server-logs:
 local-common-logs:
 	@docker logs $(PROJECT)_common --tail 25 --follow
 
-local-connector-db-logs:
+local-db-logs:
 	@docker logs $(PROJECT)_db --tail 25 --follow
 
 test-pa11y:
