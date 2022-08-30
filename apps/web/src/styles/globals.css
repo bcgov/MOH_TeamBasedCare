@@ -43,3 +43,57 @@ body,
   background-color: #999999;
   border-radius: 5px;
 }
+
+/* Buttons */
+.btn {
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 32px;
+  gap: 10px;
+  border-radius: 4px;
+  font-family: 'BC Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 34px;
+  /* identical to box height, or 200% */
+  display: flex;
+  align-items: center;
+  /* Text/White */
+  color: #FFFFFF;
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+.btn:hover {
+  opacity: 0.8;
+  text-decoration-line: underline;
+}
+.btn:disabled {
+  opacity: 0.3;
+  text-decoration-line: none;
+  cursor: no-drop;
+}
+/* Primary */
+.btn.primary {
+  background: #003366;
+}
+
+/* Secondary */
+.btn.secondary {
+  /* Text/White */
+  background: #FFFFFF;
+  /* Brand/Primary Blue */
+  border: 2px solid #003366;
+  color: #003366;
+}
+.btn.secondary:hover {
+  background: rgba(0, 51, 102, 0.2)
+}
+.btn.secondary:disabled {
+  background: #FFFFFF;
+}
+
+/* size */
