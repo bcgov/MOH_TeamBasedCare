@@ -3,10 +3,13 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
-    "allowJs": true
+    "allowJs": true,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true
   },
   "paths": {
-    "src": "./src"
+    "src": "./src",
+    "entities": "./src/entities"
   },
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "./env.js"]
 }

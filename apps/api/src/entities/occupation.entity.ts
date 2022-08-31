@@ -4,15 +4,15 @@ import { CareActivity } from './careactivity.entity';
 @Entity()
 export class Occupation {
   @PrimaryGeneratedColumn('uuid')
-  occupation_id = '';
+  id: string;
 
-  @Column()
-  occupation_name = '';
+  @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
+  occupationName: string;
 
-  @Column()
-  is_regulated = false;
+  @Column({ type: 'boolean', nullable: false, default: false })
+  isRegulated: boolean;
 
   @ManyToMany(() => CareActivity, careactivity => careactivity.occupations)
   @JoinTable()
-  careactivities: CareActivity[] = [];
+  careActivities: CareActivity[];
 }

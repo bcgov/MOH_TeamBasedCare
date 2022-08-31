@@ -4,14 +4,14 @@ import { CareActivity } from './careactivity.entity';
 @Entity()
 export class Bundle {
   @PrimaryGeneratedColumn('uuid')
-  bundle_id = '';
+  id: string;
 
-  @Column()
-  bundle_name = '';
+  @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
+  bundleName: string;
 
-  @Column()
-  bundle_description = '';
+  @Column({ type: 'varchar', length: 3000 })
+  bundleDescription: string;
 
-  @OneToMany(() => CareActivity, careactivity => careactivity.bundle)
-  careactivities: CareActivity[] = [];
+  @OneToMany(() => CareActivity, careActivity => careActivity.bundle)
+  careActivities: CareActivity[];
 }

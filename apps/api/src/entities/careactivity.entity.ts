@@ -5,17 +5,17 @@ import { Occupation } from './occupation.entity';
 @Entity()
 export class CareActivity {
   @PrimaryGeneratedColumn('uuid')
-  careactivity_id = '';
+  id: string;
 
-  @Column()
-  careactivity_name = '';
+  @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
+  careActivityName: string;
 
-  @Column()
-  careactivity_description = '';
+  @Column({ type: 'varchar', length: 3000, nullable: false })
+  careActivityNameDescription: string;
 
-  @ManyToOne(() => Bundle, bundle => bundle.careactivities)
-  bundle: Bundle = new Bundle();
+  @ManyToOne(() => Bundle, bundle => bundle.careActivities)
+  bundle: Bundle;
 
-  @ManyToMany(() => Occupation, occupation => occupation.careactivities)
-  occupations: Occupation[] = [];
+  @ManyToMany(() => Occupation, occupation => occupation.careActivities)
+  occupations: Occupation[];
 }

@@ -4,12 +4,12 @@ import { CareActivity } from './careactivity.entity';
 @Entity()
 export class Unit {
   @PrimaryGeneratedColumn('uuid')
-  unit_id = '';
+  id: string;
 
-  @Column()
-  unit_name = '';
+  @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
+  unitName: string;
 
   @ManyToMany(() => CareActivity)
   @JoinTable()
-  careactivities: CareActivity[] = [];
+  careActivities: CareActivity[];
 }
