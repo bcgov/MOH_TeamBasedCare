@@ -21,7 +21,7 @@ export interface BooleanRadioProps {
   }
   
 
-export const Radiobox: React.FC<BooleanRadioProps> = ({ legend, name, options, horizontal }) => {    return (
+export const Radio: React.FC<BooleanRadioProps> = ({ legend, name, options, horizontal }) => {    return (
     <fieldset className='flex flex-col gap-4'>
         <legend className='text-bcBlack font-bold mb-4'>{legend}</legend>
         <div
