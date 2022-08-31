@@ -1,5 +1,5 @@
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { CareActivity } from './careactivity.entity';
+import { CareActivity } from './care-activity.entity';
 
 @Entity()
 export class Unit {

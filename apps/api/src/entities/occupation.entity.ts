@@ -1,5 +1,5 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { CareActivity } from './careactivity.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { AllowedActivity } from './allowed-activities.entity';
 
 @Entity()
 export class Occupation {
@@ -12,7 +12,6 @@ export class Occupation {
   @Column({ type: 'boolean', nullable: false, default: false })
   isRegulated: boolean;
 
-  @ManyToMany(() => CareActivity, careactivity => careactivity.occupations)
-  @JoinTable()
-  careActivities: CareActivity[];
+  @OneToMany(() => AllowedActivity, allowedActivity => allowedActivity.occupation)
+  allowedActivities: AllowedActivity[];
 }
