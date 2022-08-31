@@ -1,4 +1,4 @@
-import { OptionType } from '@components';
+// import { OptionType } from '@components';
 // import { Field as FormikField } from 'formik';
 
 interface CheckboxProps {
@@ -7,12 +7,16 @@ interface CheckboxProps {
   value?: string;
 }
 
+export interface CheckboxOptionType {
+    label: string;
+    value: string;
+}
+
 export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
   /**
    * if being used in an array, unique values will be passed which should be used
    * instead of name, which will be the same for each item in the list
    */
-
   const identifier = value ?? name;
   return (
     <div className='flex items-center'>
@@ -33,7 +37,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
 interface CheckboxArrayProps {
   name: string;
   legend: string;
-  options: OptionType[];
+  options: CheckboxOptionType[];
 }
 
 export const CheckboxArray: React.FC<CheckboxArrayProps> = ({ name, legend, options }) => {
@@ -43,7 +47,6 @@ export const CheckboxArray: React.FC<CheckboxArrayProps> = ({ name, legend, opti
       {options.map(option => (
         <Checkbox key={option.value} name={name} value={option.value} label={option.label} />
       ))}
-     
     </fieldset>
   );
 };
