@@ -1,5 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CareActivity } from './care-activity.entity';
+import { CustomBaseEntity } from './custom-base.entity';
 import { Occupation } from './occupation.entity';
 
 export enum Permissions {
@@ -9,7 +10,7 @@ export enum Permissions {
 }
 
 @Entity()
-export class AllowedActivity {
+export class AllowedActivity extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

@@ -1,8 +1,9 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { AllowedActivity } from './allowed-activities.entity';
+import { CustomBaseEntity } from './custom-base.entity';
 
 @Entity()
-export class Occupation {
+export class Occupation extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
