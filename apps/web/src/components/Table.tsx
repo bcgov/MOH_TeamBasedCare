@@ -42,7 +42,7 @@ interface TableProps<T extends MinTableItem> {
 export default function Table<T extends MinTableItem>(props: TableProps<T>) {
     function renderRow(item: T) {
         return (
-            <tr>
+            <tr className="border-b">
                 {objectKeys(item).map((itemProperty) => {
                     const customRenderer = props.customRenderers?.[itemProperty];
 
@@ -51,7 +51,9 @@ export default function Table<T extends MinTableItem>(props: TableProps<T>) {
                     }
 
                     return (
-                        <td>{isPrimitive(item[itemProperty]) ? item[itemProperty] : ""}</td>
+                        <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">
+                            {isPrimitive(item[itemProperty]) ? item[itemProperty] : ""}
+                        </td>
                     );
                 })}
             </tr>
@@ -60,13 +62,13 @@ export default function Table<T extends MinTableItem>(props: TableProps<T>) {
 
     return (
         <div className="flex flex-col">
-            <div className="overflow-x-auto">
-                <div className="p-1.5 w-full inline-block align-middle">
-                    <div className="overflow-hidden border rounded-lg">
+            <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div className="py-2 inline-block min-w-full sm:px-6 lg:px-8">
+                    <div className="overflow-hidden">
                         <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-white border-b">
                                 {objectValues(props.headers).map((headerValue) => (
-                                    <th>{headerValue}</th>
+                                    <th scope="col" className="text-sm font-bold text-gray-900 px-6 py-4 text-left">{headerValue}</th>
                                 ))}
                             </thead>
                             <tbody>{props.items.map(renderRow)}</tbody>
