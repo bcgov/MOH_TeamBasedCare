@@ -8,8 +8,7 @@
     "experimentalDecorators": true
   },
   "paths": {
-    "src": "./src",
-    "entities": "./src/entities"
+    "src": "./src"
   },
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "./env.js"]
 }
