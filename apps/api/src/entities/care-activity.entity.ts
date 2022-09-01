@@ -1,9 +1,10 @@
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { AllowedActivity } from './allowed-activities.entity';
 import { Bundle } from './bundle.entity';
+import { CustomBaseEntity } from './custom-base.entity';
 
 @Entity()
-export class CareActivity {
+export class CareActivity extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

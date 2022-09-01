@@ -1,8 +1,9 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CareActivity } from './care-activity.entity';
+import { CustomBaseEntity } from './custom-base.entity';
 
 @Entity()
-export class Bundle {
+export class Bundle extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
