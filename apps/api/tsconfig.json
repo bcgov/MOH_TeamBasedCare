@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
-    "allowJs": true
+    "allowJs": true,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true
   },
   "paths": {
     "src": "./src"
