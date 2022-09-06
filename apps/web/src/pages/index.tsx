@@ -1,8 +1,15 @@
 import type { NextPage } from 'next';
 import 'reflect-metadata';
 
+
+
+
 const Home: NextPage = () => {
-  return <span>Hi Helloo!</span>;
+  return <>
+    <p>Hello World</p>
+      
+
+  </>;
 };
 
 export default Home;
