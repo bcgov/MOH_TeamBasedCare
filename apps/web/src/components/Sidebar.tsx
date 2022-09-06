@@ -4,17 +4,40 @@ import logo from '@assets/img/bc_logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faUsers, faBars } from '@fortawesome/free-solid-svg-icons';
 import { SidebarButton } from './SidebarButton';
+import { SidebarCollapsible } from './SidebarCollapsible';
 
 export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(true);
   const buttonsInit = [
     {
+      id: '001',
+      kind: 'regular',
       text: 'Resourcing',
       active: true,
       faIcon: faUsers,
     },
     {
+      id: '002',
+      kind: 'collapsible',
+      text: 'Planning',
+      active: false,
+      faIcon: faClipboardList,
+      options: [
+        {
+          id: '003',
+          text: 'Create New',
+          active: false,
+        },
+        {
+          id: '004',
+          text: 'All Plan',
+          active: false,
+        },
+      ],
+    },
+    {
+      id: '005',
+      kind: 'regular',
       text: 'Testing Spacing',
       active: false,
       faIcon: faUsers,
@@ -51,55 +74,35 @@ export const Sidebar: React.FC = () => {
 
         <div className='py-14'>
           <ul>
-            {buttons.map((button, index) => (
-              <SidebarButton
-                key={index}
-                setButtons={setButtons}
-                open={open}
-                active={button.active}
-                text={button.text}
-                faIcon={button.faIcon}
-              ></SidebarButton>
-            ))}
-            {/* <SidebarButton
-              handleActive={handleActive}
-              open={open}
-              text={'Resourcing'}
-              faIcon={faUsers}
-            ></SidebarButton> */}
-
-            <li className='left-0 flex flex-wrap items-center py-4 rounded-sm'>
-              <button
-                type='button'
-                className={`${
-                  open ? 'justify-center' : 'justify-left'
-                } flex items-center p-1 space-x-3 rounded-md`}
-                onClick={() => {
-                  setDropdownOpen(!dropdownOpen);
-                }}
-                aria-controls='dropdownExample'
-                data-collapse-toggle='dropdownExample'
-              >
-                <FontAwesomeIcon className='w-6 h-6 text-gray-100' icon={faClipboardList} />
-
-                <span className={open ? 'hidden' : 'text-gray-100'}>Planning</span>
-              </button>
-              <ul className={dropdownOpen || open ? 'hidden' : 'py-2 space-y-2 w-full'}>
-                <li className='flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700'>
-                  <span className={open ? 'hidden' : 'text-gray-100'}>Create New</span>
-                </li>
-                <li className='flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700'>
-                  <span className={open ? 'hidden' : 'text-gray-100'}>All Plan</span>
-                </li>
-              </ul>
-            </li>
-
-            {/* <SidebarButton
-              handleActive={handleActive}
-              open={open}
-              text={'Testing Spacing'}
-              faIcon={faUsers}
-            ></SidebarButton> */}
+            {buttons.map(button => {
+              if (button.kind === 'regular') {
+                return (
+                  <SidebarButton
+                    key={button.id}
+                    id={button.id}
+                    setButtons={setButtons}
+                    open={open}
+                    active={button.active}
+                    text={button.text}
+                    faIcon={button.faIcon}
+                  ></SidebarButton>
+                );
+              }
+              if (button.kind === 'collapsible') {
+                return (
+                  <SidebarCollapsible
+                    key={button.id}
+                    id={button.id}
+                    setButtons={setButtons}
+                    open={open}
+                    active={button.active}
+                    text={button.text}
+                    faIcon={button.faIcon}
+                    options={button.options}
+                  ></SidebarCollapsible>
+                );
+              }
+            })}
           </ul>
         </div>
       </aside>
