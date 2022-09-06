@@ -25,7 +25,9 @@ export const SidebarButton = ({ open, text, faIcon, setButtons, active }: Sideba
   };
   return (
     <li
-      className={`${active ? 'bg-bcActiveBlue' : ''} left-0 flex items-center py-4 rounded-md`}
+      className={`${
+        active ? 'bg-bcBluePrimary' : 'hover:bg-bcBlueBorder'
+      } left-0 flex items-center py-4 rounded-md`}
       onClick={handleClick}
     >
       <a
@@ -34,9 +36,14 @@ export const SidebarButton = ({ open, text, faIcon, setButtons, active }: Sideba
           open ? 'justify-center' : 'justify-left px-2'
         } flex items-center p-1 space-x-3 rounded-md`}
       >
-        <FontAwesomeIcon className='w-6 h-6 text-gray-100' icon={faIcon} />
+        <FontAwesomeIcon
+          className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}
+          icon={faIcon}
+        />
 
-        <span className={open ? 'hidden' : 'text-gray-100'}>{text}</span>
+        <span className={`${open ? 'hidden' : ''} ${active ? 'text-gray-100' : 'text-gray-400'} `}>
+          {text}
+        </span>
       </a>
     </li>
   );
