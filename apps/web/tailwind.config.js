@@ -38,6 +38,7 @@ module.exports = {
         bcYellowCream: '#F9F1C6',
         bcYellowCreamStroke: '#FAEBCC',
         bcDarkBlue: '#001a33',
+        bcActiveBlue: '#003265',
       },
       fontSize: {
         '3xl': '1.5rem',

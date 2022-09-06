@@ -8,6 +8,19 @@ import { SidebarButton } from './SidebarButton';
 export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(true);
+  const buttonsInit = [
+    {
+      text: 'Resourcing',
+      active: true,
+      faIcon: faUsers,
+    },
+    {
+      text: 'Testing Spacing',
+      active: false,
+      faIcon: faUsers,
+    },
+  ];
+  const [buttons, setButtons] = useState(buttonsInit);
 
   return (
     <div className='flex overflow-x-hidden h-screen mr-auto'>
@@ -38,7 +51,22 @@ export const Sidebar: React.FC = () => {
 
         <div className='py-14'>
           <ul>
-            <SidebarButton open={open} text={'Resourcing'} faIcon={faUsers}></SidebarButton>
+            {buttons.map((button, index) => (
+              <SidebarButton
+                key={index}
+                setButtons={setButtons}
+                open={open}
+                active={button.active}
+                text={button.text}
+                faIcon={button.faIcon}
+              ></SidebarButton>
+            ))}
+            {/* <SidebarButton
+              handleActive={handleActive}
+              open={open}
+              text={'Resourcing'}
+              faIcon={faUsers}
+            ></SidebarButton> */}
 
             <li className='left-0 flex flex-wrap items-center py-4 rounded-sm'>
               <button
@@ -66,7 +94,12 @@ export const Sidebar: React.FC = () => {
               </ul>
             </li>
 
-            <SidebarButton open={open} text={'Testing Spacing'} faIcon={faUsers}></SidebarButton>
+            {/* <SidebarButton
+              handleActive={handleActive}
+              open={open}
+              text={'Testing Spacing'}
+              faIcon={faUsers}
+            ></SidebarButton> */}
           </ul>
         </div>
       </aside>
