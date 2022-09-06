@@ -9,7 +9,7 @@ export const Sidebar: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(true);
 
   return (
-    <div className='flex overflow-x-hidden h-screen'>
+    <div className='flex overflow-x-hidden h-screen mr-auto'>
       <aside
         className={`${
           open ? 'w-14' : 'w-60'
