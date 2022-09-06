@@ -1,5 +1,4 @@
-// import { OptionType } from '@components';
-// import { Field as FormikField } from 'formik';
+
 
 interface CheckboxProps {
   name: string;
