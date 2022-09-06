@@ -3,6 +3,7 @@ import { useState } from 'react';
 import logo from '@assets/img/bc_logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faUsers, faBars } from '@fortawesome/free-solid-svg-icons';
+import { SidebarButton } from './SidebarButton';
 
 export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -37,18 +38,7 @@ export const Sidebar: React.FC = () => {
 
         <div className='py-14'>
           <ul>
-            <li className='left-0 flex items-center py-4 rounded-sm'>
-              <a
-                href='#'
-                className={`${
-                  open ? 'justify-center' : 'justify-left'
-                } flex items-center p-1 space-x-3 rounded-md`}
-              >
-                <FontAwesomeIcon className='w-6 h-6 text-gray-100' icon={faUsers} />
-
-                <span className={open ? 'hidden' : 'text-gray-100'}>Resourcing</span>
-              </a>
-            </li>
+            <SidebarButton open={open} text={'Resourcing'} faIcon={faUsers}></SidebarButton>
 
             <li className='left-0 flex flex-wrap items-center py-4 rounded-sm'>
               <button
@@ -76,18 +66,7 @@ export const Sidebar: React.FC = () => {
               </ul>
             </li>
 
-            <li className='left-0 flex items-center py-4 rounded-sm'>
-              <a
-                href='#'
-                className={`${
-                  open ? 'justify-center' : 'justify-left'
-                } flex items-center p-1 space-x-3 rounded-md`}
-              >
-                <FontAwesomeIcon className='w-6 h-6 text-gray-100' icon={faUsers} />
-
-                <span className={open ? 'hidden' : 'text-gray-100'}>Test</span>
-              </a>
-            </li>
+            <SidebarButton open={open} text={'Testing Spacing'} faIcon={faUsers}></SidebarButton>
           </ul>
         </div>
       </aside>
