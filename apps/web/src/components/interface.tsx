@@ -1,14 +1,14 @@
 import { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { Dispatch, SetStateAction } from 'react';
 
-export enum ButtonKind {
+export enum SidebarButtonKind {
   REGULAR = 'regular',
   COLLAPSIBLE = 'collapsible',
 }
 
 export interface SidebarButtonProps {
   id: string;
-  kind?: ButtonKind;
+  kind?: SidebarButtonKind;
   open?: boolean;
   active: boolean;
   text: string;

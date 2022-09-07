@@ -5,12 +5,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { SidebarButton } from './SidebarButton';
 import { SidebarCollapsible } from './SidebarCollapsible';
-import { ButtonKind } from './Interfaces';
-import { SidebarData } from './SidebarData';
+import { SidebarButtonKind } from './interface';
+import { sidebarNavItems } from '../common/constants';
 
 export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [buttons, setButtons] = useState(SidebarData);
+  const [buttons, setButtons] = useState(sidebarNavItems);
 
   return (
     <div className='flex overflow-x-hidden h-screen mr-auto'>
@@ -42,7 +42,7 @@ export const Sidebar: React.FC = () => {
         <div className='py-14'>
           <ul>
             {buttons.map(button => {
-              if (button.kind === ButtonKind.REGULAR) {
+              if (button.kind === SidebarButtonKind.REGULAR) {
                 return (
                   <SidebarButton
                     key={button.id}
@@ -55,7 +55,7 @@ export const Sidebar: React.FC = () => {
                   ></SidebarButton>
                 );
               }
-              if (button.kind === ButtonKind.COLLAPSIBLE) {
+              if (button.kind === SidebarButtonKind.COLLAPSIBLE) {
                 return (
                   <SidebarCollapsible
                     key={button.id}

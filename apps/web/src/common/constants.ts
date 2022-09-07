@@ -1,17 +1,17 @@
-import { SidebarButtonProps, ButtonKind } from './Interfaces';
+import { SidebarButtonProps, SidebarButtonKind } from '../components/interface';
 import { faClipboardList, faUsers } from '@fortawesome/free-solid-svg-icons';
 
-export const SidebarData: SidebarButtonProps[] = [
+export const sidebarNavItems: SidebarButtonProps[] = [
   {
     id: '001',
-    kind: ButtonKind.REGULAR,
+    kind: SidebarButtonKind.REGULAR,
     text: 'Resourcing',
     active: true,
     faIcon: faUsers,
   },
   {
     id: '002',
-    kind: ButtonKind.COLLAPSIBLE,
+    kind: SidebarButtonKind.COLLAPSIBLE,
     text: 'Planning',
     active: false,
     faIcon: faClipboardList,
@@ -30,7 +30,7 @@ export const SidebarData: SidebarButtonProps[] = [
   },
   {
     id: '005',
-    kind: ButtonKind.REGULAR,
+    kind: SidebarButtonKind.REGULAR,
     text: 'Testing Spacing',
     active: false,
     faIcon: faUsers,
