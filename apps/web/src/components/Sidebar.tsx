@@ -2,48 +2,15 @@ import React from 'react';
 import { useState } from 'react';
 import logo from '@assets/img/bc_logo.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardList, faUsers, faBars } from '@fortawesome/free-solid-svg-icons';
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { SidebarButton } from './SidebarButton';
 import { SidebarCollapsible } from './SidebarCollapsible';
+import { ButtonKind } from './Interfaces';
+import { SidebarData } from './SidebarData';
 
 export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const buttonsInit = [
-    {
-      id: '001',
-      kind: 'regular',
-      text: 'Resourcing',
-      active: true,
-      faIcon: faUsers,
-    },
-    {
-      id: '002',
-      kind: 'collapsible',
-      text: 'Planning',
-      active: false,
-      faIcon: faClipboardList,
-      options: [
-        {
-          id: '003',
-          text: 'Create New',
-          active: false,
-        },
-        {
-          id: '004',
-          text: 'All Plan',
-          active: false,
-        },
-      ],
-    },
-    {
-      id: '005',
-      kind: 'regular',
-      text: 'Testing Spacing',
-      active: false,
-      faIcon: faUsers,
-    },
-  ];
-  const [buttons, setButtons] = useState(buttonsInit);
+  const [buttons, setButtons] = useState(SidebarData);
 
   return (
     <div className='flex overflow-x-hidden h-screen mr-auto'>
@@ -75,7 +42,7 @@ export const Sidebar: React.FC = () => {
         <div className='py-14'>
           <ul>
             {buttons.map(button => {
-              if (button.kind === 'regular') {
+              if (button.kind === ButtonKind.REGULAR) {
                 return (
                   <SidebarButton
                     key={button.id}
@@ -88,7 +55,7 @@ export const Sidebar: React.FC = () => {
                   ></SidebarButton>
                 );
               }
-              if (button.kind === 'collapsible') {
+              if (button.kind === ButtonKind.COLLAPSIBLE) {
                 return (
                   <SidebarCollapsible
                     key={button.id}

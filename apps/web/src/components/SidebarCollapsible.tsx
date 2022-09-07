@@ -1,18 +1,8 @@
 import React from 'react';
 import { SidebarButton } from './SidebarButton';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
-
-interface SidebarCollapsibleProps {
-  id: string;
-  open: boolean;
-  active: boolean;
-  text: string;
-  faIcon: IconDefinition;
-  setButtons: any;
-  options: any;
-}
+import { SidebarButtonProps } from './Interfaces';
 
 export const SidebarCollapsible = ({
   setButtons,
@@ -20,7 +10,7 @@ export const SidebarCollapsible = ({
   open,
   faIcon,
   options,
-}: SidebarCollapsibleProps) => {
+}: SidebarButtonProps) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   return (
@@ -34,10 +24,12 @@ export const SidebarCollapsible = ({
           setDropdownOpen(!dropdownOpen);
         }}
       >
-        <FontAwesomeIcon
-          className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}
-          icon={faIcon}
-        />
+        {faIcon ? (
+          <FontAwesomeIcon
+            className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}
+            icon={faIcon}
+          />
+        ) : null}
 
         <span className={`${open ? 'hidden' : ''} ${active ? 'text-gray-100' : 'text-gray-400'}`}>
           Planning
@@ -55,16 +47,18 @@ export const SidebarCollapsible = ({
           !dropdownOpen || open ? 'hidden' : 'py-2 space-y-2 w-full flex flex-col p-2 pl-11'
         }
       >
-        {options.map((option: any) => (
-          <SidebarButton
-            key={option.id}
-            id={option.id}
-            setButtons={setButtons}
-            open={open}
-            active={option.active}
-            text={option.text}
-          ></SidebarButton>
-        ))}
+        {options
+          ? options.map((option: SidebarButtonProps) => (
+              <SidebarButton
+                key={option.id}
+                id={option.id}
+                setButtons={setButtons}
+                open={open}
+                active={option.active}
+                text={option.text}
+              ></SidebarButton>
+            ))
+          : null}
       </ul>
     </li>
   );

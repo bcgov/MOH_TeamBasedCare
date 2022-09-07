@@ -1,16 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconDefinition } from '@fortawesome/fontawesome-common-types';
-
-interface SidebarButtonProps {
-  id: string;
-  open: boolean;
-  active: boolean;
-  text: string;
-  faIcon?: IconDefinition;
-  setButtons: any;
-  options?: any;
-}
+import { SidebarButtonProps } from './Interfaces';
 
 export const SidebarButton = ({
   id,
@@ -22,27 +12,29 @@ export const SidebarButton = ({
 }: SidebarButtonProps) => {
   const handleClick = () => {
     // Update state
-    setButtons((current: SidebarButtonProps[]) =>
-      current.map(obj => {
-        if (obj.id === id) {
-          return { ...obj, active: true };
-        }
+    if (setButtons) {
+      setButtons(current =>
+        current.map(obj => {
+          if (obj.id === id) {
+            return { ...obj, active: true };
+          }
 
-        if (obj.options) {
-          let parentActive = false;
-          const newOptObj = obj.options.map((opt: SidebarButtonProps) => {
-            if (opt.id === id) {
-              parentActive = true;
-              return { ...opt, active: true };
-            }
-            return { ...opt, active: false };
-          });
-          return { ...obj, active: parentActive, options: newOptObj };
-        }
+          if (obj.options) {
+            let parentActive = false;
+            const newOptObj = obj.options.map((opt: SidebarButtonProps) => {
+              if (opt.id === id) {
+                parentActive = true;
+                return { ...opt, active: true };
+              }
+              return { ...opt, active: false };
+            });
+            return { ...obj, active: parentActive, options: newOptObj };
+          }
 
-        return { ...obj, active: false };
-      }),
-    );
+          return { ...obj, active: false };
+        }),
+      );
+    }
   };
   return (
     <li
