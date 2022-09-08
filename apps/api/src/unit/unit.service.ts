@@ -11,6 +11,6 @@ export class UnitService {
   ) {}
 
   async getAllUnits(): Promise<Unit[]> {
-    return await this.unitsRepository.find();
+    return this.unitsRepository.find();
   }
 }
