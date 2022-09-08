@@ -1,15 +1,9 @@
 import type { NextPage } from 'next';
 import 'reflect-metadata';
-
-
-
+import { Sidebar } from '../components/Sidebar';
 
 const Home: NextPage = () => {
-  return <>
-    <p>Hello World</p>
-      
-
-  </>;
+  return <Sidebar></Sidebar>;
 };
 
 export default Home;
