@@ -7,3 +7,8 @@ export * from './Label';
 export * from './Error';
 export * from './Description';
 export * from './Table';
+export * from './Stepper';
+export * from './FormStepHeader';
+export * from './Form';
+export * from './FormContent';
+export * from './Header';
