@@ -1,7 +1,6 @@
 import type { NextPage } from 'next';
 import 'reflect-metadata';
-import { Form, Header } from '@components';
-import { Sidebar } from '../components/Sidebar';
+import { Form, Header, PageTitle, Sidebar } from '@components';
 
 const Home: NextPage = () => {
   return <>
@@ -9,6 +8,7 @@ const Home: NextPage = () => {
       <Sidebar />
       <div className="w-full p-4 flex-col">
         <Header />
+        <PageTitle title="Resource Planning" description="Planning resourcing plan based on skills and tasks within your unit."/>
         <Form />
       </div>
     </div>
