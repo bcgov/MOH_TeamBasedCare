@@ -1,6 +1,6 @@
 /* This example requires Tailwind CSS v2.0+ */
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoffee } from '@fortawesome/free-solid-svg-icons'
+import { faUsers, faAddressBook } from '@fortawesome/free-solid-svg-icons'
 
 const navigation = [
   { name: 'Dashboard', href: '#', current: true },
@@ -19,15 +19,15 @@ export const Header = () => {
     <header className="flex w-full items-center justify-between border-b-2 border-gray-200 p-4">
         
         <div className="flex items-center space-x-2">
-            <h1 className="text-2xl ">Resourcing</h1>
+            <h1 className="text-2xl "><FontAwesomeIcon icon={faUsers} className='h-5' />Resourcing</h1>
         </div>
 
        
         <div className="flex p-2">
             <div className="">
-                    <a href="#" className="transition hover:text-blue-600">Profile</a>
-                    <a href="#" className="transition hover:text-blue-600">Edit</a>
-                    <a href="#" className="transition hover:text-blue-600">Settings</a>
+                    <a href="#" className="transition hover:text-blue-600"><FontAwesomeIcon icon={faAddressBook}/></a>
+                    <a href="#" className="transition hover:text-blue-600"><FontAwesomeIcon icon={faUsers} className='h-5' /></a>
+                    <a href="#" className="transition hover:text-blue-600"><FontAwesomeIcon icon={faUsers} className='h-5' /></a>
                 </div>
             <button type="button"
                 className="flex h-9 w-9 overflow-hidden rounded-full">
