@@ -14,6 +14,7 @@ export const Form = () => {
     setCurrentStep(Number(currentStep) + 1);
   }
   const handlePreviousStep = () => {
+    if(isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
   }
    
@@ -24,8 +25,8 @@ export const Form = () => {
         </div>
         <div className="flex p-2"> 
             <Button variant="outline" type="button" onClick={()=>{}}>Save Draft</Button>
-            <Button variant="primary" type="button" classes="ml-2" disabled={isFirstStep}  onClick={handlePreviousStep}>Previous</Button>
-            <Button variant="primary"  type="button" classes="ml-2" disabled={currentStep >= steps.length} onClick={handleNextStep}>Next</Button>
+            <Button variant="primary" type="button" classes={`ml-2 ${isFirstStep && "hidden"}`}  disabled={isFirstStep}  onClick={handlePreviousStep}>Previous</Button>
+            <Button variant="primary"  type="button" classes={`ml-2 ${currentStep >= steps.length && "hidden"}`}  disabled={currentStep >= steps.length} onClick={handleNextStep}>Next</Button>
         </div>
     </div>
     <div className='w-full flex justify-right print:hidden border-2 bg-white  rounded p-4 mt-10' aria-hidden>
