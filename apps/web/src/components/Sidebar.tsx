@@ -13,11 +13,10 @@ export const Sidebar: React.FC = () => {
   const [buttons, setButtons] = useState(sidebarNavItems);
 
   return (
-    <div className='flex overflow-x-hidden h-screen mr-auto'>
       <aside
         className={`${
           open ? 'w-14' : 'w-60'
-        } sidebar fixed top-0 bottom-0 lg:left-0 flex flex-col h-screen p-3 shadow duration-300 bg-bcDarkBlue`}
+        } sidebar  top-0 bottom-0 lg:left-0 flex flex-col h-screen p-3 shadow duration-300 bg-bcDarkBlue`}
         aria-label='Sidebar'
       >
         <div className='space-y-3 overflow-y-auto'>
@@ -73,6 +72,6 @@ export const Sidebar: React.FC = () => {
           </ul>
         </div>
       </aside>
-    </div>
+
   );
 };
