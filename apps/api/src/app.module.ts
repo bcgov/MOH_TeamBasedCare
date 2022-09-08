@@ -4,9 +4,10 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AppLogger } from './common/logger.service';
 import { LoggerMiddleware } from './logger.middleware';
+import { UnitModule } from './unit/unit.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, UnitModule],
   controllers: [AppController],
   providers: [AppService, AppLogger],
 })
