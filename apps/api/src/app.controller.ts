@@ -1,6 +1,7 @@
-import { Controller, Get, HttpStatus, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, HttpStatus, InternalServerErrorException, Patch } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
+import { SUCCESS_RESPONSE } from './common/constants';
 
 @Controller()
 export class AppController {
@@ -22,5 +23,14 @@ export class AppController {
   @Get('/error')
   getError(): object {
     throw new InternalServerErrorException('Breaking uptime');
+  }
+
+  @ApiOperation({
+    summary: 'Runs script to update care activities',
+  })
+  @Patch('/update-care-activities')
+  async updateCareActivities() {
+    await this.appService.updateCareActivities();
+    return SUCCESS_RESPONSE;
   }
 }

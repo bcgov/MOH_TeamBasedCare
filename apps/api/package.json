@@ -22,7 +22,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_ENV=test jest --config ./jest-e2e.json --runInBand",
-    "typeorm": "ts-node -r tsconfig-paths/register ../../node_modules/typeorm/cli.js --config src/ormconfig.ts"
+    "typeorm": "ts-node -r tsconfig-paths/register ../../node_modules/typeorm/cli.js --config src/ormconfig.ts",
+    "db:seed-care-activities": "SEED_TYPE=SEED_CARE_ACTIVITIES ts-node ./src/database/scripts/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "8.2.3",
@@ -35,6 +36,7 @@
     "@vendia/serverless-express": "4.3.11",
     "aws-sdk": "2.1017.0",
     "class-transformer": "0.5.1",
+    "csv-parser": "3.0.0",
     "csv-stringify": "6.0.4",
     "dotenv": "10.0.0",
     "express": "4.17.1",
@@ -61,6 +63,7 @@
     "@types/js-yaml": "4.0.5",
     "@types/node": "16.0.0",
     "@types/supertest": "2.0.11",
+    "@types/zen-observable": "0.8.3",
     "eslint": "8.0.1",
     "jest": "27.4.7",
     "source-map-support": "0.5.20",

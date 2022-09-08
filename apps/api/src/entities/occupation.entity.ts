@@ -8,9 +8,9 @@ export class Occupation extends CustomBaseEntity {
   id: string;
 
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
-  occupationName: string;
+  name: string;
 
-  @Column({ type: 'boolean', nullable: false, default: false })
+  @Column({ type: 'boolean', default: false })
   isRegulated: boolean;
 
   @OneToMany(() => AllowedActivity, allowedActivity => allowedActivity.occupation)

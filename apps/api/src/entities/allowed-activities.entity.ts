@@ -1,13 +1,8 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Permissions } from '../common/constants';
 import { CareActivity } from './care-activity.entity';
 import { CustomBaseEntity } from './custom-base.entity';
 import { Occupation } from './occupation.entity';
-
-export enum Permissions {
-  PERFORM = 'X',
-  ASSIST = 'A',
-  CONTINUED_EDUCATION = 'C(E)',
-}
 
 @Entity()
 export class AllowedActivity extends CustomBaseEntity {
@@ -17,9 +12,9 @@ export class AllowedActivity extends CustomBaseEntity {
   @Column({ type: 'enum', enum: Permissions, nullable: false })
   permission: string;
 
-  @ManyToOne(() => Occupation, occupation => occupation.allowedActivities)
+  @ManyToOne(() => Occupation, occupation => occupation.allowedActivities, { nullable: false })
   occupation: Occupation;
 
-  @ManyToOne(() => CareActivity, careActivity => careActivity.occupations)
+  @ManyToOne(() => CareActivity, careActivity => careActivity.occupations, { nullable: false })
   careActivity: CareActivity;
 }
