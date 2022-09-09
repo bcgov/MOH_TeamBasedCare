@@ -1,21 +1,15 @@
 import React from 'react';
 import { Label } from './Label';
-import { getCareLocations } from '../services/carelocations';
 
-interface CareUnitProps {
+interface DropdownOptionProps {
   id: string;
-  unitName: string;
+  value: string;
+}
+interface DropdownProps {
+  dropdownOptions: DropdownOptionProps[];
 }
 
-export const Dropdown = () => {
-  const [careUnits, setCareUnits] = React.useState([]);
-
-  React.useEffect(() => {
-    (async () => {
-      setCareUnits(await getCareLocations());
-    })();
-  }, []);
-
+export const Dropdown = ({ dropdownOptions }: DropdownProps) => {
   return (
     <div>
       <Label htmlFor='test'>
@@ -25,10 +19,10 @@ export const Dropdown = () => {
           id='careunits'
           className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5'
         >
-          {careUnits.map((unit: CareUnitProps) => {
+          {dropdownOptions.map((option: DropdownOptionProps) => {
             return (
-              <option key={unit.id} value={unit.unitName}>
-                {unit.unitName}
+              <option key={option.id} value={option.value}>
+                {option.value}
               </option>
             );
           })}
