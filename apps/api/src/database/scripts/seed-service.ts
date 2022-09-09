@@ -26,35 +26,10 @@ export class SeedService {
   ) {}
 
   async updateCareActivities(file: Buffer): Promise<void> {
-    // TODO: Get occupation list from database
-    const occupation = [
-      'Respiratory Therapist',
-      'Speech Language Pathologist',
-      'Occupational Therapist',
-      'Physiotherapist',
-      'Rehabilitation Assistant',
-      'Registered Dietitian',
-      'Clinical Pharmacist',
-      'Pharmacy Technician',
-      'Registered Social Worker',
-      'Spiritual Health Provider',
-      'Indigenous Liaison',
-      'Registered Nurse - Critical Care',
-      'Registered Nurse - Other (Med/Sx)',
-      'Registered Pyschiatric Nurse (RPN)',
-      'Licensed Practical Nurse (LPN)',
-      'ESN',
-      'HCA',
-      'Other - Non Clinical',
-      'Physician',
-      'Resident',
-    ];
     let headers: string[];
     const bundleVsCareActivity: { [key: string]: string[] } = {};
     const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
-    occupation.forEach(e => {
-      occupationVsCareActivity[e] = {};
-    });
+
     let bundleName: string;
 
     const readable = new Readable();
@@ -69,15 +44,16 @@ export class SeedService {
         if (!headers) {
           headers = Object.keys(data);
         }
-        bundleName = !data[headers[0]] ? bundleName : data[headers[0]];
-        const activityName = data[headers[1]];
+        bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
+        const activityName = data[headers[2]].trim().replace(/"/g, '');
         let activityList: string[] = [];
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
         }
         activityList.push(activityName);
         bundleVsCareActivity[bundleName] = activityList;
-        occupation.forEach(e => {
+        for (let index = 3; index < headers.length; index++) {
+          const e = headers[index];
           let action: string = data[e];
           let allowedAction;
           if (action?.length > 0) {
@@ -88,13 +64,18 @@ export class SeedService {
               allowedAction = Permissions.ASSIST;
             } else if (action.includes('c')) {
               allowedAction = Permissions.CONTINUED_EDUCATION;
+            } else if (action.includes('l')) {
+              allowedAction = Permissions.LIMITS;
             }
           }
 
           if (allowedAction) {
+            if (!occupationVsCareActivity[e]) {
+              occupationVsCareActivity[e] = {};
+            }
             occupationVsCareActivity[e][cleanText(activityName)] = allowedAction;
           }
-        });
+        }
       })
       .on('end', async () => {
         // Save the result
@@ -193,7 +174,7 @@ export class SeedService {
     activityMap: { [key: string]: Permissions },
     careActivityDBMap: { [key: string]: CareActivity },
   ): Promise<void> {
-    const occupation = await this.findOrCreateOccupation(occupationName);
+    const occupation = await this.findOrCreateOccupation(occupationName.trim().replace(/"/g, ''));
 
     const allowedActivities = Object.entries(activityMap).map(([eachCA, permission]) => {
       return this.allowedActRepo.create({
