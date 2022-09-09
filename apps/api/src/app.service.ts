@@ -20,8 +20,7 @@ export class AppService {
     };
   }
 
-  async updateCareActivities() {
-    const path = 'testData.csv';
-    await this.seedService.updateCareActivities(path);
+  async updateCareActivities(file: Buffer) {
+    await this.seedService.updateCareActivities(file);
   }
 }

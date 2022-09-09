@@ -1,6 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AppLogger } from '../../common/logger.service';
-import fs from 'fs';
 import csv from 'csv-parser';
 import { AllowedActivity } from '../../entities/allowed-activities.entity';
 import { cleanText } from '../../common/utils';
@@ -10,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CareActivity } from '../../entities/care-activity.entity';
 import { Occupation } from '../../entities/occupation.entity';
 import { Permissions } from '../../common/constants';
+import { Readable } from 'stream';
 
 @Injectable()
 export class SeedService {
@@ -25,7 +25,7 @@ export class SeedService {
     private readonly allowedActRepo: Repository<AllowedActivity>,
   ) {}
 
-  async updateCareActivities(filePath: string): Promise<void> {
+  async updateCareActivities(file: Buffer): Promise<void> {
     // TODO: Get occupation list from database
     const occupation = [
       'Respiratory Therapist',
@@ -56,7 +56,14 @@ export class SeedService {
       occupationVsCareActivity[e] = {};
     });
     let bundleName: string;
-    fs.createReadStream(filePath)
+
+    const readable = new Readable();
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    readable._read = () => {}; // _read is required but you can noop it
+    readable.push(file);
+    readable.push(null);
+
+    readable
       .pipe(csv())
       .on('data', data => {
         if (!headers) {
@@ -92,7 +99,7 @@ export class SeedService {
       .on('end', async () => {
         // Save the result
 
-        Promise.all(
+        await Promise.allSettled(
           Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) =>
             this.saveCareActivity(bundleName, careActivities),
           ),
@@ -115,7 +122,7 @@ export class SeedService {
           careActivityDBMap[eachCA.name] = eachCA;
         });
 
-        Promise.all(
+        await Promise.allSettled(
           Object.entries(occupationVsCareActivity).map(([occupationName, activityMap]) => {
             this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
           }),
