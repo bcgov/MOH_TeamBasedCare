@@ -11,10 +11,10 @@ const Check: React.FC<CheckProps> = ({ number, step, currentStep }) => {
   return (
     <div
       className={`
-      h-6 w-6 rounded-full border-2 
+      h-6 w-6 rounded-full border-2 border-bcBluePrimary
       flex flex-row items-center justify-center mr-4
       ${step >= number && 'bg-bcBlueNav '}  
-      ${currentStep >= number && ' border-bcDarkBlue bg-bcDarkBlue text-white'}  
+      ${currentStep >= number && ' border-bcBluePrimary bg-bcBluePrimary text-white'}  
       `}
     >
       {(() => {

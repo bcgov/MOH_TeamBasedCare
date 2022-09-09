@@ -19,7 +19,7 @@ export const Form = () => {
   }
    
   return <>
-     <div className='w-full flex items-center justify-between print:hidden rounded border-2 bg-white p-4 mt-10' aria-hidden>
+     <div className='w-full flex items-center justify-between print:hidden rounded border-2 bg-white p-2 mt-4' aria-hidden>
         <div className="flex items-center space-x-2">
             <Stepper steps={steps} currentStep={currentStep} />
         </div>
@@ -29,7 +29,7 @@ export const Form = () => {
             <Button variant="primary"  type="button" classes={`ml-2 ${currentStep >= steps.length && "hidden"}`}  disabled={currentStep >= steps.length} onClick={handleNextStep}>Next</Button>
         </div>
     </div>
-    <div className='w-full flex justify-right print:hidden border-2 bg-white  rounded p-4 mt-10' aria-hidden>
+    <div className='w-full flex justify-right print:hidden border-2 bg-white  rounded p-4 mt-4' aria-hidden>
         <FormContent step={currentStep} formTitle={steps[currentStep -1]}/>
     </div>
   </>;
