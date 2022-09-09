@@ -23,7 +23,7 @@ export interface BooleanRadioProps {
 
 export const Radio: React.FC<BooleanRadioProps> = ({ legend, name, options, horizontal }) => {    return (
     <fieldset className='flex flex-col gap-4'>
-        <legend className='text-bcBlack font-bold mb-4'>{legend}</legend>
+        <legend className='text-bcBluePrimary font-bold mb-4'>{legend}</legend>
         <div
           className={classnames(
             'flex',
@@ -34,13 +34,13 @@ export const Radio: React.FC<BooleanRadioProps> = ({ legend, name, options, hori
           {options.map((option, index) => (
             <label
               key={option.label + index}
-              className='flex items-center cursor-pointer leading-none'
+              className='flex text-bcBluePrimary  items-center cursor-pointer leading-none'
             >
               <input
                 type='radio'
                 name={name}
                 value={option.value}
-                className='mr-2 h-5 w-5 min-w-5 cursor-pointer'
+                className='mr-2 h-5 w-5 min-w-5 checked:bg-bcBluePrimary cursor-pointer'
               />
               {option.label}
             </label>

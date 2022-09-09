@@ -9,7 +9,7 @@ export * from './Description';
 export * from './Table';
 export * from './Stepper';
 export * from './FormStepHeader';
-export * from './Form';
+export * from '../pages/Planning';
 export * from './FormContent';
 export * from './Header';
 export * from './PageTitle';

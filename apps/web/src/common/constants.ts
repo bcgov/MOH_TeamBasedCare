@@ -36,3 +36,6 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     faIcon: faUsers,
   },
 ];
+
+export const steps = ["Profile", "Care Activities Bundles", "Occupation", "Activities Gap", "Suggestions"];
+
