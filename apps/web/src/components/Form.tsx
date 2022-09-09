@@ -1,9 +1,13 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { Stepper, Button, FormContent }  from '@components';
 
 export const Form = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const isFirstStep = currentStep === 1;
+
+  useEffect(()=> {
+    
+  }, [currentStep]);
 
   const steps = ["Profile", "Care Activities Bundles", "Occupation", "Activities Gap", "Suggestions"];
 
