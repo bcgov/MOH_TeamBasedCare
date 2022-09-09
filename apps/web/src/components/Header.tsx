@@ -38,7 +38,7 @@ export const Header = () => {
                 </div>
                 
 
-                <div className={` ${accountDropdown && "hidden"} absolute right-2 mt-10 w-48 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white shadow-md`}>
+                <div className={` ${!accountDropdown && "hidden"} absolute right-2 mt-10 w-48 divide-y divide-gray-200 rounded-md border border-gray-200 bg-white shadow-md`}>
                   
                     <div className="flex flex-col space-y-3 p-2">
                         <a href="#" className="transition hover:text-blue-600">My Profile</a>

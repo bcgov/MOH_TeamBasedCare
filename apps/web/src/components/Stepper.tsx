@@ -11,22 +11,12 @@ const Check: React.FC<CheckProps> = ({ number, step, currentStep }) => {
   return (
     <div
       className={`
-      h-6 w-6 rounded-full border-2 border-bcBluePrimary
+      h-6 w-6 rounded-full border-2 
       flex flex-row items-center justify-center mr-4
-      ${step >= number && 'bg-bcBlueNav '}  
-      ${currentStep >= number && ' border-bcBluePrimary bg-bcBluePrimary text-white'}  
+      ${currentStep == number ? ' border-bcBluePrimary bg-bcBluePrimary text-white' : 'border-gray-400 text-gray-400'}  
       `}
-    >
-      {(() => {
-        switch (true) {
-          case currentStep === step:
-            return <span className='text-sm'>{step}</span>;
-          case currentStep < step:
-            return <span className='text-sm'>{step}</span>;
-          default:
-            return <FontAwesomeIcon icon={faCheck} className='h-3' />;
-        }
-      })()}
+      >
+      <span className='text-sm'>{step}</span>
     </div>
   );
 };
@@ -42,11 +32,11 @@ interface StepProps {
 const Step: React.FC<StepProps> = ({ index, step, label, isLast, currentStep }) => {
   return (
     <div className='flex flex-col items-start'>
-      <div aria-hidden className='flex justify-center items-center text-slate-400'>
+      <div aria-hidden className='flex justify-center items-center'>
         <Check number={index + 1} step={step} currentStep={currentStep}/>
-        <label className='hidden md:block text-lg w-min text-slate-400 whitespace-nowrap mr-4'>{label}</label>
+        <label className={`hidden md:block text-lg w-min ${currentStep == index +1 ? "text-black" : "text-gray-400"} whitespace-nowrap mr-4`}>{label}</label>
         {!isLast ? (
-          <FontAwesomeIcon icon={faGreaterThan} className='h-3 mr-4' />
+          <FontAwesomeIcon icon={faGreaterThan} className='h-3 mr-4 text-gray-400' />
         ) : null} 
       </div>
       
