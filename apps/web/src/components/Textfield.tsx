@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import { Error, Label, Description } from '@components';
 import { Field as FormikField, useField, FieldConfig } from 'formik';
 
-export interface FieldProps extends FieldConfig {
+export interface TextfieldProps extends FieldConfig {
   name: string;
   label: string | React.ReactNode;
   description?: string | React.ReactNode;
@@ -11,7 +11,7 @@ export interface FieldProps extends FieldConfig {
   maxLength?: number;
 }
 
-export const Field: React.FC<FieldProps> = props => {
+export const Textfield: React.FC<TextfieldProps> = props => {
   const {
     name,
     label,
@@ -25,8 +25,8 @@ export const Field: React.FC<FieldProps> = props => {
     children,
   } = props;
 
-  console
-  const [field, meta] = useField(name);
+  
+  // const [field, meta] = useField(name);
 
   return (
     <div>
@@ -40,26 +40,20 @@ export const Field: React.FC<FieldProps> = props => {
         id={name}
         aria-describedby={description ? `${name}-description` : null}
         className={
-          className ??
-          classnames(
             `w-full rounded-none bg-gray-100 block h-10
-            border-b-2 border-bcBlack pl-1 disabled:bg-bcDisabled`,
-            {
-              'border-red-500': meta.touched && meta.error,
-            },
-          )
+            border-b-2 border-bcBlack pl-1 disabled:bg-bcDisabled`
+            
         }
         disabled={disabled}
         as={as}
         type={type}
         maxLength={maxLength}
         component={component}
-        {...field}
-      >
-        {children}
-      </FormikField>
+       
+      />
+        
 
-      <Error name={name} />
+      {/* <Error name={name} /> */}
     </div>
   );
 };

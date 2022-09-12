@@ -1,9 +1,18 @@
 import type { NextPage } from 'next';
 import 'reflect-metadata';
-import { Sidebar } from '../components/Sidebar';
+import { Header, Sidebar} from '@components';
+import {PlanningWrapper} from '@components';
 
 const Home: NextPage = () => {
-  return <Sidebar></Sidebar>;
+  return <>
+    <div className="flex overflow-x-hidden h-screen mr-auto">
+      <Sidebar />
+      <div className="w-full p-4 flex-col">
+        <Header />
+        <PlanningWrapper />
+      </div>
+    </div>
+  </>
 };
 
 export default Home;
