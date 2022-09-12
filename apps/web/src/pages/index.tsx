@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import 'reflect-metadata';
 import { Header, Sidebar} from '@components';
-import {Planning} from './Planning';
+import {PlanningWrapper} from '@components';
 
 const Home: NextPage = () => {
   return <>
@@ -9,7 +9,7 @@ const Home: NextPage = () => {
       <Sidebar />
       <div className="w-full p-4 flex-col">
         <Header />
-        <Planning />
+        <PlanningWrapper />
       </div>
     </div>
   </>

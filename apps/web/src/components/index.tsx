@@ -9,7 +9,7 @@ export * from './Description';
 export * from './Table';
 export * from './Stepper';
 export * from './PlanningStepHeader';
-export * from '../pages/Planning';
+export * from './PlanningWrapper';
 export * from './PlanningContent';
 export * from './Header';
 export * from './PageTitle';

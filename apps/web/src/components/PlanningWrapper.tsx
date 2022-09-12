@@ -3,16 +3,16 @@ import { Stepper, Button, PlanningContent }  from '@components';
 import { Formik,Form} from 'formik';
 import { PlanningSteps } from '../common/constants';
 
-interface PlanningFormValues {
+interface PlanningWrapperFormValues {
   firstName: string;
   lastName: string;
 }
 
-export const Planning = () => {
+export const PlanningWrapper = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const isFirstStep = currentStep === 1;
 
-  const initialValues: PlanningFormValues = { 
+  const initialValues: PlanningWrapperFormValues = { 
     firstName: "Bob",
     lastName: "Loblaw",
   };
