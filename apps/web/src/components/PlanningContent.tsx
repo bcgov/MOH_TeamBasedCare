@@ -1,8 +1,8 @@
-import {Profile}  from '../pages/forms/Profile';
-import {CareActivitiesBundle} from '../pages/forms/CareActivitiesBundle';
-import {Occupation} from '../pages/forms/Occupation';
-import {ActivitiesGap} from '../pages/forms/ActivitiesGap';
-import {Suggestions} from '../pages/forms/Suggestions';
+import {Profile}  from './planning/Profile';
+import {CareActivitiesBundle} from './planning/CareActivitiesBundle';
+import {Occupation} from './planning/Occupation';
+import {ActivitiesGap} from './planning/ActivitiesGap';
+import {Suggestions} from './planning/Suggestions';
 
 interface PlanningContentProps {
   step: number;
