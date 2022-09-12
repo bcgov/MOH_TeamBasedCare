@@ -1,6 +1,7 @@
 import { Radio } from '@components';
 import { useState } from 'react';
 import { CareLocationSelector } from '../CareLocationSelector';
+import { formFormatting } from '../../common';
 
 export interface ProfileProps {
   step: number;
@@ -33,24 +34,34 @@ export const Profile: React.FC<ProfileProps> = () => {
     }
   };
   return (
-    <>
-      {/* <PlanningStepHeader>{title}</PlanningStepHeader> */}
-      {/* <Textfield type="text" name="asdasdasd" label="qwerty" description="asdasdsadasdasdasdadd"/> */}
+    <div>
+      <div className={formFormatting}>
+        {/* <PlanningStepHeader>{title}</PlanningStepHeader> */}
+        {/* <Textfield type="text" name="asdasdasd" label="qwerty" description="asdasdsadasdasdasdadd"/> */}
 
-      {/* <label htmlFor="Profile">Profile
+        {/* <label htmlFor="Profile">Profile
         <Field id="Profile" name="Profile"  className={
             `w-full rounded-none bg-gray-100 block h-10
             border-b-2 border-bcBlack pl-1 disabled:bg-bcDisabled`
             
         } placeholder="Profile" /></label> */}
 
-      <Radio
-        legend='Select how do you want to start with'
-        name='Profile'
-        options={profileOptions}
-        handleSelect={handleSelect}
-      />
-      <div className='w-full grow'>{displayDropdown ? <CareLocationSelector /> : null}</div>
-    </>
+        <Radio
+          legend='Select how do you want to start with'
+          name='Profile'
+          options={profileOptions}
+          handleSelect={handleSelect}
+        />
+      </div>
+      <div>
+        <div>
+          {displayDropdown ? (
+            <div className={formFormatting}>
+              <CareLocationSelector />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 };

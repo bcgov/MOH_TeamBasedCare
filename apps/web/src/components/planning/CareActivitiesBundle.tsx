@@ -1,14 +1,14 @@
-import {PlanningStepHeader} from '@components';
+import { PlanningStepHeader } from '@components';
+import { formFormatting } from '../../common';
 export interface CareActivitiesBundleProps {
   step: number;
   title: string;
 }
 
-export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ step, title }) => {
+export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
   return (
-    <>
-        <PlanningStepHeader>{title}</PlanningStepHeader>
-        
-    </>
+    <div className={formFormatting}>
+      <PlanningStepHeader>{title}</PlanningStepHeader>
+    </div>
   );
 };

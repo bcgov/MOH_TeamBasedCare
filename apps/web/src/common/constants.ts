@@ -37,5 +37,13 @@ export const sidebarNavItems: SidebarButtonProps[] = [
   },
 ];
 
-export const PlanningSteps = ["Profile", "Care Activities Bundles", "Occupation", "Activities Gap", "Suggestions"];
+export const PlanningSteps = [
+  'Profile',
+  'Care Activities Bundles',
+  'Occupation',
+  'Activities Gap',
+  'Suggestions',
+];
 
+export const formFormatting =
+  'w-full justify-right print:hidden border-2 bg-white rounded p-4 mt-4';

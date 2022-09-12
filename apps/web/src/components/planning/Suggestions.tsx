@@ -1,15 +1,14 @@
-
-import {PlanningStepHeader} from '@components';
+import { PlanningStepHeader } from '@components';
+import { formFormatting } from '../../common';
 export interface SuggestionsProps {
   step: number;
   title: string;
 }
 
-export const Suggestions: React.FC<SuggestionsProps> = ({ step, title }) => {
+export const Suggestions: React.FC<SuggestionsProps> = ({ title }) => {
   return (
-    <>
-        <PlanningStepHeader>{title}</PlanningStepHeader>
-        
-    </>
+    <div className={formFormatting}>
+      <PlanningStepHeader>{title}</PlanningStepHeader>
+    </div>
   );
 };

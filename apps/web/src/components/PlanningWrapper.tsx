@@ -56,10 +56,7 @@ export const PlanningWrapper = () => {
           </Button>
         </div>
       </div>
-      <div
-        className='w-full flex justify-right print:hidden border-2 bg-white  rounded p-4 mt-4'
-        aria-hidden
-      >
+      <div className='' aria-hidden>
         <Formik
           initialValues={initialValues}
           onSubmit={(values, actions) => {
