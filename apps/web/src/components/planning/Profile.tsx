@@ -1,4 +1,4 @@
-import {FormStepHeader, Radio } from '@components';
+import {PlanningStepHeader, Radio } from '@components';
 import { Field } from 'formik';
 
 
@@ -22,7 +22,7 @@ export const Profile: React.FC<ProfileProps> = ({ step, title }) => {
 
   return (
     <>
-        {/* <FormStepHeader>{title}</FormStepHeader> */}
+        {/* <PlanningStepHeader>{title}</PlanningStepHeader> */}
         {/* <Textfield type="text" name="asdasdasd" label="qwerty" description="asdasdsadasdasdasdadd"/> */}
       
         {/* <label htmlFor="Profile">Profile

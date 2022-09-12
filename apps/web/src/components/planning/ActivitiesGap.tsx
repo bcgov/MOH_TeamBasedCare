@@ -1,5 +1,5 @@
 
-import {FormStepHeader} from '@components';
+import {PlanningStepHeader} from '@components';
 import { Field } from 'formik';
 
 export interface ActivitiesGapProps {
@@ -10,7 +10,7 @@ export interface ActivitiesGapProps {
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ step, title }) => {
   return (
     <>
-        <FormStepHeader>{title}</FormStepHeader>
+        <PlanningStepHeader>{title}</PlanningStepHeader>
         <label htmlFor="ActivitiesGap">ActivitiesGap
         <Field id="ActivitiesGap" name="ActivitiesGap"  className={
             `w-full rounded-none bg-gray-100 block h-10

@@ -1,5 +1,5 @@
 
-import {FormStepHeader} from '@components';
+import {PlanningStepHeader} from '@components';
 export interface SuggestionsProps {
   step: number;
   title: string;
@@ -8,7 +8,7 @@ export interface SuggestionsProps {
 export const Suggestions: React.FC<SuggestionsProps> = ({ step, title }) => {
   return (
     <>
-        <FormStepHeader>{title}</FormStepHeader>
+        <PlanningStepHeader>{title}</PlanningStepHeader>
         
     </>
   );

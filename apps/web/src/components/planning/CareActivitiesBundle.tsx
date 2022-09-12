@@ -1,4 +1,4 @@
-import {FormStepHeader} from '@components';
+import {PlanningStepHeader} from '@components';
 export interface CareActivitiesBundleProps {
   step: number;
   title: string;
@@ -7,7 +7,7 @@ export interface CareActivitiesBundleProps {
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ step, title }) => {
   return (
     <>
-        <FormStepHeader>{title}</FormStepHeader>
+        <PlanningStepHeader>{title}</PlanningStepHeader>
         
     </>
   );

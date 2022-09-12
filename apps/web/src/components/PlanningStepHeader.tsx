@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 /**
  * a styled header that auto focuses when the step parameter changes
  */
-export const FormStepHeader: React.FC = ({ children }) => {
+export const PlanningStepHeader: React.FC = ({ children }) => {
   const router = useRouter();
   const step = Number(router.query.step);
   const headerRef = useRef<HTMLHeadingElement>(null);
