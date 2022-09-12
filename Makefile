@@ -129,7 +129,7 @@ start-local: print-env start-local-db
 	@yarn 
 	@yarn start:local
 
-start-local-db:
+run-local-db:
 	@echo "++\n***** Starting local database\n++"
 	@docker-compose up -d db 
 	@echo "++\n*****"
@@ -150,6 +150,16 @@ run-local:
 	@docker-compose up --build -d
 	@echo "++\n*****"
 
+run-local-server:
+	@echo "++\n***** Starting local server\n++"
+	@docker-compose up -d api 
+	@echo "++\n*****"
+
+run-local-client:
+	@echo "++\n***** Starting local client\n++"
+	@docker-compose up -d web 
+	@echo "++\n*****"
+
 local-client-logs:
 	@docker logs $(PROJECT)_web --tail 25 --follow
 
@@ -161,6 +171,12 @@ local-common-logs:
 
 local-db-logs:
 	@docker logs $(PROJECT)_db --tail 25 --follow
+
+local-client-workspace:
+	@docker exec -it $(PROJECT)_web sh
+
+local-server-workspace:
+	@docker exec -it $(PROJECT)_api sh
 
 test-pa11y:
 	@make start-test-db

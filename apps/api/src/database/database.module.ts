@@ -4,8 +4,13 @@ import { join } from 'path';
 
 import { LoggerOptions } from 'typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { AllowedActivity } from '../entities/allowed-activities.entity';
+import { Bundle } from '../entities/bundle.entity';
+import { CareActivity } from '../entities/care-activity.entity';
+import { Occupation } from '../entities/occupation.entity';
 
 import config from '../ormconfig';
+import { SeedService } from './scripts/seed-service';
 
 const getEnvironmentSpecificConfig = (env?: string) => {
   switch (env) {
@@ -48,7 +53,11 @@ const appOrmConfig: PostgresConnectionOptions = {
 };
 
 @Module({
-  imports: [TypeOrmModule.forRoot(appOrmConfig)],
-  providers: [Logger],
+  imports: [
+    TypeOrmModule.forRoot(appOrmConfig),
+    TypeOrmModule.forFeature([Bundle, CareActivity, Occupation, AllowedActivity]),
+  ],
+  providers: [Logger, SeedService],
+  exports: [SeedService],
 })
 export class DatabaseModule {}

@@ -1,0 +1,24 @@
+﻿Care Location,Care Activity Bundles,Care Activities                                                                                                                                                                                     ,Respiratory Therapist,Speech Language Pathologist,Occupational Therapist,Physiotherapist,Rehabilitation Assistant,Registered Dietitian,Clinical Pharmacist,Pharmacy Technician,Registered Social Worker,Spiritual Health Provider,Indigenous Liaison (Hold for phase 2),Registered Nurse - Critical Care, Registered Nurse - Other (Med/Sx),Registered Psychiatric Nurse (RPN),Licensed Practical Nurse (LPN),ESN,HCA,"""Other - Non Clinical (Unit clerk, Porter, Etc.)""",Physician
+ICU,ICU Admission,Set up ICU room for new ICU patient admission,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,
+ICU,ICU Admission,Set up patient condition specific ICU room for new ICU patient admission,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,
+ICU,Admission,Perform basic room safety check for patient upon arrival,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,
+ICU,Admission,Perform patient condition specific safety check as per the profession's scope of practice/ provider's role description,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,
+ICU,ICU Admission,Orient patient and family to ICU in hospital,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),,
+ICU,ICU Admission,Admits patient into the ICU and determines ICU Admission Orders,,,,,,,,,,,,,,,,,,,X
+ICU,Admission,Obtain patient's medical information from patient/family/health occupation to transcribe in patient record,,,,,,,,,,,,X,c(e),c(e),c(e),c(e),,X,
+ICU,ICU Admission,Transcribes ICU Admission Orders,,,,,,,,,,,,X,c(e),c(e),c(e),c(e),,X,
+ICU,ICU Admission,Send requisitions based on ICU Admission Orders,c(e),c(e),c(e),c(e),,c(e),c(e),,,,,c(e),c(e),c(e),c(e),c(e),,X,
+ICU,ICU Admission,Review ICU Admission Orders for appropriateness as per the profession's scope of practice/ provider's role description,X,X,X,X,A,X,X,A,X,X,,X,X,X,A,,,,
+ICU,ICU Admission,Validate ICU Admission Orders as per the profession's scope of practice/ provider's role description,,,,,,,,,,,,X,c(e),,,,,,
+ICU,ICU Admission,Review admitting diagnosis and patient medical information/history and patient record as per the profession's scope of practice/ provider's role description for the purpose of developing a occupation-specific care plan,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,
+ICU,Medication,Obtain list of current medications from patient/family (part of Best Possible Medication History),X,X,X,X,,X,X,A,X,,,X,X,X,X,c(e),,,X
+ICU,Medication,Confirm list of current medications patient is taking (part of Best Possible Medication History),c(e),c(e),c(e),c(e),,c(e),X,A,c(e),,,X,X,X,c(e),,,,X
+ICU,Medication,Assess the appropriateness of all drugs taken together to minimize adverse reactions and complexity,,,,,,,X,,,,,X,c(e),A,,,,,
+ICU,Medication,Assess appropriateness of patient's prescribed drugs and make recommendations to prescriber as per the profession's scope of practice/ provider's role description.,X,,,,,X,X,,,,,X,,,,,,,
+ICU,Medication,Review patient medical information/history on medication allergies or adverse reactions to inform clinical decisions as per the profession's scope of practice/ provider's role description.,X,,,,,X,X,,,,,X,c(e),,,,,,
+ICU,Medication,"""Prescribe drugs (Schedule 1, 1A)""",,,,,,,,,,,,L,L,L,,,,,X
+ICU,Diagnostic imaging,Review x-ray to confirm placement of a medical device (e.g. central line),A,,,,,,,,,,,A,,,,,,,X
+ICU,Diagnostic imaging,Review x-ray to inform an occupation-specific care plan as per the profession's scope of practice/ provider's role description,X,,,X,,,,,,,,A,A,,,,,,X
+ICU,Diagnostic imaging,Interpretation of x-ray to provide a patient diagnosis,,,,,,,,,,,,,,,,,,,X
+ICU,Patient Assessment (General),Conduct patient physical assessment for the purpose of informing and monitoring the care plan as per the profession's scope of practice/ provider's role description,X,X,X,X,,X,,,,,,X,c(e),,,,,,X
+ICU,Patient Assessment (General),Conduct spiritual assessment for the purpose of  informing and monitoring the care plan as per the profession's scope of practice/ provider's role description,,,,,,,,,,X,,,,,,,,,

@@ -26,7 +26,8 @@
     "test": "echo 'Running tests' && wsrun --parallel --exclude-missing test",
     "test:seed": "scripts/seed-test-data.sh",
     "test:e2e": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn start:cypress'",
-    "test:pa11y": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn workspace @tbcm/accessibility start'"
+    "test:pa11y": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn workspace @tbcm/accessibility start'",
+    "db:seed-care-activities": "yarn workspace @tbcm/api db:seed-care-activities"
   },
   "workspaces": [
     "packages/*",

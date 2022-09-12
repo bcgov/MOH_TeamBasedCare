@@ -13,6 +13,7 @@ import { AppLogger } from './common/logger.service';
 import { ErrorExceptionFilter } from './common/error-exception.filter';
 import { TrimPipe } from './common/trim.pipe';
 import { API_PREFIX } from './config';
+import { Documentation } from './common/documentation';
 
 interface ValidationErrorMessage {
   property: string;
@@ -69,6 +70,11 @@ export async function createNestApp(): Promise<{
 
   // Api prefix api/v1/
   app.setGlobalPrefix(API_PREFIX);
+
+  // Enabling Documentation
+  if (process.env.NODE_ENV !== 'production') {
+    Documentation(app);
+  }
 
   // Validation pipe
   app.useGlobalPipes(new TrimPipe(), new ValidationPipe(validationPipeConfig));
