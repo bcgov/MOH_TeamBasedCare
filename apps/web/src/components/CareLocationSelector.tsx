@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dropdown } from './Dropdown';
-import { getCareLocations } from '../services/carelocations';
+import { useHttp } from '../services/useHttp';
+import { REQUEST_METHOD } from '../common';
 
 interface UnitProps {
   id: string;
@@ -8,13 +9,20 @@ interface UnitProps {
 }
 
 export const CareLocationSelector = () => {
+  const http = useHttp();
   const [careLocations, setCareLocations] = React.useState([]);
 
   React.useEffect(() => {
     (async () => {
-      setCareLocations(
-        (await getCareLocations()).map((unit: UnitProps) => ({ ...unit, value: unit.unitName })),
-      );
+      const config = { endpoint: '/carelocations', method: REQUEST_METHOD.GET };
+
+      await http.fetchData(config, (data: any) => {
+        setCareLocations(
+          data.map((unit: UnitProps) => {
+            return { ...unit, value: unit.unitName };
+          }),
+        );
+      });
     })();
   }, []);
 

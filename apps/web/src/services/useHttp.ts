@@ -34,7 +34,6 @@ export const useHttp = (): HttpReturn => {
       method: REQUEST_METHOD.GET,
       params: requestConfig?.params,
       data: requestConfig?.data,
-      signal: controller.signal,
     };
     try {
       setIsLoading(true);
