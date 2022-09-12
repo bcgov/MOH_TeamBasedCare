@@ -1,7 +1,7 @@
 import { Radio } from '@components';
 import { useState } from 'react';
 import { CareLocationSelector } from '../CareLocationSelector';
-import { formFormatting } from '../../common';
+import { planningFormBox } from '../../styles/styles';
 
 export interface ProfileProps {
   step: number;
@@ -35,7 +35,7 @@ export const Profile: React.FC<ProfileProps> = () => {
   };
   return (
     <div>
-      <div className={formFormatting}>
+      <div className={planningFormBox}>
         {/* <PlanningStepHeader>{title}</PlanningStepHeader> */}
         {/* <Textfield type="text" name="asdasdasd" label="qwerty" description="asdasdsadasdasdasdadd"/> */}
 
@@ -56,7 +56,7 @@ export const Profile: React.FC<ProfileProps> = () => {
       <div>
         <div>
           {displayDropdown ? (
-            <div className={formFormatting}>
+            <div className={planningFormBox}>
               <CareLocationSelector />
             </div>
           ) : null}

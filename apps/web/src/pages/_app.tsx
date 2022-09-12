@@ -4,8 +4,6 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../styles/globals.css';
-import axios from 'axios';
-axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL;
 
 function App({ Component, pageProps }: AppProps) {
   return (
@@ -15,7 +13,7 @@ function App({ Component, pageProps }: AppProps) {
         <link rel='icon' href='/assets/img/bc_favicon.ico' />
       </Head>
 
-      <main className="min-h-screen w-full bg-gray-100 text-gray-700" x-data="layout">
+      <main className='min-h-screen w-full bg-gray-100 text-gray-700' x-data='layout'>
         <Component {...pageProps} />
       </main>
       <ToastContainer

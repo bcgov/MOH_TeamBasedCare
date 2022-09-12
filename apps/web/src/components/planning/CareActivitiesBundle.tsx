@@ -1,5 +1,6 @@
 import { PlanningStepHeader } from '@components';
-import { formFormatting } from '../../common';
+import { planningFormBox } from '../../styles/styles';
+
 export interface CareActivitiesBundleProps {
   step: number;
   title: string;
@@ -7,7 +8,7 @@ export interface CareActivitiesBundleProps {
 
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
   return (
-    <div className={formFormatting}>
+    <div className={planningFormBox}>
       <PlanningStepHeader>{title}</PlanningStepHeader>
     </div>
   );
