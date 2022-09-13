@@ -7,6 +7,14 @@ import { Injectable } from '@nestjs/common';
 export class PlanningSessionService {
   constructor(
     @InjectRepository(PlanningSession)
-    private unitsRepository: Repository<PlanningSession>,
+    private planningSessionrepository: Repository<PlanningSession>,
   ) {}
+
+  async createPlanningSession(): Promise<PlanningSession> {
+    const planningSession = this.planningSessionrepository.create();
+
+    await this.planningSessionrepository.save(planningSession);
+
+    return planningSession;
+  }
 }
