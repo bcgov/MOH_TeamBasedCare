@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
 import { Formik, Form } from 'formik';
 import { PlanningSteps } from '../common/constants';
+// import { usePlanningSession } from '../services/usePlanningSession';
 
 interface PlanningWrapperFormValues {
   firstName: string;
@@ -9,6 +10,8 @@ interface PlanningWrapperFormValues {
 }
 
 export const PlanningWrapper = () => {
+  // const { planningSession } = usePlanningSession();
+
   const [currentStep, setCurrentStep] = useState(1);
   const isFirstStep = currentStep === 1;
 
