@@ -10,6 +10,7 @@ import { CareActivity } from '../../entities/care-activity.entity';
 import { Occupation } from '../../entities/occupation.entity';
 import { Permissions } from '../../common/constants';
 import { Readable } from 'stream';
+import { Unit } from '../../unit/entity/unit.entity';
 
 @Injectable()
 export class SeedService {
@@ -23,12 +24,15 @@ export class SeedService {
     private readonly occupationRepo: Repository<Occupation>,
     @InjectRepository(AllowedActivity)
     private readonly allowedActRepo: Repository<AllowedActivity>,
+    @InjectRepository(Unit)
+    private readonly unitRepo: Repository<Unit>,
   ) {}
 
   async updateCareActivities(file: Buffer): Promise<void> {
     let headers: string[];
     const bundleVsCareActivity: { [key: string]: string[] } = {};
     const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
+    const careLocations = new Set<string>();
 
     let bundleName: string;
 
@@ -46,6 +50,7 @@ export class SeedService {
         }
         bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
         const activityName = data[headers[2]].trim().replace(/"/g, '');
+        careLocations.add(data[headers[0]].trim().replace(/"/g, ''));
         let activityList: string[] = [];
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
@@ -108,6 +113,8 @@ export class SeedService {
             this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
           }),
         );
+
+        await this.saveCareLocations(Array.from(careLocations));
       });
   }
 
@@ -193,6 +200,22 @@ export class SeedService {
         conflict_target: ['id'],
         overwrite: ['permission'],
       })
+      .execute();
+  }
+
+  private async saveCareLocations(locations: string[]): Promise<void> {
+    this.unitRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Unit)
+      .values(
+        locations.map(location => {
+          return this.unitRepo.create({
+            unitName: location,
+          });
+        }),
+      )
+      .orIgnore()
       .execute();
   }
 }

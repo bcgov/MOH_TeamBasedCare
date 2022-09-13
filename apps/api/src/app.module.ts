@@ -11,12 +11,13 @@ import { SeedService } from './database/scripts/seed-service';
 import { CareActivity } from './entities/care-activity.entity';
 import { Occupation } from './entities/occupation.entity';
 import { AllowedActivity } from './entities/allowed-activities.entity';
+import { Unit } from './unit/entity/unit.entity';
 
 @Module({
   imports: [
     DatabaseModule,
     UnitModule,
-    TypeOrmModule.forFeature([Bundle, CareActivity, Occupation, AllowedActivity]),
+    TypeOrmModule.forFeature([Bundle, CareActivity, Occupation, AllowedActivity, Unit]),
   ],
   controllers: [AppController],
   providers: [Logger, AppLogger, AppService, SeedService],
