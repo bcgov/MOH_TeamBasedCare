@@ -13,7 +13,7 @@ function App({ Component, pageProps }: AppProps) {
         <link rel='icon' href='/assets/img/bc_favicon.ico' />
       </Head>
 
-      <main className="min-h-screen w-full bg-gray-100 text-gray-700" x-data="layout">
+      <main className='min-h-screen w-full bg-gray-100 text-gray-700' x-data='layout'>
         <Component {...pageProps} />
       </main>
       <ToastContainer

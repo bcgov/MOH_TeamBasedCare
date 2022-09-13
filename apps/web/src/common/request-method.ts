@@ -7,6 +7,5 @@ export enum REQUEST_METHOD {
 }
 
 export const API_ENDPOINT = {
-  //TODO: remove this endpoint once actual endpoints are added
-  USER: '/user',
+  CARE_LOCATIONS: '/carelocations',
 };

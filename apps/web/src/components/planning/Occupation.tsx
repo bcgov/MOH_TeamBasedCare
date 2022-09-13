@@ -1,14 +1,15 @@
+import { PlanningStepHeader } from '@components';
+import { planningFormBox } from '../../styles/styles';
 
-import {PlanningStepHeader} from '@components';
 export interface OccupationProps {
   step: number;
   title: string;
 }
 
-export const Occupation: React.FC<OccupationProps> = ({ step, title }) => {
+export const Occupation: React.FC<OccupationProps> = ({ title }) => {
   return (
-    <>
-        <PlanningStepHeader>{title}</PlanningStepHeader>
-    </>
+    <div className={planningFormBox}>
+      <PlanningStepHeader>{title}</PlanningStepHeader>
+    </div>
   );
 };

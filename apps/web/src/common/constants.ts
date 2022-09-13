@@ -37,5 +37,10 @@ export const sidebarNavItems: SidebarButtonProps[] = [
   },
 ];
 
-export const PlanningSteps = ["Profile", "Care Activities Bundles", "Occupation", "Activities Gap", "Suggestions"];
-
+export const PlanningSteps = [
+  'Profile',
+  'Care Activities Bundles',
+  'Occupation',
+  'Activities Gap',
+  'Suggestions',
+];

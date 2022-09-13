@@ -1,14 +1,15 @@
-import {PlanningStepHeader} from '@components';
+import { PlanningStepHeader } from '@components';
+import { planningFormBox } from '../../styles/styles';
+
 export interface CareActivitiesBundleProps {
   step: number;
   title: string;
 }
 
-export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ step, title }) => {
+export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
   return (
-    <>
-        <PlanningStepHeader>{title}</PlanningStepHeader>
-        
-    </>
+    <div className={planningFormBox}>
+      <PlanningStepHeader>{title}</PlanningStepHeader>
+    </div>
   );
 };

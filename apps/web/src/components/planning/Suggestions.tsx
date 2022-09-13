@@ -1,15 +1,15 @@
+import { PlanningStepHeader } from '@components';
+import { planningFormBox } from '../../styles/styles';
 
-import {PlanningStepHeader} from '@components';
 export interface SuggestionsProps {
   step: number;
   title: string;
 }
 
-export const Suggestions: React.FC<SuggestionsProps> = ({ step, title }) => {
+export const Suggestions: React.FC<SuggestionsProps> = ({ title }) => {
   return (
-    <>
-        <PlanningStepHeader>{title}</PlanningStepHeader>
-        
-    </>
+    <div className={planningFormBox}>
+      <PlanningStepHeader>{title}</PlanningStepHeader>
+    </div>
   );
 };
