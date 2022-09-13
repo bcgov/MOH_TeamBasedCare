@@ -14,7 +14,7 @@ import { SUCCESS_RESPONSE } from './common/constants';
 
 class UpdateScriptDTO {
   @ApiProperty({ type: 'string', format: 'binary' })
-  image: any;
+  file: any;
 }
 
 @Controller()
@@ -43,7 +43,7 @@ export class AppController {
     summary: 'Runs script to update care activities',
   })
   @Patch('/update-care-activities')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
   async updateCareActivities(@UploadedFile() file: any) {
