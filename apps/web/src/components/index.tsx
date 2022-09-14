@@ -15,3 +15,4 @@ export * from './Header';
 export * from './PageTitle';
 export * from './Sidebar';
 export * from './LeftSideBarActivites';
+export * from './RightSideBarActivities';
