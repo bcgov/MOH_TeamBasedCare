@@ -32,7 +32,7 @@ export const PlanningWrapper = () => {
   return (
     <>
       <div
-        className='w-full flex items-center justify-between print:hidden rounded border-2 bg-white p-2 mt-4'
+        className='w-full flex items-center justify-between print:hidden rounded border-2 bg-white p-1 mt-4'
         aria-hidden
       >
         <div className='flex items-center space-x-2'>
@@ -42,7 +42,7 @@ export const PlanningWrapper = () => {
           <Button
             variant='outline'
             type='button'
-            classes={`ml-2 ${isFirstStep && 'hidden'}`}
+            classes={`ml-2`}
             disabled={isFirstStep}
             onClick={handlePreviousStep}
           >
@@ -51,7 +51,7 @@ export const PlanningWrapper = () => {
           <Button
             variant='primary'
             type='button'
-            classes={`ml-2 ${currentStep >= PlanningSteps.length && 'hidden'}`}
+            classes={`ml-2`}
             disabled={currentStep >= PlanningSteps.length}
             onClick={handleNextStep}
           >
