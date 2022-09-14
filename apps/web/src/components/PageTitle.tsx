@@ -1,19 +1,17 @@
 
-
 export interface PageTitleProps {
     title: string;
     description: string;
+    
   }
   
-export const PageTitle: React.FC<PageTitleProps> = ({ title, description }) => {
+export const PageTitle: React.FC<PageTitleProps> = ({ title, description, children}) => {
   return (<>
-  <h1
-      tabIndex={-1}
-      className='text-bcBluePrimary text-left text-4xl text-bold focus:outline-none mt-5'
-    >
-      {title}
-    </h1>
-    <p className='text-bcBluePrimary text-left'>{description}</p>
+    <div className="flex items-center space-x-2">
+        {children}
+        <h1 className="text-2xl text-bcBluePrimary flex-col items-start">{title}</h1>
+    </div>    
+    <p className='text-sm text-gray-400'>{description}</p>
   </>
     
   );
