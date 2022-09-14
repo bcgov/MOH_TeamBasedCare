@@ -12,12 +12,22 @@ import { CareActivity } from './entities/care-activity.entity';
 import { Occupation } from './entities/occupation.entity';
 import { AllowedActivity } from './entities/allowed-activities.entity';
 import { Unit } from './unit/entity/unit.entity';
+import { PlanningSession } from './planning-session/entity/planning-session.entity';
+import { PlanningSessionModule } from './planning-session/planning-session.module';
 
 @Module({
   imports: [
     DatabaseModule,
     UnitModule,
-    TypeOrmModule.forFeature([Bundle, CareActivity, Occupation, AllowedActivity, Unit]),
+    PlanningSessionModule,
+    TypeOrmModule.forFeature([
+      Bundle,
+      CareActivity,
+      Occupation,
+      AllowedActivity,
+      Unit,
+      PlanningSession,
+    ]),
   ],
   controllers: [AppController],
   providers: [Logger, AppLogger, AppService, SeedService],
