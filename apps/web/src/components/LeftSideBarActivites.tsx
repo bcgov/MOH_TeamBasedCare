@@ -34,6 +34,38 @@ export const data =[
         name: "Medical Review",
         selection: "24/4"
     },
+    {
+        name: "Airways assesment & Mangement",
+        selection: "24/4"
+    },
+    {
+        name: "ADLs",
+        selection: "24/4"
+    },
+    {
+        name: "Cognitive Assesment",
+        selection: "24/4"
+    },
+    {
+        name: "Medical Review",
+        selection: "24/4"
+    },
+    {
+        name: "Airways assesment & Mangement",
+        selection: "24/4"
+    },
+    {
+        name: "ADLs",
+        selection: "24/4"
+    },
+    {
+        name: "Cognitive Assesment",
+        selection: "24/4"
+    },
+    {
+        name: "Medical Review",
+        selection: "24/4"
+    },
 ]
 
 export interface LeftSideBarActivitesProps {
@@ -78,8 +110,8 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                 onChange={handleSearch}
             />
            
-            <div className="max-h-screen overflow-y-auto">
-                <ul role="list" className="max-h-screen overflow-y-auto">
+            <div className="mt-4" style={{overflow: "auto", maxHeight: "400px"}}>
+                <ul role="list">
                     { !_.isEmpty(filteredData) ?
                         filteredData.map((item, index) => {
                                 return (
