@@ -23,4 +23,8 @@ export class AppService {
   async updateCareActivities(file: Buffer) {
     await this.seedService.updateCareActivities(file);
   }
+
+  async updateOccupations(file: Buffer) {
+    await this.seedService.updateOccupations(file);
+  }
 }

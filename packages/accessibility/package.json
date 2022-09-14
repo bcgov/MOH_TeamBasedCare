@@ -1,5 +1,6 @@
 {
   "name": "@tbcm/accessibility",
+  "version": "0.0.1",
   "packageManager": "yarn@3.1.0",
   "scripts": {
     "debug": "DEBUG=true pa11y-ci --config ./src/pa11y-ci.js",
