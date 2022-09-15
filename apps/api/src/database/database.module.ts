@@ -5,8 +5,8 @@ import { join } from 'path';
 import { LoggerOptions } from 'typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
-import { Bundle } from '../entities/bundle.entity';
-import { CareActivity } from '../entities/care-activity.entity';
+import { Bundle } from '../care-activity/entity/bundle.entity';
+import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from '../entities/occupation.entity';
 
 import config from '../ormconfig';
@@ -56,9 +56,9 @@ const appOrmConfig: PostgresConnectionOptions = {
 @Module({
   imports: [
     TypeOrmModule.forRoot(appOrmConfig),
-    TypeOrmModule.forFeature([Bundle, CareActivity, Occupation, AllowedActivity, Unit]),
+    TypeOrmModule.forFeature([CareActivity, Occupation, AllowedActivity, Unit, Bundle]),
   ],
   providers: [Logger, SeedService],
-  exports: [SeedService],
+  exports: [SeedService, TypeOrmModule],
 })
 export class DatabaseModule {}

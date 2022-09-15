@@ -6,11 +6,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { cleanText } from '../common/utils';
+import { cleanText } from '../../common/utils';
 import { CareActivity } from './care-activity.entity';
-import { CustomBaseEntity } from './custom-base.entity';
+import { CustomBaseEntity } from '../../common/custom-base.entity';
 
-@Entity('bundle')
+@Entity()
 export class Bundle extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
