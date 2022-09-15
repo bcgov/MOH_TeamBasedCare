@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   db:
@@ -7,7 +7,7 @@ services:
     volumes:
       - ./database:/database
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       - POSTGRES_USER=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -22,7 +22,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    command: "yarn watch:common"
+    command: 'yarn watch:common'
     volumes:
       - ./node_modules:/node_modules
       - ./packages:/packages
@@ -32,13 +32,13 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    command: "yarn watch:api"
+    command: 'yarn watch:api'
     volumes:
       - ./node_modules:/node_modules
       - ./apps/api:/apps/api
       - ./packages:/packages
     ports:
-      - "4000:4000"
+      - '4000:4000'
     env_file:
       - ./.env
     environment:
@@ -57,13 +57,13 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    command: "yarn watch:web"
+    command: 'yarn watch:web'
     volumes:
       - ./node_modules:/node_modules
       - ./apps/web:/apps/web
       - ./packages:/packages
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
       - RUNTIME_ENV=local

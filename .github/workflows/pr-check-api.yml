@@ -2,8 +2,8 @@ name: API PR Checks
 on:
   pull_request:
     paths:
-      - "apps/api/**"
-      - "packages/common/**"
+      - 'apps/api/**'
+      - 'packages/common/**'
 
 jobs:
   pr-checks:

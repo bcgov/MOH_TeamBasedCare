@@ -2,7 +2,7 @@ name: Common PR Checks
 on:
   pull_request:
     paths:
-      - "packages/common/**"
+      - 'packages/common/**'
 
 jobs:
   pr-checks:

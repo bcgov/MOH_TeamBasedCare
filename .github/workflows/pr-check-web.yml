@@ -2,8 +2,8 @@ name: Web PR Checks
 on:
   pull_request:
     paths:
-      - "apps/web/**"
-      - "packages/common/**"
+      - 'apps/web/**'
+      - 'packages/common/**'
 
 jobs:
   pr-checks:
