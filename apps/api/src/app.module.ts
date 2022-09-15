@@ -8,9 +8,16 @@ import { UnitModule } from './unit/unit.module';
 import { SeedService } from './database/scripts/seed-service';
 import { PlanningSessionModule } from './planning-session/planning-session.module';
 import { CareActivityModule } from './care-activity/care-activity.module';
+import { OccupationModule } from './occupation/occupation.module';
 
 @Module({
-  imports: [DatabaseModule, UnitModule, PlanningSessionModule, CareActivityModule],
+  imports: [
+    DatabaseModule,
+    UnitModule,
+    PlanningSessionModule,
+    CareActivityModule,
+    OccupationModule,
+  ],
   controllers: [AppController],
   providers: [Logger, AppLogger, AppService, SeedService],
 })

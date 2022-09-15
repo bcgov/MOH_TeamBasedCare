@@ -6,9 +6,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { cleanText } from '../common/utils';
-import { AllowedActivity } from './allowed-activities.entity';
-import { CustomBaseEntity } from '../common/custom-base.entity';
+import { cleanText } from '../../common/utils';
+import { AllowedActivity } from '../../entities/allowed-activities.entity';
+import { CustomBaseEntity } from '../../common/custom-base.entity';
 
 @Entity()
 export class Occupation extends CustomBaseEntity {
