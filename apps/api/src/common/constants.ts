@@ -13,3 +13,14 @@ export enum Permissions {
   CONTINUED_EDUCATION = 'C(E)',
   LIMITS = 'L',
 }
+
+export enum CareActivityType {
+  ASPECT_OF_PRACTICE = 'Aspect of Practice',
+  TASK = 'Task',
+  RESTRICTED_ACTIVITY = 'Restricted Activity',
+}
+
+export enum ClinicalType {
+  CLINICAL = 'Clinical',
+  SUPPORT = 'Clinical Support',
+}

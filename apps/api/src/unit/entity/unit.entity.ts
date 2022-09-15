@@ -1,6 +1,6 @@
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { CareActivity } from '../../entities/care-activity.entity';
-import { CustomBaseEntity } from '../../entities/custom-base.entity';
+import { CareActivity } from '../../care-activity/entity/care-activity.entity';
+import { CustomBaseEntity } from '../../common/custom-base.entity';
 
 @Entity()
 export class Unit extends CustomBaseEntity {

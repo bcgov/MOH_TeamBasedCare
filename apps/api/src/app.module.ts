@@ -5,30 +5,12 @@ import { DatabaseModule } from './database/database.module';
 import { AppLogger } from './common/logger.service';
 import { LoggerMiddleware } from './logger.middleware';
 import { UnitModule } from './unit/unit.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Bundle } from './entities/bundle.entity';
 import { SeedService } from './database/scripts/seed-service';
-import { CareActivity } from './entities/care-activity.entity';
-import { Occupation } from './entities/occupation.entity';
-import { AllowedActivity } from './entities/allowed-activities.entity';
-import { Unit } from './unit/entity/unit.entity';
-import { PlanningSession } from './planning-session/entity/planning-session.entity';
 import { PlanningSessionModule } from './planning-session/planning-session.module';
+import { CareActivityModule } from './care-activity/care-activity.module';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    UnitModule,
-    PlanningSessionModule,
-    TypeOrmModule.forFeature([
-      Bundle,
-      CareActivity,
-      Occupation,
-      AllowedActivity,
-      Unit,
-      PlanningSession,
-    ]),
-  ],
+  imports: [DatabaseModule, UnitModule, PlanningSessionModule, CareActivityModule],
   controllers: [AppController],
   providers: [Logger, AppLogger, AppService, SeedService],
 })

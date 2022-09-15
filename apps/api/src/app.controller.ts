@@ -50,4 +50,16 @@ export class AppController {
     await this.appService.updateCareActivities(file.buffer);
     return SUCCESS_RESPONSE;
   }
+
+  @ApiOperation({
+    summary: 'Runs script to update occupation list',
+  })
+  @Patch('/update-occupation')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({ type: UpdateScriptDTO })
+  @ApiConsumes('multipart/form-data')
+  async updateOccupations(@UploadedFile() file: any) {
+    await this.appService.updateOccupations(file.buffer);
+    return SUCCESS_RESPONSE;
+  }
 }
