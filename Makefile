@@ -5,7 +5,7 @@
 export $(shell sed 's/=.*//' ./.env)
 
 # Project
-export PROJECT := team_based_care
+export PROJECT := tbcm
 
 # Runtime and application Environments specific variable
 export ENV_NAME ?= dev
@@ -39,23 +39,18 @@ export BOOTSTRAP_ENV=terraform/bootstrap
 
 ifeq ($(ENV_NAME), prod)
 DOMAIN=tbcm.gov.bc.ca
-NEXT_PUBLIC_AUTH_URL=https://common-logon.hlth.gov.bc.ca/auth
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_PROD)
 DB_HOST = $(DB_HOST_PROD)
-BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_PROD)
 endif
 
-ifeq ($(ENV_NAME), dev) 
-DOMAIN=dev.tbcm.freshworks.club
-NEXT_PUBLIC_AUTH_URL = https://keycloak.freshworks.club/auth
-NEXT_PUBLIC_AUTH_REALM = tbcm
+ifeq ($(ENV_NAME), dev)
+NEXT_PUBLIC_API_URL=https://d3qshnmydybt5m.cloudfront.net/api
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_DEV)
 DB_HOST = $(DB_HOST_DEV)
 endif
 
 ifeq ($(ENV_NAME), test) 
 DOMAIN=test.tbcm.freshworks.club
-NEXT_PUBLIC_AUTH_URL = https://common-logon-test.hlth.gov.bc.ca/auth
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
 DB_HOST = $(DB_HOST_PROD_TEST)
 endif
@@ -68,16 +63,15 @@ app_sources = "build/app"
 app_sources_bucket = "$(APP_SRC_BUCKET)"
 domain = "$(DOMAIN)"
 db_username = "$(POSTGRES_USERNAME)"
-ches_cltbcmt_id = "$(CHES_CLtbcmT_ID)"
-mail_from = "$(MAIL_FROM)"
 build_id = "$(COMMIT_SHA)"
 build_info = "$(LAST_COMMIT_MESSAGE)"
+region = "$(AWS_REGION)"
 endef
 export TFVARS_DATA
 
 # Terraform cloud backend config variables
 # LZ2 
-LZ2_PROJECT = uux0vy
+LZ2_PROJECT = hzy4co
 
 # Terraform Cloud backend config variables
 define TF_BACKEND_CFG
@@ -230,7 +224,6 @@ build-api:
 
 build-web:
 	@echo "++\n***** Building Web for AWS\n++"
-	@yarn workspace @tbcm/web build
 	@yarn workspace @tbcm/web export
 	@mv ./apps/web/out ./terraform/build/app
 	@echo "++\n*****"
@@ -277,8 +270,6 @@ deploy-app:
 # Full redirection to /dev/null is required to not leak env variables
 deploy-api:
 	aws lambda update-function-code --function-name tbcm-$(ENV_NAME)-api --zip-file fileb://./terraform/build/api.zip --region $(AWS_REGION) > /dev/null
-	aws lambda update-function-code --function-name tbcm-$(ENV_NAME)-syncdata --zip-file fileb://./terraform/build/api.zip --region $(AWS_REGION) > /dev/null
-	aws lambda update-function-code --function-name tbcm-$(ENV_NAME)-notifylambda --zip-file fileb://./terraform/build/api.zip --region $(AWS_REGION) > /dev/null
 
 deploy-all: sync-app deploy-api
 	@echo "Deploying Webapp and API"

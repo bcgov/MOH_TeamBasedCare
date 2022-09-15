@@ -72,9 +72,7 @@ export async function createNestApp(): Promise<{
   app.setGlobalPrefix(API_PREFIX);
 
   // Enabling Documentation
-  if (process.env.NODE_ENV !== 'production') {
-    Documentation(app);
-  }
+  Documentation(app);
 
   // Validation pipe
   app.useGlobalPipes(new TrimPipe(), new ValidationPipe(validationPipeConfig));

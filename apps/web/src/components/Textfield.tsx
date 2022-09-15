@@ -1,6 +1,6 @@
-import classnames from 'classnames';
-import { Error, Label, Description } from '@components';
-import { Field as FormikField, useField, FieldConfig } from 'formik';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Label, Description } from '@components';
+import { Field as FormikField, FieldConfig } from 'formik';
 
 export interface TextfieldProps extends FieldConfig {
   name: string;
@@ -25,7 +25,6 @@ export const Textfield: React.FC<TextfieldProps> = props => {
     children,
   } = props;
 
-  
   // const [field, meta] = useField(name);
 
   return (
@@ -39,19 +38,14 @@ export const Textfield: React.FC<TextfieldProps> = props => {
       <FormikField
         id={name}
         aria-describedby={description ? `${name}-description` : null}
-        className={
-            `w-full rounded-none bg-gray-100 block h-10
-            border-b-2 border-bcBlack pl-1 disabled:bg-bcDisabled`
-            
-        }
+        className={`w-full rounded-none bg-gray-100 block h-10
+            border-b-2 border-bcBlack pl-1 disabled:bg-bcDisabled`}
         disabled={disabled}
         as={as}
         type={type}
         maxLength={maxLength}
         component={component}
-       
       />
-        
 
       {/* <Error name={name} /> */}
     </div>

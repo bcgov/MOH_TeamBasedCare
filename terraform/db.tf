@@ -8,7 +8,7 @@ resource "aws_rds_cluster_instance" "pgsql" {
   count              = var.target_env == "prod" ? 2 : 1
   identifier         = "${local.db_name}-${count.index}"
   cluster_identifier = aws_rds_cluster.pgsql.id
-  instance_class     = "db.r5.large"
+  instance_class     = "db.t4g.large"
   engine             = aws_rds_cluster.pgsql.engine
   engine_version     = aws_rds_cluster.pgsql.engine_version
 }
@@ -16,7 +16,7 @@ resource "aws_rds_cluster_instance" "pgsql" {
 resource "aws_rds_cluster" "pgsql" {
   cluster_identifier  = local.db_name
   engine              = "aurora-postgresql"
-  engine_version      = "13.6"
+  engine_version      = "14.3"
   availability_zones  = ["ca-central-1a", "ca-central-1b"]
   database_name       = replace(var.project_code, "-", "_")
   master_username     = var.db_username
