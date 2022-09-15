@@ -7,11 +7,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { CareActivityType, ClinicalType } from '../common/constants';
-import { cleanText } from '../common/utils';
-import { AllowedActivity } from './allowed-activities.entity';
+import { CareActivityType, ClinicalType } from '../../common/constants';
+import { cleanText } from '../../common/utils';
+import { AllowedActivity } from '../../entities/allowed-activities.entity';
 import { Bundle } from './bundle.entity';
-import { CustomBaseEntity } from './custom-base.entity';
+import { CustomBaseEntity } from '../../common/custom-base.entity';
 
 @Entity()
 export class CareActivity extends CustomBaseEntity {

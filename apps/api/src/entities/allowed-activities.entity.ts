@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Permissions } from '../common/constants';
-import { CareActivity } from './care-activity.entity';
-import { CustomBaseEntity } from './custom-base.entity';
+import { CareActivity } from '../care-activity/entity/care-activity.entity';
+import { CustomBaseEntity } from '../common/custom-base.entity';
 import { Occupation } from './occupation.entity';
 
 @Entity()

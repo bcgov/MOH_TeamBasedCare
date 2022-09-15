@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { cleanText } from '../common/utils';
 import { AllowedActivity } from './allowed-activities.entity';
-import { CustomBaseEntity } from './custom-base.entity';
+import { CustomBaseEntity } from '../common/custom-base.entity';
 
 @Entity()
 export class Occupation extends CustomBaseEntity {
