@@ -6,6 +6,8 @@ import { PlanningSteps } from '../common/constants';
 interface PlanningWrapperFormValues {
   firstName: string;
   lastName: string;
+  careActivityID: string;
+  carActivityBundle: [];
 }
 
 export const PlanningWrapper = () => {
@@ -15,6 +17,8 @@ export const PlanningWrapper = () => {
   const initialValues: PlanningWrapperFormValues = {
     firstName: 'Bob',
     lastName: 'Loblaw',
+    careActivityID: '3dd33805-a813-4cab-8576-e06355f16074',
+    carActivityBundle: [],
   };
 
   const handleNextStep = () => {
@@ -60,14 +64,14 @@ export const PlanningWrapper = () => {
         <Formik
           initialValues={initialValues}
           onSubmit={(values, actions) => {
-            alert(JSON.stringify(values, null, 2));
+            console.log(JSON.stringify(values, null, 2));
             actions.setSubmitting(false);
           }}
         >
           <Form className='w-full'>
             <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
 
-            {/* <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button> */}
+            <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button>
           </Form>
         </Formik>
       </div>
