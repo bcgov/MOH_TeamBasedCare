@@ -28,13 +28,6 @@ export const sidebarNavItems: SidebarButtonProps[] = [
       },
     ],
   },
-  {
-    id: '005',
-    kind: SidebarButtonKind.REGULAR,
-    text: 'Testing Spacing',
-    active: false,
-    faIcon: faUsers,
-  },
 ];
 
 export const PlanningSteps = [

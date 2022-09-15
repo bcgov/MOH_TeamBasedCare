@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { AxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
 import { AxiosPublic } from '../utils';
@@ -13,19 +13,12 @@ type HttpReturn = {
 
 export const useHttp = (): HttpReturn => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const controller = new AbortController();
 
   const errorHandler = (err: any) => {
     if (err?.response?.status === 400) {
-      toast.error({
-        status: 'error',
-        message: 'Kindly verify the input',
-      });
+      toast.error('Kindly verify the input');
     } else {
-      toast.error({
-        status: 'error',
-        message: err?.response?.data?.message ?? 'Error fetching data',
-      });
+      toast.error(err?.response?.data?.message ?? 'Error fetching data');
     }
   };
 
@@ -62,12 +55,6 @@ export const useHttp = (): HttpReturn => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    return () => {
-      controller.abort();
-    };
-  });
 
   return {
     sendApiRequest,

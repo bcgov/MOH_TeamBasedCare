@@ -9,7 +9,7 @@ interface UnitProps {
 
 export const useCareLocations = () => {
   const { fetchData, isLoading } = useHttp();
-  const [careLocations, setCareLocations] = useState();
+  const [careLocations, setCareLocations] = useState([]);
 
   useEffect(() => {
     const config = { endpoint: API_ENDPOINT.CARE_LOCATIONS };

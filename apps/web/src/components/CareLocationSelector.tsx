@@ -1,12 +1,16 @@
 import React from 'react';
-import { Dropdown } from './Dropdown';
 import { useCareLocations } from '../services/useCareLocations';
+import { Dropdown } from './generic/Dropdown';
 
 export const CareLocationSelector = () => {
   const { careLocations } = useCareLocations();
   return (
     <>
-      <Dropdown dropdownOptions={careLocations}></Dropdown>
+      <Dropdown
+        label={'Select Care Location Profile'}
+        options={careLocations}
+        id='careunits'
+      ></Dropdown>
     </>
   );
 };

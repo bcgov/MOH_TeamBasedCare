@@ -9,7 +9,7 @@ function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Team based care mapping</title>
+        <title>Team basedsdsds care mapping</title>
         <link rel='icon' href='/assets/img/bc_favicon.ico' />
       </Head>
 
@@ -17,8 +17,8 @@ function App({ Component, pageProps }: AppProps) {
         <Component {...pageProps} />
       </main>
       <ToastContainer
-        style={{ width: '50%' }}
-        position='top-center'
+        style={{ width: '30%', maxWidth: '675px' }}
+        position='top-right'
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
