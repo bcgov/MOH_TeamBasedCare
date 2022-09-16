@@ -37,3 +37,8 @@ export const PlanningSteps = [
   'Activities Gap',
   'Suggestions',
 ];
+
+export enum TagStyles {
+  BLUE = 'blue',
+  GREEN = 'green',
+}
