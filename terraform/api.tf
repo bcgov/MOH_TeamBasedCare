@@ -2,12 +2,12 @@ resource "aws_lambda_function" "api" {
   description      = "API for ${local.namespace}"
   function_name    = local.api_name
   role             = aws_iam_role.lambda.arn
-  runtime          = "nodejs14.x"
+  runtime          = "nodejs16.x"
   filename         = "./build/empty_lambda.zip"
   source_code_hash = filebase64sha256("./build/empty_lambda.zip")
   handler          = "api/lambda.handler" # TODO update 
   memory_size      = var.function_memory_mb
-  timeout          = 30
+  timeout          = 900
 
   vpc_config {
     security_group_ids = [data.aws_security_group.app.id]
@@ -29,8 +29,6 @@ resource "aws_lambda_function" "api" {
     variables = {
       NODE_ENV          = "production"
       RUNTIME_ENV       = "hosted"
-      AUTH_URL          = data.aws_ssm_parameter.keycloak_url.value
-      AUTH_REALM         = data.aws_ssm_parameter.keycloak_realm.value
       TARGET_ENV        = var.target_env
       AWS_S3_REGION     = var.region
       BUILD_ID          = var.build_id
@@ -39,10 +37,6 @@ resource "aws_lambda_function" "api" {
       POSTGRES_PASSWORD = data.aws_ssm_parameter.postgres_password.value
       POSTGRES_HOST     = aws_rds_cluster.pgsql.endpoint
       POSTGRES_DATABASE = aws_rds_cluster.pgsql.database_name
-      HMBC_ATS_BASE_URL = data.aws_ssm_parameter.hmbc_ats_base_url.value
-      HMBC_ATS_AUTH_KEY = data.aws_ssm_parameter.hmbc_ats_auth_key.value
-      SQS_QUEUE_URL     = aws_sqs_queue.terraform_queue.url
-      JWT_SECRET        = data.aws_ssm_parameter.sync_jwt_secret.value
       # MAIL_FROM                = var.mail_from
       # CHES_CLIENT_ID           = var.ches_client_id
       # CHES_CLIENT_SECRET       = data.aws_ssm_parameter.ches_client_secret.value

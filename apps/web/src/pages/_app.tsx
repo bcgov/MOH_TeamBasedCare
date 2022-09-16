@@ -2,7 +2,6 @@ import Head from 'next/head';
 import type { AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
-import 'react-datepicker/dist/react-datepicker.css';
 import '../styles/globals.css';
 
 function App({ Component, pageProps }: AppProps) {
@@ -17,8 +16,8 @@ function App({ Component, pageProps }: AppProps) {
         <Component {...pageProps} />
       </main>
       <ToastContainer
-        style={{ width: '50%' }}
-        position='top-center'
+        style={{ width: '30%', maxWidth: '675px' }}
+        position='top-right'
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}

@@ -3,12 +3,12 @@ import { AppLogger } from '../../common/logger.service';
 import csv from 'csv-parser';
 import { AllowedActivity } from '../../entities/allowed-activities.entity';
 import { cleanText } from '../../common/utils';
-import { Bundle } from '../../entities/bundle.entity';
+import { Bundle } from '../../care-activity/entity/bundle.entity';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CareActivity } from '../../entities/care-activity.entity';
+import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { Occupation } from '../../entities/occupation.entity';
-import { Permissions } from '../../common/constants';
+import { CareActivityType, ClinicalType, Permissions } from '../../common/constants';
 import { Readable } from 'stream';
 import { Unit } from '../../unit/entity/unit.entity';
 
@@ -28,9 +28,51 @@ export class SeedService {
     private readonly unitRepo: Repository<Unit>,
   ) {}
 
+  async updateOccupations(file: Buffer): Promise<void> {
+    let headers: string[];
+    const occupations: { name: string; isRegulated: boolean }[] = [];
+
+    const readable = new Readable();
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    readable._read = () => {}; // _read is required but you can noop it
+    readable.push(file);
+    readable.push(null);
+
+    readable
+      .pipe(csv())
+      .on('data', data => {
+        if (!headers) {
+          headers = Object.keys(data);
+        }
+        const name = data[headers[0]].trim().replace(/"/g, '');
+        const isRegulated = data[headers[1]].trim().replace(/"/g, '') === 'Regulated';
+        occupations.push({ name, isRegulated });
+      })
+      .on('end', async () => {
+        // Save the result
+
+        await this.occupationRepo
+          .createQueryBuilder()
+          .insert()
+          .into(Occupation)
+          .values(
+            occupations.map(({ name, isRegulated }) => {
+              return this.occupationRepo.create({
+                name,
+                isRegulated,
+              });
+            }),
+          )
+          .orIgnore()
+          .execute();
+      });
+  }
+
   async updateCareActivities(file: Buffer): Promise<void> {
     let headers: string[];
-    const bundleVsCareActivity: { [key: string]: string[] } = {};
+    const bundleVsCareActivity: {
+      [key: string]: { name: string; activityType: CareActivityType; clinicalType: ClinicalType }[];
+    } = {};
     const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
     const careLocations = new Set<string>();
 
@@ -51,13 +93,19 @@ export class SeedService {
         bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
         const activityName = data[headers[2]].trim().replace(/"/g, '');
         careLocations.add(data[headers[0]].trim().replace(/"/g, ''));
-        let activityList: string[] = [];
+        let activityList: {
+          name: string;
+          activityType: CareActivityType;
+          clinicalType: ClinicalType;
+        }[] = [];
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
         }
-        activityList.push(activityName);
+        const activityType = data[headers[headers.length - 1]].trim().replace(/"/g, '');
+        const clinicalType = data[headers[headers.length - 2]].trim().replace(/"/g, '');
+        activityList.push({ name: activityName, activityType, clinicalType });
         bundleVsCareActivity[bundleName] = activityList;
-        for (let index = 3; index < headers.length; index++) {
+        for (let index = 3; index < headers.length - 2; index++) {
           const e = headers[index];
           let action: string = data[e];
           let allowedAction;
@@ -93,7 +141,7 @@ export class SeedService {
 
         const consolidatedCareActivities: string[] = Object.values(bundleVsCareActivity)
           .map(careActivities => {
-            return careActivities.map(each => cleanText(each));
+            return careActivities.map(each => cleanText(each.name));
           })
           .flat(1);
 
@@ -140,7 +188,10 @@ export class SeedService {
     return bundle;
   }
 
-  private async saveCareActivity(bundleName: string, careActivities: string[]): Promise<void> {
+  private async saveCareActivity(
+    bundleName: string,
+    careActivities: { name: string; activityType: CareActivityType; clinicalType: ClinicalType }[],
+  ): Promise<void> {
     const bundle = await this.findOrCreateBundle(bundleName);
 
     await this.careActivityRepo
@@ -148,10 +199,12 @@ export class SeedService {
       .insert()
       .into(CareActivity)
       .values(
-        careActivities.map(eachCA => {
+        careActivities.map(({ name, activityType, clinicalType }) => {
           return this.careActivityRepo.create({
-            name: eachCA,
+            name,
             bundle,
+            activityType,
+            clinicalType,
           });
         }),
       )
@@ -162,7 +215,7 @@ export class SeedService {
   //TODO: Move this logic to the appropriate service file
   private async findOrCreateOccupation(name: string): Promise<Occupation> {
     let occupation = await this.occupationRepo.findOne({
-      where: { name },
+      where: { name: cleanText(name) },
     });
 
     if (!occupation) {

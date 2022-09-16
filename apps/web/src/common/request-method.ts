@@ -8,4 +8,5 @@ export enum REQUEST_METHOD {
 
 export const API_ENDPOINT = {
   CARE_LOCATIONS: '/carelocations',
+  SESSIONS: '/sessions',
 };

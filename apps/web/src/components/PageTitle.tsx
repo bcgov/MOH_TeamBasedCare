@@ -13,6 +13,5 @@ export const PageTitle: React.FC<PageTitleProps> = ({ title, description, childr
     </div>    
     <p className='text-sm text-gray-400'>{description}</p>
   </>
-    
   );
 };
