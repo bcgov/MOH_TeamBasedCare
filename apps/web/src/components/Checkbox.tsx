@@ -1,5 +1,3 @@
-
-
 interface CheckboxProps {
   name: string;
   label: string;
@@ -7,8 +5,8 @@ interface CheckboxProps {
 }
 
 export interface CheckboxOptionType {
-    label: string;
-    value: string;
+  label: string;
+  value: string;
 }
 
 export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
@@ -40,7 +38,7 @@ interface CheckboxArrayProps {
 }
 
 export const CheckboxArray: React.FC<CheckboxArrayProps> = ({ name, legend, options }) => {
-    return (
+  return (
     <fieldset className='flex flex-col gap-4'>
       <legend className='text-bcBlack font-bold mb-2'>{legend}</legend>
       {options.map(option => (
