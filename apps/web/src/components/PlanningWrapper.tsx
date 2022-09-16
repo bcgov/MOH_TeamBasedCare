@@ -73,7 +73,7 @@ export const PlanningWrapper = () => {
           <Form className='w-full'>
             <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
 
-            <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button>
+            {/* <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button> */}
           </Form>
         </Formik>
       </div>

@@ -55,7 +55,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                     { !_.isEmpty(filteredData) ?
                         filteredData.map((item, index) => {
                                 return (
-                                    <label key={item.id} className={`${selectedItem == item.id && "bg-gray-200"} flex items-center space-x-4 cursor-pointer p-2 hover:bg-gray-200`} onClick={()=> setSelectedItem(String(item.id))}>
+                                    <label key={item.id} className={`${selectedItem == item.id && "bg-gray-200"} careActivityIDlabel flex items-center space-x-4 cursor-pointer p-2 hover:bg-gray-200`} onClick={()=> setSelectedItem(String(item.id))}>
                                         <Field type="radio" name="careActivityID" value={item.id} />
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-bcBluePrimary truncate dark:text-white">

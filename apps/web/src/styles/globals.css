@@ -43,3 +43,10 @@ body,
   background-color: #999999;
   border-radius: 5px;
 }
+
+.careActivityIDlabel {
+  margin-left: -20px;
+}
+.careActivityIDlabel > input[type=radio] {
+  display: none;
+}
