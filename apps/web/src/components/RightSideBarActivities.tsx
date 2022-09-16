@@ -58,7 +58,7 @@ export const RightSideBarActivites: React.FC = () => {
         <div className='w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
             <div className="justify-between text-bcBluePrimary w-full items-center mb-4 border-b-2 border-gray-200 pb-4">
                 <label>
-                    <input type="checkbox" name="selectAll" onChange={handleSearchAll}/>
+                    <input type="checkbox" name="selectAll" className="mr-3" onChange={handleSearchAll}/>
                     Select all
                 </label>
             </div>
