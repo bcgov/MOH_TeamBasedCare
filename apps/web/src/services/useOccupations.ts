@@ -11,7 +11,6 @@ export const useOccupations = () => {
     const config = { endpoint: API_ENDPOINT.OCCUPATIONS };
 
     fetchData(config, (data: OccupationItemProps[]) => {
-      console.log(data);
       setOccupations(data);
     });
   }, []);

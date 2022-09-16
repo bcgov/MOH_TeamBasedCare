@@ -13,7 +13,7 @@ export interface OccupationProps {
 }
 
 export const Occupation: React.FC<OccupationProps> = ({ title }) => {
-  const [occupationsSelected, setOccupationsSelected] = useState(0);
+  const [selectedOccupations, setSelectedOccupations] = useState([]);
 
   return (
     <div className={planningFormBox}>
@@ -36,11 +36,14 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
 
           <div className='space-y-2'>
             <p className='text-sm font-extralight font-sans text-gray-400'>
-              {occupationsSelected} occupations selected
+              {selectedOccupations.length} occupations selected
             </p>
             <Paginator></Paginator>
 
-            <OccupationSelector></OccupationSelector>
+            <OccupationSelector
+              selectedOccupations={selectedOccupations}
+              setSelectedOccupations={setSelectedOccupations}
+            ></OccupationSelector>
 
             <Paginator></Paginator>
           </div>

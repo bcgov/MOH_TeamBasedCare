@@ -2,6 +2,7 @@ interface CheckboxProps {
   name: string;
   label: string;
   value?: string;
+  handleChange?: any;
 }
 
 export interface CheckboxOptionType {
@@ -9,11 +10,12 @@ export interface CheckboxOptionType {
   value: string;
 }
 
-export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value, handleChange }) => {
   /**
    * if being used in an array, unique values will be passed which should be used
    * instead of name, which will be the same for each item in the list
    */
+
   const identifier = value ?? name;
   return (
     <div className='flex items-center'>
@@ -23,6 +25,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
         value={value}
         type='checkbox'
         className='mr-3 h-5 w-5 min-w-5'
+        onChange={handleChange}
       />
       <label htmlFor={identifier} className='cursor-pointer'>
         {label}

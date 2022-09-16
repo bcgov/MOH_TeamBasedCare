@@ -2,7 +2,7 @@ import { useOccupations } from 'src/services/useOccupations';
 import { OccupationItem } from './OccupationItem';
 import { isOdd } from 'src/common/util';
 
-export const OccupationSelector = () => {
+export const OccupationSelector = ({ selectedOccupations, setSelectedOccupations }: any) => {
   const { occupations } = useOccupations();
 
   // Initially were imported from Styles, but for some reason would break the application
@@ -17,7 +17,12 @@ export const OccupationSelector = () => {
         const styling = isOdd(index) ? occupationItemBoxGray : occupationItemBoxWhite;
         return (
           <div key={index} className={styling}>
-            <OccupationItem key={occupation.id} {...occupation}></OccupationItem>
+            <OccupationItem
+              selectedOccupations={selectedOccupations}
+              setSelectedOccupations={setSelectedOccupations}
+              key={occupation.id}
+              {...occupation}
+            ></OccupationItem>
           </div>
         );
       })}
