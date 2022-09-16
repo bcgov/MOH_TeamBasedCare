@@ -7,7 +7,8 @@ interface PlanningWrapperFormValues {
   firstName: string;
   lastName: string;
   careActivityID: string;
-  carActivityBundle: [];
+  careActivityBundle: [];
+  checked: [];
 }
 
 export const PlanningWrapper = () => {
@@ -18,7 +19,8 @@ export const PlanningWrapper = () => {
     firstName: 'Bob',
     lastName: 'Loblaw',
     careActivityID: '3dd33805-a813-4cab-8576-e06355f16074',
-    carActivityBundle: [],
+    careActivityBundle: [],
+    checked: [],
   };
 
   const handleNextStep = () => {
