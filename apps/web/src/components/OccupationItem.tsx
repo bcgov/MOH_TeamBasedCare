@@ -3,7 +3,7 @@ import { OccupationItemProps } from 'src/common/interfaces';
 
 export const OccupationItem = ({ displayName, isRegulated }: OccupationItemProps) => {
   return (
-    <div className='flex'>
+    <div className='flex flex-1'>
       <div className='flex-initial w-5/6'>
         <Checkbox name={displayName} label={displayName}></Checkbox>
       </div>
