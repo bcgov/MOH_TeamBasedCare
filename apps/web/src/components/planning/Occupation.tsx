@@ -39,7 +39,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
               {occupationsSelected} occupations selected
             </p>
             <Paginator></Paginator>
-  
+
             <OccupationSelector></OccupationSelector>
 
             <Paginator></Paginator>

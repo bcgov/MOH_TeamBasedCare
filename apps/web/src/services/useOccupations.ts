@@ -1,22 +1,16 @@
 import { useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
 import { useHttp } from './useHttp';
-import { CommonDBItem } from '../common/interfaces';
-
-interface OccupationProps extends CommonDBItem {
-  name: string;
-  displayName: string;
-  isRegulated: boolean;
-}
+import { OccupationItemProps } from '../common/interfaces';
 
 export const useOccupations = () => {
   const { fetchData, isLoading } = useHttp();
-  const [occupations, setOccupations] = useState<OccupationProps[]>([]);
+  const [occupations, setOccupations] = useState<OccupationItemProps[]>([]);
 
   useEffect(() => {
     const config = { endpoint: API_ENDPOINT.OCCUPATIONS };
 
-    fetchData(config, (data: OccupationProps[]) => {
+    fetchData(config, (data: OccupationItemProps[]) => {
       console.log(data);
       setOccupations(data);
     });
