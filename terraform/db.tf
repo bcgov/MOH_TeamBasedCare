@@ -8,7 +8,7 @@ resource "aws_rds_cluster_instance" "pgsql" {
   count              = var.target_env == "prod" ? 2 : 1
   identifier         = "${local.db_name}-${count.index}"
   cluster_identifier = aws_rds_cluster.pgsql.id
-  instance_class     = "db.t4g.large"
+  instance_class     = "db.t4g.medium"
   engine             = aws_rds_cluster.pgsql.engine
   engine_version     = aws_rds_cluster.pgsql.engine_version
 }

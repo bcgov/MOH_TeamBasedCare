@@ -20,7 +20,7 @@ const getEnvironmentSpecificConfig = (env?: string) => {
         entities: [join(__dirname, '../**/*.entity.js')],
         migrations: [join(__dirname, '../migration/*.js')],
         logging: ['migration'] as LoggerOptions,
-        synchronize: false,
+        synchronize: true,
       };
     case 'test':
       return {
@@ -37,9 +37,9 @@ const getEnvironmentSpecificConfig = (env?: string) => {
     default:
       return {
         entities: ['dist/**/*.entity.js'],
+        synchronize: true,
         migrations: ['dist/migration/*.js'],
         logging: ['error', 'warn', 'migration'] as LoggerOptions,
-        synchronize: true,
       };
   }
 };
@@ -50,7 +50,7 @@ const environmentSpecificConfig = getEnvironmentSpecificConfig(nodeEnv);
 const appOrmConfig: PostgresConnectionOptions = {
   ...config,
   ...environmentSpecificConfig,
-  migrationsRun: true,
+  migrationsRun: false,
 };
 
 @Module({

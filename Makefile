@@ -36,7 +36,6 @@ APP_SRC_BUCKET = $(NAMESPACE)-app
 TERRAFORM_DIR = terraform
 export BOOTSTRAP_ENV=terraform/bootstrap
 
-
 ifeq ($(ENV_NAME), prod)
 DOMAIN=tbcm.gov.bc.ca
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_PROD)
@@ -44,7 +43,7 @@ DB_HOST = $(DB_HOST_PROD)
 endif
 
 ifeq ($(ENV_NAME), dev)
-NEXT_PUBLIC_API_URL=https://d3qshnmydybt5m.cloudfront.net/api
+NEXT_PUBLIC_API_URL=https://d3qshnmydybt5m.cloudfront.net/api/v1
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_DEV)
 DB_HOST = $(DB_HOST_DEV)
 endif
@@ -202,6 +201,7 @@ pre-build:
 
 build-api:
 	@echo "++\n***** Building API for AWS\n++"
+	@rm -rf ./apps/api/dist || true
 	@echo 'Building api package... \n' 
 	@yarn workspace @tbcm/api build
 	@echo 'Updating prod dependencies...\n'
