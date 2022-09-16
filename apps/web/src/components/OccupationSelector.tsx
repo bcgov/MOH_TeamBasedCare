@@ -1,3 +1,6 @@
+import { useOccupations } from 'src/services/useOccupations';
+
 export const OccupationSelector = () => {
-    return(<></>);
-}
+  const { occupations } = useOccupations();
+  return <></>;
+};
