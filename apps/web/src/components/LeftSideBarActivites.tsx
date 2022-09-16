@@ -34,7 +34,6 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
     items.result.filter(item => {
       return item.name.toLowerCase().includes(searchValue.toLowerCase());
     });
-    console.log('++++++++ values.checked', values);
 
   return (
     <div className='w-1/3 mt-4 border-2 border-gray-200 p-4'>

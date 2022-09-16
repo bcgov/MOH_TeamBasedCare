@@ -14,10 +14,7 @@ export const RightSideBarActivites: React.FC = () => {
     const newCareActivity = _.find(dataObj.result, function (o) {
       return o.id == values.careActivityID;
     });
-    if(!_.isUndefined) {
-        setItems(newCareActivity);
-    } 
-   
+    setItems(newCareActivity);
     //Set checked ids to previously selected ids when care activity changes
     values.checked = _.filter(values.careActivityBundle[values.careActivityID]);
   }, [values.careActivityID]);
