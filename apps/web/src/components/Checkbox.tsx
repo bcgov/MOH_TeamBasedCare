@@ -1,4 +1,4 @@
-import { Field } from "formik";
+import { Field } from 'formik';
 
 interface CheckboxProps {
   name: string;
@@ -19,8 +19,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
   const identifier = value ?? name;
   return (
     <div className='flex items-center text-bcBluePrimary'>
-
-      
       <Field
         name={name}
         id={identifier}

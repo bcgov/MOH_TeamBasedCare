@@ -47,6 +47,6 @@ body,
 .careActivityIDlabel {
   margin-left: -20px;
 }
-.careActivityIDlabel > input[type=radio] {
+.careActivityIDlabel > input[type='radio'] {
   display: none;
 }

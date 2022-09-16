@@ -10,20 +10,21 @@ export interface CareActivitiesBundleProps {
 }
 
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
+  const description =
+    'Based on the your Profile selection, here are the list of activities that done by the selected care location profile. All the care acitivities are selected by default, please select or deselect base on your planning.';
 
-  const description = "Based on the your Profile selection, here are the list of activities that done by the selected care location profile. All the care acitivities are selected by default, please select or deselect base on your planning.";
-  
-  return (<>
-    <div className={planningFormBox}>
-      <PageTitle title={title} description={description}>
-        <FontAwesomeIcon icon={faClipboardList} className='h-8 text-bcBluePrimary' />
-      </PageTitle>
-      
-      <div className="flex">
-        <LeftSideBarActivites title={title}/>
-        <RightSideBarActivites />
+  return (
+    <>
+      <div className={planningFormBox}>
+        <PageTitle title={title} description={description}>
+          <FontAwesomeIcon icon={faClipboardList} className='h-8 text-bcBluePrimary' />
+        </PageTitle>
+
+        <div className='flex'>
+          <LeftSideBarActivites title={title} />
+          <RightSideBarActivites />
+        </div>
       </div>
-    </div>
     </>
   );
 };
