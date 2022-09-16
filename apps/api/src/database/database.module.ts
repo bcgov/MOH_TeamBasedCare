@@ -7,7 +7,7 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 import { AllowedActivity } from '../entities/allowed-activities.entity';
 import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
-import { Occupation } from '../entities/occupation.entity';
+import { Occupation } from 'src/occupation/entity/occupation.entity';
 
 import config from '../ormconfig';
 import { Unit } from '../unit/entity/unit.entity';
