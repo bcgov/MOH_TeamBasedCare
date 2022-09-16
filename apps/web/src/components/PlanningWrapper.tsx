@@ -66,16 +66,9 @@ export const PlanningWrapper = () => {
         </div>
       </div>
       <div className='' aria-hidden>
-        <Formik
-          initialValues={initialValues}
-          onSubmit={(values, actions) => {
-            console.log(JSON.stringify(values, null, 2));
-            actions.setSubmitting(false);
-          }}
-        >
+        <Formik initialValues={initialValues} onSubmit={() => {}}>
           <Form className='w-full'>
             <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
-
             {/* <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button> */}
           </Form>
         </Formik>

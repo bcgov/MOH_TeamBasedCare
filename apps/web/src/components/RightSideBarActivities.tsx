@@ -34,16 +34,16 @@ export const RightSideBarActivites: React.FC = () => {
       return item.name.toLowerCase().includes(searchValue.toLowerCase());
     });
 
-  const arr =
-    items &&
-    items.careActivities.filter((item: any) => {
-      const a = [];
-      return item.id;
-    });
+  //   const arr =
+  //     items &&
+  //     items.careActivities.filter((item: any) => {
+  //       const a = [];
+  //       return item.id;
+  //     });
 
   // Get search value
   const handleSearchAll = (e: any) => {
-    const arr = [];
+    // const arr = [];
     if (e.target.checked) {
       _.each(items.careActivities, item => {
         values.checked.push(item.id);

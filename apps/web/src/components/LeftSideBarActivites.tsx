@@ -22,7 +22,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
     _.each(items.result, item => {
       values.careActivityBundle[item.id] = [];
     });
-  }, []);
+  }, [items.result]);
 
   // Get search value
   const handleSearch = (e: { target: { value: string } }) => {
@@ -54,7 +54,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
       <div className='mt-4' style={{ overflow: 'auto', maxHeight: '400px' }}>
         <div role='group'>
           {!_.isEmpty(filteredData) ? (
-            filteredData.map((item, index) => {
+            filteredData.map(item => {
               return (
                 <label
                   key={item.id}
