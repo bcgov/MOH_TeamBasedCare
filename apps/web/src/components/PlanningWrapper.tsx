@@ -5,14 +5,6 @@ import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningSession } from '../services/usePlanningSession';
 import { usePlanningContext } from '../services';
 
-interface PlanningWrapperFormValues {
-  firstName: string;
-  lastName: string;
-  careActivityID: string;
-  careActivityBundle: [];
-  checked: [];
-}
-
 const WrapperContent = () => {
   const { sessionId } = usePlanningSession();
 
@@ -24,14 +16,6 @@ const WrapperContent = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const isFirstStep = currentStep === 1;
-
-  const initialValues: PlanningWrapperFormValues = {
-    firstName: 'Bob',
-    lastName: 'Loblaw',
-    careActivityID: '',
-    careActivityBundle: [],
-    checked: [],
-  };
 
   const handleNextStep = () => {
     updateNextTriggered();
