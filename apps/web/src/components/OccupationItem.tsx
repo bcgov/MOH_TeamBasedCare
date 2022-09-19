@@ -33,7 +33,12 @@ export const OccupationItem = ({
   return (
     <div className='flex flex-1 items-center'>
       <div className='flex-initial w-5/6'>
-        <Checkbox name={displayName} label={displayName} handleChange={checkboxTicked}></Checkbox>
+        <Checkbox
+          name={displayName}
+          styles='text-bcDarkBlue accent-bcBlueLink'
+          label={displayName}
+          handleChange={checkboxTicked}
+        ></Checkbox>
       </div>
       <div className='flex flex-initial w-1/6 justify-end'>
         <Tag text={tagText} tagStyle={tagColor}></Tag>

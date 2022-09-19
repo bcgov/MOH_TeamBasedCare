@@ -21,7 +21,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
       <div className='px-5'>
         <div className='space-y-3'>
           <div className='space-x-1.5 flex'>
-            <FontAwesomeIcon className='inline w-6 h-6' icon={faUserCircle} />
+            <FontAwesomeIcon className='text-bcDarkBlue inline w-6 h-6' icon={faUserCircle} />
             <h4 className='inline text-bcBluePrimary font-bold font-sans'>
               Select Occupation (Optional)
             </h4>
