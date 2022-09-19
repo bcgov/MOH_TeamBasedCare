@@ -1,4 +1,5 @@
 import { TagStyles } from '../../common/constants';
+import { blueTag, greenTag } from '../../styles/styles';
 
 interface TagProps {
   text: string;
@@ -6,12 +7,6 @@ interface TagProps {
 }
 
 export const Tag = ({ text, tagStyle }: TagProps) => {
-  // Initially were imported from Styles, but for some reason would break the application
-  // Putting them here for now.
-  const tag = 'flex justify-center items-center px-6 py-1 border rounded font-bold text-xs';
-  const greenTag = `${tag} bg-bcBannerSuccessBg text-bcBannerSuccessText border-bcBannerSuccessText`;
-  const blueTag = `${tag} bg-bcLightBlueBackground text-bcBlueLink border-bcBlueLink`;
-
   const style = (() => {
     switch (tagStyle) {
       case TagStyles.BLUE:
@@ -22,5 +17,5 @@ export const Tag = ({ text, tagStyle }: TagProps) => {
         return blueTag;
     }
   })();
-  return <div className={`${tag} ${style}`}>{text}</div>;
+  return <div className={`${style}`}>{text}</div>;
 };

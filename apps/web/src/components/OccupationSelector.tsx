@@ -1,15 +1,10 @@
 import { useOccupations } from 'src/services/useOccupations';
 import { OccupationItem } from './OccupationItem';
 import { isOdd } from 'src/common/util';
+import { occupationItemBoxGray, occupationItemBoxWhite } from 'src/styles/styles';
 
 export const OccupationSelector = ({ selectedOccupations, setSelectedOccupations }: any) => {
   const { occupations } = useOccupations();
-
-  // Initially were imported from Styles, but for some reason would break the application
-  // Putting them here for now.
-  const occupationItemBox = 'flex items-center h-16 px-4';
-  const occupationItemBoxGray = `${occupationItemBox} bg-bcLightGray shadow-xs`;
-  const occupationItemBoxWhite = `${occupationItemBox} shadow-x`;
 
   return (
     <div>
