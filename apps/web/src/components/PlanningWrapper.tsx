@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+
 import React, { useState } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
 import { Formik, Form } from 'formik';
@@ -35,6 +37,10 @@ export const PlanningWrapper = () => {
     setCurrentStep(Number(currentStep) - 1);
   };
 
+  const handleForm = () => {
+   
+  }
+
   return (
     <>
       <div
@@ -66,7 +72,7 @@ export const PlanningWrapper = () => {
         </div>
       </div>
       <div className='' aria-hidden>
-        <Formik initialValues={initialValues} onSubmit={() => {}}>
+        <Formik initialValues={initialValues} onSubmit={handleForm}>
           <Form className='w-full'>
             <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
             {/* <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button> */}

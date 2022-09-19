@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Radio } from '@components';
 import { useState } from 'react';
 import { CareLocationSelector } from '../CareLocationSelector';

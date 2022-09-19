@@ -1,6 +1,8 @@
 // TODO: fix these
 /* eslint-disable react/jsx-key */
 /* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 function objectValues<T extends {}>(obj: T) {
   return Object.keys(obj).map(objKey => obj[objKey as keyof T]);
 }

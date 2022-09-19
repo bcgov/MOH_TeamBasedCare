@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { useEffect, useState } from 'react';
 import { Checkbox } from '@components';
 import _ from 'lodash';
