@@ -60,7 +60,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                 <label
                   key={item.id}
                   className={`${
-                    selectedItem == item.id && 'bg-gray-200'
+                    values.careActivityID == item.id && 'bg-gray-200'
                   } careActivityIDlabel flex items-center space-x-4 cursor-pointer p-2 hover:bg-gray-200`}
                   onClick={() => setSelectedItem(String(item.id))}
                 >

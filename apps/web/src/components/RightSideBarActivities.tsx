@@ -59,45 +59,50 @@ export const RightSideBarActivites: React.FC = () => {
 
   return (
     <div className='w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
-      <div className='justify-between text-bcBluePrimary w-full items-center mb-4 border-b-2 border-gray-200 pb-4'>
-        <label>
-          <input type='checkbox' name='selectAll' className='mr-3' onChange={handleSearchAll} />
-          Select all
-        </label>
-      </div>
+      { _.isEmpty(values.careActivityID) 
+        ? <p className='text-center text-sm mt-4'>Please select an activity bundle on the left side.</p>
+        : <>
+            <div className='justify-between text-bcBluePrimary w-full items-center mb-4 border-b-2 border-gray-200 pb-4'>
+              <label>
+                <input type='checkbox' name='selectAll' className='mr-3' onChange={handleSearchAll} />
+                Select all
+              </label>
+            </div>
 
-      <input
-        type='text'
-        name='search'
-        placeholder='Search '
-        className='block w-full text-sm text-slate-500 border-2 border-gray-200 p-2'
-        value={searchValue}
-        onChange={handleSearch}
-      />
+            <input
+              type='text'
+              name='search'
+              placeholder='Search '
+              className='block w-full text-sm text-slate-500 border-2 border-gray-200 p-2'
+              value={searchValue}
+              onChange={handleSearch}
+            />
 
-      <p className='text-sm text-gray-400'>
-        {items && items.careActivities.length} Care Activities Tasks and Restricted Tasks
-      </p>
+            <p className='text-sm text-gray-400'>
+              {items && items.careActivities.length} Care Activities Tasks and Restricted Tasks
+            </p>
 
-      <div
-        className='mt-4'
-        role='group'
-        aria-labelledby='checkbox-group'
-        style={{ overflow: 'auto', maxHeight: '400px' }}
-      >
-        {!_.isEmpty(filteredData) ? (
-          filteredData &&
-          filteredData.map((item: any) => {
-            return (
-              <div key={item.id}>
-                <Checkbox name='checked' value={item.id} label={item.name} />
-              </div>
-            );
-          })
-        ) : (
-          <p className='text-center text-sm mt-4'>No available Care Activity Tasks.</p>
-        )}
-      </div>
+            <div
+              className='mt-4'
+              role='group'
+              aria-labelledby='checkbox-group'
+              style={{ overflow: 'auto', maxHeight: '400px' }}
+              >
+              {!_.isEmpty(filteredData) ? (
+                filteredData &&
+                filteredData.map((item: any) => {
+                  return (
+                    <div key={item.id}>
+                      <Checkbox name='checked' value={item.id} label={item.name} />
+                    </div>
+                  );
+                })
+              ) : (
+                <p className='text-center text-sm mt-4'>No available Care Activity Tasks. : {values.careActivityID} </p>
+              )}
+            </div>
+          </>
+        }
     </div>
   );
 };

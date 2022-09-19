@@ -23,7 +23,7 @@ export const PlanningWrapper = () => {
   const initialValues: PlanningWrapperFormValues = {
     firstName: 'Bob',
     lastName: 'Loblaw',
-    careActivityID: '3dd33805-a813-4cab-8576-e06355f16074',
+    careActivityID: '',
     careActivityBundle: [],
     checked: [],
   };
