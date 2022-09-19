@@ -80,5 +80,5 @@ module.exports = {
       backgroundColor: ['even'],
     },
   },
-  plugins: [require('@tailwindcss/typography'),require('tailwind-accent-color')()],
+  plugins: [require('@tailwindcss/typography'), require('tailwind-accent-color')()],
 };
