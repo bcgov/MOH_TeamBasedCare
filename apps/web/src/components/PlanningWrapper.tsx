@@ -37,9 +37,7 @@ export const PlanningWrapper = () => {
     setCurrentStep(Number(currentStep) - 1);
   };
 
-  const handleForm = () => {
-   
-  }
+  const handleForm = () => {};
 
   return (
     <>
