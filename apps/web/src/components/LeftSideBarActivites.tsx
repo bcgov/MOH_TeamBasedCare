@@ -39,7 +39,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
   return (
     <div className='w-1/3 mt-4 border-2 border-gray-200 p-4'>
       <div className='justify-between w-full items-center mb-4 border-b-2 border-gray-200 pb-4'>
-        <h3 className='text-xl text-bcBluePrimary leading-none '>{title}</h3>
+        <h3 className='text-xl leading-none '>{title}</h3>
         <p className='text-sm text-gray-400'>{items.count} Activities</p>
       </div>
 

@@ -18,7 +18,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value }) => {
    */
   const identifier = value ?? name;
   return (
-    <div className='flex items-center text-bcBluePrimary'>
+    <div className='flex items-center'>
       <Field
         name={name}
         id={identifier}
