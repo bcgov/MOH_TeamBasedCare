@@ -1,57 +1,104 @@
 import { Radio } from '@components';
-import { useState } from 'react';
-import { CareLocationSelector } from '../CareLocationSelector';
 import { planningFormBox } from '../../styles/styles';
+import { Form, Formik, useFormikContext } from 'formik';
+import { useCareLocations, usePlanningContext } from '../../services';
+import { SaveProfileDTO } from '@tbcm/common';
+import createValidator from 'class-validator-formik';
+import { useEffect } from 'react';
+import { RenderSelect } from '../generic/RenderSelect';
+import { usePlanningProfile } from '../../services/usePlanningProfile';
 
 export interface ProfileProps {
   step: number;
   title: string;
 }
 
+export const enum ProfileOptions {
+  GENERIC = 'generic',
+  FROM_SCRATCH = 'scratch',
+}
+
+interface ProfileFormProps {
+  profile: string;
+  careLocation: string;
+}
+
 export const profileOptions = [
   {
     label: 'Start from a generic profile',
-    value: 'generic',
+    value: ProfileOptions.GENERIC,
     selected: false,
   },
   {
     label: 'Start a new profile from scratch',
-    value: 'scratch',
+    value: ProfileOptions.FROM_SCRATCH,
     selected: false,
   },
 ];
 
-export const Profile: React.FC<ProfileProps> = () => {
-  const [displayDropdown, setDisplayDropdown] = useState(false);
+const ProfileForm = () => {
+  const { isSubmitting, values, submitForm, isValid } = useFormikContext<ProfileFormProps>();
 
-  const handleSelect = (e: any) => {
-    const { value } = e.target;
+  const { careLocations, isLoading } = useCareLocations();
+  const {
+    state: { isNextTriggered },
+    updateWaitForValidation,
+  } = usePlanningContext();
 
-    if (value === 'generic') {
-      setDisplayDropdown(true);
-    } else {
-      setDisplayDropdown(false);
-    }
-  };
+  useEffect(() => {
+    (async () => {
+      if (isNextTriggered && !isSubmitting) {
+        try {
+          await submitForm();
+          !isValid && updateWaitForValidation();
+        } catch (error: any) {
+          updateWaitForValidation();
+        }
+      }
+    })();
+  }, [isNextTriggered]);
+
   return (
-    <div>
-      <div className={planningFormBox}>
-        <Radio
-          legend='Select how do you want to start with'
-          name='Profile'
-          options={profileOptions}
-          handleSelect={handleSelect}
-        />
-      </div>
+    <Form className='w-full'>
       <div>
+        <div className={planningFormBox}>
+          <Radio
+            legend='Select how do you want to start with'
+            name='profile'
+            options={profileOptions}
+          />
+        </div>
         <div>
-          {displayDropdown ? (
-            <div className={planningFormBox}>
-              <CareLocationSelector />
-            </div>
-          ) : null}
+          <div>
+            {values.profile === ProfileOptions.GENERIC && !isLoading && (
+              <div className={planningFormBox}>
+                <RenderSelect
+                  label={'Select Care Location Profile'}
+                  options={careLocations}
+                  name='careLocation'
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Form>
+  );
+};
+
+export const Profile: React.FC<ProfileProps> = () => {
+  const profileValidationSchema = createValidator(SaveProfileDTO);
+  const { handleSubmit, initialValues } = usePlanningProfile();
+  return (
+    <Formik
+      initialValues={initialValues}
+      validate={profileValidationSchema}
+      onSubmit={handleSubmit}
+      validateOnBlur={true}
+      validateOnMount={true}
+      enableReinitialize={true}
+    >
+      <ProfileForm />
+    </Formik>
   );
 };
