@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
+import { OptionType } from '../components/generic/RenderSelect';
 import { useHttp } from './useHttp';
 
 interface UnitProps {
@@ -9,7 +10,7 @@ interface UnitProps {
 
 export const useCareLocations = () => {
   const { fetchData, isLoading } = useHttp();
-  const [careLocations, setCareLocations] = useState([]);
+  const [careLocations, setCareLocations] = useState<OptionType[]>([]);
 
   useEffect(() => {
     const config = { endpoint: API_ENDPOINT.CARE_LOCATIONS };
@@ -17,7 +18,7 @@ export const useCareLocations = () => {
     fetchData(config, (data: any) => {
       setCareLocations(
         data.map((unit: UnitProps) => {
-          return { ...unit, value: unit.unitName };
+          return { value: unit.id, label: unit.unitName };
         }),
       );
     });

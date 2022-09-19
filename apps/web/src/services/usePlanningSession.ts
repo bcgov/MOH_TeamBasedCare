@@ -5,15 +5,15 @@ import { REQUEST_METHOD } from '../common';
 
 export const usePlanningSession = () => {
   const { sendApiRequest, isLoading } = useHttp();
-  const [planningSession, setPlanningSession] = useState({});
+  const [sessionId, setSessionId] = useState<string>();
 
   useEffect(() => {
     const config = { endpoint: API_ENDPOINT.SESSIONS, method: REQUEST_METHOD.POST };
 
     sendApiRequest(config, (data: any) => {
-      setPlanningSession(data);
+      setSessionId(data.id);
     });
   }, []);
 
-  return { planningSession, isLoading };
+  return { sessionId, isLoading };
 };

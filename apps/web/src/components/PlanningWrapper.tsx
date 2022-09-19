@@ -1,33 +1,42 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
-import { Formik, Form } from 'formik';
 import { PlanningSteps } from '../common/constants';
-// import { usePlanningSession } from '../services/usePlanningSession';
+import { PlanningProvider } from './planning/PlanningContext';
+import { usePlanningSession } from '../services/usePlanningSession';
+import { usePlanningContext } from '../services';
 
-interface PlanningWrapperFormValues {
-  firstName: string;
-  lastName: string;
-}
+const WrapperContent = () => {
+  const { sessionId } = usePlanningSession();
 
-export const PlanningWrapper = () => {
-  // const { planningSession } = usePlanningSession();
+  const {
+    state: { canProceedToNext },
+    updateNextTriggered,
+    updateSessionId,
+  } = usePlanningContext();
 
   const [currentStep, setCurrentStep] = useState(1);
   const isFirstStep = currentStep === 1;
 
-  const initialValues: PlanningWrapperFormValues = {
-    firstName: 'Bob',
-    lastName: 'Loblaw',
-  };
-
   const handleNextStep = () => {
-    if (currentStep >= PlanningSteps.length) return;
-    setCurrentStep(Number(currentStep) + 1);
+    updateNextTriggered();
   };
   const handlePreviousStep = () => {
     if (isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
   };
+
+  useEffect(() => {
+    if (sessionId) {
+      updateSessionId(sessionId);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (canProceedToNext) {
+      if (currentStep >= PlanningSteps.length) return;
+      setCurrentStep(Number(currentStep) + 1);
+    }
+  }, [canProceedToNext]);
 
   return (
     <>
@@ -60,20 +69,16 @@ export const PlanningWrapper = () => {
         </div>
       </div>
       <div className='' aria-hidden>
-        <Formik
-          initialValues={initialValues}
-          onSubmit={(values, actions) => {
-            alert(JSON.stringify(values, null, 2));
-            actions.setSubmitting(false);
-          }}
-        >
-          <Form className='w-full'>
-            <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
-
-            {/* <Button variant="outline" type="submit" classes="mt-5" onClick={()=>{}}>Save Draft</Button> */}
-          </Form>
-        </Formik>
+        <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
     </>
+  );
+};
+
+export const PlanningWrapper = () => {
+  return (
+    <PlanningProvider>
+      <WrapperContent />
+    </PlanningProvider>
   );
 };
