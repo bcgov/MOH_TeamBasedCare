@@ -102,7 +102,7 @@ export const RightSideBarActivites: React.FC = () => {
               })
             ) : (
               <p className='text-center text-sm mt-4'>
-                No available Care Activity Tasks. : {values.careActivityID}{' '}
+                No available Care Activity Tasks.
               </p>
             )}
           </div>
