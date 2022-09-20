@@ -25,7 +25,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
 
   return (
     <>
-      <div className="planning-form-box">
+      <div className='planning-form-box'>
         <PageTitle title={title} description={description}>
           <FontAwesomeIcon icon={faClipboardList} className='h-8 text-bcBluePrimary' />
         </PageTitle>
