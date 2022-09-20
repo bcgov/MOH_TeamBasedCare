@@ -51,7 +51,7 @@ export class PlanningSessionService {
 
   async getCareActivity(sessionId: string): Promise<string[] | undefined> {
     const planningSession = await this.planningSessionRepo.findOne(sessionId, {
-      relations: ['careActivity'],
+      relations: ['careActivity', 'careActivity.bundle'],
     });
 
     if (planningSession) {
