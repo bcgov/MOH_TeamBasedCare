@@ -6,7 +6,7 @@ import { OccupationService } from './occupation.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Occupation])],
-  exports: [],
+  exports: [OccupationService],
   controllers: [OccupationController],
   providers: [OccupationService],
 })

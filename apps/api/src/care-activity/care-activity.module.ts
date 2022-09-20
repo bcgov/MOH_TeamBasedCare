@@ -9,6 +9,6 @@ import { CareActivity } from './entity/care-activity.entity';
   imports: [TypeOrmModule.forFeature([CareActivity, Bundle])],
   providers: [Logger, CareActivityService],
   controllers: [CareActivityController],
-  exports: [],
+  exports: [CareActivityService],
 })
 export class CareActivityModule {}
