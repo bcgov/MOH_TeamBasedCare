@@ -18,6 +18,9 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
   //const { handleSubmit, initialValues } = usePlanningProfile();
   // const { handleSubmit } = usePlanningProfile();
 
+  const handleCareActivitiesForm = function () {
+    // any clear comments.
+  };
   const description =
     'Based on the your Profile selection, here are the list of activities that done by the selected care location profile. All the care acitivities are selected by default, please select or deselect base on your planning.';
 
@@ -31,7 +34,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
         <div className='flex'>
           <Formik
             initialValues={initialValues}
-            onSubmit={() => {}}
+            onSubmit={handleCareActivitiesForm}
             validateOnBlur={true}
             validateOnMount={true}
             enableReinitialize={true}
