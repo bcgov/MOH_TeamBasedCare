@@ -6,6 +6,7 @@ import { SaveProfileDTO, SaveCareActivityDTO, SaveOccupationDTO } from '@tbcm/co
 import { ProfileSelection } from './interface';
 import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
+import _ from 'lodash';
 
 @Injectable()
 export class PlanningSessionService {
@@ -39,9 +40,13 @@ export class PlanningSessionService {
   }
 
   async saveCareActivity(sessionId: string, careActivityDto: SaveCareActivityDTO): Promise<void> {
+    if (!careActivityDto.careActivityBundle) {
+      return;
+    }
     const careActivity = await this.careActivityService.findAllCareActivities(
-      careActivityDto.careActivities,
+      Object.values(careActivityDto.careActivityBundle).flatMap(each => each),
     );
+
     const planningSession = await this.planningSessionRepo.findOne(sessionId);
     await this.planningSessionRepo.save({
       ...planningSession,
@@ -49,13 +54,26 @@ export class PlanningSessionService {
     });
   }
 
-  async getCareActivity(sessionId: string): Promise<string[] | undefined> {
+  async getCareActivity(sessionId: string): Promise<{ [key: string]: any[] } | undefined> {
     const planningSession = await this.planningSessionRepo.findOne(sessionId, {
       relations: ['careActivity', 'careActivity.bundle'],
     });
 
     if (planningSession) {
-      return planningSession.careActivity?.map(each => each.id);
+      const careActivities = planningSession.careActivity?.map(each => {
+        return {
+          id: each.id,
+          bundle_id: each.bundle.id,
+        };
+      });
+      const groupedActivities = _.groupBy(careActivities, 'bundle_id');
+      const careActivityBundle: { [key: string]: any[] } = {};
+
+      Object.entries(groupedActivities).forEach(([key, value]) => {
+        careActivityBundle[key] = value.map(e => e.id);
+      });
+
+      return careActivityBundle;
     }
 
     return;

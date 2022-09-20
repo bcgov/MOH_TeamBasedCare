@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Radio } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
-import { useCareLocations, usePlanningContext } from '../../services';
+import { useCareLocations, usePlanningContent } from '../../services';
 import { SaveProfileDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
-import { useEffect } from 'react';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
 
@@ -37,26 +36,10 @@ export const profileOptions = [
 ];
 
 const ProfileForm = () => {
-  const { isSubmitting, values, submitForm, isValid } = useFormikContext<ProfileFormProps>();
-
+  const { values } = useFormikContext<ProfileFormProps>();
   const { careLocations, isLoading } = useCareLocations();
-  const {
-    state: { isNextTriggered },
-    updateWaitForValidation,
-  } = usePlanningContext();
 
-  useEffect(() => {
-    (async () => {
-      if (isNextTriggered && !isSubmitting) {
-        try {
-          await submitForm();
-          !isValid && updateWaitForValidation();
-        } catch (error: any) {
-          updateWaitForValidation();
-        }
-      }
-    })();
-  }, [isNextTriggered]);
+  usePlanningContent();
 
   return (
     <Form className='w-full'>

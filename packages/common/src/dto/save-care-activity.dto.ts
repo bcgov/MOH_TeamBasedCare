@@ -1,10 +1,15 @@
-import { ArrayMinSize, ArrayNotEmpty, IsArray, IsString, MinLength } from 'class-validator';
+import { Validate, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 
+@ValidatorConstraint({ name: 'isAnyArrayEmpty' })
+export class IsAnyArrayEmpty implements ValidatorConstraintInterface {
+  validate(values: { [key: string]: string[] } | undefined): boolean {
+    if (values) {
+      return Object.values(values).filter(each => each?.length > 0)?.length > 0;
+    }
+    return false;
+  }
+}
 export class SaveCareActivityDTO {
-  @IsArray()
-  @ArrayMinSize(1, { message: 'At least 1 Care Activity is required' })
-  @ArrayNotEmpty({ message: 'Care Activity is required' })
-  @IsString({ each: true })
-  @MinLength(1, { each: true })
-  careActivities!: string[];
+  @Validate(IsAnyArrayEmpty, { message: 'At least 1 Care Activity is required' })
+  careActivityBundle: { [key: string]: string[] } | undefined;
 }

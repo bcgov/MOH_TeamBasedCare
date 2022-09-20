@@ -4,9 +4,7 @@ import { SearchBar } from '../generic/SearchBar';
 import { Paginator } from '../generic/Paginator';
 import { OccupationSelector } from '../OccupationSelector';
 import { Form, Formik } from 'formik';
-import { usePlanningContext, usePlanningOccupations } from '@services';
-import { useEffect } from 'react';
-import { useFormikContext } from 'formik';
+import { usePlanningContent, usePlanningOccupations } from '@services';
 import { SaveOccupationDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { Error } from '../Error';
@@ -17,26 +15,7 @@ export interface OccupationProps {
 }
 
 const OccupationForm = () => {
-  const { isSubmitting, submitForm, isValid } = useFormikContext();
-
-  const {
-    state: { isNextTriggered },
-    updateWaitForValidation,
-  } = usePlanningContext();
-
-  useEffect(() => {
-    (async () => {
-      if (isNextTriggered && !isSubmitting) {
-        try {
-          await submitForm();
-          !isValid && updateWaitForValidation();
-        } catch (error: any) {
-          updateWaitForValidation();
-        }
-      }
-    })();
-  }, [isNextTriggered]);
-
+  usePlanningContent();
   return (
     <Form>
       <OccupationSelector></OccupationSelector>

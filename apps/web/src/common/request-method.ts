@@ -13,4 +13,5 @@ export const API_ENDPOINT = {
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
   OCCUPATIONS: '/occupations',
   getPlanningOccupation: (sessionId: string) => `/sessions/${sessionId}/occupation`,
+  getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
 };
