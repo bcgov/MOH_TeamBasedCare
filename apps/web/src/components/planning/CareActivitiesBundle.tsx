@@ -3,13 +3,21 @@ import { planningFormBox } from '../../styles/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import { LeftSideBarActivites, RightSideBarActivites } from '@components';
+import { Formik } from 'formik';
 
 export interface CareActivitiesBundleProps {
   step: number;
   title: string;
 }
+export const initialValues = {
+  careActivities: [],
+  careActivityBundle: [],
+};
 
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
+  //const { handleSubmit, initialValues } = usePlanningProfile();
+  // const { handleSubmit } = usePlanningProfile();
+
   const description =
     'Based on the your Profile selection, here are the list of activities that done by the selected care location profile. All the care acitivities are selected by default, please select or deselect base on your planning.';
 
@@ -21,8 +29,18 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
         </PageTitle>
 
         <div className='flex'>
-          <LeftSideBarActivites title={title} />
-          <RightSideBarActivites />
+          <Formik
+            initialValues={initialValues}
+            onSubmit={() => {}}
+            validateOnBlur={true}
+            validateOnMount={true}
+            enableReinitialize={true}
+          >
+            <>
+              <LeftSideBarActivites title={title} />
+              <RightSideBarActivites />
+            </>
+          </Formik>
         </div>
       </div>
     </>

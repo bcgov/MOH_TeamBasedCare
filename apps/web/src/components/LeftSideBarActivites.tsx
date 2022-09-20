@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import _ from 'lodash';
-import data from '../common/careActivites.json';
+import { useCareActivities } from '../services';
 import { Field, useFormikContext } from 'formik';
 
 export interface LeftSideBarActivitesProps {
@@ -13,17 +13,21 @@ export interface SearchInputProps {
 }
 
 export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ title }) => {
-  const [items] = useState(data);
+  const { careActivities, isLoading } = useCareActivities();
+  const [items, setItems] = useState<any>();
   const [selectedItem, setSelectedItem] = useState<any>();
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
   const { values } = useFormikContext<any>();
 
   useEffect(() => {
-    // Create object with id's as keys
-    _.each(items.result, item => {
-      values.careActivityBundle[item.id] = [];
-    });
-  }, [items.result]);
+    if (isLoading) {
+      setItems(careActivities);
+      _.each(careActivities.result, item => {
+        values.careActivityBundle[item.id] = [];
+      });
+      values.careActivityID = _.head(careActivities.result).id;
+    }
+  }, [careActivities]);
 
   // Get search value
   const handleSearch = (e: { target: { value: string } }) => {
@@ -31,6 +35,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
   };
   // Filter data with search value
   const filteredData =
+    items &&
     items.result &&
     items.result.filter(item => {
       return item.name.toLowerCase().includes(searchValue.toLowerCase());
@@ -40,7 +45,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
     <div className='w-1/3 mt-4 border-2 border-gray-200 p-4'>
       <div className='justify-between w-full items-center mb-4 border-b-2 border-gray-200 pb-4'>
         <h3 className='text-xl leading-none '>{title}</h3>
-        <p className='text-sm text-gray-400'>{items.count} Activities</p>
+        <p className='text-sm text-gray-400'>{items && items.count} Activities</p>
       </div>
 
       <input
@@ -70,7 +75,8 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                       {item.name}
                     </p>
                     <p className='text-sm text-gray-400 truncate dark:text-gray-400'>
-                      {0} / {item.careActivities.length} selection
+                      {values.careActivityBundle[item.id].length} / {item.careActivities.length}{' '}
+                      selection
                     </p>
                   </div>
                 </label>

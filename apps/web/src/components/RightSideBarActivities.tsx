@@ -3,23 +3,24 @@
 import { useEffect, useState } from 'react';
 import { Checkbox } from '@components';
 import _ from 'lodash';
-import dataObj from '../common/careActivites.json';
 import { useFormikContext } from 'formik';
+import { useCareActivities } from '../services';
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
   const { values } = useFormikContext<any>();
   const [items, setItems] = useState<any>();
+  const { careActivities } = useCareActivities();
 
   //useEFFECTS
   useEffect(() => {
-    const newCareActivity = _.find(dataObj.result, function (o) {
+    const newCareActivity = _.find(careActivities.result, function (o) {
       return o.id == values.careActivityID;
     });
     setItems(newCareActivity);
     //Set checked ids to previously selected ids when care activity changes
     values.checked = _.filter(values.careActivityBundle[values.careActivityID]);
-  }, [values.careActivityID]);
+  }, [values.careActivityID, careActivities]);
 
   useEffect(() => {
     values.careActivityBundle[values.careActivityID] = values.checked;
@@ -36,26 +37,8 @@ export const RightSideBarActivites: React.FC = () => {
       return item.name.toLowerCase().includes(searchValue.toLowerCase());
     });
 
-  //   const arr =
-  //     items &&
-  //     items.careActivities.filter((item: any) => {
-  //       const a = [];
-  //       return item.id;
-  //     });
-
   // Get search value
-  const handleSearchAll = (e: any) => {
-    // const arr = [];
-    if (e.target.checked) {
-      _.each(items.careActivities, item => {
-        values.checked.push(item.id);
-      });
-      // values.checked = arr;
-    } else {
-      values.checked = [];
-    }
-    //values.checked = arr;
-  };
+  const handleSearchAll = () => {};
 
   return (
     <div className='w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
