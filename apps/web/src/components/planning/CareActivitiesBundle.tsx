@@ -1,5 +1,4 @@
 import { PageTitle } from '@components';
-import { planningFormBox } from '../../styles/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import { LeftSideBarActivites, RightSideBarActivites } from '@components';
@@ -26,7 +25,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
 
   return (
     <>
-      <div className={planningFormBox}>
+      <div className="planning-form-box">
         <PageTitle title={title} description={description}>
           <FontAwesomeIcon icon={faClipboardList} className='h-8 text-bcBluePrimary' />
         </PageTitle>
