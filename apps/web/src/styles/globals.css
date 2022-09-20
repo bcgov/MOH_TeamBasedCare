@@ -13,6 +13,34 @@ body,
   background-color: rgb(243 244 246);
 }
 
+.planning-form-box {
+  @apply w-full justify-end border-2 bg-white rounded p-3 mt-4;
+}
+
+.occupation-item-box {
+  @apply flex items-center h-16 px-4;
+}
+
+.occupation-item-box-gray {
+  @apply bg-bcLightGray shadow-xs;
+}
+
+.occupation-item-box-white {
+  @apply shadow-xs;
+}
+
+.occupation-tag {
+  @apply flex justify-center items-center px-6 py-1 border rounded font-bold text-xs;
+}
+
+.occupation-tag-green {
+  @apply bg-bcBannerSuccessBg text-bcBannerSuccessText border-bcBannerSuccessText;
+}
+
+.occupation-tag-blue {
+  @apply bg-bcLightBlueBackground text-bcBlueLink border-bcBlueLink;
+}
+
 @layer base {
   @font-face {
     font-family: BCSans;

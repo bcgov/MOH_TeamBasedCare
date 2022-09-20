@@ -11,4 +11,5 @@ export const API_ENDPOINT = {
   CARE_ACTIVITIES: '/care-activity/bundle',
   SESSIONS: '/sessions',
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
+  OCCUPATIONS: '/occupations',
 };
