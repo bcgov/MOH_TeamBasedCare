@@ -1,3 +1,5 @@
+import { FastField } from 'formik';
+
 interface CheckboxProps {
   name: string;
   label: string;
@@ -11,13 +13,7 @@ export interface CheckboxOptionType {
   value: string;
 }
 
-export const Checkbox: React.FC<CheckboxProps> = ({
-  name,
-  label,
-  value,
-  handleChange,
-  styles = '',
-}) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value, styles = '' }) => {
   /**
    * if being used in an array, unique values will be passed which should be used
    * instead of name, which will be the same for each item in the list
@@ -26,13 +22,12 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   const identifier = value ?? name;
   return (
     <div className='flex items-center'>
-      <input
+      <FastField
         name={name}
         id={identifier}
         value={value}
         type='checkbox'
         className={`${styles} mr-3 h-5 w-5 min-w-5`}
-        onChange={handleChange}
       />
       <label htmlFor={identifier} className={`${styles} cursor-pointer`}>
         {label}

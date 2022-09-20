@@ -3,17 +3,48 @@ import { planningFormBox } from '../../styles/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { SearchBar } from '../generic/SearchBar';
-import { useState } from 'react';
 import { Paginator } from '../generic/Paginator';
 import { OccupationSelector } from '../OccupationSelector';
+import { Form, Formik } from 'formik';
+import { usePlanningContext } from '@services';
+import { useEffect } from 'react';
+import { useFormikContext } from 'formik';
 
 export interface OccupationProps {
   step: number;
   title: string;
 }
 
+const OccupationForm = () => {
+  const { isSubmitting, submitForm, isValid } = useFormikContext();
+
+  const {
+    state: { isNextTriggered },
+    updateWaitForValidation,
+  } = usePlanningContext();
+
+  useEffect(() => {
+    (async () => {
+      if (isNextTriggered && !isSubmitting) {
+        try {
+          await submitForm();
+          !isValid && updateWaitForValidation();
+        } catch (error: any) {
+          updateWaitForValidation();
+        }
+      }
+    })();
+  }, [isNextTriggered]);
+
+  return (
+    <Form>
+      <OccupationSelector></OccupationSelector>
+    </Form>
+  );
+};
+
 export const Occupation: React.FC<OccupationProps> = ({ title }) => {
-  const [selectedOccupations, setSelectedOccupations] = useState([]);
+  const { updateProceedToNext } = usePlanningContext();
 
   return (
     <div className={planningFormBox}>
@@ -36,14 +67,23 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
 
           <div className='space-y-2'>
             <p className='text-sm font-extralight font-sans text-gray-400'>
-              {selectedOccupations.length} occupations selected
+              {} occupations selected
             </p>
             <Paginator></Paginator>
 
-            <OccupationSelector
-              selectedOccupations={selectedOccupations}
-              setSelectedOccupations={setSelectedOccupations}
-            ></OccupationSelector>
+            <Formik
+              initialValues={{
+                occupation: [],
+              }}
+              onSubmit={() => {
+                updateProceedToNext();
+              }}
+              validateOnBlur={true}
+              validateOnMount={true}
+              enableReinitialize={true}
+            >
+              <OccupationForm></OccupationForm>
+            </Formik>
 
             <Paginator></Paginator>
           </div>
