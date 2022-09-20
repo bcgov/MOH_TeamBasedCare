@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 
@@ -16,6 +16,12 @@ export class CareActivityService {
   async getAllBundles(): Promise<Bundle[]> {
     return this.bundleRepo.find({
       relations: ['careActivities'],
+    });
+  }
+
+  findAllCareActivities(careActivityIds: string[]): Promise<CareActivity[]> {
+    return this.careActivityRepo.find({
+      where: { id: In(careActivityIds) },
     });
   }
 }

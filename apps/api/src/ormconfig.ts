@@ -14,9 +14,9 @@ const config: PostgresConnectionOptions = {
   database: process.env.POSTGRES_DATABASE || 'tbcm',
   cli: {
     migrationsDir: 'src/migration',
-    entitiesDir: 'src/**/entities/*.entity.ts',
+    entitiesDir: 'src/**/*.entity.ts',
   },
-  entities: ['dist/**/entities/*.entity.js'],
+  entities: ['dist/**/*.entity.js'],
   migrations: ['dist/migration/*.js'],
   subscribers: ['dist/**/*.subscribers.js'],
   synchronize: false,

@@ -17,7 +17,7 @@ export const usePlanningProfile = () => {
   const handleSubmit = (values: any) => {
     sendApiRequest(
       {
-        method: REQUEST_METHOD.POST,
+        method: REQUEST_METHOD.PATCH,
         data: values,
         endpoint: API_ENDPOINT.getPlanningProfile(sessionId),
       },
