@@ -32,13 +32,13 @@ export const sidebarNavItems: SidebarButtonProps[] = [
 
 export const PlanningSteps = [
   'Profile',
-  'Care Activities Bundles',
+  // 'Care Activities Bundles',
   'Occupation',
   'Activities Gap',
   'Suggestions',
 ];
 
-export enum TagStyles {
+export enum OccupationTagStyles {
   BLUE = 'blue',
   GREEN = 'green',
 }
