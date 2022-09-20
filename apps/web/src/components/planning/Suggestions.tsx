@@ -1,5 +1,4 @@
 import { PlanningStepHeader } from '@components';
-import { planningFormBox } from '../../styles/styles';
 
 export interface SuggestionsProps {
   step: number;
@@ -8,7 +7,7 @@ export interface SuggestionsProps {
 
 export const Suggestions: React.FC<SuggestionsProps> = ({ title }) => {
   return (
-    <div className={planningFormBox}>
+    <div className='planning-form-box'>
       <PlanningStepHeader>{title}</PlanningStepHeader>
     </div>
   );

@@ -1,5 +1,4 @@
 import { Radio } from '@components';
-import { planningFormBox } from '../../styles/styles';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContext } from '../../services';
 import { SaveProfileDTO } from '@tbcm/common';
@@ -61,7 +60,7 @@ const ProfileForm = () => {
   return (
     <Form className='w-full'>
       <div>
-        <div className={planningFormBox}>
+        <div className='planning-form-box'>
           <Radio
             legend='Select how do you want to start with'
             name='profile'
@@ -71,7 +70,7 @@ const ProfileForm = () => {
         <div>
           <div>
             {values.profile === ProfileOptions.GENERIC && !isLoading && (
-              <div className={planningFormBox}>
+              <div className='planning-form-box'>
                 <RenderSelect
                   label={'Select Care Location Profile'}
                   options={careLocations}
