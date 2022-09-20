@@ -14,12 +14,14 @@ export const RightSideBarActivites: React.FC = () => {
 
   //useEFFECTS
   useEffect(() => {
-    const newCareActivity = _.find(careActivities.result, function (o) {
-      return o.id == values.careActivityID;
-    });
-    setItems(newCareActivity);
-    //Set checked ids to previously selected ids when care activity changes
-    values.checked = _.filter(values.careActivityBundle[values.careActivityID]);
+    if (!_.isUndefined(careActivities)) {
+      const newCareActivity = _.find(careActivities.result, function (o) {
+        return o.id == values.careActivityID;
+      });
+      setItems(newCareActivity);
+      //Set checked ids to previously selected ids when care activity changes
+      values.checked = _.filter(values.careActivityBundle[values.careActivityID]);
+    }
   }, [values.careActivityID, careActivities]);
 
   useEffect(() => {

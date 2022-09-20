@@ -22,10 +22,12 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
   useEffect(() => {
     if (isLoading) {
       setItems(careActivities);
-      _.each(careActivities.result, item => {
-        values.careActivityBundle[item.id] = [];
-      });
-      values.careActivityID = _.head(careActivities.result).id;
+      if (!_.isUndefined(careActivities)) {
+        _.each(careActivities.result, item => {
+          values.careActivityBundle[item.id] = [];
+        });
+        values.careActivityID = _.head(careActivities.result).id;
+      }
     }
   }, [careActivities]);
 
@@ -37,7 +39,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
   const filteredData =
     items &&
     items.result &&
-    items.result.filter(item => {
+    items.result.filter((item: any) => {
       return item.name.toLowerCase().includes(searchValue.toLowerCase());
     });
 
@@ -60,7 +62,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
       <div className='mt-4' style={{ overflow: 'auto', maxHeight: '400px' }}>
         <div role='group'>
           {!_.isEmpty(filteredData) ? (
-            filteredData.map(item => {
+            filteredData.map((item: any) => {
               return (
                 <label
                   key={item.id}
