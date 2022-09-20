@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import classnames from 'classnames';
 import { Field as FormikField } from 'formik';
 import { Error } from './Error';
