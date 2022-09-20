@@ -1,5 +1,4 @@
 import { PlanningStepHeader } from '@components';
-import { planningFormBox } from '../../styles/styles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { SearchBar } from '../generic/SearchBar';
@@ -47,7 +46,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
   const { updateProceedToNext } = usePlanningContext();
 
   return (
-    <div className={planningFormBox}>
+    <div className='planning-form-box'>
       <PlanningStepHeader>{title}</PlanningStepHeader>
       <div className='px-5'>
         <div className='space-y-3'>

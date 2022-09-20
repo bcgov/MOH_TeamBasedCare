@@ -5,18 +5,12 @@ import { isOdd } from 'src/common/util';
 export const OccupationSelector = ({}) => {
   const { occupations } = useOccupations();
 
-  // Have to declare them here because importing from styles.ts
-  // breaks it, I don't know why.
-  const occupationItemBox = 'flex items-center h-16 px-4';
-  const occupationItemBoxGray = `${occupationItemBox} bg-bcLightGray shadow-xs`;
-  const occupationItemBoxWhite = `${occupationItemBox} shadow-x`;
-
   return (
     <div>
       {occupations.map((occupation, index) => {
-        const styling = isOdd(index) ? occupationItemBoxGray : occupationItemBoxWhite;
+        const styling = isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white';
         return (
-          <div key={index} className={styling}>
+          <div key={index} className={`occupation-item-box ${styling}`}>
             <OccupationItem key={occupation.id} {...occupation}></OccupationItem>
           </div>
         );

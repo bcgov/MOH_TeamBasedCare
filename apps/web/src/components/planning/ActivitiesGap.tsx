@@ -1,6 +1,5 @@
 import { PlanningStepHeader } from '@components';
 import { Field } from 'formik';
-import { planningFormBox } from '../../styles/styles';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -9,7 +8,7 @@ export interface ActivitiesGapProps {
 
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   return (
-    <div className={planningFormBox}>
+    <div className='planning-form-box'>
       <PlanningStepHeader>{title}</PlanningStepHeader>
       <label htmlFor='ActivitiesGap'>
         ActivitiesGap
