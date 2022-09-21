@@ -10,7 +10,6 @@ import { SaveCareActivityDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { usePlanningCareActivities } from '../../services';
 
-
 export interface CareActivitiesBundleProps {
   step?: number;
   title: string;
@@ -62,11 +61,9 @@ const CareActivitiesBundleWrapper: React.FC<CareActivitiesBundleProps> = ({ titl
 // };
 
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
-
   const { handleSubmit, initialValues } = usePlanningCareActivities();
 
   const occupationValidationSchema = createValidator(SaveCareActivityDTO);
-
 
   const description =
     'Based on the your Profile selection, here are the list of activities that done by the selected care location profile. All the care acitivities are selected by default, please select or deselect base on your planning.';
@@ -86,7 +83,6 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
           enableReinitialize={true}
         >
           <CareActivitiesBundleWrapper title={title} />
-
         </Formik>
       </div>
     </>
