@@ -5,6 +5,9 @@ import { Checkbox } from '@components';
 import _ from 'lodash';
 import { useFormikContext } from 'formik';
 import { useCareActivities } from '../services';
+import { Tag } from './generic/Tag';
+import { TagStyles } from 'src/common';
+import { SearchBar } from './generic/SearchBar'
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
@@ -57,14 +60,7 @@ export const RightSideBarActivites: React.FC = () => {
             </label>
           </div>
 
-          <input
-            type='text'
-            name='search'
-            placeholder='Search '
-            className='block w-full text-sm text-slate-500 border-2 border-gray-200 p-2'
-            value={searchValue}
-            onChange={handleSearch}
-          />
+          <SearchBar handleChange={handleSearch} />
 
           <p className='text-sm text-gray-400'>
             {items && items.careActivities.length} Care Activities Tasks and Restricted Tasks
@@ -80,8 +76,19 @@ export const RightSideBarActivites: React.FC = () => {
               filteredData &&
               filteredData.map((item: any) => {
                 return (
-                  <div key={item.id}>
-                    <Checkbox name='checked' value={item.id} label={item.name} />
+                  <div key={item.id} className='flex flex-1 items-center'>
+                    <div className='flex-initial w-5/6'>
+                      <Checkbox
+                        name='checked'
+                        value={item.id}
+                        styles='text-bcDarkBlue accent-bcBlueLink'
+                        label={item.name}
+                      />
+                    </div>
+                    <div className='flex flex-initial w-3/6 justify-end'>
+                      <Tag text={item.activityType} tagStyle={TagStyles.GREEN}></Tag>
+                      <Tag text={item.clinicalType} tagStyle={TagStyles.BLUE}></Tag>
+                    </div>
                   </div>
                 );
               })
