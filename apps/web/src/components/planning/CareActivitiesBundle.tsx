@@ -29,37 +29,6 @@ const CareActivitiesBundleWrapper: React.FC<CareActivitiesBundleProps> = ({ titl
   );
 };
 
-// const CareActivitiesForm: React.FC<CareActivitiesBundleProps> = ({ title }) => {
-//   const { isSubmitting, submitForm, isValid } = useFormikContext();
-
-//   const {
-//     state: { isNextTriggered },
-//     updateWaitForValidation,
-//   } = usePlanningContext();
-
-//   useEffect(() => {
-//     (async () => {
-//       if (isNextTriggered && !isSubmitting) {
-//         try {
-//           await submitForm();
-//           !isValid && updateWaitForValidation();
-//         } catch (error: any) {
-//           updateWaitForValidation();
-//         }
-//       }
-//     })();
-//   }, [isNextTriggered]);
-
-//   return (
-//     <Form>
-//       <div className='flex'>
-//         <LeftSideBarActivites title={title} />
-//         <RightSideBarActivites />
-//       </div>
-//     </Form>
-//   );
-// };
-
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
   const { handleSubmit, initialValues } = usePlanningCareActivities();
 
