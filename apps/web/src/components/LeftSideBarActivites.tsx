@@ -14,14 +14,14 @@ export interface SearchInputProps {
 }
 
 export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ title }) => {
-  const { careActivities, isLoading } = useCareActivities();
+  const { careActivities } = useCareActivities();
   const [items, setItems] = useState<any>();
   const [selectedItem, setSelectedItem] = useState<any>();
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
   const { values } = useFormikContext<any>();
 
   useEffect(() => {
-    if (isLoading) {
+    if (careActivities && careActivities.result?.length > 0) {
       setItems(careActivities);
       if (!_.isUndefined(careActivities)) {
         _.each(careActivities.result, item => {
@@ -71,8 +71,8 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                       {item.name}
                     </p>
                     <p className='text-sm text-gray-400 truncate dark:text-gray-400'>
-                      {values.careActivityBundle[item.id].length} / {item.careActivities.length}{' '}
-                      selection
+                      {values.careActivityBundle[item.id]?.length ?? 0} /{' '}
+                      {item.careActivities?.length} selection
                     </p>
                   </div>
                 </label>
