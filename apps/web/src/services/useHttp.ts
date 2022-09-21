@@ -38,7 +38,7 @@ export const useHttp = (): HttpReturn => {
     setIsLoading(false);
   }, []);
 
-  const sendApiRequest = async (requestConfig: any, handleData: any) => {
+  const sendApiRequest = async (requestConfig: any, handleData: any, handleError?: any) => {
     const configOptions = {
       method: requestConfig.method,
       body: requestConfig?.body,
@@ -51,6 +51,9 @@ export const useHttp = (): HttpReturn => {
       setIsLoading(false);
       handleData(res);
     } catch (err: any) {
+      if (handleError) {
+        handleError();
+      }
       errorHandler(err);
       setIsLoading(false);
     }

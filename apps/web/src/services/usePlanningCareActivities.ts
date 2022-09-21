@@ -10,16 +10,17 @@ export const usePlanningCareActivities = () => {
   } = usePlanningContext();
   const [initialValues, setInitialValues] = useState<any>({
     careActivities: [],
-    careActivityBundle: [],
+    careActivityBundle: {},
+    careActivityID: '',
   });
   const { sendApiRequest, fetchData } = useHttp();
 
   const handleSubmit = (values: any) => {
     sendApiRequest(
       {
-        method: REQUEST_METHOD.POST,
+        method: REQUEST_METHOD.PATCH,
         data: values,
-        endpoint: API_ENDPOINT.getPlanningProfile(sessionId),
+        endpoint: API_ENDPOINT.getPlanningCareActivity(sessionId),
       },
       () => {
         updateProceedToNext();
@@ -29,9 +30,13 @@ export const usePlanningCareActivities = () => {
 
   useEffect(() => {
     if (sessionId) {
-      fetchData({ endpoint: API_ENDPOINT.getPlanningProfile(sessionId) }, (data: any) => {
-        if (data) {
-          setInitialValues(data);
+      fetchData({ endpoint: API_ENDPOINT.getPlanningCareActivity(sessionId) }, (data: any) => {
+        if (data && Object.keys(data).length > 0) {
+          setInitialValues({
+            careActivities: [],
+            careActivityBundle: data,
+            careActivityID: '',
+          });
         }
       });
     }

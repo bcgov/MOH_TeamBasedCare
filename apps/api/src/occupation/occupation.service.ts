@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
 import { Injectable } from '@nestjs/common';
 
@@ -12,5 +12,11 @@ export class OccupationService {
 
   async getAllOccupations(): Promise<Occupation[]> {
     return this.occupationrepository.find();
+  }
+
+  findAllOccupation(occupationIds: string[]): Promise<Occupation[]> {
+    return this.occupationrepository.find({
+      where: { id: In(occupationIds) },
+    });
   }
 }
