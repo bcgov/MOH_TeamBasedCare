@@ -33,6 +33,10 @@ export const RightSideBarActivites: React.FC = () => {
     }
   }, [values.careActivities]);
 
+  useEffect(() => {
+    values.careActivityBundle[values.careActivityID] = values.checked;
+  }, [values.checked]);
+
   // Get search value
   const handleSearch = (e: { target: { value: string } }) => {
     setSearchValue(e.target.value);
