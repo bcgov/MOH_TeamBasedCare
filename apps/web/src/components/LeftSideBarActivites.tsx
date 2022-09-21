@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import _ from 'lodash';
 import { useCareActivities } from '../services';
 import { Field, useFormikContext } from 'formik';
-import { SearchBar } from './generic/SearchBar'
+import { SearchBar } from './generic/SearchBar';
 
 export interface LeftSideBarActivitesProps {
   title: string;
@@ -52,7 +52,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
       </div>
 
       <SearchBar handleChange={handleSearch} />
-      
+
       <div className='mt-4' style={{ overflow: 'auto', maxHeight: '400px' }}>
         <div role='group'>
           {!_.isEmpty(filteredData) ? (

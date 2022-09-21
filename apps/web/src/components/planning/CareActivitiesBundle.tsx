@@ -68,7 +68,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
           validateOnBlur={true}
           validateOnMount={true}
           enableReinitialize={true}
-          >
+        >
           <CareActivitiesForm title={title} />
         </Formik>
       </div>

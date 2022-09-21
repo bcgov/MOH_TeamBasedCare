@@ -7,7 +7,7 @@ import { useFormikContext } from 'formik';
 import { useCareActivities } from '../services';
 import { Tag } from './generic/Tag';
 import { TagStyles } from 'src/common';
-import { SearchBar } from './generic/SearchBar'
+import { SearchBar } from './generic/SearchBar';
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');

@@ -1,8 +1,6 @@
 interface SearchBarProps {
   placeholderText?: string;
-  handleChange?: ({
-    target,
-  }: React.ChangeEvent<HTMLInputElement>) => void;
+  handleChange?: ({ target }: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const SearchBar = ({ placeholderText = 'Search', handleChange }: SearchBarProps) => {

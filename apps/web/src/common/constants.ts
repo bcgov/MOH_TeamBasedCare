@@ -43,5 +43,3 @@ export enum TagStyles {
   BLUE = 'occupation-tag-blue',
   GREEN = 'occupation-tag-green',
 }
-
-
