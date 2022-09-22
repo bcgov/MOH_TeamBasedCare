@@ -8,7 +8,7 @@ const Home: NextPage = () => {
     <>
       <div className='flex overflow-x-hidden h-screen mr-auto'>
         <Sidebar />
-        <div className='h-screen flex flex-col overflow-auto w-full p-3'>
+        <div className='h-screen flex flex-col w-full p-3'>
           <Header />
           <PlanningWrapper />
         </div>

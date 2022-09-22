@@ -14,7 +14,7 @@ body,
 }
 
 .planning-form-box {
-  @apply w-full justify-end border-2 bg-white rounded p-3 mt-4;
+  @apply flex-1 w-full justify-end border-2 bg-white rounded p-3 mt-4;
 }
 
 .occupation-item-box {
