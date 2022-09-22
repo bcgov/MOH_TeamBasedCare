@@ -24,3 +24,12 @@ export enum ClinicalType {
   CLINICAL = 'Clinical',
   SUPPORT = 'Clinical Support',
 }
+
+export enum ActivitiesActionType {
+  GREEN_CHECK = 'X',
+  YELLOW = 'A',
+  YELLOW_EXCLAMATION = 'C(E)',
+  YELLOW_CAUTION = 'L',
+  RED = '',
+  GREY = 'MIXED',
+}

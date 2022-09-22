@@ -8,6 +8,7 @@ import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
+import { ActivitiesActionType } from '../common/constants';
 
 @Injectable()
 export class PlanningSessionService {
@@ -121,7 +122,7 @@ export class PlanningSessionService {
     const occupations = planningSession.occupation;
     const groupedBundles = _.groupBy(careActivities, 'bundle_name');
 
-    const headers = ['Care Activities'].concat(occupations.map(e => e.displayName));
+    const headers = ['Activities Bundle'].concat(occupations.map(e => e.displayName));
 
     const query = await this.planningSessionRepo
       .createQueryBuilder('ps')
@@ -148,6 +149,13 @@ export class PlanningSessionService {
       const data: { [key: string]: any | any[] } = {
         name,
       };
+
+      const occupationSummary: { [key: string]: Set<string> } = {};
+
+      occupations.forEach(eachMember => {
+        occupationSummary[eachMember.displayName] = new Set<string>();
+      });
+
       let numberOfGaps = 0;
       const careActivitiesForBundle: any[] = [];
       value.forEach(eachCA => {
@@ -159,11 +167,18 @@ export class PlanningSessionService {
         }
         const groupedCAAction = groupedMappingActions[eachCA.id];
         occupations.forEach(eachMember => {
-          eachActivity[eachMember.displayName] = groupedCAAction?.[eachMember.id] ?? '';
+          eachActivity[eachMember.displayName] =
+            groupedCAAction?.[eachMember.id] ?? ActivitiesActionType.RED;
+          occupationSummary[eachMember.displayName].add(eachActivity[eachMember.displayName]);
         });
 
         careActivitiesForBundle.push(eachActivity);
       });
+
+      Object.entries(occupationSummary).forEach(([name, actions]) => {
+        data[name] = actions.size === 1 ? [...actions][0] : ActivitiesActionType.GREY;
+      });
+
       data['numberOfGaps'] = numberOfGaps;
       data['careActivities'] = careActivitiesForBundle;
       result.push(data);
