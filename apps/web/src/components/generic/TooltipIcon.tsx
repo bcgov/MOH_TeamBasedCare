@@ -15,13 +15,15 @@ export const TooltipIcon = ({
   style = tooltipDefaultValues.style,
 }: TooltipIconProps) => {
   return (
-    <div className='inline-block w-5'>
+    <div className={`inline-block w-[25px]`}>
       <div className='relative flex flex-col items-center group'>
-        <button className='w-5'>
+        <button className='w-[25px]'>
           <FontAwesomeIcon className={`${style}`} icon={icon}></FontAwesomeIcon>
         </button>
-        <div className='absolute bottom-3 flex flex-col items-center hidden mb-6 group-hover:flex'>
-          <span className='relative z-10 p-3 text-sm leading-none text-white whitespace-no-wrap bg-bcBlueAccent shadow-sm rounded-sm'>
+        <div
+          className={`absolute bottom-3 flex flex-col items-center hidden mb-[25px] group-hover:flex`}
+        >
+          <span className='relative z-10 min-w-[200px] w-auto p-3 text-sm leading-none text-white bg-bcBlueAccent shadow-sm rounded-sm'>
             {text}
           </span>
           <div className='w-3 h-3 -mt-2 rotate-45 bg-bcBlueAccent'></div>
