@@ -17,7 +17,7 @@ export interface OccupationProps {
 const OccupationForm = () => {
   usePlanningContent();
   return (
-    <Form>
+    <Form className='flex-1'>
       <OccupationSelector></OccupationSelector>
     </Form>
   );
@@ -31,14 +31,14 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
 
   return (
     <div className='planning-form-box'>
-      <div className='px-5'>
-        <div className='space-y-3'>
-          <div className='space-x-1.5 flex'>
+      <div className='h-full px-5'>
+        <div className='h-full flex flex-col space-y-3'>
+          <div className='h-auto space-x-1.5 flex'>
             <FontAwesomeIcon className='text-bcDarkBlue inline w-6 h-6' icon={faUserCircle} />
             <h4 className='inline text-bcBluePrimary font-bold font-sans'>Select Occupation</h4>
           </div>
 
-          <div className='space-y-2'>
+          <div className='h-full space-y-2'>
             <p className='text-sm font-extralight font-sans text-gray-400'>
               Select all the roles on your team.
             </p>
@@ -53,7 +53,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
             enableReinitialize={true}
           >
             {({ values }) => (
-              <div className='space-y-2'>
+              <div className='flex-1 space-y-2'>
                 <p className='text-sm font-extralight font-sans text-gray-400'>
                   {values.occupation?.length} occupations selected
                 </p>

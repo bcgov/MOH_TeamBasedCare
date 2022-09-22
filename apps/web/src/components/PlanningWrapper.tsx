@@ -68,7 +68,7 @@ const WrapperContent = () => {
           </Button>
         </div>
       </div>
-      <div className='' aria-hidden>
+      <div>
         <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
     </>
