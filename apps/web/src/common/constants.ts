@@ -48,9 +48,20 @@ export const PlanningSteps = [
 ];
 
 export enum TagStyles {
-  BASE = 'occupation-tag',
-  BLUE = 'occupation-tag-blue',
-  GREEN = 'occupation-tag-green',
+  BASE = 'tag',
+  BLUE = 'tag-blue',
+  GREEN = 'tag-green',
+  YELLOW = 'tag-yellow',
+  PURPLE = 'tag-purple',
+  TEAL = 'tag-teal',
+}
+
+export enum ActivityTagVariants {
+  ASPECT = 'Aspect of Practice',
+  TASK = 'Task',
+  RESTRICTED = 'Restricted Activity',
+  CLINICAL = 'Clinical',
+  SUPPORT = 'Clinical Support',
 }
 
 export enum TooltipIconTypes {

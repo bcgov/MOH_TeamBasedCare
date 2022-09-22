@@ -6,8 +6,8 @@ import _ from 'lodash';
 import { useFormikContext } from 'formik';
 import { useCareActivities } from '../services';
 import { Tag } from './generic/Tag';
-import { TagStyles } from 'src/common';
 import { SearchBar } from './generic/SearchBar';
+import { pickTagStyle } from 'src/common/util';
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
@@ -83,8 +83,14 @@ export const RightSideBarActivites: React.FC = () => {
                       <Checkbox name='careActivities' value={item.id} label={item.name} />
                     </div>
                     <div className='flex flex-initial w-3/6 justify-end'>
-                      <Tag text={item.activityType} tagStyle={TagStyles.GREEN}></Tag>
-                      <Tag text={item.clinicalType} tagStyle={TagStyles.BLUE}></Tag>
+                      <Tag
+                        text={item.activityType}
+                        tagStyle={pickTagStyle(item.activityType)}
+                      ></Tag>
+                      <Tag
+                        text={item.clinicalType}
+                        tagStyle={pickTagStyle(item.clinicalType)}
+                      ></Tag>
                     </div>
                   </div>
                 );

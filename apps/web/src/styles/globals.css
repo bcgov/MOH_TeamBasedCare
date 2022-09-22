@@ -29,16 +29,28 @@ body,
   @apply shadow-xs;
 }
 
-.occupation-tag {
+.tag {
   @apply flex justify-center items-center px-2  border rounded font-bold text-xs mr-1;
 }
 
-.occupation-tag-green {
+.tag-green {
   @apply bg-bcBannerSuccessBg text-bcBannerSuccessText border-bcBannerSuccessText;
 }
 
-.occupation-tag-blue {
+.tag-blue {
   @apply bg-bcLightBlueBackground text-bcBlueLink border-bcBlueLink;
+}
+
+.tag-yellow {
+  @apply bg-bcLightYellow text-bcDarkYellow border-bcDarkYellow;
+}
+
+.tag-purple {
+  @apply bg-bcLightPurple text-bcDarkPurple border-bcDarkPurple;
+}
+
+.tag-teal {
+  @apply bg-bcLightTeal text-bcDarkTeal border-bcDarkTeal;
 }
 
 .tooltip-icon {
