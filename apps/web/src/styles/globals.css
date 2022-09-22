@@ -30,7 +30,7 @@ body,
 }
 
 .occupation-tag {
-  @apply flex justify-center items-center px-6 py-1 border rounded font-bold text-xs;
+  @apply flex justify-center items-center px-2  border rounded font-bold text-xs mr-1;
 }
 
 .occupation-tag-green {

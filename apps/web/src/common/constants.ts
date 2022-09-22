@@ -47,7 +47,7 @@ export const PlanningSteps = [
   'Suggestions',
 ];
 
-export enum OccupationTagStyles {
+export enum TagStyles {
   BASE = 'occupation-tag',
   BLUE = 'occupation-tag-blue',
   GREEN = 'occupation-tag-green',
