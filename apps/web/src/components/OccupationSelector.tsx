@@ -6,7 +6,7 @@ export const OccupationSelector = ({}) => {
   const { occupations } = useOccupations();
 
   return (
-    <div className='flex-1 overflow-y-auto'>
+    <div className='flex-1 flex flex-col'>
       {occupations.map((occupation, index) => {
         const styling = isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white';
         return (
