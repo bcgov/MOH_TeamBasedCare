@@ -1,0 +1,22 @@
+{
+    "columns":[
+       "Care Activities",
+       "Therapist",
+       "Physician"
+    ],
+    "data":[
+       {
+          "name":"ICU Admission",
+          "numberOfGap":2,
+          "careActivities":[
+             {
+                "name":"Perform basic room safety check for patient upon arrival",
+                "Therapist":"L",
+                "Physician":"A"
+             }
+          ],
+          "Therapist":"C(E)",
+          "Physician":"X"
+       }
+    ]
+ }
