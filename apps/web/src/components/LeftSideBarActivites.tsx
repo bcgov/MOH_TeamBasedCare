@@ -25,7 +25,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
       setItems(careActivities);
       if (!_.isUndefined(careActivities)) {
         _.each(careActivities.result, item => {
-          values.careActivityBundle[item.id] = [];
+          values.careActivityBundle[item.id] = values.careActivityBundle[item.id] ?? [];
         });
         values.careActivityID = _.head(careActivities.result).id;
       }

@@ -90,13 +90,13 @@ export const RightSideBarActivites: React.FC = () => {
             className='mt-4'
             role='group'
             aria-labelledby='checkbox-group'
-            style={{ overflow: 'auto', maxHeight: '400px' }}
+            style={{ overflow: 'auto', maxHeight: '500px' }}
           >
             {!_.isEmpty(filteredData) ? (
               filteredData &&
               filteredData.map((item: any) => {
                 return (
-                  <div key={item.id} className='flex flex-1 items-center'>
+                  <div key={item.id} className='flex flex-1 items-center p-1.5'>
                     <div className='flex-initial w-5/6'>
                       <Checkbox name='careActivities' value={item.id} label={item.name} />
                     </div>
