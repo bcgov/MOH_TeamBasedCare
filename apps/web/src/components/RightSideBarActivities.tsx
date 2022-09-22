@@ -24,8 +24,6 @@ export const RightSideBarActivites: React.FC = () => {
       setItems(newCareActivity);
       //Set checked ids to previously selected ids when care activity changes
       values.careActivities = _.filter(values.careActivityBundle[values.careActivityID]);
-      //Empty array when careActivityID changes
-      values.checked = [];
     }
   }, [values.careActivityID, careActivities]);
 
@@ -34,10 +32,6 @@ export const RightSideBarActivites: React.FC = () => {
       values.careActivityBundle[values.careActivityID] = values.careActivities;
     }
   }, [values.careActivities]);
-
-  useEffect(() => {
-    values.careActivityBundle[values.careActivityID] = values.checked;
-  }, [values]);
 
   // Get search value
   const handleSearch = (e: { target: { value: string } }) => {
@@ -86,7 +80,7 @@ export const RightSideBarActivites: React.FC = () => {
                 return (
                   <div key={item.id} className='flex flex-1 items-center'>
                     <div className='flex-initial w-5/6'>
-                      <Checkbox name='checked' value={item.id} label={item.name} />
+                      <Checkbox name='careActivities' value={item.id} label={item.name} />
                     </div>
                     <div className='flex flex-initial w-3/6 justify-end'>
                       <Tag text={item.activityType} tagStyle={TagStyles.GREEN}></Tag>

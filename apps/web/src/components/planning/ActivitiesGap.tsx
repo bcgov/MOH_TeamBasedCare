@@ -24,7 +24,7 @@ const Legend: React.FC = () => {
           {Object.values(tooltipIcons).map((value: any, index) => {
             return (
               <li key={index} className='flex justify-center items-center my-2'>
-                <FontAwesomeIcon icon={value.icon}  className={`h-6 w-6 ${value.style}`} />
+                <FontAwesomeIcon icon={value.icon} className={`h-6 w-6 ${value.style}`} />
                 <div className='ml-3'>{value.text}</div>
               </li>
             );
