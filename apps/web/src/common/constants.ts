@@ -1,12 +1,14 @@
 import { SidebarButtonProps, SidebarButtonKind } from '../components/interface';
-import { faClipboardList, faUsers } from '@fortawesome/free-solid-svg-icons';
 import {
+  faClipboardList,
+  faUsers,
   faCheckCircle,
   faExclamationTriangle,
   faExclamationCircle,
   faTimesCircle,
   faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
+import { TooltipIconProps } from './interfaces';
 
 export const sidebarNavItems: SidebarButtonProps[] = [
   {
@@ -51,35 +53,50 @@ export enum TagStyles {
   GREEN = 'occupation-tag-green',
 }
 
-export const activityGapLegend = [
-  {
-    faIcon: faCheckCircle,
-    color: '#2E8540',
-    text: "Care activity can be performed as part of profession's scope of practice/ provider's role description",
+export enum TooltipIconTypes {
+  GREEN_CHECKMARK = 'greenCheckmarkIcon',
+  YELLOW_CAUTION = 'yellowCautionIcon',
+  YELLOW_EXCLAMATION = 'yellowExclamationIcon',
+  YELLOW_X = 'yellowXIcon',
+  RED_X = 'redXIcon',
+  GRAY_QUESTION = 'grayQuestionIcon',
+}
+
+export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
+  greenCheckmarkIcon: {
+    text: `Care activity can be performed as part of profession's scope of practice/provider's role description.`,
+    meaning: 'All activities can be performed.',
+    icon: faCheckCircle,
+    style: 'green-icon',
   },
-  {
-    faIcon: faExclamationTriangle,
-    color: '#FCBA19',
-    text: 'Care activity can be performed with limits and conditions.',
+  yellowCautionIcon: {
+    text: `Care activity can be performed with limits and conditions.`,
+    meaning: '',
+    icon: faExclamationTriangle,
+    style: 'yellow-icon',
   },
-  {
-    faIcon: faExclamationCircle,
-    color: '#FCBA19',
-    text: 'Care activity cannot be performed BUT occupation can assist with care activity.',
+  yellowExclamationIcon: {
+    text: `Care activity could be performed with additional education/training.`,
+    meaning: '',
+    icon: faExclamationCircle,
+    style: 'yellow-icon',
   },
-  {
-    faIcon: faTimesCircle,
-    color: '#FCBA19',
-    text: 'Care activity cannot be performed BUT occupation can assist with care activity.',
+  yellowXIcon: {
+    text: `Care activity cannot be performed BUT occupation can assist with care activity.`,
+    meaning: '',
+    icon: faTimesCircle,
+    style: 'yellow-icon',
   },
-  {
-    faIcon: faTimesCircle,
-    color: 'RED',
-    text: "Care activity cannot be performed; not part of profession's scope of practice/ provider's role description.",
+  redXIcon: {
+    text: `Care activity cannot be performed; not part of profession's scope of practice/provider's role description.`,
+    meaning: 'All activities cannot be performed.',
+    icon: faTimesCircle,
+    style: 'red-icon',
   },
-  {
-    faIcon: faQuestionCircle,
-    color: '#606060',
-    text: 'This occupation can perform some activities in this bundle with different restrictions. Please expand the activities bundle on the left for more details.',
+  grayQuestionIcon: {
+    text: `This occupation can perform some activities in this bundle with different restrictions. Please expand the care activities bundle on the left for more details.`,
+    meaning: 'Some activities have restrictions.',
+    icon: faQuestionCircle,
+    style: 'gray-icon',
   },
-];
+};

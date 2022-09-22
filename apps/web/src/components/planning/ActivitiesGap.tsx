@@ -2,7 +2,7 @@ import { PageTitle, Button } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartBar, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
-import { activityGapLegend } from '../../common';
+import { tooltipIcons } from '../../common';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -11,7 +11,6 @@ export interface ActivitiesGapProps {
 
 const Legend: React.FC = () => {
   const [openLegend, setOpenLegend] = useState(false);
-
   return (
     <>
       {!openLegend && (
@@ -22,11 +21,11 @@ const Legend: React.FC = () => {
       <div className={` ${!openLegend && 'hidden'} planning-form-box`}>
         <h2>Table Legend</h2>
         <ul className='flex flex-col items-start my-4'>
-          {activityGapLegend.map((i: any, index: any) => {
+          {Object.values(tooltipIcons).map((value: any, index) => {
             return (
               <li key={index} className='flex justify-center items-center my-2'>
-                <FontAwesomeIcon icon={i.faIcon} color={i.color} className='h-6 w-6' />
-                <div className='ml-3'>{i.text}</div>
+                <FontAwesomeIcon icon={value.icon} className={`h-6 w-6 ${value.style}`} />
+                <div className='ml-3'>{value.text}</div>
               </li>
             );
           })}

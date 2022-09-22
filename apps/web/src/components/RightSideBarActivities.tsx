@@ -86,7 +86,7 @@ export const RightSideBarActivites: React.FC = () => {
                 return (
                   <div key={item.id} className='flex flex-1 items-center'>
                     <div className='flex-initial w-5/6'>
-                      <Checkbox name='checked' value={item.id} label={item.name} />
+                      <Checkbox name='careActivities' value={item.id} label={item.name} />
                     </div>
                     <div className='flex flex-initial w-3/6 justify-end'>
                       <Tag text={item.activityType} tagStyle={TagStyles.GREEN}></Tag>

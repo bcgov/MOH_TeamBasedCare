@@ -41,6 +41,25 @@ body,
   @apply bg-bcLightBlueBackground text-bcBlueLink border-bcBlueLink;
 }
 
+.tooltip-icon {
+}
+
+.green-icon {
+  @apply text-bcGreenHiredText;
+}
+
+.yellow-icon {
+  @apply text-bcYellowPrimary;
+}
+
+.red-icon {
+  @apply text-bcRedError;
+}
+
+.gray-icon {
+  @apply text-bcGray;
+}
+
 @layer base {
   @font-face {
     font-family: BCSans;
