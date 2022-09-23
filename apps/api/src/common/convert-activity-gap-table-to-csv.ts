@@ -1,16 +1,31 @@
 const fs = require('fs');
 const { parse } = require('json2csv');
-const data = require('./form-export.example.json');
 
-const main = () => {
+interface CareActivityProps {
+  name: string;
+  'Respiratory Therapist': string;
+  'Speech Language Pathologist': string;
+  'Occupational Therapist': string;
+  'Registered Nurse - Critical Care': string;
+  'Registered Nurse - Medical/ Surgical': string;
+  'Licensed Practical Nurse (LPN)': string;
+  'Health Care Assistant (HCA)': string;
+  'Other - Non Clinical': string;
+  Physician: string;
+  numberOfGaps?: string;
+}
+interface JsonDataProps extends CareActivityProps {
+  careActivities: CareActivityProps[];
+}
+
+export const convertActivityGapTableToCSV = (data: any) => {
   try {
-    const f = data.headers;
-    const fields = f.map(element => {
+    const fields = data.headers.map((element: string | { label: string; value: string }) => {
       if (element === 'Activities Bundle') return { label: 'Activities Bundle', value: 'name' };
       return element;
     });
 
-    const emptyRow = {
+    const emptyRow: CareActivityProps = {
       name: '',
       'Respiratory Therapist': '',
       'Speech Language Pathologist': '',
@@ -23,22 +38,19 @@ const main = () => {
       Physician: '',
       numberOfGaps: '',
     };
+    const options = { fields };
 
-    const opts = { fields };
-    const resData = data.data
-      .map(element => {
+    const resultData = data.data
+      .map((element: JsonDataProps) => {
         const { careActivities, ...remainder } = element;
         const res = [remainder, ...careActivities, emptyRow];
         return [{ ...emptyRow, name: remainder.name }, ...careActivities, emptyRow];
       })
       .flat();
 
-    let csv = parse(resData, opts);
-    // console.log(csv);
+    const csv = parse(resultData, options);
     fs.writeFileSync('./src/example-data/converted-data.csv', csv);
   } catch (err) {
     console.log(err);
   }
 };
-
-main();
