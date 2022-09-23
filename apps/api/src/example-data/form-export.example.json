@@ -1,0 +1,319 @@
+{
+  "headers": [
+    "Activities Bundle",
+    "Respiratory Therapist",
+    "Speech Language Pathologist",
+    "Occupational Therapist",
+    "Registered Nurse - Critical Care",
+    "Registered Nurse - Medical/ Surgical",
+    "Licensed Practical Nurse (LPN)",
+    "Health Care Assistant (HCA)",
+    "Other - Non Clinical",
+    "Physician"
+  ],
+  "data": [
+    {
+      "name": "ICU Admission",
+      "Respiratory Therapist": "MIXED",
+      "Speech Language Pathologist": "MIXED",
+      "Occupational Therapist": "MIXED",
+      "Registered Nurse - Critical Care": "MIXED",
+      "Registered Nurse - Medical/ Surgical": "MIXED",
+      "Licensed Practical Nurse (LPN)": "MIXED",
+      "Health Care Assistant (HCA)": "MIXED",
+      "Other - Non Clinical": "MIXED",
+      "Physician": "MIXED",
+      "numberOfGaps": 0,
+      "careActivities": [
+        {
+          "name": "Set up ICU room for new ICU patient admission",
+          "Respiratory Therapist": "C(E)",
+          "Speech Language Pathologist": "C(E)",
+          "Occupational Therapist": "C(E)",
+          "Registered Nurse - Critical Care": "C(E)",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "C(E)",
+          "Health Care Assistant (HCA)": "C(E)",
+          "Other - Non Clinical": "X",
+          "Physician": ""
+        },
+        {
+          "name": "Set up patient condition specific ICU room for new ICU patient admission",
+          "Respiratory Therapist": "C(E)",
+          "Speech Language Pathologist": "C(E)",
+          "Occupational Therapist": "C(E)",
+          "Registered Nurse - Critical Care": "C(E)",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "C(E)",
+          "Health Care Assistant (HCA)": "C(E)",
+          "Other - Non Clinical": "X",
+          "Physician": ""
+        },
+        {
+          "name": "Orient patient and family to ICU in hospital",
+          "Respiratory Therapist": "C(E)",
+          "Speech Language Pathologist": "C(E)",
+          "Occupational Therapist": "C(E)",
+          "Registered Nurse - Critical Care": "C(E)",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "C(E)",
+          "Health Care Assistant (HCA)": "C(E)",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Admits patient into the ICU and determines ICU Admission Orders",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "",
+          "Registered Nurse - Medical/ Surgical": "",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": "X"
+        },
+        {
+          "name": "Transcribes ICU Admission Orders",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "C(E)",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "X",
+          "Physician": ""
+        },
+        {
+          "name": "Send requisitions based on ICU Admission Orders",
+          "Respiratory Therapist": "C(E)",
+          "Speech Language Pathologist": "C(E)",
+          "Occupational Therapist": "C(E)",
+          "Registered Nurse - Critical Care": "C(E)",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "C(E)",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "X",
+          "Physician": ""
+        },
+        {
+          "name": "Review ICU Admission Orders for appropriateness as per the profession's scope of practice/ provider's role description",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "X",
+          "Occupational Therapist": "X",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "X",
+          "Licensed Practical Nurse (LPN)": "A",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Validate ICU Admission Orders as per the profession's scope of practice/ provider's role description",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Review admitting diagnosis and patient medical information/history and patient record as per the profession's scope of practice/ provider's role description for the purpose of developing a occupation-specific care plan",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "X",
+          "Occupational Therapist": "X",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "X",
+          "Licensed Practical Nurse (LPN)": "X",
+          "Health Care Assistant (HCA)": "X",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        }
+      ]
+    },
+    {
+      "name": "Admission",
+      "Respiratory Therapist": "MIXED",
+      "Speech Language Pathologist": "MIXED",
+      "Occupational Therapist": "MIXED",
+      "Registered Nurse - Critical Care": "X",
+      "Registered Nurse - Medical/ Surgical": "MIXED",
+      "Licensed Practical Nurse (LPN)": "MIXED",
+      "Health Care Assistant (HCA)": "MIXED",
+      "Other - Non Clinical": "MIXED",
+      "Physician": "",
+      "numberOfGaps": 0,
+      "careActivities": [
+        {
+          "name": "Perform patient condition specific safety check as per the profession's scope of practice/ provider's role description",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "X",
+          "Occupational Therapist": "X",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "X",
+          "Licensed Practical Nurse (LPN)": "X",
+          "Health Care Assistant (HCA)": "X",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Obtain patient's medical information from patient/family/health occupation to transcribe in patient record",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "C(E)",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "X",
+          "Physician": ""
+        }
+      ]
+    },
+    {
+      "name": "Medication",
+      "Respiratory Therapist": "MIXED",
+      "Speech Language Pathologist": "MIXED",
+      "Occupational Therapist": "MIXED",
+      "Registered Nurse - Critical Care": "MIXED",
+      "Registered Nurse - Medical/ Surgical": "MIXED",
+      "Licensed Practical Nurse (LPN)": "MIXED",
+      "Health Care Assistant (HCA)": "",
+      "Other - Non Clinical": "",
+      "Physician": "MIXED",
+      "numberOfGaps": 0,
+      "careActivities": [
+        {
+          "name": "Obtain list of current medications from patient/family (part of Best Possible Medication History)",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "X",
+          "Occupational Therapist": "X",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "X",
+          "Licensed Practical Nurse (LPN)": "X",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": "X"
+        },
+        {
+          "name": "Assess the appropriateness of all drugs taken together to minimize adverse reactions and complexity",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Assess appropriateness of patient's prescribed drugs and make recommendations to prescriber as per the profession's scope of practice/ provider's role description.",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Review patient medical information/history on medication allergies or adverse reactions to inform clinical decisions as per the profession's scope of practice/ provider's role description.",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        },
+        {
+          "name": "Prescribe drugs (Schedule 1, 1A)",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "L",
+          "Registered Nurse - Medical/ Surgical": "L",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": "X"
+        }
+      ]
+    },
+    {
+      "name": "Diagnostic imaging",
+      "Respiratory Therapist": "X",
+      "Speech Language Pathologist": "",
+      "Occupational Therapist": "",
+      "Registered Nurse - Critical Care": "A",
+      "Registered Nurse - Medical/ Surgical": "A",
+      "Licensed Practical Nurse (LPN)": "",
+      "Health Care Assistant (HCA)": "",
+      "Other - Non Clinical": "",
+      "Physician": "X",
+      "numberOfGaps": 0,
+      "careActivities": [
+        {
+          "name": "Review x-ray to inform an occupation-specific care plan as per the profession's scope of practice/ provider's role description",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "A",
+          "Registered Nurse - Medical/ Surgical": "A",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": "X"
+        }
+      ]
+    },
+    {
+      "name": "Patient Assessment (General)",
+      "Respiratory Therapist": "MIXED",
+      "Speech Language Pathologist": "MIXED",
+      "Occupational Therapist": "MIXED",
+      "Registered Nurse - Critical Care": "MIXED",
+      "Registered Nurse - Medical/ Surgical": "MIXED",
+      "Licensed Practical Nurse (LPN)": "",
+      "Health Care Assistant (HCA)": "",
+      "Other - Non Clinical": "",
+      "Physician": "MIXED",
+      "numberOfGaps": 1,
+      "careActivities": [
+        {
+          "name": "Conduct patient physical assessment for the purpose of informing and monitoring the care plan as per the profession's scope of practice/ provider's role description",
+          "Respiratory Therapist": "X",
+          "Speech Language Pathologist": "X",
+          "Occupational Therapist": "X",
+          "Registered Nurse - Critical Care": "X",
+          "Registered Nurse - Medical/ Surgical": "C(E)",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": "X"
+        },
+        {
+          "name": "Conduct spiritual assessment for the purpose of  informing and monitoring the care plan as per the profession's scope of practice/ provider's role description",
+          "Respiratory Therapist": "",
+          "Speech Language Pathologist": "",
+          "Occupational Therapist": "",
+          "Registered Nurse - Critical Care": "",
+          "Registered Nurse - Medical/ Surgical": "",
+          "Licensed Practical Nurse (LPN)": "",
+          "Health Care Assistant (HCA)": "",
+          "Other - Non Clinical": "",
+          "Physician": ""
+        }
+      ]
+    }
+  ]
+}
