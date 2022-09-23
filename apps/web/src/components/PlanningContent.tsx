@@ -25,9 +25,11 @@ export const PlanningContent: React.FC<PlanningContentProps> = ({ step, formTitl
     }
   };
   return (
-    <>
-      <p className='sr-only'>{step <= step ? `Form step ${step} of ${step}` : 'Form Complete'}</p>
+    <div className='flex-1 flex flex-col min-h-0'>
+      <p className='flex-none sr-only'>
+        {step <= step ? `Form step ${step} of ${step}` : 'Form Complete'}
+      </p>
       {showStepContent()}
-    </>
+    </div>
   );
 };
