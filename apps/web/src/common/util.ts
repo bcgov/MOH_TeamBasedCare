@@ -1,22 +1,22 @@
-import { ActivityTagVariants, TagStyles } from './constants';
+import { ActivityTagVariants, TagVariants } from './constants';
 
 export const isOdd = (n: number): boolean => {
   return n % 2 !== 0;
 };
 
-export const pickTagStyle = (tag: ActivityTagVariants): TagStyles => {
+export const pickTagStyle = (tag: ActivityTagVariants): TagVariants => {
   switch (tag) {
     case ActivityTagVariants.ASPECT:
-      return TagStyles.YELLOW;
+      return TagVariants.YELLOW;
     case ActivityTagVariants.CLINICAL:
-      return TagStyles.BLUE;
+      return TagVariants.BLUE;
     case ActivityTagVariants.RESTRICTED:
-      return TagStyles.TEAL;
+      return TagVariants.TEAL;
     case ActivityTagVariants.SUPPORT:
-      return TagStyles.PURPLE;
+      return TagVariants.PURPLE;
     case ActivityTagVariants.TASK:
-      return TagStyles.GREEN;
+      return TagVariants.GREEN;
     default:
-      return TagStyles.BASE;
+      return TagVariants.BASE;
   }
 };

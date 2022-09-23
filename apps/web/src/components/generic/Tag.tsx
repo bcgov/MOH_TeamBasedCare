@@ -1,10 +1,10 @@
-import { TagStyles } from '../../common/constants';
+import { TagVariants } from '../../common/constants';
 
 interface TagProps {
   text: string;
-  tagStyle: TagStyles;
+  tagStyle: TagVariants;
 }
 
 export const Tag = ({ text, tagStyle }: TagProps) => {
-  return <div className={`${TagStyles.BASE} ${tagStyle}`}>{text}</div>;
+  return <div className={`${TagVariants.BASE} ${tagStyle}`}>{text}</div>;
 };
