@@ -47,10 +47,21 @@ export const PlanningSteps = [
   'Suggestions',
 ];
 
-export enum TagStyles {
-  BASE = 'occupation-tag',
-  BLUE = 'occupation-tag-blue',
-  GREEN = 'occupation-tag-green',
+export enum TagVariants {
+  BASE = 'tag',
+  BLUE = 'tag-blue',
+  GREEN = 'tag-green',
+  YELLOW = 'tag-yellow',
+  PURPLE = 'tag-purple',
+  TEAL = 'tag-teal',
+}
+
+export enum ActivityTagVariants {
+  ASPECT = 'Aspect of Practice',
+  TASK = 'Task',
+  RESTRICTED = 'Restricted Activity',
+  CLINICAL = 'Clinical',
+  SUPPORT = 'Clinical Support',
 }
 
 export enum TooltipIconTypes {
@@ -60,6 +71,7 @@ export enum TooltipIconTypes {
   YELLOW_X = 'yellowXIcon',
   RED_X = 'redXIcon',
   GRAY_QUESTION = 'grayQuestionIcon',
+  YELLOW_QUESTION = 'yellowQuestionIcon',
 }
 
 export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
@@ -98,5 +110,11 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     meaning: 'Some activities have restrictions.',
     icon: faQuestionCircle,
     style: 'gray-icon',
+  },
+  yellowQuestionIcon: {
+    text: `This occupation can perform some activities in this bundle with different restrictions. Please expand the care activities bundle on the left for more details.`,
+    meaning: 'Some activities have restrictions.',
+    icon: faQuestionCircle,
+    style: 'yellow-icon',
   },
 };

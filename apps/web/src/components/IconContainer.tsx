@@ -10,7 +10,7 @@ export const IconContaner = () => {
       <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_EXCLAMATION]}></TooltipIcon>
       <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_X]}></TooltipIcon>
       <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]}></TooltipIcon>
-      <TooltipIcon {...tooltipIcons[TooltipIconTypes.GRAY_QUESTION]}></TooltipIcon>
+      <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_QUESTION]}></TooltipIcon>
     </div>
   );
 };

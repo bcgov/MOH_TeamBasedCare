@@ -40,6 +40,12 @@ module.exports = {
         bcDarkBlue: '#001a33',
         bcBannerSuccessBg: '#DFF0D8',
         bcBannerSuccessText: '#2D4821',
+        bcDarkPurple: '#511A96',
+        bcLightPurple: '#DBD9F7',
+        bcDarkTeal: '#095954',
+        bcLightTeal: '#D9F4F3',
+        bcDarkYellow: '#664B07',
+        bcLightYellow: '#FFF3D6',
       },
       fontSize: {
         '3xl': '1.5rem',
