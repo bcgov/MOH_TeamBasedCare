@@ -55,4 +55,9 @@ export class PlanningSessionController {
   getOccupation(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getOccupation(sessionId);
   }
+
+  @Get('/:sessionId/activities-gap')
+  getActivitiesGap(@Param('sessionId') sessionId: string) {
+    return this.planningSessionService.getActivitiesGap(sessionId);
+  }
 }

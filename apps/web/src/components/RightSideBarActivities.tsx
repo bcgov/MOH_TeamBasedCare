@@ -11,7 +11,7 @@ import { SearchBar } from './generic/SearchBar';
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
-  const { values } = useFormikContext<any>();
+  const { values, setFieldValue } = useFormikContext<any>();
   const [items, setItems] = useState<any>();
   const { careActivities } = useCareActivities();
 
@@ -44,8 +44,16 @@ export const RightSideBarActivites: React.FC = () => {
       return item.name.toLowerCase().includes(searchValue.toLowerCase());
     });
 
-  // Get search value
-  const handleSearchAll = () => {};
+  const handleSelectAll = (e: any) => {
+    if (e.target.checked) {
+      setFieldValue(
+        'careActivities',
+        items?.careActivities?.map((e: any) => e.id),
+      );
+    } else {
+      setFieldValue('careActivities', []);
+    }
+  };
 
   return (
     <div className='w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
@@ -55,9 +63,19 @@ export const RightSideBarActivites: React.FC = () => {
         </p>
       ) : (
         <>
-          <div className='justify-between text-bcBluePrimary w-full items-center mb-4 border-b-2 border-gray-200 pb-4'>
-            <label>
-              <input type='checkbox' name='selectAll' className='mr-3' onChange={handleSearchAll} />
+          <div className='flex items-center pb-4'>
+            <input
+              type='checkbox'
+              name='selectAll'
+              id='selectAll'
+              className='mr-3 h-5 w-5 min-w-5'
+              onChange={handleSelectAll}
+              checked={
+                values.careActivityBundle[values.careActivityID]?.length ===
+                items?.careActivities?.length
+              }
+            />
+            <label className='font-bold' htmlFor={'selectAll'}>
               Select all
             </label>
           </div>
@@ -72,13 +90,13 @@ export const RightSideBarActivites: React.FC = () => {
             className='mt-4'
             role='group'
             aria-labelledby='checkbox-group'
-            style={{ overflow: 'auto', maxHeight: '400px' }}
+            style={{ overflow: 'auto', maxHeight: '500px' }}
           >
             {!_.isEmpty(filteredData) ? (
               filteredData &&
               filteredData.map((item: any) => {
                 return (
-                  <div key={item.id} className='flex flex-1 items-center'>
+                  <div key={item.id} className='flex flex-1 items-center p-1.5'>
                     <div className='flex-initial w-5/6'>
                       <Checkbox name='careActivities' value={item.id} label={item.name} />
                     </div>
