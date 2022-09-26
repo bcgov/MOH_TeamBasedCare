@@ -67,9 +67,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                 >
                   <Field type='radio' name='careActivityID' value={item.id} />
                   <div className='flex-1 min-w-0'>
-                    <p className='font-medium text-bcBluePrimary truncate dark:text-white'>
-                      {item.name}
-                    </p>
+                    <p className='font-medium truncate dark:text-white'>{item.name}</p>
                     <p className='text-sm text-gray-400 truncate dark:text-gray-400'>
                       {values.careActivityBundle[item.id]?.length ?? 0} /{' '}
                       {item.careActivities?.length} selection

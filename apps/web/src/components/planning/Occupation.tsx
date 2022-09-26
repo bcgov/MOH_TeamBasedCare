@@ -8,6 +8,7 @@ import { usePlanningContent, usePlanningOccupations } from '@services';
 import { SaveOccupationDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { Error } from '../Error';
+import { PageTitle } from '../PageTitle';
 
 export interface OccupationProps {
   step: number;
@@ -31,17 +32,13 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
 
   return (
     <div className='planning-form-box'>
-      <div className='flex-1 flex flex-col min-h-0 px-5'>
-        <div className='flex-1 min-h-0 flex flex-col space-y-3'>
-          <div className='space-x-1.5 flex'>
-            <FontAwesomeIcon className='text-bcDarkBlue inline w-6 h-6' icon={faUserCircle} />
-            <h4 className='inline text-bcBluePrimary font-bold font-sans'>Select Occupation</h4>
-          </div>
+      <div className='flex-1 flex flex-col min-h-0'>
+        <div className='flex-1 min-h-0 flex flex-col'>
+          <PageTitle title={'Select Occupation'} description={'Select all the roles on your team'}>
+            <FontAwesomeIcon className='text-bcBluePrimary inline w-6 h-6' icon={faUserCircle} />
+          </PageTitle>
 
-          <div className='space-y-2'>
-            <p className='text-sm font-extralight font-sans text-gray-400'>
-              Select all the roles on your team.
-            </p>
+          <div>
             <SearchBar placeholderText='Search by keyword'></SearchBar>
           </div>
 
@@ -53,7 +50,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
             enableReinitialize={true}
           >
             {({ values }) => (
-              <div className='flex-1 flex flex-col min-h-0 space-y-2'>
+              <div className='flex-1 flex flex-col min-h-0 p-2'>
                 <p className='text-sm font-extralight font-sans text-gray-400'>
                   {values.occupation?.length} occupations selected
                 </p>

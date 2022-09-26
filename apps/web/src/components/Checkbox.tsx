@@ -21,13 +21,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value, styles =
 
   const identifier = value ?? name;
   return (
-    <div className='flex items-center'>
+    <div className='flex'>
       <FastField
         name={name}
         id={identifier}
         value={value}
         type='checkbox'
-        className={`${styles} mr-3 h-5 w-5 min-w-5`}
+        className={`${styles} mr-3 h-5 w-5 min-w-5 mt-px`}
       />
       <label htmlFor={identifier} className={`${styles} cursor-pointer`}>
         {label}
