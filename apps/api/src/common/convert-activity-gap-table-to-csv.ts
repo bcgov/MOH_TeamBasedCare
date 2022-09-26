@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { parse } = require('json2csv');
 
 interface CareActivityProps {
@@ -43,13 +42,12 @@ export const convertActivityGapTableToCSV = (data: any) => {
     const resultData = data.data
       .map((element: JsonDataProps) => {
         const { careActivities, ...remainder } = element;
-        // const res = [remainder, ...careActivities, emptyRow];
         return [{ ...emptyRow, name: remainder.name }, ...careActivities, emptyRow];
       })
       .flat();
 
     const csv = parse(resultData, options);
-    fs.writeFileSync('./src/example-data/converted-data.csv', csv);
+    return csv;
   } catch (err) {
     // console.log(err);
   }

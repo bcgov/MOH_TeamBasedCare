@@ -66,6 +66,6 @@ export class PlanningSessionController {
 
   @Post('/:sessionId/export-csv')
   exportCsv(@Param('sessionId') sessionId: string) {
-    return `Tried to export with sessionId: ${sessionId}`;
+    return this.planningSessionService.exportCsv(sessionId);
   }
 }

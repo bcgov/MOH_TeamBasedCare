@@ -12,7 +12,7 @@ export const ExportButton = ({ sessionId = '' }) => {
     const config = { endpoint: API_ENDPOINT.getExportCsv(sessionId), method: 'POST' };
 
     sendApiRequest(config, (data: any) => {
-      fileDownload(data, 'testfile.csv');
+      fileDownload(data, 'activity_gap_summary.csv');
     });
   };
   return (

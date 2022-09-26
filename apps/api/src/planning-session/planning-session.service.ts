@@ -9,6 +9,7 @@ import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
 import { ActivitiesActionType } from '../common/constants';
+import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
 
 @Injectable()
 export class PlanningSessionService {
@@ -102,6 +103,11 @@ export class PlanningSessionService {
     }
 
     return;
+  }
+
+  async exportCsv(sessionId: string): Promise<any> {
+    const activityGaps = await this.getPlanningActivityGap(sessionId);
+    return convertActivityGapTableToCSV(activityGaps);
   }
 
   async getPlanningActivityGap(sessionId: string): Promise<any> {
