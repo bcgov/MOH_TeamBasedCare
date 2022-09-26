@@ -25,6 +25,8 @@ const WrapperContent = () => {
     setCurrentStep(Number(currentStep) - 1);
   };
 
+  const exportToCsv = () => {};
+
   useEffect(() => {
     if (sessionId) {
       updateSessionId(sessionId);
@@ -57,15 +59,22 @@ const WrapperContent = () => {
           >
             Previous
           </Button>
-          <Button
-            variant='primary'
-            type='button'
-            classes={`ml-2`}
-            disabled={currentStep >= PlanningSteps.length}
-            onClick={handleNextStep}
-          >
-            Next
-          </Button>
+
+          {currentStep >= PlanningSteps.length ? (
+            <Button variant='primary' type='button' classes={`ml-2`} onClick={exportToCsv}>
+              Export
+            </Button>
+          ) : (
+            <Button
+              variant='primary'
+              type='button'
+              classes={`ml-2`}
+              disabled={currentStep >= PlanningSteps.length}
+              onClick={handleNextStep}
+            >
+              Next
+            </Button>
+          )}
         </div>
       </div>
       {/* Works here */}

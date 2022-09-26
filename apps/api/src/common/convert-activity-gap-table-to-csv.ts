@@ -43,7 +43,7 @@ export const convertActivityGapTableToCSV = (data: any) => {
     const resultData = data.data
       .map((element: JsonDataProps) => {
         const { careActivities, ...remainder } = element;
-        const res = [remainder, ...careActivities, emptyRow];
+        // const res = [remainder, ...careActivities, emptyRow];
         return [{ ...emptyRow, name: remainder.name }, ...careActivities, emptyRow];
       })
       .flat();
@@ -51,6 +51,6 @@ export const convertActivityGapTableToCSV = (data: any) => {
     const csv = parse(resultData, options);
     fs.writeFileSync('./src/example-data/converted-data.csv', csv);
   } catch (err) {
-    console.log(err);
+    // console.log(err);
   }
 };
