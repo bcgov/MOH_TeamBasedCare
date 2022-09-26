@@ -4,6 +4,7 @@ import { PlanningSteps } from '../common/constants';
 import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningSession } from '../services/usePlanningSession';
 import { usePlanningContext } from '../services';
+import { ExportButton } from './ExportButton';
 
 const WrapperContent = () => {
   const { sessionId } = usePlanningSession();
@@ -24,8 +25,6 @@ const WrapperContent = () => {
     if (isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
   };
-
-  const exportToCsv = () => {};
 
   useEffect(() => {
     if (sessionId) {
@@ -61,9 +60,7 @@ const WrapperContent = () => {
           </Button>
 
           {currentStep >= PlanningSteps.length ? (
-            <Button variant='primary' type='button' classes={`ml-2`} onClick={exportToCsv}>
-              Export
-            </Button>
+            <ExportButton sessionId={sessionId}></ExportButton>
           ) : (
             <Button
               variant='primary'

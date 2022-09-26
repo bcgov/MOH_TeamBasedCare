@@ -44,7 +44,7 @@ export const PlanningSteps = [
   'Care Activities Bundles',
   'Occupation',
   'Activities Gap',
-  'Suggestions',
+  // 'Suggestions',
 ];
 
 export enum TagVariants {

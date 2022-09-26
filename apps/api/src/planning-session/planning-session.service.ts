@@ -104,7 +104,7 @@ export class PlanningSessionService {
     return;
   }
 
-  async getActivitiesGap(sessionId: string): Promise<any> {
+  async getPlanningActivityGap(sessionId: string): Promise<any> {
     const planningSession = await this.planningSessionRepo.findOne(sessionId, {
       relations: ['careActivity', 'careActivity.bundle', 'occupation'],
     });
