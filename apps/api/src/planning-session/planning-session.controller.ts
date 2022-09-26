@@ -16,11 +16,11 @@ export class PlanningSessionController {
 
   @Patch('/:sessionId/profile')
   @ApiBody({ type: SaveProfileDTO })
-  saveCurrentProfileSelection(
+  async saveCurrentProfileSelection(
     @Param('sessionId') sessionId: string,
     @Body() saveProfileDto: SaveProfileDTO,
   ) {
-    this.planningSessionService.saveProfileSelection(sessionId, saveProfileDto);
+    await this.planningSessionService.saveProfileSelection(sessionId, saveProfileDto);
     return SUCCESS_RESPONSE;
   }
 
@@ -31,11 +31,11 @@ export class PlanningSessionController {
 
   @Patch('/:sessionId/care-activity')
   @ApiBody({ type: SaveCareActivityDTO })
-  saveCareActivity(
+  async saveCareActivity(
     @Param('sessionId') sessionId: string,
     @Body() careActivityDto: SaveCareActivityDTO,
   ) {
-    this.planningSessionService.saveCareActivity(sessionId, careActivityDto);
+    await this.planningSessionService.saveCareActivity(sessionId, careActivityDto);
     return SUCCESS_RESPONSE;
   }
 
@@ -46,8 +46,11 @@ export class PlanningSessionController {
 
   @Patch('/:sessionId/occupation')
   @ApiBody({ type: SaveOccupationDTO })
-  saveOccupation(@Param('sessionId') sessionId: string, @Body() occupationDto: SaveOccupationDTO) {
-    this.planningSessionService.saveOccupation(sessionId, occupationDto);
+  async saveOccupation(
+    @Param('sessionId') sessionId: string,
+    @Body() occupationDto: SaveOccupationDTO,
+  ) {
+    await this.planningSessionService.saveOccupation(sessionId, occupationDto);
     return SUCCESS_RESPONSE;
   }
 
