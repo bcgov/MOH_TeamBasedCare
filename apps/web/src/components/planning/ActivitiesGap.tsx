@@ -1,10 +1,15 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartBar, faCaretDown, faTimesCircle, faCaretUp, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import {
+  faChartBar,
+  faCaretDown,
+  faTimesCircle,
+  faCaretUp,
+} from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
-import table from './ActivityGapTableData.json'
+import { usePlanningActivitiesGap } from '../../services';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -12,62 +17,70 @@ export interface ActivitiesGapProps {
 }
 
 const TableHeader: React.FC = () => {
-  const tdStyles = "table-td table-header px-6 py-4 text-left text-sm font-medium text-gray-900 border-b-4";
+  const { initialValues } = usePlanningActivitiesGap();
+  const tdStyles =
+    'table-td table-header px-6 py-4 text-left text-sm font-strong text-bcBluePrimary border-b-4';
   return (
-    <thead className="border-b bg-gray-50 table-row-fixed table-header ">
-      {
-        table.headers.map((title, index)=> (
-          <th key={`th-${index}`}  className={tdStyles}>{title}</th>
-        ))
-      }
+    <thead className='border-b bg-gray-50 table-row-fixed table-header '>
+      {initialValues.headers &&
+        initialValues.headers.map((title: string, index: number) => (
+          <th key={`th-${index}`} className={tdStyles}>
+            {title}
+          </th>
+        ))}
     </thead>
   );
 };
 
-const SwitchTooltip: React.FC<any> = (props) => {
-  const {item} = props;
-    switch (item) { 
-      case 'MIXED':
-        return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_QUESTION]}/>;
-      case 'X':
-        return <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]}/>;
-      case 'L':
-        return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]}/>;
-      case 'C(E)':
-        return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_EXCLAMATION]}/>;
-      case 'A':
-        return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_X]}/>;
-      case '':
-        return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]}/>;
-      default:
-        return item;
-    }
-}
+const SwitchTooltip: React.FC<any> = props => {
+  const { item } = props;
+  switch (item) {
+    case 'MIXED':
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_QUESTION]} />;
+    case 'X':
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} />;
+    case 'L':
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} />;
+    case 'C(E)':
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_EXCLAMATION]} />;
+    case 'A':
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_X]} />;
+    case '':
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} />;
+    default:
+      return item;
+  }
+};
 
 const TableBody: React.FC = () => {
   const [openRow, setOpenRow] = useState<boolean>(false);
   const [selectedRow, setSelectedRow] = useState<number>();
-  const tdStyles = "table-td px-6 py-4 text-left text-sm font-medium text-gray-900 table-firstRow-TD";
-  const tdActivityBundle = "table-firstRow-firstTD"
+  const tdStyles =
+    'table-td px-6 py-4 text-center text-sm font-medium text-gray-900 table-firstRow-TD';
+  const tdActivityBundle = 'table-firstRow-firstTD';
+  const { initialValues } = usePlanningActivitiesGap();
 
-  const handleSelectRow = (index:number) => {
-    setOpenRow(!openRow)
-    setSelectedRow(index)
-  }
+  const handleSelectRow = (index: number) => {
+    setOpenRow(!openRow);
+    setSelectedRow(index);
+  };
 
   return (
     <tbody>
-      {
-        table.data.map((row:any, index)=> (
+      {initialValues.data &&
+        initialValues.data.map((row: any, index: number) => (
           <>
-            <tr key={`row-${index}`} className="bg-white border-b table-row-fixed">
-              <td className={`${tdActivityBundle} flex w-full items-center justify-between`} >
+            <tr key={`row-${index}`} className='bg-white border-b table-row-fixed'>
+              <td className={`${tdActivityBundle} flex w-full items-center justify-between`}>
                 <div className='w-full flex inline-flex items-left justify-left'>
                   <h2 className='text-l text-left'>
                     {row.name}
-                    <p className='text-left text-xs mt-1'>{row.careActivities.length} care & restricted activities</p>
+                    <p className='text-left text-xs mt-1'>
+                      {row.careActivities.length} care & restricted activities
+                    </p>
                     <p className='text-left text-xs flex mt-1 justify-left items-center'>
-                      <FontAwesomeIcon icon={faTimesCircle} className='h-4 mr-1 numberOfGaps' />{row.numberOfGaps}
+                      <FontAwesomeIcon icon={faTimesCircle} className='h-4 mr-1 numberOfGaps' />
+                      {row.numberOfGaps}
                     </p>
                   </h2>
                 </div>
@@ -75,45 +88,56 @@ const TableBody: React.FC = () => {
                   classes='flex inline-flex items-center justify-end h-5 w-5 !p-0 overflow-hidden rounded-full bg-white ml-4'
                   variant='default'
                   type='button'
-                  onClick={()=>handleSelectRow(index)}
-                   >
-                    <FontAwesomeIcon icon={selectedRow == index && openRow ?faCaretUp:faCaretDown} className='h-4 text-bcBluePrimary' />
+                  onClick={() => handleSelectRow(index)}
+                >
+                  <FontAwesomeIcon
+                    icon={selectedRow == index && openRow ? faCaretUp : faCaretDown}
+                    className='h-4 text-bcBluePrimary'
+                  />
                 </Button>
               </td>
-                { table.headers.map((item:any ) => {
-                    return (item != "Activities Bundle") && 
+              {initialValues.headers.map((item: any) => {
+                return (
+                  item != 'Activities Bundle' && (
                     <td className={`table-row-td-bg ${tdStyles}`}>
                       <SwitchTooltip item={row[item]} />
                     </td>
-                  })
-                } 
-            </tr >
-            { selectedRow == index && openRow &&
-                row.careActivities.map((value: any, key:number) => {
-                  return <tr key={`toggledRow-${key}`} className="bg-white border-b table-row-fixed">
-                    { Object.values(value).map((item: any, key) => {
-                        return  <td key={item} className={`${tdStyles} ${key == 0 ? 'firstTDinsideRow':''}`}> 
+                  )
+                );
+              })}
+            </tr>
+            {selectedRow == index &&
+              openRow &&
+              row.careActivities.map((value: any, key: number) => {
+                return (
+                  <tr key={`toggledRow-${key}`} className='bg-white border-b table-row-fixed'>
+                    {Object.values(value).map((item: any, key) => {
+                      return (
+                        <td
+                          key={item}
+                          className={`${tdStyles} ${key == 0 ? 'firstTDinsideRow' : ''}`}
+                        >
                           <SwitchTooltip item={item} />
                         </td>
-                      })}
-                    </tr >
-              })
-            }
+                      );
+                    })}
+                  </tr>
+                );
+              })}
           </>
-        ))
-      }
+        ))}
     </tbody>
   );
 };
 
-const ActivityGapTable: React.FC = () => {  
+const ActivityGapTable: React.FC = () => {
   return (
-     <div className="flex flex-col">
-      <table className="min-w-full text-center">
+    <div className='flex flex-col'>
+      <table className='min-w-full text-center'>
         <TableHeader />
         <TableBody />
       </table>
-    </div> 
+    </div>
   );
 };
 

@@ -77,38 +77,37 @@ body,
 }
 
 .table-active-bundles-row {
-  background: #CCE7FF;
+  background: #cce7ff;
 }
 .table-header {
-  border-bottom: 2px solid #FCBA19;
+  border-bottom: 2px solid #fcba19;
   background: #fff;
 }
 .table-row-td-bg {
-  background: #F2F2F2!important;
+  background: #f2f2f2 !important;
 }
 .table-firstRow-firstTD {
-  background: #EAF5FF;
+  background: #eaf5ff;
   padding: 8px 12px;
 }
 .table-firstRow-TD {
-  background: #F2F2F2;
+  background: #f2f2f2;
 }
 .table-row-fixed {
   width: 100%;
 }
 .table-td {
   max-width: 100px;
-  text-align: center;
   background: #fff;
-  padding:8px
+  padding: 8px;
 }
 .numberOfGaps {
-  color:red;
+  color: red;
 }
 .firstTDinsideRow {
   text-align: left;
   word-wrap: break-word;
-  white-space:initial;
+  white-space: initial;
 }
 
 @layer base {

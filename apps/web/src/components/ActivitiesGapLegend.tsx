@@ -13,7 +13,7 @@ export const ActivitiesGapLegend: React.FC = () => {
           Click here to view table legend
         </a>
       )}
-      {openLegend && 
+      {openLegend && (
         <div className={`legend-box`}>
           <h2>Table Legend</h2>
           <ul className='flex flex-col items-start my-4'>
@@ -31,7 +31,7 @@ export const ActivitiesGapLegend: React.FC = () => {
             Dismiss
           </Button>
         </div>
-      }
+      )}
     </>
   );
 };

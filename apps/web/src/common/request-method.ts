@@ -14,4 +14,5 @@ export const API_ENDPOINT = {
   OCCUPATIONS: '/occupations',
   getPlanningOccupation: (sessionId: string) => `/sessions/${sessionId}/occupation`,
   getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
+  getPlanningActivityGap: (sessionId: string) => `/sessions/${sessionId}/activities-gap`,
 };
