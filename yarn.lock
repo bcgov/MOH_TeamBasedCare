@@ -1978,7 +1978,7 @@ __metadata:
     formik: 2.2.9
     identity-obj-proxy: 3.0.0
     jest: 27.4.2
-    js-file-download: ^0.4.12
+    js-file-download: 0.4.12
     keycloak-js: 16.1.1
     lodash: 4.17.21
     next: 12.1.4
@@ -9784,7 +9784,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-file-download@npm:^0.4.12":
+"js-file-download@npm:0.4.12":
   version: 0.4.12
   resolution: "js-file-download@npm:0.4.12"
   checksum: a03847eef0184fbf34a7b7fd365ea6aa1a6cc142efeac52c4baa0cdde845dc93718eb66808dfcffd6c91b37ddc9d058d352ac9698b4280744bad3587240c93b6
@@ -9940,7 +9940,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json2csv@npm:^5.0.7":
+"json2csv@npm:5.0.7":
   version: 5.0.7
   resolution: "json2csv@npm:5.0.7"
   dependencies:
@@ -14380,7 +14380,7 @@ __metadata:
     dayjs: 1.11.0
     eslint-config-prettier: 8.3.0
     husky: 7.0.4
-    json2csv: ^5.0.7
+    json2csv: 5.0.7
     nodemon: 2.0.15
     npm-run-all: 4.1.5
     papaparse: 5.3.1
