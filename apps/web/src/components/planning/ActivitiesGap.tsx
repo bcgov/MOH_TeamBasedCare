@@ -22,12 +22,14 @@ const TableHeader: React.FC = () => {
     'table-td table-header px-6 py-4 text-left text-sm font-strong text-bcBluePrimary border-b-4';
   return (
     <thead className='border-b bg-gray-50 table-row-fixed table-header '>
-      {initialValues.headers &&
-        initialValues.headers.map((title: string, index: number) => (
-          <th key={`th-${index}`} className={tdStyles}>
-            {title}
-          </th>
-        ))}
+      <tr>
+        {initialValues.headers &&
+          initialValues.headers.map((title: string, index: number) => (
+            <th key={`th${index}`} className={tdStyles}>
+              {title}
+            </th>
+          ))}
+      </tr>
     </thead>
   );
 };
@@ -70,7 +72,7 @@ const TableBody: React.FC = () => {
       {initialValues.data &&
         initialValues.data.map((row: any, index: number) => (
           <>
-            <tr key={`row-${index}`} className='bg-white border-b table-row-fixed'>
+            <tr key={`row${index}`} className='bg-white border-b table-row-fixed'>
               <td className={`${tdActivityBundle} flex w-full items-center justify-between`}>
                 <div className='w-full flex inline-flex items-left justify-left'>
                   <h2 className='text-l text-left'>
@@ -96,10 +98,10 @@ const TableBody: React.FC = () => {
                   />
                 </Button>
               </td>
-              {initialValues.headers.map((item: any) => {
+              {initialValues.headers.map((item: any, index: number) => {
                 return (
                   item != 'Activities Bundle' && (
-                    <td className={`table-row-td-bg ${tdStyles}`}>
+                    <td key={`rowTd${index}`} className={`table-row-td-bg ${tdStyles}`}>
                       <SwitchTooltip item={row[item]} />
                     </td>
                   )
@@ -108,14 +110,14 @@ const TableBody: React.FC = () => {
             </tr>
             {selectedRow == index &&
               openRow &&
-              row.careActivities.map((value: any, key: number) => {
+              row.careActivities.map((value: any, index: number) => {
                 return (
-                  <tr key={`toggledRow-${key}`} className='bg-white border-b table-row-fixed'>
-                    {Object.values(value).map((item: any, key) => {
+                  <tr key={`toggledRow${index}`} className='bg-white border-b table-row-fixed'>
+                    {Object.values(value).map((item: any, index) => {
                       return (
                         <td
-                          key={item}
-                          className={`${tdStyles} ${key == 0 ? 'firstTDinsideRow' : ''}`}
+                          key={`toggledRowTd${index}`}
+                          className={`${tdStyles} ${index == 0 ? 'firstTDinsideRow' : ''}`}
                         >
                           <SwitchTooltip item={item} />
                         </td>
