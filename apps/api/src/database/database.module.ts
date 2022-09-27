@@ -47,8 +47,8 @@ const environmentSpecificConfig = getEnvironmentSpecificConfig(nodeEnv);
 const appOrmConfig: PostgresConnectionOptions = {
   ...config,
   ...environmentSpecificConfig,
-  migrationsRun: true,
-  synchronize: false,
+  migrationsRun: false,
+  synchronize: true,
 };
 
 @Module({

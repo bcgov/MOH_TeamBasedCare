@@ -13,6 +13,10 @@ body,
   background-color: rgb(243 244 246);
 }
 
+.legend-box {
+  @apply w-full border-2 bg-white rounded p-3 mt-4;
+}
+
 .planning-form-box {
   @apply flex-1 flex flex-col min-h-0 overflow-auto w-full border-2 bg-white rounded p-3 mt-4;
 }
@@ -58,6 +62,41 @@ body,
 
 .gray-icon {
   @apply text-bcGray;
+}
+
+.table-active-bundles-row {
+  background: #CCE7FF;
+}
+.table-header {
+  border-bottom: 2px solid #FCBA19;
+  background: #fff;
+}
+.table-row-td-bg {
+  background: #F2F2F2!important;
+}
+.table-firstRow-firstTD {
+  background: #EAF5FF;
+  padding: 8px 12px;
+}
+.table-firstRow-TD {
+  background: #F2F2F2;
+}
+.table-row-fixed {
+  width: 100%;
+}
+.table-td {
+  max-width: 100px;
+  text-align: center;
+  background: #fff;
+  padding:8px
+}
+.numberOfGaps {
+  color:red;
+}
+.firstTDinsideRow {
+  text-align: left;
+  word-wrap: break-word;
+  white-space:initial;
 }
 
 @layer base {

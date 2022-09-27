@@ -60,6 +60,7 @@ export enum TooltipIconTypes {
   YELLOW_X = 'yellowXIcon',
   RED_X = 'redXIcon',
   GRAY_QUESTION = 'grayQuestionIcon',
+  YELLOW_QUESTION = 'yellowQuestionIcon',
 }
 
 export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
@@ -98,5 +99,11 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     meaning: 'Some activities have restrictions.',
     icon: faQuestionCircle,
     style: 'gray-icon',
+  },
+  yellowQuestionIcon: {
+    text: `Care activity could be performed with additional education/training.`,
+    meaning: '',
+    icon: faQuestionCircle,
+    style: 'yellow-icon',
   },
 };
