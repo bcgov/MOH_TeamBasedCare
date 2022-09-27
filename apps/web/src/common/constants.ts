@@ -112,8 +112,8 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     style: 'gray-icon',
   },
   yellowQuestionIcon: {
-    text: `This occupation can perform some activities in this bundle with different restrictions. Please expand the care activities bundle on the left for more details.`,
-    meaning: 'Some activities have restrictions.',
+    text: `Care activity could be performed with additional education/training.`,
+    meaning: '',
     icon: faQuestionCircle,
     style: 'yellow-icon',
   },
