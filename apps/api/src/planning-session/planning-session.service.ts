@@ -10,10 +10,14 @@ import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
 import { ActivitiesActionType } from '../common/constants';
 import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
+import { AppLogger } from '../common/logger.service';
+import { Logger } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class PlanningSessionService {
   constructor(
+    @Inject(Logger) private readonly logger: AppLogger,
     @InjectRepository(PlanningSession)
     private planningSessionRepo: Repository<PlanningSession>,
     private careActivityService: CareActivityService,
