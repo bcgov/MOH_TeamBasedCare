@@ -3,7 +3,11 @@ import { API_ENDPOINT } from 'src/common';
 const fileDownload = require('js-file-download');
 import { Button } from './Button';
 
-export const ExportButton = ({ sessionId = '' }) => {
+interface ExportButtonProps {
+  sessionId: string;
+}
+
+export const ExportButton = ({ sessionId }: ExportButtonProps) => {
   const { sendApiRequest } = useHttp();
 
   const exportToCsv = () => {
