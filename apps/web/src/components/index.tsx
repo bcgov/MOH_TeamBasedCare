@@ -16,3 +16,4 @@ export * from './PageTitle';
 export * from './Sidebar';
 export * from './LeftSideBarActivites';
 export * from './RightSideBarActivities';
+export * from './ActivitiesGapLegend';
