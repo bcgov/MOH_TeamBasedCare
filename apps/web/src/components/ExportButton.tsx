@@ -4,7 +4,7 @@ const fileDownload = require('js-file-download');
 import { Button } from './Button';
 
 interface ExportButtonProps {
-  sessionId: string;
+  sessionId: any;
 }
 
 export const ExportButton = ({ sessionId }: ExportButtonProps) => {
