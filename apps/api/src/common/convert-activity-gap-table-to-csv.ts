@@ -1,21 +1,8 @@
+import { AppModule } from 'src/app.module';
+import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { AppLogger } from '../common/logger.service';
 const { parse } = require('json2csv');
-
-interface CareActivityProps {
-  name: string;
-  'Respiratory Therapist': string;
-  'Speech Language Pathologist': string;
-  'Occupational Therapist': string;
-  'Registered Nurse - Critical Care': string;
-  'Registered Nurse - Medical/ Surgical': string;
-  'Licensed Practical Nurse (LPN)': string;
-  'Health Care Assistant (HCA)': string;
-  'Other - Non Clinical': string;
-  Physician: string;
-  numberOfGaps?: string;
-}
-interface JsonDataProps extends CareActivityProps {
-  careActivities: CareActivityProps[];
-}
 
 export const convertActivityGapTableToCSV = (data: any) => {
   try {
@@ -24,23 +11,14 @@ export const convertActivityGapTableToCSV = (data: any) => {
       return element;
     });
 
-    const emptyRow: CareActivityProps = {
+    const emptyRow = {
+      ...data.headers.reduce((acc: any, curr: any) => ((acc[curr] = ''), acc), {}),
       name: '',
-      'Respiratory Therapist': '',
-      'Speech Language Pathologist': '',
-      'Occupational Therapist': '',
-      'Registered Nurse - Critical Care': '',
-      'Registered Nurse - Medical/ Surgical': '',
-      'Licensed Practical Nurse (LPN)': '',
-      'Health Care Assistant (HCA)': '',
-      'Other - Non Clinical': '',
-      Physician: '',
-      numberOfGaps: '',
     };
     const options = { fields };
 
     const resultData = data.data
-      .map((element: JsonDataProps) => {
+      .map((element: any) => {
         const { careActivities, ...remainder } = element;
         return [{ ...emptyRow, name: remainder.name }, ...careActivities, emptyRow];
       })
@@ -49,6 +27,10 @@ export const convertActivityGapTableToCSV = (data: any) => {
     const csv = parse(resultData, options);
     return csv;
   } catch (err) {
-    // console.log(err);
+    (async () => {
+      const appContext = await NestFactory.createApplicationContext(AppModule);
+      const logger: AppLogger = appContext.get(Logger);
+      logger.error(err);
+    })();
   }
 };

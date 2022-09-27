@@ -1978,6 +1978,7 @@ __metadata:
     formik: 2.2.9
     identity-obj-proxy: 3.0.0
     jest: 27.4.2
+    js-file-download: ^0.4.12
     keycloak-js: 16.1.1
     lodash: 4.17.21
     next: 12.1.4
@@ -5849,9 +5850,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.251":
-  version: 1.4.262
-  resolution: "electron-to-chromium@npm:1.4.262"
-  checksum: fee9ee842495f5cc4209b3af3a6ef0737165a19b62efd10825d7eb84f8cfb627380b4cf9d82fae5fb98cb065194dc974e0dec8b61b40d9c96e430f30fa13485c
+  version: 1.4.264
+  resolution: "electron-to-chromium@npm:1.4.264"
+  checksum: c716e480224164f7340033956adb95593bf2518571733c66ec647b30c9920b070923787ddfd3b1c466cb493c8e85f36c864e224e55a0e28fba1f1bc0fbf95d13
   languageName: node
   linkType: hard
 
@@ -14379,7 +14380,6 @@ __metadata:
     dayjs: 1.11.0
     eslint-config-prettier: 8.3.0
     husky: 7.0.4
-    js-file-download: ^0.4.12
     json2csv: ^5.0.7
     nodemon: 2.0.15
     npm-run-all: 4.1.5

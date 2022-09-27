@@ -28,6 +28,7 @@
     "cookie": "0.4.2",
     "eventemitter3": "4.0.7",
     "formik": "2.2.9",
+    "js-file-download": "^0.4.12",
     "keycloak-js": "16.1.1",
     "lodash": "4.17.21",
     "next": "12.1.4",
