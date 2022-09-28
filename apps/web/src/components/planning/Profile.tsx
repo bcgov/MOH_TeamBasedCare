@@ -27,6 +27,7 @@ export const profileOptions = [
     label: 'Start from a generic profile',
     value: ProfileOptions.GENERIC,
     selected: false,
+    disabled: true,
   },
   {
     label: 'Start a new profile from scratch',
@@ -50,6 +51,15 @@ const ProfileForm = () => {
             name='profile'
             options={profileOptions}
           />
+
+          <div
+            className='p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800'
+            role='alert'
+          >
+            <span className='font-bold'>Start from a generic profile</span> is currently under
+            development. Please select{' '}
+            <span className='font-bold'>Start a new profile from scratch</span>
+          </div>
         </div>
         <div>
           <div>
