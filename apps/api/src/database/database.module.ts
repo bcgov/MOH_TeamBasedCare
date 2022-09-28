@@ -48,7 +48,7 @@ const appOrmConfig: PostgresConnectionOptions = {
   ...config,
   ...environmentSpecificConfig,
   migrationsRun: false,
-  synchronize: true,
+  synchronize: false,
 };
 
 @Module({
