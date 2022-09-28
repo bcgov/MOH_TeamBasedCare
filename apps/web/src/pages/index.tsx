@@ -6,9 +6,9 @@ import { PlanningWrapper } from '@components';
 const Home: NextPage = () => {
   return (
     <>
-      <div className='flex overflow-x-hidden h-screen mr-auto'>
+      <div className='flex w-full overflow-x-hidden h-screen'>
         <Sidebar />
-        <div className='h-screen flex flex-col w-full p-3'>
+        <div className='h-screen flex flex-col flex-1 min-h-0 min-w-0 p-3'>
           <Header />
           <PlanningWrapper />
         </div>

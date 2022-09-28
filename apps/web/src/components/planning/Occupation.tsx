@@ -50,7 +50,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
             enableReinitialize={true}
           >
             {({ values }) => (
-              <div className='flex-1 flex flex-col min-h-0 p-2'>
+              <div className='flex-1 flex flex-col min-h-0 min-w-0 p-2'>
                 <p className='text-sm font-extralight font-sans text-gray-400'>
                   {values.occupation?.length} occupations selected
                 </p>
