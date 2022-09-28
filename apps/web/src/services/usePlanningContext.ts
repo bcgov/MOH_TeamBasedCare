@@ -8,12 +8,14 @@ export const usePlanningContext = () => {
     updateProceedToNext,
     updateWaitForValidation,
     updateSessionId,
+    updateDisableNextButton,
   } = useContext(PlanningContext) as PlanningContextType;
 
   return {
     updateNextTriggered: () => updateNextTriggered(),
     updateProceedToNext: () => updateProceedToNext(),
     updateWaitForValidation: () => updateWaitForValidation(),
+    updateDisableNextButton: () => updateDisableNextButton(),
     updateSessionId: (sessionId: string) => updateSessionId(sessionId),
     state,
   };

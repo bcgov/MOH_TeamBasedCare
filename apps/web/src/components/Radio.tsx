@@ -2,7 +2,8 @@
 import classnames from 'classnames';
 import { Field as FormikField } from 'formik';
 import { Error } from './Error';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 // interface RadioProps {
 //   legend: string;
 //   name: string;
@@ -13,6 +14,7 @@ import { Error } from './Error';
 export interface RadioOptionType {
   label: string;
   value: string;
+  disabled: boolean;
 }
 
 export interface BooleanRadioProps {
@@ -42,12 +44,18 @@ export const Radio: React.FC<BooleanRadioProps> = ({ legend, name, options, hori
               type='radio'
               name={name}
               value={option.value}
+              disabled={option.disabled}
               className='mr-2 h-5 w-5 min-w-5 checked:bg-bcBluePrimary cursor-pointer'
             />
             {option.label}
           </label>
         ))}
       </div>
+      <label className='flex rounded-md bg-blue-100 px-4 ml-6 py-2 text-center text-bcBluePrimary w-3/4'>
+        <FontAwesomeIcon icon={faInfoCircle} className='h-6 mr-3 mt-0 text-bcBluePrimary' />
+        This functionality is currently under development. Please select Start from a generic
+        profile
+      </label>
       <Error name={name} />
     </fieldset>
   );

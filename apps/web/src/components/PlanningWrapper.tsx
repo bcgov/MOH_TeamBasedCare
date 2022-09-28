@@ -8,9 +8,8 @@ import { ExportButton } from './ExportButton';
 
 const WrapperContent = () => {
   const { sessionId } = usePlanningSession();
-
   const {
-    state: { canProceedToNext },
+    state: { canProceedToNext, disableNextButton },
     updateNextTriggered,
     updateSessionId,
   } = usePlanningContext();
@@ -66,7 +65,7 @@ const WrapperContent = () => {
               variant='primary'
               type='button'
               classes={`ml-2`}
-              disabled={currentStep >= PlanningSteps.length}
+              disabled={currentStep >= PlanningSteps.length || disableNextButton}
               onClick={handleNextStep}
             >
               Next

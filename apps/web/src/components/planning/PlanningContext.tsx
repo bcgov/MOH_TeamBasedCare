@@ -4,12 +4,14 @@ export interface PlanningContextStateProps {
   isNextTriggered: boolean;
   canProceedToNext: boolean;
   sessionId: string;
+  disableNextButton: boolean;
 }
 
 const initialState: PlanningContextStateProps = {
   isNextTriggered: false,
   canProceedToNext: false,
   sessionId: '',
+  disableNextButton: true,
 };
 
 export type PlanningContextType = {
@@ -18,6 +20,7 @@ export type PlanningContextType = {
   updateProceedToNext: () => void;
   updateWaitForValidation: () => void;
   updateSessionId: (sessionId: string) => void;
+  updateDisableNextButton: () => void;
 };
 
 const enum PlanningActions {
@@ -25,6 +28,7 @@ const enum PlanningActions {
   PROCEED_TO_NEXT = 'PROCEED_TO_NEXT',
   WAIT_FOR_VALIDATION = 'WAIT_FOR_VALIDATION',
   UPDATE_SESSION_ID = 'UPDATE_SESSION_ID',
+  DISABLENEXTBUTTON = 'DISABLENEXTBUTTON',
 }
 
 function reducer(state: any, action: any): PlanningContextStateProps {
@@ -47,6 +51,11 @@ function reducer(state: any, action: any): PlanningContextStateProps {
         isNextTriggered: false,
         canProceedToNext: false,
       };
+    case PlanningActions.DISABLENEXTBUTTON:
+      return {
+        ...state,
+        disableNextButton: false,
+      };
     case PlanningActions.UPDATE_SESSION_ID:
       return {
         ...state,
@@ -67,6 +76,7 @@ export const PlanningProvider = ({ children }: any) => {
   const updateNextTriggered = () => dispatch({ type: PlanningActions.NEXT_TRIGGERED });
   const updateProceedToNext = () => dispatch({ type: PlanningActions.PROCEED_TO_NEXT });
   const updateWaitForValidation = () => dispatch({ type: PlanningActions.WAIT_FOR_VALIDATION });
+  const updateDisableNextButton = () => dispatch({ type: PlanningActions.DISABLENEXTBUTTON });
   const updateSessionId = (sessionId: string) =>
     dispatch({ type: PlanningActions.UPDATE_SESSION_ID, payload: { sessionId } });
 
@@ -78,6 +88,7 @@ export const PlanningProvider = ({ children }: any) => {
         updateProceedToNext,
         updateWaitForValidation,
         updateSessionId,
+        updateDisableNextButton,
       }}
     >
       {children}

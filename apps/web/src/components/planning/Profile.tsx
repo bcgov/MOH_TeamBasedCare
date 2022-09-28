@@ -6,6 +6,9 @@ import { SaveProfileDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
+import { usePlanningContext } from '../../services';
+import { useEffect } from 'react';
+import _ from 'lodash';
 
 export interface ProfileProps {
   step: number;
@@ -26,20 +29,26 @@ export const profileOptions = [
   {
     label: 'Start from a generic profile',
     value: ProfileOptions.GENERIC,
-    selected: false,
+    disabled: false,
   },
   {
     label: 'Start a new profile from scratch',
     value: ProfileOptions.FROM_SCRATCH,
-    selected: false,
+    disabled: true,
   },
 ];
 
 const ProfileForm = () => {
   const { values } = useFormikContext<ProfileFormProps>();
   const { careLocations, isLoading } = useCareLocations();
+  const { updateDisableNextButton } = usePlanningContext();
 
   usePlanningContent();
+  useEffect(() => {
+    if (!_.isEmpty(values.profile) && !_.isEmpty(values.careLocation)) {
+      updateDisableNextButton();
+    }
+  }, [values]);
 
   return (
     <Form className='w-full'>
