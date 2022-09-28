@@ -68,7 +68,7 @@ export const RightSideBarActivites: React.FC = () => {
               type='checkbox'
               name='selectAll'
               id='selectAll'
-              className='mr-3 h-5 w-5 min-w-5 text-bcDarkBlue accent-bcBlueLink'
+              className='mr-3 h-5 w-5 min-w-5 accent-bcBlueLink'
               onChange={handleSelectAll}
               checked={
                 values.careActivityBundle[values.careActivityID]?.length ===
@@ -100,7 +100,7 @@ export const RightSideBarActivites: React.FC = () => {
                     <div className='flex-initial w-5/6'>
                       <Checkbox
                         name='careActivities'
-                        styles='text-bcDarkBlue accent-bcBlueLink'
+                        styles='accent-bcBlueLink'
                         value={item.id}
                         label={item.name}
                       />
