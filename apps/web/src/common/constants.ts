@@ -70,7 +70,6 @@ export enum TooltipIconTypes {
   YELLOW_EXCLAMATION = 'yellowExclamationIcon',
   YELLOW_X = 'yellowXIcon',
   RED_X = 'redXIcon',
-  GRAY_QUESTION = 'grayQuestionIcon',
   YELLOW_QUESTION = 'yellowQuestionIcon',
 }
 
@@ -104,12 +103,6 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     meaning: 'All activities cannot be performed.',
     icon: faTimesCircle,
     style: 'red-icon',
-  },
-  grayQuestionIcon: {
-    text: `This occupation can perform some activities in this bundle with different restrictions. Please expand the care activities bundle on the left for more details.`,
-    meaning: 'Some activities have restrictions.',
-    icon: faQuestionCircle,
-    style: 'gray-icon',
   },
   yellowQuestionIcon: {
     text: `This occupation can perform some activities in this bundle with different restrictions. Please expand the care activities bundle on the left for more details.`,
