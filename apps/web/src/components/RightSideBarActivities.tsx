@@ -56,7 +56,7 @@ export const RightSideBarActivites: React.FC = () => {
   };
 
   return (
-    <div className='w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
+    <div className='flex-2 flex flex-col min-h-0 w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
       {_.isEmpty(values.careActivityID) ? (
         <p className='text-center text-sm mt-4'>
           Please select an activity bundle on the left side.
@@ -68,7 +68,7 @@ export const RightSideBarActivites: React.FC = () => {
               type='checkbox'
               name='selectAll'
               id='selectAll'
-              className='mr-3 h-5 w-5 min-w-5'
+              className='mr-3 h-5 w-5 min-w-5 accent-bcBlueLink'
               onChange={handleSelectAll}
               checked={
                 values.careActivityBundle[values.careActivityID]?.length ===
@@ -98,7 +98,12 @@ export const RightSideBarActivites: React.FC = () => {
                 return (
                   <div key={item.id} className='flex flex-1 items-center p-1.5'>
                     <div className='flex-initial w-5/6'>
-                      <Checkbox name='careActivities' value={item.id} label={item.name} />
+                      <Checkbox
+                        name='careActivities'
+                        styles='accent-bcBlueLink'
+                        value={item.id}
+                        label={item.name}
+                      />
                     </div>
                     <div className='flex flex-initial w-3/6 justify-end'>
                       <Tag

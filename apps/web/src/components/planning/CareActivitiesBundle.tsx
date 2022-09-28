@@ -19,9 +19,9 @@ const CareActivitiesBundleWrapper: React.FC<CareActivitiesBundleProps> = ({ titl
   usePlanningContent();
 
   return (
-    <Form>
+    <Form className='flex flex-1 flex-col min-h-0'>
       <Error name='careActivityBundle'></Error>
-      <div className='flex'>
+      <div className='flex-1 flex min-h-0'>
         <LeftSideBarActivites title={title} />
         <RightSideBarActivites />
       </div>
