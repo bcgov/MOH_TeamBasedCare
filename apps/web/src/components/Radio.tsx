@@ -13,6 +13,7 @@ import { Error } from './Error';
 export interface RadioOptionType {
   label: string;
   value: string;
+  disabled?: boolean;
 }
 
 export interface BooleanRadioProps {
@@ -36,13 +37,18 @@ export const Radio: React.FC<BooleanRadioProps> = ({ legend, name, options, hori
         {options.map((option, index) => (
           <label
             key={option.label + index}
-            className='flex items-center cursor-pointer leading-none'
+            className={`flex items-center ${
+              option.disabled === true ? '' : 'cursor-pointer'
+            } leading-none`}
           >
             <FormikField
               type='radio'
               name={name}
               value={option.value}
-              className='mr-2 h-5 w-5 min-w-5 checked:bg-bcBluePrimary cursor-pointer'
+              className={`mr-2 h-5 w-5 min-w-5 checked:bg-bcBluePrimary ${
+                option.disabled === true ? '' : 'cursor-pointer'
+              }`}
+              disabled={option.disabled}
             />
             {option.label}
           </label>
