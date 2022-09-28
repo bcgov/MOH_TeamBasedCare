@@ -1903,6 +1903,7 @@ __metadata:
     handlebars: 4.7.7
     jest: 27.4.7
     js-yaml: 4.1.0
+    json2csv: 5.0.7
     jsonwebtoken: 8.5.1
     jwks-rsa: 2.0.5
     lodash: 4.17.21
@@ -14380,7 +14381,6 @@ __metadata:
     dayjs: 1.11.0
     eslint-config-prettier: 8.3.0
     husky: 7.0.4
-    json2csv: 5.0.7
     nodemon: 2.0.15
     npm-run-all: 4.1.5
     papaparse: 5.3.1
