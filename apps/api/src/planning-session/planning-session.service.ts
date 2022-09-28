@@ -9,10 +9,15 @@ import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
 import { ActivitiesActionType } from '../common/constants';
+import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
+import { AppLogger } from '../common/logger.service';
+import { Logger } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class PlanningSessionService {
   constructor(
+    @Inject(Logger) private readonly logger: AppLogger,
     @InjectRepository(PlanningSession)
     private planningSessionRepo: Repository<PlanningSession>,
     private careActivityService: CareActivityService,
@@ -104,7 +109,12 @@ export class PlanningSessionService {
     return;
   }
 
-  async getActivitiesGap(sessionId: string): Promise<any> {
+  async exportCsv(sessionId: string): Promise<any> {
+    const activityGaps = await this.getPlanningActivityGap(sessionId);
+    return convertActivityGapTableToCSV(activityGaps);
+  }
+
+  async getPlanningActivityGap(sessionId: string): Promise<any> {
     const planningSession = await this.planningSessionRepo.findOne(sessionId, {
       relations: ['careActivity', 'careActivity.bundle', 'occupation'],
     });

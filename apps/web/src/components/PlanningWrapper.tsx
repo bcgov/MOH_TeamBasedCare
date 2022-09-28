@@ -4,6 +4,7 @@ import { PlanningSteps } from '../common/constants';
 import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningSession } from '../services/usePlanningSession';
 import { usePlanningContext } from '../services';
+import { ExportButton } from './ExportButton';
 
 const WrapperContent = () => {
   const { sessionId } = usePlanningSession();
@@ -57,15 +58,20 @@ const WrapperContent = () => {
           >
             Previous
           </Button>
-          <Button
-            variant='primary'
-            type='button'
-            classes={`ml-2`}
-            disabled={currentStep >= PlanningSteps.length}
-            onClick={handleNextStep}
-          >
-            Next
-          </Button>
+
+          {currentStep >= PlanningSteps.length ? (
+            <ExportButton sessionId={sessionId}></ExportButton>
+          ) : (
+            <Button
+              variant='primary'
+              type='button'
+              classes={`ml-2`}
+              disabled={currentStep >= PlanningSteps.length}
+              onClick={handleNextStep}
+            >
+              Next
+            </Button>
+          )}
         </div>
       </div>
       {/* Works here */}

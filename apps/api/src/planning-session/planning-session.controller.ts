@@ -60,7 +60,12 @@ export class PlanningSessionController {
   }
 
   @Get('/:sessionId/activities-gap')
-  getActivitiesGap(@Param('sessionId') sessionId: string) {
-    return this.planningSessionService.getActivitiesGap(sessionId);
+  getPlanningActivityGap(@Param('sessionId') sessionId: string) {
+    return this.planningSessionService.getPlanningActivityGap(sessionId);
+  }
+
+  @Post('/:sessionId/export-csv')
+  exportCsv(@Param('sessionId') sessionId: string) {
+    return this.planningSessionService.exportCsv(sessionId);
   }
 }
