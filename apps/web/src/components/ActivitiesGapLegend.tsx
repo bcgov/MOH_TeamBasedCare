@@ -7,15 +7,15 @@ import { tooltipIcons } from '../common';
 export const ActivitiesGapLegend: React.FC = () => {
   const [openLegend, setOpenLegend] = useState(false);
   return (
-    <>
+    <div className='flex-1 p-2'>
       {!openLegend && (
-        <a href='#' onClick={() => setOpenLegend(true)}>
+        <a href='#' onClick={() => setOpenLegend(true)} className='font-bold text-bcBlueLink'>
           Click here to view table legend
         </a>
       )}
       {openLegend && (
         <div className={`legend-box`}>
-          <h2>Table Legend</h2>
+          <h2 className='font-bold'>Table Legend</h2>
           <ul className='flex flex-col items-start my-4'>
             {Object.values(tooltipIcons).map((value: any, index) => {
               return (
@@ -27,11 +27,11 @@ export const ActivitiesGapLegend: React.FC = () => {
             })}
           </ul>
           <Button variant='outline' onClick={() => setOpenLegend(false)}>
-            <FontAwesomeIcon icon={faTimes} className='h-4 mr-2' />
-            Dismiss
+            <FontAwesomeIcon icon={faTimes} className='h-4 mr-2 font-bold text-bcBluePrimary' />
+            <span className='text-bcBluePrimary'>Dismiss</span>
           </Button>
         </div>
       )}
-    </>
+    </div>
   );
 };
