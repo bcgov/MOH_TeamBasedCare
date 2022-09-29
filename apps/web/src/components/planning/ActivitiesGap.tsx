@@ -133,8 +133,9 @@ const TableBody: React.FC = () => {
 };
 
 const ActivityGapTable: React.FC = () => {
+  const width = screen.width - 290;
   return (
-    <div className='flex flex-col'>
+    <div className='customTable' style={{ width: width }}>
       <table className='min-w-full text-center'>
         <TableHeader />
         <TableBody />
