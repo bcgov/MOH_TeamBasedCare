@@ -1,0 +1,34 @@
+name: Common PR Checks
+on:
+  pull_request:
+    paths:
+      - 'packages/common/**'
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+        name: checkout
+      - uses: actions/cache@v2
+        name: Cache yarn
+        with:
+          path: ./.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn workspace @tbcm/common install
+
+      - name: Run formatting check
+        run: yarn format:check
+
+      - name: Lint web package
+        run: yarn workspace @tbcm/common lint
+
+      - name: Test web package
+        run: yarn workspace @tbcm/common test
+
+      - name: Build web package
+        run: yarn workspace @tbcm/common build

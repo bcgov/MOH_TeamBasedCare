@@ -1,0 +1,27 @@
+{
+  "name": "@tbcm/common",
+  "version": "1.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "echo \"Building Common package\" && rm -rf dist && tsc",
+    "watch": "tsc --watch",
+    "test": "echo \"Testing Common\" && jest --passWithNoTests",
+    "lint": "echo 'Linting @tbcm/common...' && eslint --fix --cache ./src"
+  },
+  "dependencies": {
+    "@types/node": "16.11.7",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.13.2",
+    "dayjs": "1.11.0",
+    "eslint": "8.0.1",
+    "typescript": "4.3.5"
+  },
+  "devDependencies": {
+    "@types/jest": "26.0.14",
+    "eslint": "8.0.1",
+    "jest": "26.6.0",
+    "ts-jest": "26.4.2",
+    "ts-node": "10.4.0"
+  }
+}

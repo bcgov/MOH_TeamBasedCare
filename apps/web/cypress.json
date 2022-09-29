@@ -1,0 +1,16 @@
+{
+  "projectId": "zad925",
+  "baseUrl": "http://localhost:3000",
+  "env": {
+    "FAIL_FAST_STRATEGY": "run",
+    "FAIL_FAST_ENABLED": true
+  },
+  "pageLoadTimeout": 30000,
+  "defaultCommandTimeout": 60000,
+  "chromeWebSecurity": false,
+  "viewportWidth": 1280,
+  "viewportHeight": 960,
+  "videoUploadOnPasses": false,
+  "experimentalSessionAndOrigin": true,
+  "waitForAnimations": true
+}

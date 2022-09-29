@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  overflow-y: scroll;
+}
+
+html,
+body,
+#__next {
+  height: 100%;
+  background-color: rgb(243 244 246);
+}
+
+.legend-box {
+  @apply w-full border-2 bg-white rounded p-3 mt-4;
+}
+
+.planning-form-box {
+  @apply flex-1 flex flex-col min-h-0 overflow-auto w-full border-2 bg-white rounded p-3 mt-4;
+}
+
+.occupation-item-box {
+  @apply flex items-center h-16 px-4;
+}
+
+.occupation-item-box-gray {
+  @apply bg-bcLightGray shadow-xs;
+}
+
+.occupation-item-box-white {
+  @apply shadow-xs;
+}
+
+.tag {
+  @apply flex justify-center items-center px-2  border rounded font-bold text-xs mr-1;
+}
+
+.tag-green {
+  @apply bg-bcBannerSuccessBg text-bcBannerSuccessText border-bcBannerSuccessText;
+}
+
+.tag-blue {
+  @apply bg-bcLightBlueBackground text-bcBlueLink border-bcBlueLink;
+}
+
+.tag-yellow {
+  @apply bg-bcLightYellow text-bcDarkYellow border-bcDarkYellow;
+}
+
+.tag-purple {
+  @apply bg-bcLightPurple text-bcDarkPurple border-bcDarkPurple;
+}
+
+.tag-teal {
+  @apply bg-bcLightTeal text-bcDarkTeal border-bcDarkTeal;
+}
+
+.tooltip-icon {
+}
+
+.green-icon {
+  @apply text-bcGreenHiredText;
+}
+
+.yellow-icon {
+  @apply text-bcYellowPrimary;
+}
+
+.red-icon {
+  @apply text-bcRedError;
+}
+
+.gray-icon {
+  @apply text-bcGray;
+}
+
+.table-active-bundles-row {
+  background: #cce7ff;
+}
+.table-header {
+  border-bottom: 2px solid #fcba19;
+  background: #fff;
+}
+.table-row-td-bg {
+  background: #f2f2f2 !important;
+}
+.table-firstRow-firstTD {
+  background: #eaf5ff;
+  padding: 8px 12px;
+}
+.table-firstRow-TD {
+  background: #f2f2f2;
+}
+.table-row-fixed {
+  width: 100%;
+}
+.table-td {
+  max-width: 100px;
+  background: #fff;
+  padding: 8px;
+}
+.numberOfGaps {
+  color: red;
+}
+.firstTDinsideRow {
+  text-align: left;
+  word-wrap: break-word;
+  white-space: initial;
+}
+
+@layer base {
+  @font-face {
+    font-family: BCSans;
+    src: url('./fonts/BCSans-Regular.woff') format('woff');
+  }
+  @font-face {
+    font-family: BCSans;
+    font-weight: 700;
+    src: url('./fonts/BCSans-Bold.woff') format('woff');
+  }
+}
+
+@media (min-width: 768px) {
+  .bar-separator > *:not(:last-child):after {
+    content: '|';
+    margin: 0 0.5rem;
+    color: #fff;
+  }
+}
+
+::-webkit-scrollbar {
+  height: 7px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #999999;
+  border-radius: 5px;
+}
+
+.careActivityIDlabel {
+  margin-left: -20px;
+}
+.careActivityIDlabel > input[type='radio'] {
+  display: none;
+}

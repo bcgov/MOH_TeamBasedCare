@@ -1,0 +1,6 @@
+dist
+node_modules
+load
+build
+env.js
+.build
