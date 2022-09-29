@@ -10,6 +10,8 @@ export PROJECT := tbcm
 # Runtime and application Environments specific variable
 export ENV_NAME ?= dev
 export POSTGRES_USERNAME ?= localdev
+# export ENV_NAME ?= test
+# export POSTGRES_USERNAME ?= testuser
 export POSTGRES_PASSWORD ?= password
 export POSTGRES_DATABASE ?= tbcm
 
@@ -48,8 +50,8 @@ BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_DEV)
 DB_HOST = $(DB_HOST_DEV)
 endif
 
-ifeq ($(ENV_NAME), test) 
-DOMAIN=test.tbcm.freshworks.club
+ifeq ($(ENV_NAME), test)
+NEXT_PUBLIC_API_URL=https://d1xxd26qe80lqw.cloudfront.net/api/v1
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
 DB_HOST = $(DB_HOST_PROD_TEST)
 endif
