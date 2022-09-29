@@ -7,7 +7,7 @@ import { tooltipIcons } from '../common';
 export const ActivitiesGapLegend: React.FC = () => {
   const [openLegend, setOpenLegend] = useState(false);
   return (
-    <div className='flex-1 p-2'>
+    <div className='flex-initial p-2'>
       {!openLegend && (
         <a href='#' onClick={() => setOpenLegend(true)} className='font-bold text-bcBlueLink'>
           Click here to view table legend
