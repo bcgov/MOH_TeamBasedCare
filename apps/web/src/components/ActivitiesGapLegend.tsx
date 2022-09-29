@@ -5,16 +5,20 @@ import { useState } from 'react';
 import { tooltipIcons } from '../common';
 
 export const ActivitiesGapLegend: React.FC = () => {
-  const [openLegend, setOpenLegend] = useState(false);
+  const [openLegend, setOpenLegend] = useState(true);
   return (
     <>
       {!openLegend && (
-        <a href='#' onClick={() => setOpenLegend(true)}>
+        <a
+          href='#'
+          className='ml-2 text-sm font-strong text-bcBluePrimary mb-4'
+          onClick={() => setOpenLegend(true)}
+        >
           Click here to view table legend
         </a>
       )}
       {openLegend && (
-        <div className={`legend-box`}>
+        <div className={`legend-box mb-4`}>
           <h2>Table Legend</h2>
           <ul className='flex flex-col items-start my-4'>
             {Object.values(tooltipIcons).map((value: any, index) => {
