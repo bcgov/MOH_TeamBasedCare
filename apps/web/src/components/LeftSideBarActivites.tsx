@@ -53,7 +53,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
 
       <SearchBar handleChange={handleSearch} />
 
-      <div className='mt-4' style={{ overflow: 'auto', maxHeight: '400px' }}>
+      <div className='mt-4' style={{ overflow: 'auto' }}>
         <div role='group'>
           {!_.isEmpty(filteredData) ? (
             filteredData.map((item: any) => {
