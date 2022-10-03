@@ -1,0 +1,58 @@
+Care Location,Care Activity Bundles,Care Activities                                                                                                                                                                                     ,Respiratory Therapist,Speech Language Pathologist,Occupational Therapist,Physiotherapist,Rehabilitation Assistant,Registered Dietitian,Clinical Pharmacist,Pharmacy Technician,Registered Social Worker,Spiritual Health Provider,Registered Nurse - Critical Care, Registered Nurse - Medical/ Surgical,Registered Psychiatric Nurse (RPN),Licensed Practical Nurse (LPN),Employed Student Nurses (ESN),Health Care Assistant (HCA),Other - Non Clinical,Physician,Clinical/Clinical Support,Aspect of Practice/ Restricted Activity/ Task
+ICU,ICU Admission,Set up ICU room for new ICU patient admission,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,,Clinical Support,Task
+ICU,ICU Admission,Set up patient condition-specific ICU room for new ICU patient admission,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,,Clinical Support,Task
+ICU,Admission,Perform basic room safety check for patient upon arrival,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,,Clinical Support,Task
+ICU,ICU Admission,Orient patient and family to ICU in hospital,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),,,Clinical Support,Task
+ICU,ICU Admission,Admit patient into the ICU and determines ICU Admission Orders,,,,,,,,,,,,,,,,,,X,Clinical,Restricted Activity 
+ICU,Admission,Obtain patient's medical information from patient/family/health occupation to transcribe in patient record,,,,,,,,,,,X,c(e),c(e),c(e),c(e),,X,,Clinical Support,Task
+ICU,ICU Admission,Transcribe ICU Admission Orders,,,,,,,,,,,X,c(e),c(e),c(e),c(e),,X,,Clinical Support,Task
+ICU,ICU Admission,Send requisitions based on ICU Admission Orders,c(e),c(e),c(e),c(e),,c(e),c(e),,,,c(e),c(e),c(e),c(e),c(e),,X,,Clinical Support,Task
+ICU,ICU Admission,Review ICU Admission Orders for appropriateness as per the profession's scope of practice/ provider's role description,X,X,X,X,A,X,X,A,X,X,X,X,X,A,,,,,Clinical,Aspect of Practice
+ICU,ICU Admission,Validate ICU Admission Orders ,,,,,,,,,,,X,c(e),,,,,,,Clinical,Aspect of Practice
+ICU,ICU Admission,Review admitting diagnosis and patient medical information/history and patient record as per the profession's scope of practice/ provider's role description for the purpose of developing a occupation-specific care plan,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,,,Clinical,Aspect of Practice
+ICU,Patient Assessment (General),Conduct patient physical assessment for the purpose of informing and monitoring the care plan as per the profession's scope of practice/ provider's role description,X,X,X,X,,X,,,,,X,c(e),,,,,,X,Clinical,Aspect of Practice
+ICU,Patient Assessment (General),Conduct spiritual assessment for the purpose of  informing and monitoring the care plan as per the profession's scope of practice/ provider's role description,,,,,,,,,,X,,,,,,,,,Clinical,Aspect of Practice
+ICU,Monitoring,Measure Height,,,X,X,X,,,,,,X,X,X,X,c(e),X,,,Clinical,Task
+ICU,Monitoring,Measure Weight,A,,X,X,X,,,,,,X,X,X,X,c(e),X,,,Clinical,Task
+ICU,Monitoring,Measure Intake/Output (catheter drainage bag),,,,,,X,,,,,X, C,A,A,c(e),,,,Clinical,Task
+ICU,Monitoring,Measure Temperature,X,,A,,,,,,,,X,X,X,X,c(e),A,,,Clinical,Task
+ICU,Monitoring,Measure Pulse,X,,,,,,,,,,X,X,A,A,c(e),,,,Clinical,Task
+ICU,Monitoring,Measure Respirations,X,,,,,,,,,,X,X,A,A,c(e),,,,Clinical,Task
+ICU,Monitoring,Measure Blood pressure (invasive arterial blood pressure),X,,A,,,,,,,,X,X,A,A,c(e),,,,Clinical,Task 
+ICU,Monitoring,Monitor Pulse oximetry,X,,A,,,,,,,,X,X,A,A,c(e),c(e),,,Clinical,Task
+ICU,Monitoring,"Perform surveillance: regular visualization for overall patient status, safety, comfort  as appropriate to the responsibility of care",X,A,X,X,A,A,,,,,X,C,A,A,c(e),X,,,Clinical,Aspect of Practice
+ICU,Medication,Obtain list of current medications from patient/family (part of Best Possible Medication History),X,X,X,X,,X,X,A,X,,X,X,X,X,c(e),,,X,Clinical Support,Task
+ICU,Medication,Confirm list of current medications patient is taking (part of Best Possible Medication History),c(e),c(e),c(e),c(e),,c(e),X,A,c(e),,X,X,X,c(e),,,,X,Clinical,Task
+ICU,Medication,Assess the appropriateness of all drugs taken together to minimize adverse reactions and complexity,,,,,,,X,,,,X,c(e),A,,,,,,Clinical,Aspect of Practice
+ICU,Medication,Assess appropriateness of patient's prescribed drugs and make recommendations to prescriber as per the profession's scope of practice/ provider's role description.,,,,,,X,X,,,,X,,,,,,,,Clinical,Aspect of Practice
+ICU,Medication,Review patient medical information/history on medication allergies or adverse reactions to inform clinical decisions as per the profession's scope of practice/ provider's role description.,X,,,,,X,X,,,,X,c(e),,,,,,,Clinical,Aspect of Practice
+ICU,Medication,"Prescribe drugs (Schedule 1, 1A)",,,,,,,,,,,L,L,L,,,,,X,Clinical,Restricted Activity 
+ICU,Diagnostic imaging,Review x-ray to confirm placement of a medical device (e.g. central line),A,,,,,,,,,,A,,,,,,,X,Clinical,Aspect of Practice
+ICU,Diagnostic imaging,Review x-ray to inform an occupation-specific care plan as per the profession's scope of practice/ provider's role description,X,,,X,,,,,,,X,X,,,,,,X,Clinical,Aspect of Practice
+ICU,Diagnostic imaging,Interpret x-ray to make a patient diagnosis,,,,,,,,,,,,,,,,,,X,Clinical,Restricted Activity 
+ICU,Neurological /Cognitive,Perform Glasgow Coma Scale with drift and limb strength,,,X,,,,,,,,X,c(e),X,X,X,A,,,Clinical,Task 
+ICU,Neurological /Cognitive,"Assess for changes in cognition, changes in Ranchos Levels or GCS scores that indicate clinical changes/declines/progressions to inform the care plan/ interventions",A,X,X,,,,,,,,X,X,,,,,,,Clinical,Aspect of Practice
+ICU,Respiratory ,Assess/evaluate patient airway,X,X,,,,,,,,,X,X,X,X,X,X,,,Clinical,Aspect of Practice
+ICU,Respiratory ,"Perform artificial airway insertion: select appropriate artificial airway device, optimize patient position, insert artificial airway",A,,,,,,,,,,X,c(e),X,X,A,X,,,Clinical,Restricted Activity 
+ICU,Respiratory ,"Assist with insertion of artificial airway: select appropriate artificial airway device, optimize patient position, assist with insertion of artificial airway",X,,,,,,,,,,X,X,X,X,X,X,,0,Clinical,Restricted Activity
+ICU,Respiratory ,Suction tracheostomy tube  ,A,,,,,,,,,,X,c(e),,,,,,,Clinical,Restricted Activity
+ICU,Respiratory ,"Chart: quantity, consistency, and colour on critical care flowsheet; patient tolerance of procedure, cough and gag in respiratory history notes.",X,A,,X,,,,,,,X,X,X,A,A,,,,Clinical,Task
+ICU,Respiratory ,Perform extubation,A,,,,,,,,,,A,,A,,,,,,Clinical,Restricted Activity
+ICU,Respiratory ,Assist with extubation,X,,,X,,,,,,,X,X,X,A,c(e),,,,Clinical,Task
+ICU,Respiratory ,Perform tracheostomy dressing change,X,,,,,,,,,,X,c(e),X,A,,,,,Clinical,Restricted Activity 
+ICU,Cardiovascular,Flush central venous catheter ,A,,,,,,,,,,X,c(e),X,X,A,,,,Clinical,Task
+ICU,Cardiovascular,Remove central venous catheter ,A,,,,,,,,,,A,A,X,X,,,,,Clinical,Restricted Activity
+ICU,Cardiovascular,Telemetry monitoring,X,,,,,,,,,,X,c(e),X,A,,,,,Clinical,Aspect of Practice
+ICU,Cardiovascular,"Perform Manual Chest Therapy - X-RN, c(3)",X,,A,X,A,,,,,,X,c(e),A,,,,,,Clinical,Aspect of Practice
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ","Assist with patient early mobility (ventilated, monitored) - ",X,A,A,X,A,,,,,,X,X,X,X,X,X,,,Clinical,Task
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ","Assist with patient mobility (stable, non-ventilated)",X,A,A,X,A,,,,,,X,X,X,X,X,X,,,Clinical,Task
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ","Assist and practise activities of daily living (e.g. washing, dressing, feeding)",,A,X,X,A,A,,,,,X,X,X,X,X,X,,X,Clinical,Task
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ",Assist with active and passive range of motion exercises,,A,X,X,A,,,,,,X,X,X,X,X,X,,X,Clinical,Task
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ","Educate and train patient and family how to use mobility equipment (e.g. braces, wheelchairs, walkers)",,,X,X,A,,,,,,X,X,c(e),c(e),c(e),c(e),,c(e),Clinical,Aspect of Practice
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ","Educate and train patient and family how to use adaptive equipment for activities of daily living (e.g. eating utensils, dressing tools, splints, adapted call bell)",A,A,X,X,A,A,,,,,X,X,c(e),c(e),c(e),c(e),,c(e),Clinical,Aspect of Practice
+ICU,Gastrointestinal / GU /Renal,Manage continuous renal replacement therapy (CRRT),,,,,,,,,,,X,X,X,A,,,,,Clinical,Aspect of Practice
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ",Complete mobility screen for ambulation and transfers,A,A,X,X,X,A,A,,A,,X,X,X,X,X,X,c(e),,Clinical,Aspect of Practice
+ICU,"Neuromuscular, Musculoskeletal, and Mobility ","Provide, adjust and maintain wheelchair for patient use",A,,X,X,X,,,,,,X,X,A,A,A,A,c(e),A,Clinical Support,Task
+ICU,Actvities of Daily Living,Assist with bathing/changing/personal care/continence & toileting,A,A,A,A,A,A,,,,,X,X,X,X,X,X,c(e),X,Clinical,Task
+ICU,Actvities of Daily Living,Assist and support patient with transfers/ambulation,X,A,X,A,A,A,,,,,X,X,X,X,X,X,c(e),X,Clinical,Task
+ICU,Post-Discharge,Clean room for new ICU patient admission,c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),c(e),X,,Clinical Support,Task

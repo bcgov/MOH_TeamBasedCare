@@ -11,7 +11,11 @@ export class OccupationService {
   ) {}
 
   async getAllOccupations(): Promise<Occupation[]> {
-    return this.occupationrepository.find();
+    return this.occupationrepository.find({
+      order: {
+        name: 'ASC',
+      },
+    });
   }
 
   findAllOccupation(occupationIds: string[]): Promise<Occupation[]> {

@@ -10,8 +10,6 @@ export PROJECT := tbcm
 # Runtime and application Environments specific variable
 export ENV_NAME ?= dev
 export POSTGRES_USERNAME ?= localdev
-# export ENV_NAME ?= test
-# export POSTGRES_USERNAME ?= testuser
 export POSTGRES_PASSWORD ?= password
 export POSTGRES_DATABASE ?= tbcm
 
@@ -113,6 +111,7 @@ print-env:
 	@echo ./$(TERRAFORM_DIR)/backend.hcl:
 	@echo "$$TF_BACKEND_CFG"
 	@echo "\n*********************\n"
+	@echo "\n DB username: $(POSTGRES_USERNAME)"
 
 watch: print-env start-local-db
 	@echo "++\n***** Running api + web in local Node server\n++"

@@ -16,6 +16,9 @@ export class CareActivityService {
   async getAllBundles(): Promise<Bundle[]> {
     return this.bundleRepo.find({
       relations: ['careActivities'],
+      order: {
+        name: 'ASC',
+      },
     });
   }
 
