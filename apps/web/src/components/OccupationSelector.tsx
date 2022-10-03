@@ -1,11 +1,12 @@
-import { useOccupations } from 'src/services/useOccupations';
 import { OccupationItem } from './OccupationItem';
 import { isOdd } from 'src/common/util';
 import { useFormikContext } from 'formik';
 
-export const OccupationSelector = ({}) => {
-  const { occupations } = useOccupations();
+export const OccupationSelector = (occupations: any) => {
   const { values, setFieldValue } = useFormikContext<any>();
+
+  const data = occupations.occupations;
+
   return (
     <>
       <div className='flex items-center p-4'>
@@ -18,20 +19,20 @@ export const OccupationSelector = ({}) => {
             if (e.target.checked) {
               setFieldValue(
                 'occupation',
-                occupations.map((e: any) => e.id),
+                data.map((e: any) => e.id),
               );
             } else {
               setFieldValue('occupation', []);
             }
           }}
-          checked={values.occupation.length === occupations.length}
+          checked={values.occupation.length === data.length}
         />
         <label className='font-bold' htmlFor={'selectAll'}>
           Select all
         </label>
       </div>
       <div className='flex-1 flex flex-col'>
-        {occupations.map((occupation, index) => {
+        {data.map((occupation: any, index: number) => {
           const styling = isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white';
           return (
             <div key={index} className={`occupation-item-box ${styling}`}>
