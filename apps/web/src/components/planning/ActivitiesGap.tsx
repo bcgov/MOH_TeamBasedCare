@@ -169,7 +169,8 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
       </PageTitle>
       <ActivitiesGapLegend />
       <Dropdown>
-        <OccupationCounter counter={displayedValues.headers.length} />
+        <span className=''>Occupation list</span>
+        <OccupationCounter counter={displayedValues.headers ? displayedValues.headers.length : 0} />
       </Dropdown>
       <ActivityGapTable values={displayedValues} />
     </div>
