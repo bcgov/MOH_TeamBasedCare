@@ -14,6 +14,7 @@ import { Dropdown } from '../generic/Dropdown';
 import { Checkbox } from '@components';
 import { Form, Formik } from 'formik';
 import { noop } from 'lodash';
+import { useOccupations } from 'src/services/useOccupations';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -158,31 +159,14 @@ const OccupationCounter = ({ counter }: { counter: number }) => {
 
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const { initialValues } = usePlanningActivitiesGap();
+  const { occupations } = useOccupations();
 
   const [displayedValues, setDisplayedValues] = useState(initialValues);
-  const [dropdownOptions, setDropdownOptions] = useState([]);
+  // const [dropdownOptions, setDropdownOptions] = useState([]);
 
   useEffect(() => {
     setDisplayedValues(initialValues);
   }, [initialValues]);
-
-  useEffect(() => {
-    if (initialValues.headers) {
-      setDropdownOptions(
-        initialValues.headers.map((header: any) => {
-          return (
-            <Checkbox
-              key={header}
-              name='occupation'
-              value={header}
-              styles='text-bcDarkBlue accent-bcBlueLink'
-              label={header}
-            ></Checkbox>
-          );
-        }),
-      );
-    }
-  }, [initialValues.headers]);
 
   const description =
     'Based on the roles and tasks that you filled in the previous steps, here are the the gaps that we found. Expanding the row on the left hand side table to view more.';
@@ -202,11 +186,21 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
             <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
           </PageTitle>
           <ActivitiesGapLegend />
-          <Dropdown options={dropdownOptions}>
+          <Dropdown
+            options={occupations.map((occupation: any) => {
+              return (
+                <Checkbox
+                  key={occupation.id}
+                  name='occupations'
+                  value={occupation.displayName}
+                  styles='text-bcDarkBlue accent-bcBlueLink'
+                  label={occupation.displayName}
+                ></Checkbox>
+              );
+            })}
+          >
             <span className=''>Occupation list</span>
-            <OccupationCounter
-              counter={displayedValues.headers ? displayedValues.headers.length : 0}
-            />
+            <OccupationCounter counter={occupations.length ? occupations.length : 0} />
           </Dropdown>
           <ActivityGapTable values={displayedValues} />
         </div>
