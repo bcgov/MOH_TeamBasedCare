@@ -5,14 +5,17 @@ import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningSession } from '../services/usePlanningSession';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
+import { Modal } from './generic/Modal';
 
 const WrapperContent = () => {
   const { sessionId } = usePlanningSession();
 
   const {
-    state: { canProceedToNext },
+    state: { canProceedToNext, canProceedToPrevious },
     updateNextTriggered,
     updateSessionId,
+    updateShowModal,
+    updateCanProceedToPrevious,
   } = usePlanningContext();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -21,10 +24,17 @@ const WrapperContent = () => {
   const handleNextStep = () => {
     updateNextTriggered();
   };
-  const handlePreviousStep = () => {
+  const handlePreviousStep = async () => {
     if (isFirstStep || currentStep < 1) return;
-    setCurrentStep(Number(currentStep) - 1);
+    updateShowModal(true);
   };
+
+  useEffect(() => {
+    if (canProceedToPrevious) {
+      setCurrentStep(Number(currentStep) - 1);
+      updateCanProceedToPrevious(false);
+    }
+  }, [canProceedToPrevious]);
 
   useEffect(() => {
     if (sessionId) {
@@ -49,6 +59,11 @@ const WrapperContent = () => {
           <Stepper steps={PlanningSteps} currentStep={currentStep} />
         </div>
         <div className='flex p-2'>
+          <Modal
+            headerTitle='Unsaved changes'
+            bodyText='If you are leaving this step now, all of the information you entered here will be unsaved. Are you sure you want to leave now?'
+          />
+
           <Button
             variant='outline'
             type='button'
