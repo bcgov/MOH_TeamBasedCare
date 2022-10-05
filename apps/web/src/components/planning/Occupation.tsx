@@ -17,12 +17,12 @@ export interface OccupationProps {
   title: string;
 }
 
-const OccupationForm = (occupations: any) => {
+const OccupationForm = (occupations: any, filteredOccupations: any) => {
   usePlanningContent();
 
   return (
     <Form className='flex-1 flex flex-col overflow-auto'>
-      <OccupationSelector occupations={occupations.occupations} />
+      <OccupationSelector filteredOccupations={filteredOccupations} occupations={occupations} />
     </Form>
   );
 };
@@ -75,7 +75,10 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
                 <Paginator></Paginator>
                 <Error name='occupation'></Error>
                 {occupations && filteredOccupations.length != 0 ? (
-                  <OccupationForm occupations={filteredOccupations} />
+                  <OccupationForm
+                    occupations={occupations}
+                    filteredOccupations={filteredOccupations}
+                  />
                 ) : (
                   <p className='text-center text-sm mt-4'>No Occupations found.</p>
                 )}
