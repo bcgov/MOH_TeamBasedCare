@@ -26,7 +26,7 @@ export const usePlanningActivitiesGap = () => {
     );
   };
 
-  useEffect(() => {
+  const getActivityGaps = () => {
     if (sessionId) {
       fetchData({ endpoint: API_ENDPOINT.getPlanningActivityGap(sessionId) }, (data: any) => {
         if (data && Object.keys(data).length > 0) {
@@ -34,7 +34,11 @@ export const usePlanningActivitiesGap = () => {
         }
       });
     }
+  };
+
+  useEffect(() => {
+    getActivityGaps();
   }, [sessionId]);
 
-  return { handleSubmit, initialValues };
+  return { handleSubmit, initialValues, getActivityGaps };
 };

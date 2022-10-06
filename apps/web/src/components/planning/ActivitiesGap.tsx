@@ -13,7 +13,6 @@ import { usePlanningActivitiesGap, usePlanningOccupations } from '../../services
 import { Dropdown } from '../generic/Dropdown';
 import { Checkbox } from '@components';
 import { Form, Formik } from 'formik';
-import { noop } from 'lodash';
 import { useOccupations } from 'src/services/useOccupations';
 
 export interface ActivitiesGapProps {
@@ -158,7 +157,7 @@ const OccupationCounter = ({ counter }: { counter: number }) => {
 };
 
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
-  const { initialValues } = usePlanningActivitiesGap();
+  const { initialValues, getActivityGaps } = usePlanningActivitiesGap();
   const occupationValues = usePlanningOccupations();
   const { occupations } = useOccupations();
 
@@ -167,7 +166,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
 
   useEffect(() => {
     setDisplayedValues(initialValues);
-  }, [initialValues]);
+  }, [initialValues, occupationValues]);
 
   useEffect(() => {
     setDropdownOptions(
@@ -185,8 +184,9 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
     );
   }, [occupations]);
 
-  const handleConfrim = () => {
-    noop;
+  const handleConfrim = async (values: any) => {
+    occupationValues.handleSubmit(values);
+    getActivityGaps();
   };
 
   const description =
