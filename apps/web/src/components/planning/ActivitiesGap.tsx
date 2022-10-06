@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
-import { usePlanningActivitiesGap } from '../../services';
+import { usePlanningActivitiesGap, usePlanningOccupations } from '../../services';
 import { Dropdown } from '../generic/Dropdown';
 import { Checkbox } from '@components';
 import { Form, Formik } from 'formik';
@@ -159,52 +159,61 @@ const OccupationCounter = ({ counter }: { counter: number }) => {
 
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const { initialValues } = usePlanningActivitiesGap();
+  const occupationValues = usePlanningOccupations();
   const { occupations } = useOccupations();
 
   const [displayedValues, setDisplayedValues] = useState(initialValues);
-  // const [dropdownOptions, setDropdownOptions] = useState([]);
+  const [dropdownOptions, setDropdownOptions] = useState<any>([]);
 
   useEffect(() => {
     setDisplayedValues(initialValues);
   }, [initialValues]);
+
+  useEffect(() => {
+    setDropdownOptions(
+      occupations.map((occupation: any) => {
+        return (
+          <Checkbox
+            key={occupation.id}
+            name='occupation'
+            value={occupation.id}
+            styles='text-bcDarkBlue accent-bcBlueLink'
+            label={occupation.displayName}
+          ></Checkbox>
+        );
+      }),
+    );
+  }, [occupations]);
 
   const description =
     'Based on the roles and tasks that you filled in the previous steps, here are the the gaps that we found. Expanding the row on the left hand side table to view more.';
 
   return (
     <Formik
-      initialValues={initialValues}
+      initialValues={occupationValues.initialValues}
       onSubmit={() => {
         noop;
       }}
       validateOnBlur={true}
       enableReinitialize={true}
     >
-      <Form>
-        <div className='planning-form-box'>
-          <PageTitle title={title} description={description}>
-            <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
-          </PageTitle>
-          <ActivitiesGapLegend />
-          <Dropdown
-            options={occupations.map((occupation: any) => {
-              return (
-                <Checkbox
-                  key={occupation.id}
-                  name='occupations'
-                  value={occupation.displayName}
-                  styles='text-bcDarkBlue accent-bcBlueLink'
-                  label={occupation.displayName}
-                ></Checkbox>
-              );
-            })}
-          >
-            <span className=''>Occupation list</span>
-            <OccupationCounter counter={occupations.length ? occupations.length : 0} />
-          </Dropdown>
-          <ActivityGapTable values={displayedValues} />
-        </div>
-      </Form>
+      {({ values }) => (
+        <Form>
+          <div className='planning-form-box'>
+            <PageTitle title={title} description={description}>
+              <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
+            </PageTitle>
+            <ActivitiesGapLegend />
+            <Dropdown options={dropdownOptions}>
+              <span className=''>Occupation list</span>
+              <OccupationCounter
+                counter={values.occupation.length ? values.occupation.length : 0}
+              />
+            </Dropdown>
+            <ActivityGapTable values={displayedValues} />
+          </div>
+        </Form>
+      )}
     </Formik>
   );
 };
