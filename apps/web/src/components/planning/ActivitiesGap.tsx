@@ -185,33 +185,31 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
     );
   }, [occupations]);
 
+  const handleConfrim = () => {
+    noop;
+  };
+
   const description =
     'Based on the roles and tasks that you filled in the previous steps, here are the the gaps that we found. Expanding the row on the left hand side table to view more.';
 
   return (
     <Formik
       initialValues={occupationValues.initialValues}
-      onSubmit={() => {
-        noop;
-      }}
+      onSubmit={handleConfrim}
       validateOnBlur={true}
       enableReinitialize={true}
     >
       {({ values }) => (
-        <Form>
-          <div className='planning-form-box'>
-            <PageTitle title={title} description={description}>
-              <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
-            </PageTitle>
-            <ActivitiesGapLegend />
-            <Dropdown options={dropdownOptions}>
-              <span className=''>Occupation list</span>
-              <OccupationCounter
-                counter={values.occupation.length ? values.occupation.length : 0}
-              />
-            </Dropdown>
-            <ActivityGapTable values={displayedValues} />
-          </div>
+        <Form className='planning-form-box'>
+          <PageTitle title={title} description={description}>
+            <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
+          </PageTitle>
+          <ActivitiesGapLegend />
+          <Dropdown options={dropdownOptions} onHandle={handleConfrim}>
+            <span className=''>Occupation list</span>
+            <OccupationCounter counter={values.occupation.length ? values.occupation.length : 0} />
+          </Dropdown>
+          <ActivityGapTable values={displayedValues} />
         </Form>
       )}
     </Formik>
