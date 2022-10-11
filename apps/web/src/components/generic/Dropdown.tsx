@@ -9,7 +9,7 @@ const DropdownOption = ({ children }: any) => (
 
 const DropdownOptionBox = ({ options }: any) => {
   return (
-    <div className='bg-white absolute left-0 z-10 mt-12 w-[400px] rounded-md shadow-lg focus:outline-none'>
+    <div className='bg-white absolute left-0 z-10 mt-12 w-[400px] h-[350px] overflow-scroll rounded-md shadow-lg focus:outline-none'>
       <div className='py-1 flex flex-col' role='none'>
         {options && options.length ? (
           options.map((option: any, index: number) => {

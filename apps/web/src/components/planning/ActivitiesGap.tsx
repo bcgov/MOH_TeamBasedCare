@@ -160,8 +160,6 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const { initialValues, getActivityGaps } = usePlanningActivitiesGap();
   const occupationValues = usePlanningOccupations();
   const { occupations } = useOccupations();
-
-  const [displayedValues, setDisplayedValues] = useState(initialValues);
   const [dropdownOptions, setDropdownOptions] = useState<any>([]);
 
   useEffect(() => {
