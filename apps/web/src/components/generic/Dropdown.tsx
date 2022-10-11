@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Button } from '../Button';
 
 const DropdownOption = ({ children }: any) => (
-  <span className='flex-1 text-gray-700 block px-4 py-2 text-sm space-x-2'>{children}</span>
+  <span className='flex-1 text-gray-700 block px-4 py-2 text-sm space-x-2 shadow-xs'>
+    {children}
+  </span>
 );
 
 const DropdownOptionBox = ({ options }: any) => {
