@@ -167,8 +167,8 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   }, [occupationValues.initialValues]);
 
   useEffect(() => {
-    setDropdownOptions(
-      occupations.map((occupation: any) => {
+    setDropdownOptions([
+      ...occupations.map((occupation: any) => {
         return (
           <Checkbox
             key={occupation.id}
@@ -179,7 +179,11 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
           ></Checkbox>
         );
       }),
-    );
+      ,
+      <Button key='confirm' variant='primary' type='submit' classes={`my-2 w-full`}>
+        Confirm
+      </Button>,
+    ]);
   }, [occupations]);
 
   const handleConfrim = (values: any) => {
