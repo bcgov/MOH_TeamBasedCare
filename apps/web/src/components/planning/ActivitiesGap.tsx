@@ -165,8 +165,8 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const [dropdownOptions, setDropdownOptions] = useState<any>([]);
 
   useEffect(() => {
-    setDisplayedValues(initialValues);
-  }, [initialValues, occupationValues]);
+    getActivityGaps();
+  }, [occupationValues]);
 
   useEffect(() => {
     setDropdownOptions(
@@ -186,7 +186,6 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
 
   const handleConfrim = async (values: any) => {
     occupationValues.handleSubmit(values);
-    getActivityGaps();
   };
 
   const description =
@@ -209,7 +208,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
             <span className=''>Occupation list</span>
             <OccupationCounter counter={values.occupation.length ? values.occupation.length : 0} />
           </Dropdown>
-          <ActivityGapTable values={displayedValues} />
+          <ActivityGapTable values={initialValues} />
         </Form>
       )}
     </Formik>
