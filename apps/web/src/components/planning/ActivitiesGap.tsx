@@ -207,10 +207,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
             <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
           </PageTitle>
           <ActivitiesGapLegend />
-          <Dropdown
-            options={<ActivityGapDropdownOptions occupations={occupations} />}
-            onHandle={handleConfrim}
-          >
+          <Dropdown options={<ActivityGapDropdownOptions occupations={occupations} />}>
             <span className=''>Occupation list</span>
             <span className='flex justify-center items-center ml-2 bg-bcBluePrimary w-6 h-6 rounded-md text-white'>
               {values.occupation.length ? values.occupation.length : 0}
