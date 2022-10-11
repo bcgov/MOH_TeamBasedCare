@@ -12,7 +12,7 @@ import { TooltipIcon } from '../generic/TooltipIcon';
 import { usePlanningActivitiesGap, usePlanningOccupations } from '../../services';
 import { Dropdown } from '../generic/Dropdown';
 import { Checkbox } from '@components';
-import { Form, Formik } from 'formik';
+import { Form, Formik, useFormikContext } from 'formik';
 import { useOccupations } from 'src/services/useOccupations';
 
 export interface ActivitiesGapProps {
@@ -148,43 +148,44 @@ const ActivityGapTable = ({ values }: any) => {
   );
 };
 
-const OccupationCounter = ({ counter }: { counter: number }) => {
-  return (
-    <span className='flex justify-center items-center ml-2 bg-bcBluePrimary w-6 h-6 rounded-md text-white'>
-      {counter}
-    </span>
-  );
+const ActivityGapDropdownOptions = ({ occupations }: any) => {
+  const [dropdownOptions, setDropdownOptions] = useState<any>([]);
+  const dropdownOptionStyle = 'flex-1 text-gray-700 block px-4 py-2 text-sm space-x-2 shadow-xs';
+  const { values } = useFormikContext<any>();
+
+  useEffect(() => {
+    setDropdownOptions([
+      ...occupations.map((occupation: any, index: number) => {
+        return (
+          <span key={index} className={dropdownOptionStyle}>
+            <Checkbox
+              key={occupation.id}
+              name='occupation'
+              value={occupation.id}
+              styles='text-bcDarkBlue accent-bcBlueLink'
+              label={occupation.displayName}
+            ></Checkbox>
+          </span>
+        );
+      }),
+      ,
+      <Button key='confirm' variant='primary' type='submit' classes={`my-2 w-full`}>
+        {`Confirm (${values.occupation?.length})`}
+      </Button>,
+    ]);
+  }, [occupations, values]);
+
+  return <>{dropdownOptions}</>;
 };
 
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const { initialValues, getActivityGaps } = usePlanningActivitiesGap();
   const occupationValues = usePlanningOccupations();
   const { occupations } = useOccupations();
-  const [dropdownOptions, setDropdownOptions] = useState<any>([]);
 
   useEffect(() => {
     getActivityGaps();
   }, [occupationValues.initialValues]);
-
-  useEffect(() => {
-    setDropdownOptions([
-      ...occupations.map((occupation: any) => {
-        return (
-          <Checkbox
-            key={occupation.id}
-            name='occupation'
-            value={occupation.id}
-            styles='text-bcDarkBlue accent-bcBlueLink'
-            label={occupation.displayName}
-          ></Checkbox>
-        );
-      }),
-      ,
-      <Button key='confirm' variant='primary' type='submit' classes={`my-2 w-full`}>
-        Confirm
-      </Button>,
-    ]);
-  }, [occupations]);
 
   const handleConfrim = (values: any) => {
     occupationValues.saveAndSetInitialvalues(values);
@@ -206,9 +207,14 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
             <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
           </PageTitle>
           <ActivitiesGapLegend />
-          <Dropdown options={dropdownOptions} onHandle={handleConfrim}>
+          <Dropdown
+            options={<ActivityGapDropdownOptions occupations={occupations} />}
+            onHandle={handleConfrim}
+          >
             <span className=''>Occupation list</span>
-            <OccupationCounter counter={values.occupation.length ? values.occupation.length : 0} />
+            <span className='flex justify-center items-center ml-2 bg-bcBluePrimary w-6 h-6 rounded-md text-white'>
+              {values.occupation.length ? values.occupation.length : 0}
+            </span>
           </Dropdown>
           <ActivityGapTable values={initialValues} />
         </Form>

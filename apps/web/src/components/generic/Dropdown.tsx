@@ -2,20 +2,12 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 
-const DropdownOption = ({ children }: any) => (
-  <span className='flex-1 text-gray-700 block px-4 py-2 text-sm space-x-2 shadow-xs'>
-    {children}
-  </span>
-);
-
 const DropdownOptionBox = ({ options }: any) => {
   return (
     <div className='bg-white absolute left-0 z-10 mt-12 w-[400px] h-[350px] overflow-scroll rounded-md shadow-lg focus:outline-none'>
       <div className='py-1 flex flex-col' role='none'>
-        {options && options.length ? (
-          options.map((option: any, index: number) => {
-            return <DropdownOption key={index}>{option}</DropdownOption>;
-          })
+        {options ? (
+          options
         ) : (
           <span className='text-gray-700 block px-4 py-2 text-sm'>No Options Provided</span>
         )}
