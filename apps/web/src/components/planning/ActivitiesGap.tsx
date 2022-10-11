@@ -164,7 +164,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
 
   useEffect(() => {
     getActivityGaps();
-  }, [occupationValues]);
+  }, [occupationValues.initialValues]);
 
   useEffect(() => {
     setDropdownOptions(
@@ -182,8 +182,8 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
     );
   }, [occupations]);
 
-  const handleConfrim = async (values: any) => {
-    occupationValues.handleSubmit(values);
+  const handleConfrim = (values: any) => {
+    occupationValues.saveAndSetInitialvalues(values);
   };
 
   const description =
