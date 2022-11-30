@@ -8,6 +8,8 @@ export const usePlanningContext = () => {
     updateProceedToNext,
     updateWaitForValidation,
     updateSessionId,
+    updateShowModal,
+    updateCanProceedToPrevious,
   } = useContext(PlanningContext) as PlanningContextType;
 
   return {
@@ -15,6 +17,10 @@ export const usePlanningContext = () => {
     updateProceedToNext: () => updateProceedToNext(),
     updateWaitForValidation: () => updateWaitForValidation(),
     updateSessionId: (sessionId: string) => updateSessionId(sessionId),
+    updateShowModal: (showModal: boolean) => updateShowModal(showModal),
+    updateCanProceedToPrevious: (canProceedToPrevious: boolean) =>
+      updateCanProceedToPrevious(canProceedToPrevious),
+
     state,
   };
 };

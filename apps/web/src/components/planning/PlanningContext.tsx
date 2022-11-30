@@ -4,12 +4,16 @@ export interface PlanningContextStateProps {
   isNextTriggered: boolean;
   canProceedToNext: boolean;
   sessionId: string;
+  showModal: boolean;
+  canProceedToPrevious: boolean;
 }
 
 const initialState: PlanningContextStateProps = {
   isNextTriggered: false,
   canProceedToNext: false,
   sessionId: '',
+  showModal: false,
+  canProceedToPrevious: false,
 };
 
 export type PlanningContextType = {
@@ -18,6 +22,8 @@ export type PlanningContextType = {
   updateProceedToNext: () => void;
   updateWaitForValidation: () => void;
   updateSessionId: (sessionId: string) => void;
+  updateShowModal: (showModal: boolean) => void;
+  updateCanProceedToPrevious: (canProceedToPrevious: boolean) => void;
 };
 
 const enum PlanningActions {
@@ -25,6 +31,8 @@ const enum PlanningActions {
   PROCEED_TO_NEXT = 'PROCEED_TO_NEXT',
   WAIT_FOR_VALIDATION = 'WAIT_FOR_VALIDATION',
   UPDATE_SESSION_ID = 'UPDATE_SESSION_ID',
+  UPDATE_SHOW_MODAL = 'UPDATE_SHOW_MODAL',
+  PROCEED_TO_PREVIOUS = 'PROCEED_TO_PREVIOUS',
 }
 
 function reducer(state: any, action: any): PlanningContextStateProps {
@@ -52,6 +60,16 @@ function reducer(state: any, action: any): PlanningContextStateProps {
         ...state,
         ...action.payload,
       };
+    case PlanningActions.UPDATE_SHOW_MODAL:
+      return {
+        ...state,
+        showModal: action.payload.showModal,
+      };
+    case PlanningActions.PROCEED_TO_PREVIOUS:
+      return {
+        ...state,
+        canProceedToPrevious: action.payload.canProceedToPrevious,
+      };
     default:
       return {
         ...state,
@@ -70,6 +88,12 @@ export const PlanningProvider = ({ children }: any) => {
   const updateSessionId = (sessionId: string) =>
     dispatch({ type: PlanningActions.UPDATE_SESSION_ID, payload: { sessionId } });
 
+  const updateShowModal = (showModal: boolean) =>
+    dispatch({ type: PlanningActions.UPDATE_SHOW_MODAL, payload: { showModal } });
+
+  const updateCanProceedToPrevious = (canProceedToPrevious: boolean) =>
+    dispatch({ type: PlanningActions.PROCEED_TO_PREVIOUS, payload: { canProceedToPrevious } });
+
   return (
     <PlanningContext.Provider
       value={{
@@ -78,6 +102,8 @@ export const PlanningProvider = ({ children }: any) => {
         updateProceedToNext,
         updateWaitForValidation,
         updateSessionId,
+        updateShowModal,
+        updateCanProceedToPrevious,
       }}
     >
       {children}
