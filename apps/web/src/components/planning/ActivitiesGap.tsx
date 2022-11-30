@@ -6,25 +6,29 @@ import {
   faTimesCircle,
   faCaretUp,
 } from '@fortawesome/free-solid-svg-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
-import { usePlanningActivitiesGap } from '../../services';
+import { usePlanningActivitiesGap, usePlanningOccupations } from '../../services';
+import { Dropdown } from '../generic/Dropdown';
+import { Checkbox } from '@components';
+import { Form, Formik, useFormikContext } from 'formik';
+import { useOccupations } from 'src/services/useOccupations';
 
 export interface ActivitiesGapProps {
   step: number;
   title: string;
 }
 
-const TableHeader: React.FC = () => {
-  const { initialValues } = usePlanningActivitiesGap();
+const TableHeader = ({ values }: any) => {
+  // const { initialValues } = usePlanningActivitiesGap();
   const tdStyles =
     'table-td table-header px-6 py-4 text-left text-sm font-strong text-bcBluePrimary border-b-4';
   return (
     <thead className='border-b bg-gray-50 table-row-fixed table-header '>
       <tr>
-        {initialValues.headers &&
-          initialValues.headers.map((title: string, index: number) => (
+        {values.headers &&
+          values.headers.map((title: string, index: number) => (
             <th key={`th${index}`} className={tdStyles}>
               {title}
             </th>
@@ -54,13 +58,13 @@ const SwitchTooltip: React.FC<any> = props => {
   }
 };
 
-const TableBody: React.FC = () => {
+const TableBody = ({ values }: any) => {
   const [openRow, setOpenRow] = useState<boolean>(false);
   const [selectedRow, setSelectedRow] = useState<number>();
   const tdStyles =
     'table-td px-6 py-4 text-center text-sm font-medium text-gray-900 table-firstRow-TD';
   const tdActivityBundle = 'table-firstRow-firstTD';
-  const { initialValues } = usePlanningActivitiesGap();
+  // const { initialValues } = usePlanningActivitiesGap();
 
   const handleSelectRow = (index: number) => {
     setOpenRow(!openRow);
@@ -69,8 +73,8 @@ const TableBody: React.FC = () => {
 
   return (
     <tbody>
-      {initialValues.data &&
-        initialValues.data.map((row: any, index: number) => (
+      {values.data &&
+        values.data.map((row: any, index: number) => (
           <>
             <tr key={`row${index}`} className='bg-white border-b table-row-fixed'>
               <td className={`${tdActivityBundle} flex w-full items-center justify-between`}>
@@ -98,7 +102,7 @@ const TableBody: React.FC = () => {
                   />
                 </Button>
               </td>
-              {initialValues.headers.map((item: any, index: number) => {
+              {values.headers.map((item: any, index: number) => {
                 return (
                   item != 'Activities Bundle' && (
                     <td key={`rowTd${index}`} className={`table-row-td-bg ${tdStyles}`}>
@@ -132,28 +136,86 @@ const TableBody: React.FC = () => {
   );
 };
 
-const ActivityGapTable: React.FC = () => {
+const ActivityGapTable = ({ values }: any) => {
   const width = screen.width - 290;
   return (
     <div className='customTable' style={{ width: width }}>
       <table className='min-w-full text-center'>
-        <TableHeader />
-        <TableBody />
+        <TableHeader values={values} />
+        <TableBody values={values} />
       </table>
     </div>
   );
 };
 
+const ActivityGapDropdownOptions = ({ occupations }: any) => {
+  const [dropdownOptions, setDropdownOptions] = useState<any>([]);
+  const dropdownOptionStyle = 'flex-1 text-gray-700 block px-4 py-2 text-sm space-x-2 shadow-xs';
+  const { values } = useFormikContext<any>();
+
+  useEffect(() => {
+    setDropdownOptions([
+      ...occupations.map((occupation: any, index: number) => {
+        return (
+          <span key={index} className={dropdownOptionStyle}>
+            <Checkbox
+              key={occupation.id}
+              name='occupation'
+              value={occupation.id}
+              styles='text-bcDarkBlue accent-bcBlueLink'
+              label={occupation.displayName}
+            ></Checkbox>
+          </span>
+        );
+      }),
+      ,
+      <Button key='confirm' variant='primary' type='submit' classes={`my-2 w-full`}>
+        {`Confirm (${values.occupation?.length})`}
+      </Button>,
+    ]);
+  }, [occupations, values]);
+
+  return <>{dropdownOptions}</>;
+};
+
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
+  const { initialValues, getActivityGaps } = usePlanningActivitiesGap();
+  const occupationValues = usePlanningOccupations();
+  const { occupations } = useOccupations();
+
+  useEffect(() => {
+    getActivityGaps();
+  }, [occupationValues.initialValues]);
+
+  const handleConfrim = (values: any) => {
+    occupationValues.saveAndSetInitialvalues(values);
+  };
+
   const description =
     'Based on the roles and tasks that you filled in the previous steps, here are the the gaps that we found. Expanding the row on the left hand side table to view more.';
+
   return (
-    <div className='planning-form-box'>
-      <PageTitle title={title} description={description}>
-        <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
-      </PageTitle>
-      <ActivitiesGapLegend />
-      <ActivityGapTable />
-    </div>
+    <Formik
+      initialValues={occupationValues.initialValues}
+      onSubmit={handleConfrim}
+      validateOnBlur={true}
+      enableReinitialize={true}
+    >
+      {({ values }) => (
+        <Form className='planning-form-box'>
+          <PageTitle title={title} description={description}>
+            <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
+          </PageTitle>
+          <ActivitiesGapLegend />
+          <Dropdown options={<ActivityGapDropdownOptions occupations={occupations} />}>
+            <span className=''>Occupation list</span>
+            <span className='flex justify-center items-center ml-2 bg-bcBluePrimary w-6 h-6 rounded-md text-white'>
+              {values.occupation.length ? values.occupation.length : 0}
+            </span>
+          </Dropdown>
+          <ActivityGapTable values={initialValues} />
+        </Form>
+      )}
+    </Formik>
   );
 };

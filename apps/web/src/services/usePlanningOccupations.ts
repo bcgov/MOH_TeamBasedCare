@@ -26,6 +26,25 @@ export const usePlanningOccupations = () => {
     );
   };
 
+  const saveAndSetInitialvalues = (values: any) => {
+    sendApiRequest(
+      {
+        method: REQUEST_METHOD.PATCH,
+        data: values,
+        endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+      },
+      () => {
+        if (sessionId) {
+          fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: any) => {
+            if (data && data?.length > 0) {
+              setInitialValues({ occupation: data });
+            }
+          });
+        }
+      },
+    );
+  };
+
   useEffect(() => {
     if (sessionId) {
       fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: any) => {
@@ -36,5 +55,5 @@ export const usePlanningOccupations = () => {
     }
   }, [sessionId]);
 
-  return { handleSubmit, initialValues };
+  return { handleSubmit, initialValues, saveAndSetInitialvalues };
 };
