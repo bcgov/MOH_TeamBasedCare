@@ -9,17 +9,20 @@ import { SaveOccupationDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { Error } from '../Error';
 import { PageTitle } from '../PageTitle';
+import { useState } from 'react';
+import { useOccupations } from 'src/services/useOccupations';
 
 export interface OccupationProps {
   step: number;
   title: string;
 }
 
-const OccupationForm = () => {
+const OccupationForm = (occupations: any, filteredOccupations: any) => {
   usePlanningContent();
+
   return (
     <Form className='flex-1 flex flex-col overflow-auto'>
-      <OccupationSelector></OccupationSelector>
+      <OccupationSelector filteredOccupations={filteredOccupations} occupations={occupations} />
     </Form>
   );
 };
@@ -27,8 +30,22 @@ const OccupationForm = () => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const Occupation: React.FC<OccupationProps> = ({ title }) => {
   const occupationValidationSchema = createValidator(SaveOccupationDTO);
+  const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
+  const { occupations } = useOccupations();
 
   const { handleSubmit, initialValues } = usePlanningOccupations();
+
+  // Get search value
+  const handleSearch = (e: { target: { value: string } }) => {
+    setSearchValue(e.target.value);
+  };
+
+  // Filter data with search value
+  const filteredOccupations =
+    occupations &&
+    occupations.filter((item: any) => {
+      return item.name.toLowerCase().includes(searchValue.toLowerCase());
+    });
 
   return (
     <div className='planning-form-box'>
@@ -39,7 +56,8 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
           </PageTitle>
 
           <div>
-            <SearchBar placeholderText='Search by keyword'></SearchBar>
+            {/* <SearchBar placeholderText='Search by keyword'></SearchBar> */}
+            <SearchBar handleChange={handleSearch} />
           </div>
 
           <Formik
@@ -56,7 +74,14 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
                 </p>
                 <Paginator></Paginator>
                 <Error name='occupation'></Error>
-                <OccupationForm></OccupationForm>
+                {occupations && filteredOccupations.length != 0 ? (
+                  <OccupationForm
+                    occupations={occupations}
+                    filteredOccupations={filteredOccupations}
+                  />
+                ) : (
+                  <p className='text-center text-sm mt-4'>No Occupations found.</p>
+                )}
                 <Paginator></Paginator>
               </div>
             )}

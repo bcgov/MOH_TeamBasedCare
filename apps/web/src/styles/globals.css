@@ -116,7 +116,6 @@ thead th:first-child {
 
 tbody {
   overflow: scroll;
-  height: 200px;
 }
 
 /* MAKE LEFT COLUMN FIXED */
