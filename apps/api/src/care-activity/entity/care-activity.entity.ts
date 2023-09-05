@@ -3,6 +3,8 @@ import {
   BeforeUpdate,
   Column,
   Entity,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -12,6 +14,7 @@ import { cleanText } from '../../common/utils';
 import { AllowedActivity } from '../../entities/allowed-activities.entity';
 import { Bundle } from './bundle.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
+import { Unit } from 'src/unit/entity/unit.entity';
 
 @Entity()
 export class CareActivity extends CustomBaseEntity {
@@ -38,6 +41,10 @@ export class CareActivity extends CustomBaseEntity {
 
   @Column({ type: 'enum', enum: ClinicalType, nullable: false })
   clinicalType: ClinicalType;
+
+  @ManyToMany(() => Unit)
+  @JoinTable()
+  careLocations: Unit[];
 
   @BeforeInsert()
   @BeforeUpdate()

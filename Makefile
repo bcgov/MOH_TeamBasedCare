@@ -318,6 +318,9 @@ migration-generate:
 migration-revert:
 	@docker exec $(LOCAL_API_CONTAINER_NAME) yarn workspace @tbcm/api typeorm migration:revert
 
+migration-run:
+	@docker exec $(LOCAL_API_CONTAINER_NAME) yarn workspace @tbcm/api typeorm migration:run
+
 
 # ===================================
 # DB Tunneling

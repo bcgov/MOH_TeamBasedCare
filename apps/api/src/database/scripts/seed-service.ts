@@ -11,6 +11,7 @@ import { Occupation } from 'src/occupation/entity/occupation.entity';
 import { CareActivityType, ClinicalType, Permissions } from '../../common/constants';
 import { Readable } from 'stream';
 import { Unit } from '../../unit/entity/unit.entity';
+import { UnitService } from 'src/unit/unit.service';
 
 @Injectable()
 export class SeedService {
@@ -24,8 +25,8 @@ export class SeedService {
     private readonly occupationRepo: Repository<Occupation>,
     @InjectRepository(AllowedActivity)
     private readonly allowedActRepo: Repository<AllowedActivity>,
-    @InjectRepository(Unit)
-    private readonly unitRepo: Repository<Unit>,
+    @Inject(UnitService)
+    private readonly unitService: UnitService,
   ) {}
 
   async updateOccupations(file: Buffer): Promise<void> {
@@ -71,7 +72,12 @@ export class SeedService {
   async updateCareActivities(file: Buffer): Promise<void> {
     let headers: string[];
     const bundleVsCareActivity: {
-      [key: string]: { name: string; activityType: CareActivityType; clinicalType: ClinicalType }[];
+      [key: string]: {
+        name: string;
+        activityType: CareActivityType;
+        clinicalType: ClinicalType;
+        careLocation: string;
+      }[];
     } = {};
     const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
     const careLocations = new Set<string>();
@@ -92,18 +98,23 @@ export class SeedService {
         }
         bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
         const activityName = data[headers[2]].trim().replace(/"/g, '');
-        careLocations.add(data[headers[0]].trim().replace(/"/g, ''));
+        const careLocation = data[headers[0]].trim().replace(/"/g, '');
+        careLocations.add(careLocation);
+
         let activityList: {
           name: string;
           activityType: CareActivityType;
           clinicalType: ClinicalType;
+          careLocation: string;
         }[] = [];
+
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
         }
         const activityType = data[headers[headers.length - 1]].trim().replace(/"/g, '');
         const clinicalType = data[headers[headers.length - 2]].trim().replace(/"/g, '');
-        activityList.push({ name: activityName, activityType, clinicalType });
+
+        activityList.push({ name: activityName, activityType, clinicalType, careLocation });
         bundleVsCareActivity[bundleName] = activityList;
         for (let index = 3; index < headers.length - 2; index++) {
           const e = headers[index];
@@ -133,17 +144,48 @@ export class SeedService {
       .on('end', async () => {
         // Save the result
 
+        // save care locations (aka Units)
+        await this.unitService.saveCareLocations(Array.from(careLocations));
+
+        const consolidatedCareActivities: {
+          name: string;
+          activityType: CareActivityType;
+          clinicalType: ClinicalType;
+          careLocation: string;
+        }[] = Object.values(bundleVsCareActivity).flat(1);
+
+        const careLocationNames: string[] = consolidatedCareActivities
+          .filter(ca => 'careLocation' in ca)
+          .map(ca => ca.careLocation);
+
+        // get locations DB mapping
+        const careLocationsDbByNames = await this.unitService.getUnitsByNames(careLocationNames);
+
         await Promise.allSettled(
-          Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) =>
-            this.saveCareActivity(bundleName, careActivities),
-          ),
+          Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) => {
+            const careActivitiesWithUnit: {
+              name: string;
+              activityType: CareActivityType;
+              clinicalType: ClinicalType;
+              careLocation: Unit | undefined;
+            }[] = [];
+
+            careActivities.forEach(ca => {
+              careActivitiesWithUnit.push({
+                ...ca,
+                careLocation: careLocationsDbByNames.find(
+                  _ => _.name === cleanText(ca.careLocation),
+                ),
+              });
+            });
+
+            return this.saveCareActivity(bundleName, careActivitiesWithUnit);
+          }),
         );
 
-        const consolidatedCareActivities: string[] = Object.values(bundleVsCareActivity)
-          .map(careActivities => {
-            return careActivities.map(each => cleanText(each.name));
-          })
-          .flat(1);
+        const consolidatedCareActivitiesName: string[] = consolidatedCareActivities.map(
+          careActivity => cleanText(careActivity.name),
+        );
 
         //Delete object to free-up space
         Object.keys(bundleVsCareActivity).forEach(key => {
@@ -152,17 +194,15 @@ export class SeedService {
 
         const careActivityDBMap: { [key: string]: CareActivity } = {};
 
-        (await this.findAllCareActivities(consolidatedCareActivities)).forEach(eachCA => {
+        (await this.findAllCareActivities(consolidatedCareActivitiesName)).forEach(eachCA => {
           careActivityDBMap[eachCA.name] = eachCA;
         });
 
         await Promise.allSettled(
           Object.entries(occupationVsCareActivity).map(([occupationName, activityMap]) => {
-            this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
+            return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
           }),
         );
-
-        await this.saveCareLocations(Array.from(careLocations));
       });
   }
 
@@ -190,7 +230,12 @@ export class SeedService {
 
   private async saveCareActivity(
     bundleName: string,
-    careActivities: { name: string; activityType: CareActivityType; clinicalType: ClinicalType }[],
+    careActivities: {
+      name: string;
+      activityType: CareActivityType;
+      clinicalType: ClinicalType;
+      careLocation: Unit | undefined;
+    }[],
   ): Promise<void> {
     const bundle = await this.findOrCreateBundle(bundleName);
 
@@ -199,12 +244,13 @@ export class SeedService {
       .insert()
       .into(CareActivity)
       .values(
-        careActivities.map(({ name, activityType, clinicalType }) => {
+        careActivities.map(({ name, activityType, clinicalType, careLocation }) => {
           return this.careActivityRepo.create({
             name,
             bundle,
             activityType,
             clinicalType,
+            careLocations: careLocation ? [careLocation] : [],
           });
         }),
       )
@@ -253,22 +299,6 @@ export class SeedService {
         conflict_target: ['id'],
         overwrite: ['permission'],
       })
-      .execute();
-  }
-
-  private async saveCareLocations(locations: string[]): Promise<void> {
-    this.unitRepo
-      .createQueryBuilder()
-      .insert()
-      .into(Unit)
-      .values(
-        locations.map(location => {
-          return this.unitRepo.create({
-            unitName: location,
-          });
-        }),
-      )
-      .orIgnore()
       .execute();
   }
 }
