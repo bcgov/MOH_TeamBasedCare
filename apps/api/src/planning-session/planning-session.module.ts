@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UnitModule } from 'src/unit/unit.module';
 import { CareActivityModule } from '../care-activity/care-activity.module';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
 import { OccupationModule } from '../occupation/occupation.module';
@@ -12,6 +13,7 @@ import { PlanningSessionService } from './planning-session.service';
     TypeOrmModule.forFeature([PlanningSession, AllowedActivity]),
     CareActivityModule,
     OccupationModule,
+    UnitModule,
   ],
   exports: [],
   controllers: [PlanningSessionController],

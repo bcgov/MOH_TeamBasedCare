@@ -1,4 +1,4 @@
-export const enum ProfileOptions {
+export enum ProfileOptions {
   GENERIC = 'generic',
   FROM_SCRATCH = 'scratch',
 }

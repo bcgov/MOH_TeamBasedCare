@@ -1,4 +1,4 @@
 export interface ProfileSelection {
-  profile: string;
+  profileOption?: string;
   careLocation?: string;
 }

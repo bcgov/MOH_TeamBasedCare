@@ -10,6 +10,8 @@ import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
 import { ActivitiesActionType } from '../common/constants';
 import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
+import { UnitService } from 'src/unit/unit.service';
+import { Unit } from 'src/unit/entity/unit.entity';
 
 @Injectable()
 export class PlanningSessionService {
@@ -18,6 +20,8 @@ export class PlanningSessionService {
     private planningSessionRepo: Repository<PlanningSession>,
     private careActivityService: CareActivityService,
     private occupationService: OccupationService,
+    private unitService: UnitService,
+
     @InjectRepository(AllowedActivity)
     private allowedActRepo: Repository<AllowedActivity>,
   ) {}
@@ -31,14 +35,31 @@ export class PlanningSessionService {
   }
 
   async saveProfileSelection(sessionId: string, saveProfileDto: SaveProfileDTO): Promise<void> {
-    await this.planningSessionRepo.update(sessionId, { profile: saveProfileDto });
+    let careLocation;
+
+    if (saveProfileDto.careLocation) {
+      careLocation = (await this.unitService.getById(saveProfileDto.careLocation)) as Unit;
+    }
+
+    const saveProfileSelectionObj: Partial<PlanningSession> = {
+      profileOption: saveProfileDto.profileOption,
+    };
+
+    if (careLocation) {
+      saveProfileSelectionObj.careLocation = careLocation;
+    }
+
+    await this.planningSessionRepo.update(sessionId, saveProfileSelectionObj);
   }
 
   async getProfileSelection(sessionId: string): Promise<ProfileSelection | undefined> {
     const planningSession = await this.planningSessionRepo.findOne(sessionId);
 
     if (planningSession) {
-      return planningSession.profile;
+      return {
+        profileOption: planningSession?.profileOption,
+        careLocation: planningSession?.careLocation?.id,
+      };
     }
 
     return;

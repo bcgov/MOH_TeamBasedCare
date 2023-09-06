@@ -1,16 +1,19 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Unit } from 'src/unit/entity/unit.entity';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Occupation } from '../../occupation/entity/occupation.entity';
-import { ProfileSelection } from '../interface';
 
 @Entity()
 export class PlanningSession extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('jsonb', { nullable: true })
-  profile?: ProfileSelection;
+  @Column({ nullable: false })
+  profileOption?: string;
+
+  @ManyToOne(() => Unit)
+  careLocation?: Unit;
 
   @ManyToMany(() => CareActivity)
   @JoinTable()
