@@ -9,7 +9,7 @@ export class PlanningSession extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: false })
+  @Column()
   profileOption?: string;
 
   @ManyToOne(() => Unit)

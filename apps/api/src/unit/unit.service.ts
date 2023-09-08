@@ -11,9 +11,9 @@ export class UnitService {
     private unitsRepository: Repository<Unit>,
   ) {}
 
-  async getById(id?: string): Promise<Unit> {
+  async getById(id: string): Promise<Unit> {
     if (!id) throw new NotFoundException({ message: 'Care Location Not found: Invalid Id' });
-    
+
     const careLocation = await this.unitsRepository.findOne(id);
 
     if (!careLocation) {
@@ -28,22 +28,18 @@ export class UnitService {
   }
 
   async getUnitsByNames(names: string[]): Promise<Unit[]> {
-    return this.unitsRepository.find({ where: { name: In(names.map(name => cleanText(name))) } });
+    return this.unitsRepository.find({
+      where: { name: In(names.map(name => cleanText(name))) },
+    });
   }
 
-  async saveCareLocations(locations: string[]): Promise<void> {
-    this.unitsRepository
-      .createQueryBuilder()
-      .insert()
-      .into(Unit)
-      .values(
-        locations.map(location => {
-          return this.unitsRepository.create({
-            name: location,
-          });
+  async saveCareLocations(locations: string[]) {
+    return this.unitsRepository.upsert(
+      locations.map(name =>
+        this.unitsRepository.create({
+          name,
         }),
-      )
-      .orIgnore()
-      .execute();
+      ), ['name']
+    );
   }
 }

@@ -1,9 +1,9 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlanningSession } from './entity/planning-session.entity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { SaveProfileDTO, SaveCareActivityDTO, SaveOccupationDTO } from '@tbcm/common';
-import { ProfileSelection } from './interface';
+import { IProfileSelection } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
@@ -12,6 +12,7 @@ import { ActivitiesActionType } from '../common/constants';
 import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
 import { UnitService } from 'src/unit/unit.service';
 import { Unit } from 'src/unit/entity/unit.entity';
+import { BundleRO } from 'src/care-activity/ro/get-bundle.ro';
 
 @Injectable()
 export class PlanningSessionService {
@@ -52,17 +53,26 @@ export class PlanningSessionService {
     await this.planningSessionRepo.update(sessionId, saveProfileSelectionObj);
   }
 
-  async getProfileSelection(sessionId: string): Promise<ProfileSelection | undefined> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId);
+  async getProfileSelection(sessionId: string): Promise<IProfileSelection> {
+    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+      relations: ['careLocation'],
+    });
+    return {
+      profileOption: planningSession?.profileOption || null,
+      careLocation: planningSession?.careLocation?.id || null,
+    };
+  }
 
-    if (planningSession) {
-      return {
-        profileOption: planningSession?.profileOption,
-        careLocation: planningSession?.careLocation?.id,
-      };
+  async getBundlesForSelectedCareLocation(sessionId: string): Promise<BundleRO[]> {
+    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+      relations: ['careLocation'],
+    });
+
+    if (!planningSession?.careLocation?.id) {
+      throw new NotFoundException({ message: 'Care Location Not found' });
     }
 
-    return;
+    return this.careActivityService.getCareActivitiesByBundlesForCareLocation(planningSession.careLocation.id);
   }
 
   async saveCareActivity(sessionId: string, careActivityDto: SaveCareActivityDTO): Promise<void> {

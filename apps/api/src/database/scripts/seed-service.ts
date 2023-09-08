@@ -154,12 +154,16 @@ export class SeedService {
           careLocation: string;
         }[] = Object.values(bundleVsCareActivity).flat(1);
 
-        const careLocationNames: string[] = consolidatedCareActivities
+        const careLocationNames = new Set<string>();
+
+        consolidatedCareActivities
           .filter(ca => 'careLocation' in ca)
-          .map(ca => ca.careLocation);
+          .forEach(ca => careLocationNames.add(ca.careLocation));
 
         // get locations DB mapping
-        const careLocationsDbByNames = await this.unitService.getUnitsByNames(careLocationNames);
+        const careLocationsDbByNames = await this.unitService.getUnitsByNames(
+          Array.from(careLocationNames),
+        );
 
         await Promise.allSettled(
           Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) => {
@@ -239,23 +243,17 @@ export class SeedService {
   ): Promise<void> {
     const bundle = await this.findOrCreateBundle(bundleName);
 
-    await this.careActivityRepo
-      .createQueryBuilder()
-      .insert()
-      .into(CareActivity)
-      .values(
-        careActivities.map(({ name, activityType, clinicalType, careLocation }) => {
-          return this.careActivityRepo.create({
-            name,
-            bundle,
-            activityType,
-            clinicalType,
-            careLocations: careLocation ? [careLocation] : [],
-          });
-        }),
-      )
-      .orIgnore()
-      .execute();
+    await this.careActivityRepo.upsert(
+      careActivities.map(({ name, activityType, clinicalType, careLocation }) => {
+        return this.careActivityRepo.create({
+          name,
+          bundle,
+          activityType,
+          clinicalType,
+          careLocations: careLocation ? [careLocation] : [],
+        });
+      }), ['name']
+    );
   }
 
   //TODO: Move this logic to the appropriate service file
