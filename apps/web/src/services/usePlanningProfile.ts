@@ -1,3 +1,4 @@
+import { IProfileSelection } from '@tbcm/common';
 import { useState, useEffect } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { useHttp } from './useHttp';
@@ -9,7 +10,7 @@ export const usePlanningProfile = () => {
     updateProceedToNext,
   } = usePlanningContext();
   const [initialValues, setInitialValues] = useState<any>({
-    profile: '',
+    profileOption: '',
     careLocation: '',
   });
   const { sendApiRequest, fetchData } = useHttp();
@@ -29,7 +30,7 @@ export const usePlanningProfile = () => {
 
   useEffect(() => {
     if (sessionId) {
-      fetchData({ endpoint: API_ENDPOINT.getPlanningProfile(sessionId) }, (data: any) => {
+      fetchData({ endpoint: API_ENDPOINT.getPlanningProfile(sessionId) }, (data: IProfileSelection) => {
         if (data) {
           setInitialValues(data);
         }
