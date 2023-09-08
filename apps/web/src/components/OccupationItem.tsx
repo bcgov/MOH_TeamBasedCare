@@ -10,7 +10,7 @@ export const OccupationItem = ({ id, displayName, isRegulated }: OccupationItemP
 
   return (
     <div className='flex flex-1 items-center'>
-      <div className='flex-initial w-5/6'>
+      <div className='flex-initial w-full'>
         <Checkbox
           name='occupation'
           value={id}
@@ -18,9 +18,14 @@ export const OccupationItem = ({ id, displayName, isRegulated }: OccupationItemP
           label={displayName}
         ></Checkbox>
       </div>
-      <div className='flex flex-initial w-1/6 justify-end'>
+
+      {/** No need to show occupation tag: All occupations are regulated for now. */}
+      {/** changes: (1/2) w-5/6 changed to w-full for Checkbox's parent div */}
+      {/** changes: (2/2) commented Tag element */}
+
+      {/* <div className='flex flex-initial w-1/6 justify-end'>
         <Tag text={tagText} tagStyle={tagColor}></Tag>
-      </div>
+      </div> */}
     </div>
   );
 };
