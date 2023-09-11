@@ -1,12 +1,10 @@
 import { Checkbox } from './Checkbox';
 import { OccupationItemProps } from 'src/common/interfaces';
-import { Tag } from './generic/Tag';
-import { TagVariants } from 'src/common';
 import React from 'react';
 
-export const OccupationItem = ({ id, displayName, isRegulated }: OccupationItemProps) => {
-  const tagText = isRegulated ? 'Regulated' : 'Unregulated';
-  const tagColor = isRegulated ? TagVariants.BLUE : TagVariants.GREEN;
+export const OccupationItem = ({ id, displayName }: OccupationItemProps) => {
+  // const tagText = isRegulated ? 'Regulated' : 'Unregulated';
+  // const tagColor = isRegulated ? TagVariants.BLUE : TagVariants.GREEN;
 
   return (
     <div className='flex flex-1 items-center'>
