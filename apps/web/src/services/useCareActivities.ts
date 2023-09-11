@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
-// import { OptionType } from '../components/generic/RenderSelect';
 import { useHttp } from './useHttp';
 import { usePlanningContext } from './usePlanningContext';
 
