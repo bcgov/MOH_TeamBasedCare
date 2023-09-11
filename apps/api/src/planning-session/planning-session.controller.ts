@@ -1,4 +1,13 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, Param, Patch, Post, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { SaveCareActivityDTO, SaveOccupationDTO, SaveProfileDTO } from '@tbcm/common';
 import { SUCCESS_RESPONSE } from '../common/constants';

@@ -72,7 +72,9 @@ export class PlanningSessionService {
       throw new NotFoundException({ message: 'Care Location Not found' });
     }
 
-    return this.careActivityService.getCareActivitiesByBundlesForCareLocation(planningSession.careLocation.id);
+    return this.careActivityService.getCareActivitiesByBundlesForCareLocation(
+      planningSession.careLocation.id,
+    );
   }
 
   async saveCareActivity(sessionId: string, careActivityDto: SaveCareActivityDTO): Promise<void> {

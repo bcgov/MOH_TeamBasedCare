@@ -30,11 +30,14 @@ export const usePlanningProfile = () => {
 
   useEffect(() => {
     if (sessionId) {
-      fetchData({ endpoint: API_ENDPOINT.getPlanningProfile(sessionId) }, (data: IProfileSelection) => {
-        if (data) {
-          setInitialValues(data);
-        }
-      });
+      fetchData(
+        { endpoint: API_ENDPOINT.getPlanningProfile(sessionId) },
+        (data: IProfileSelection) => {
+          if (data) {
+            setInitialValues(data);
+          }
+        },
+      );
     }
   }, [sessionId]);
 

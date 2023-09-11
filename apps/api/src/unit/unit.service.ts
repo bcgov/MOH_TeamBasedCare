@@ -39,7 +39,8 @@ export class UnitService {
         this.unitsRepository.create({
           name,
         }),
-      ), ['name']
+      ),
+      ['name'],
     );
   }
 }

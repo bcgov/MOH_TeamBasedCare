@@ -252,7 +252,8 @@ export class SeedService {
           clinicalType,
           careLocations: careLocation ? [careLocation] : [],
         });
-      }), ['name']
+      }),
+      ['name'],
     );
   }
 
