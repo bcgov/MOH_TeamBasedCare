@@ -17,7 +17,7 @@ export class CareActivityService {
 
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
     if (!careLocationId) {
-      throw new NotFoundException({ message: 'Care Location Not found' });
+      throw new NotFoundException({ message: 'No Care Location id provided.' });
     }
 
     const careActivities = await this.careActivityRepo
@@ -34,7 +34,7 @@ export class CareActivityService {
     Object.keys(careActivitiesByBundle).forEach(bundleId => {
       // taking zeroth index since result is grouped
       const bundle = careActivitiesByBundle[bundleId][0].bundle;
-      
+
       // grab care activities
       bundle.careActivities = careActivitiesByBundle[bundleId];
 
