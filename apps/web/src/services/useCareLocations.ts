@@ -5,7 +5,7 @@ import { useHttp } from './useHttp';
 
 interface UnitProps {
   id: string;
-  unitName: string;
+  displayName: string;
 }
 
 export const useCareLocations = () => {
@@ -18,7 +18,7 @@ export const useCareLocations = () => {
     fetchData(config, (data: any) => {
       setCareLocations(
         data.map((unit: UnitProps) => {
-          return { value: unit.id, label: unit.unitName };
+          return { value: unit.id, label: unit.displayName };
         }),
       );
     });

@@ -12,6 +12,7 @@ import { Occupation } from 'src/occupation/entity/occupation.entity';
 import config from '../ormconfig';
 import { Unit } from '../unit/entity/unit.entity';
 import { SeedService } from './scripts/seed-service';
+import { UnitModule } from 'src/unit/unit.module';
 
 const getEnvironmentSpecificConfig = (env?: string) => {
   switch (env) {
@@ -55,6 +56,7 @@ const appOrmConfig: PostgresConnectionOptions = {
   imports: [
     TypeOrmModule.forRoot(appOrmConfig),
     TypeOrmModule.forFeature([CareActivity, Occupation, AllowedActivity, Unit, Bundle]),
+    UnitModule,
   ],
   providers: [Logger, SeedService],
   exports: [SeedService, TypeOrmModule],

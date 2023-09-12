@@ -18,7 +18,7 @@ export const enum ProfileOptions {
 }
 
 interface ProfileFormProps {
-  profile: string;
+  profileOption: string;
   careLocation: string;
 }
 
@@ -48,7 +48,7 @@ const ProfileForm = () => {
         <div className='planning-form-box'>
           <Radio
             legend='Select how do you want to start with'
-            name='profile'
+            name='profileOption'
             options={profileOptions}
           />
 
@@ -61,9 +61,10 @@ const ProfileForm = () => {
             <span className='font-bold'>Start a new profile from scratch</span>
           </div>
         </div>
+
         <div>
           <div>
-            {values.profile === ProfileOptions.GENERIC && !isLoading && (
+            {values.profileOption === ProfileOptions.FROM_SCRATCH && !isLoading && (
               <div className='planning-form-box'>
                 <RenderSelect
                   label={'Select Care Location Profile'}

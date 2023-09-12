@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { SaveCareActivityDTO, SaveOccupationDTO, SaveProfileDTO } from '@tbcm/common';
 import { SUCCESS_RESPONSE } from '../common/constants';
@@ -27,6 +36,12 @@ export class PlanningSessionController {
   @Get('/:sessionId/profile')
   getCurrentProfileSelection(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getProfileSelection(sessionId);
+  }
+
+  @Get('/:sessionId/care-activity/bundle')
+  @UseInterceptors(ClassSerializerInterceptor)
+  getBundlesForProfile(@Param('sessionId') sessionId: string) {
+    return this.planningSessionService.getBundlesForSelectedCareLocation(sessionId);
   }
 
   @Patch('/:sessionId/care-activity')
