@@ -75,7 +75,7 @@ const WrapperContent = () => {
         </div>
       </div>
       {/* Works here */}
-      <div className='flex-1 flex flex-col min-h-0'>
+      <div className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
         <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
     </div>
