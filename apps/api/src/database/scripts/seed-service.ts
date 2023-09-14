@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { AppLogger } from '../../common/logger.service';
 import csv from 'csv-parser';
 import { AllowedActivity } from '../../entities/allowed-activities.entity';
@@ -232,6 +232,26 @@ export class SeedService {
     return bundle;
   }
 
+  private async findOrCreateCareActivity(
+    partialEntity: Partial<CareActivity>,
+  ): Promise<CareActivity> {
+    if (!partialEntity.name) {
+      throw new BadRequestException({
+        message: 'Cannot save Care Activity: Name not found',
+      });
+    }
+
+    let careActivity = await this.careActivityRepo.findOne({
+      where: { name: cleanText(partialEntity.name) },
+    });
+
+    if (!careActivity) {
+      careActivity = await this.careActivityRepo.save(this.careActivityRepo.create(partialEntity));
+    }
+
+    return careActivity;
+  }
+
   private async saveCareActivity(
     bundleName: string,
     careActivities: {
@@ -243,17 +263,16 @@ export class SeedService {
   ): Promise<void> {
     const bundle = await this.findOrCreateBundle(bundleName);
 
-    await this.careActivityRepo.upsert(
-      careActivities.map(({ name, activityType, clinicalType, careLocation }) => {
-        return this.careActivityRepo.create({
+    await Promise.all(
+      careActivities.map(({ name, activityType, clinicalType, careLocation }) =>
+        this.findOrCreateCareActivity({
           name,
           bundle,
           activityType,
           clinicalType,
           careLocations: careLocation ? [careLocation] : [],
-        });
-      }),
-      ['name'],
+        }),
+      ),
     );
   }
 
@@ -274,6 +293,24 @@ export class SeedService {
     return occupation;
   }
 
+  private async findOrCreateAlloweActivity(partialEntity: Partial<AllowedActivity>) {
+    if (!partialEntity.careActivity || !partialEntity.occupation) {
+      throw new BadRequestException({
+        message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
+      });
+    }
+
+    let entity = await this.allowedActRepo.findOne({
+      where: { careActivity: partialEntity.careActivity, occupation: partialEntity.occupation },
+    });
+
+    if (!entity) {
+      entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
+    }
+
+    return entity;
+  }
+
   private async saveAllowedActivity(
     occupationName: string,
     activityMap: { [key: string]: Permissions },
@@ -282,22 +319,15 @@ export class SeedService {
     const occupation = await this.findOrCreateOccupation(occupationName.trim().replace(/"/g, ''));
 
     const allowedActivities = Object.entries(activityMap).map(([eachCA, permission]) => {
-      return this.allowedActRepo.create({
+      return {
         occupation,
         permission,
         careActivity: careActivityDBMap[eachCA],
-      });
+      };
     });
 
-    await this.allowedActRepo
-      .createQueryBuilder()
-      .insert()
-      .into(AllowedActivity)
-      .values(allowedActivities)
-      .orUpdate({
-        conflict_target: ['id'],
-        overwrite: ['permission'],
-      })
-      .execute();
+    await Promise.all(
+      allowedActivities.map(allowedActivity => this.findOrCreateAlloweActivity(allowedActivity)),
+    );
   }
 }
