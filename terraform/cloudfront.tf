@@ -20,11 +20,13 @@ resource "aws_cloudfront_origin_access_identity" "app" {
   comment = local.app_name
 }
 
-# data "aws_acm_certificate" "domain" {
-#   count    = local.has_domain ? 1 : 0
-#   domain   = var.domain
-#   statuses = ["ISSUED"]
-# }
+data "aws_acm_certificate" "domain" {
+  count    = local.has_domain ? 1 : 0
+  provider = aws.us-east-1
+  domain   = var.domain
+  statuses = ["ISSUED"]
+}
+
 
 
 
@@ -46,6 +48,7 @@ resource "aws_cloudfront_function" "request" {
 resource "aws_cloudfront_distribution" "app" {
   comment = local.app_name
   
+  aliases = local.fw_domain ? [var.domain] : [""] // TODO - Add gov.bc.ca domain here
 
   origin {
     domain_name = aws_s3_bucket.app.bucket_regional_domain_name
@@ -157,8 +160,8 @@ resource "aws_cloudfront_distribution" "app" {
   viewer_certificate {
     cloudfront_default_certificate = local.has_domain ? false : true
 
-    acm_certificate_arn      = null
-    minimum_protocol_version = local.has_domain ? "TLSv1.2_2019" : null
+    acm_certificate_arn      = local.has_domain ? data.aws_acm_certificate.domain[0].arn : null
+    minimum_protocol_version = local.has_domain ? "TLSv1.2_2021" : null
     ssl_support_method       = local.has_domain ? "sni-only" : null
   }
 
