@@ -232,22 +232,31 @@ export class SeedService {
     return bundle;
   }
 
-  private async findOrCreateCareActivity(
-    partialEntity: Partial<CareActivity>,
-  ): Promise<CareActivity> {
+  /**
+   * @method upsertCareActivity
+   * @description Method takes a partial entity, and upserts the entity
+   * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
+   */
+  private async upsertCareActivity(partialEntity: Partial<CareActivity>): Promise<CareActivity> {
+    // throw error if name not provided; @Unique constraint on the entity
     if (!partialEntity.name) {
       throw new BadRequestException({
         message: 'Cannot save Care Activity: Name not found',
       });
     }
 
+    // find care activity with the same name
     let careActivity = await this.careActivityRepo.findOne({
       where: { name: cleanText(partialEntity.name) },
     });
 
-    if (!careActivity) {
-      careActivity = await this.careActivityRepo.save(this.careActivityRepo.create(partialEntity));
+    // if found, and partial activity does not contain the id
+    if (careActivity && !partialEntity.id) {
+      partialEntity.id = careActivity.id;
     }
+
+    // upsert
+    careActivity = await this.careActivityRepo.save(this.careActivityRepo.create(partialEntity));
 
     return careActivity;
   }
@@ -265,7 +274,7 @@ export class SeedService {
 
     await Promise.all(
       careActivities.map(({ name, activityType, clinicalType, careLocation }) =>
-        this.findOrCreateCareActivity({
+        this.upsertCareActivity({
           name,
           bundle,
           activityType,
@@ -293,20 +302,31 @@ export class SeedService {
     return occupation;
   }
 
-  private async findOrCreateAlloweActivity(partialEntity: Partial<AllowedActivity>) {
+  /**
+   * @method upsertAllowedActivity
+   * @description Method takes a partial entity, and upserts the entity
+   * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
+   */
+  private async upsertAllowedActivity(partialEntity: Partial<AllowedActivity>) {
+    // throw error if careActivity or occupation not provided; @Unique constraint on the entity
     if (!partialEntity.careActivity || !partialEntity.occupation) {
       throw new BadRequestException({
         message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
       });
     }
 
+    // find allowed activity, if exists
     let entity = await this.allowedActRepo.findOne({
       where: { careActivity: partialEntity.careActivity, occupation: partialEntity.occupation },
     });
 
-    if (!entity) {
-      entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
+    // if found, and partial activity does not contain the id
+    if (entity && !partialEntity.id) {
+      partialEntity.id = entity.id;
     }
+
+    // upsert
+    entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
 
     return entity;
   }
@@ -327,7 +347,7 @@ export class SeedService {
     });
 
     await Promise.all(
-      allowedActivities.map(allowedActivity => this.findOrCreateAlloweActivity(allowedActivity)),
+      allowedActivities.map(allowedActivity => this.upsertAllowedActivity(allowedActivity)),
     );
   }
 }
