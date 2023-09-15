@@ -50,7 +50,7 @@ DB_HOST = $(DB_HOST_DEV)
 endif
 
 ifeq ($(ENV_NAME), test)
-DOMAIN=dev.tbcm.freshworks.club
+DOMAIN=test.tbcm.freshworks.club
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
 DB_HOST = $(DB_HOST_PROD_TEST)
 endif
