@@ -14,8 +14,8 @@ export const Popover: React.FC<PopoverProps> = ({ title, children }) => {
         <>
           <PopoverUI.Button
             className={`${
-              open ? '' : 'text-opacity-100'
-            } ml-2 text-sm font-strong text-bcBluePrimary mb-4 group inline-flex items-center rounded-md hover:text-opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75`}
+              open ? '' : 'text-opacity-90'
+            } ml-2 text-sm font-bold text-bcBluePrimary mb-4 group inline-flex items-center rounded-md hover:text-opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75`}
           >
             <span>{title}</span>
           </PopoverUI.Button>

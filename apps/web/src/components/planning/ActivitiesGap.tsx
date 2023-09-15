@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
 import { usePlanningActivitiesGap } from '../../services';
+import { OverviewCards } from './ActivitiesGap/OverviewCards';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -147,10 +148,11 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
       <div className='planning-form-box overflow-visible'>
         <PageTitle title='Overview' description={description} />
         <ActivitiesGapLegend />
+        <OverviewCards />
       </div>
 
       <div className='planning-form-box'>
-        <PageTitle title='Role Optimization Matrix' description={description} />
+        <PageTitle title='Role Optimization Matrix' />
         <ActivityGapTable />
       </div>
     </div>
