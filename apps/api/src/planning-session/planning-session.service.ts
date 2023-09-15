@@ -237,12 +237,13 @@ export class PlanningSessionService {
     // total occupations selected x total care activities selected
     const total = (occupations.length || 0) * (careActivities.length || 0);
 
-    overview.inScope = `${Math.round(
-      ((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100,
-    ) || 0}%`;
-    overview.needsTraining = `${Math.round(
-      ((permissionsGroupedCount[Permissions.CONTINUED_EDUCATION] || 0) / total) * 100,
-    ) || 0}%`;
+    overview.inScope = `${
+      Math.round(((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100) || 0
+    }%`;
+    overview.needsTraining = `${
+      Math.round(((permissionsGroupedCount[Permissions.CONTINUED_EDUCATION] || 0) / total) * 100) ||
+      0
+    }%`;
 
     const allowedActivitiesTotal =
       (permissionsGroupedCount[Permissions.ASSIST] || 0) +
