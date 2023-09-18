@@ -44,13 +44,13 @@ DB_HOST = $(DB_HOST_PROD)
 endif
 
 ifeq ($(ENV_NAME), dev)
-NEXT_PUBLIC_API_URL=https://d3qshnmydybt5m.cloudfront.net/api/v1
+DOMAIN=dev.tbcm.freshworks.club
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_DEV)
 DB_HOST = $(DB_HOST_DEV)
 endif
 
 ifeq ($(ENV_NAME), test)
-NEXT_PUBLIC_API_URL=https://d1xxd26qe80lqw.cloudfront.net/api/v1
+DOMAIN=test.tbcm.freshworks.club
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
 DB_HOST = $(DB_HOST_PROD_TEST)
 endif
