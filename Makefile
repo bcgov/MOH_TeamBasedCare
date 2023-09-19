@@ -226,6 +226,7 @@ build-api:
 
 build-web:
 	@echo "++\n***** Building Web for AWS\n++"
+	@yarn workspace @tbcm/web build
 	@yarn workspace @tbcm/web export
 	@mv ./apps/web/out ./terraform/build/app
 	@echo "++\n*****"
