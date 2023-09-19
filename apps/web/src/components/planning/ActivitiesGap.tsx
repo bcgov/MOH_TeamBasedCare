@@ -1,15 +1,11 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faChartBar,
-  faCaretDown,
-  faTimesCircle,
-  faCaretUp,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faTimesCircle, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
 import { usePlanningActivitiesGap } from '../../services';
+import { OverviewCards } from './ActivitiesGap/OverviewCards';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -144,16 +140,21 @@ const ActivityGapTable: React.FC = () => {
   );
 };
 
-export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
+export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
   const description =
     'Based on the roles and tasks that you filled in the previous steps, here are the the gaps that we found. Expanding the row on the left hand side table to view more.';
   return (
-    <div className='planning-form-box'>
-      <PageTitle title={title} description={description}>
-        <FontAwesomeIcon icon={faChartBar} className='h-6 text-bcBluePrimary' />
-      </PageTitle>
-      <ActivitiesGapLegend />
-      <ActivityGapTable />
+    <div>
+      <div className='planning-form-box overflow-visible'>
+        <PageTitle title='Overview' description={description} />
+        <ActivitiesGapLegend />
+        <OverviewCards />
+      </div>
+
+      <div className='planning-form-box'>
+        <PageTitle title='Role Optimization Matrix' />
+        <ActivityGapTable />
+      </div>
     </div>
   );
 };

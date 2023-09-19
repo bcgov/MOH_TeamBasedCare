@@ -8,7 +8,7 @@ import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
-import { ActivitiesActionType } from '../common/constants';
+import { ActivitiesActionType, Permissions } from '../common/constants';
 import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
 import { UnitService } from 'src/unit/unit.service';
 import { Unit } from 'src/unit/entity/unit.entity';
@@ -223,9 +223,40 @@ export class PlanningSessionService {
       result.push(data);
     });
 
+    /**
+     * overview calculations
+     **/
+    const overview: {
+      inScope?: string;
+      needsTraining?: string;
+      outOfScope?: string;
+    } = {};
+
+    const permissionsGroupedCount = _.countBy(query, 'permission');
+
+    // total occupations selected x total care activities selected
+    const total = (occupations.length || 0) * (careActivities.length || 0);
+
+    overview.inScope = `${
+      Math.round(((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100) || 0
+    }%`;
+    overview.needsTraining = `${
+      Math.round(((permissionsGroupedCount[Permissions.CONTINUED_EDUCATION] || 0) / total) * 100) ||
+      0
+    }%`;
+
+    const allowedActivitiesTotal =
+      (permissionsGroupedCount[Permissions.ASSIST] || 0) +
+      (permissionsGroupedCount[Permissions.CONTINUED_EDUCATION] || 0) +
+      (permissionsGroupedCount[Permissions.LIMITS] || 0) +
+      (permissionsGroupedCount[Permissions.PERFORM] || 0);
+    const outOfScope = total - allowedActivitiesTotal;
+    overview.outOfScope = `${Math.round((outOfScope / total) * 100) || 0}%`;
+
     return {
       headers,
       data: result,
+      overview,
     };
   }
 }

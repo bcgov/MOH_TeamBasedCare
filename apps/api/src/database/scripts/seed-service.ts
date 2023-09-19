@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { AppLogger } from '../../common/logger.service';
 import csv from 'csv-parser';
 import { AllowedActivity } from '../../entities/allowed-activities.entity';
@@ -232,6 +232,35 @@ export class SeedService {
     return bundle;
   }
 
+  /**
+   * @method upsertCareActivity
+   * @description Method takes a partial entity, and upserts the entity
+   * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
+   */
+  private async upsertCareActivity(partialEntity: Partial<CareActivity>): Promise<CareActivity> {
+    // throw error if name not provided; @Unique constraint on the entity
+    if (!partialEntity.name) {
+      throw new BadRequestException({
+        message: 'Cannot save Care Activity: Name not found',
+      });
+    }
+
+    // find care activity with the same name
+    let careActivity = await this.careActivityRepo.findOne({
+      where: { name: cleanText(partialEntity.name) },
+    });
+
+    // if found, and partial activity does not contain the id
+    if (careActivity && !partialEntity.id) {
+      partialEntity.id = careActivity.id;
+    }
+
+    // upsert
+    careActivity = await this.careActivityRepo.save(this.careActivityRepo.create(partialEntity));
+
+    return careActivity;
+  }
+
   private async saveCareActivity(
     bundleName: string,
     careActivities: {
@@ -243,17 +272,16 @@ export class SeedService {
   ): Promise<void> {
     const bundle = await this.findOrCreateBundle(bundleName);
 
-    await this.careActivityRepo.upsert(
-      careActivities.map(({ name, activityType, clinicalType, careLocation }) => {
-        return this.careActivityRepo.create({
+    await Promise.all(
+      careActivities.map(({ name, activityType, clinicalType, careLocation }) =>
+        this.upsertCareActivity({
           name,
           bundle,
           activityType,
           clinicalType,
           careLocations: careLocation ? [careLocation] : [],
-        });
-      }),
-      ['name'],
+        }),
+      ),
     );
   }
 
@@ -274,6 +302,35 @@ export class SeedService {
     return occupation;
   }
 
+  /**
+   * @method upsertAllowedActivity
+   * @description Method takes a partial entity, and upserts the entity
+   * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
+   */
+  private async upsertAllowedActivity(partialEntity: Partial<AllowedActivity>) {
+    // throw error if careActivity or occupation not provided; @Unique constraint on the entity
+    if (!partialEntity.careActivity || !partialEntity.occupation) {
+      throw new BadRequestException({
+        message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
+      });
+    }
+
+    // find allowed activity, if exists
+    let entity = await this.allowedActRepo.findOne({
+      where: { careActivity: partialEntity.careActivity, occupation: partialEntity.occupation },
+    });
+
+    // if found, and partial activity does not contain the id
+    if (entity && !partialEntity.id) {
+      partialEntity.id = entity.id;
+    }
+
+    // upsert
+    entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
+
+    return entity;
+  }
+
   private async saveAllowedActivity(
     occupationName: string,
     activityMap: { [key: string]: Permissions },
@@ -282,22 +339,15 @@ export class SeedService {
     const occupation = await this.findOrCreateOccupation(occupationName.trim().replace(/"/g, ''));
 
     const allowedActivities = Object.entries(activityMap).map(([eachCA, permission]) => {
-      return this.allowedActRepo.create({
+      return {
         occupation,
         permission,
         careActivity: careActivityDBMap[eachCA],
-      });
+      };
     });
 
-    await this.allowedActRepo
-      .createQueryBuilder()
-      .insert()
-      .into(AllowedActivity)
-      .values(allowedActivities)
-      .orUpdate({
-        conflict_target: ['id'],
-        overwrite: ['permission'],
-      })
-      .execute();
+    await Promise.all(
+      allowedActivities.map(allowedActivity => this.upsertAllowedActivity(allowedActivity)),
+    );
   }
 }

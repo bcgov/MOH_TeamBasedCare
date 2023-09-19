@@ -1,10 +1,11 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Permissions } from '../common/constants';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { CustomBaseEntity } from '../common/custom-base.entity';
 import { Occupation } from 'src/occupation/entity/occupation.entity';
 
 @Entity()
+@Unique('occupation_careActivity', ['occupation', 'careActivity'])
 export class AllowedActivity extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
