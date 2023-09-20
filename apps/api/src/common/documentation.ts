@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AuthModule } from 'src/auth/auth.module';
 import { AppModule } from '../app.module';
 import { CareActivityModule } from '../care-activity/care-activity.module';
 import { OccupationModule } from '../occupation/occupation.module';
@@ -15,7 +16,14 @@ export const Documentation = (app: INestApplication) => {
     .build();
 
   const baseDocument = SwaggerModule.createDocument(app, options, {
-    include: [AppModule, UnitModule, PlanningSessionModule, CareActivityModule, OccupationModule],
+    include: [
+      AppModule,
+      UnitModule,
+      PlanningSessionModule,
+      CareActivityModule,
+      OccupationModule,
+      AuthModule,
+    ],
   });
 
   SwaggerModule.setup('api', app, baseDocument, {
