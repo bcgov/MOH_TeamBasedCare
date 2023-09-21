@@ -5,6 +5,7 @@ export enum StorageKeys {
   REFRESH_TOKEN_EXPIRY = 'refreshTokenExpiry',
   TOKENS_LAST_REFRESHED_AT = 'tokensLastRefreshedAt',
   USERNAME = 'username',
+  DISPLAY_NAME = 'displayName',
   ROLES = 'roles',
 }
 

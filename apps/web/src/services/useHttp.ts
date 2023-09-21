@@ -1,17 +1,14 @@
-import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { AxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
 import { AxiosPublic } from '../utils';
 import { REQUEST_METHOD } from '../common';
 
-type HttpReturn = {
-  sendApiRequest: any;
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
-  isLoading: boolean;
-  fetchData: any;
-};
+export interface RequestConfig extends AxiosRequestConfig {
+  endpoint: string;
+}
 
-export const useHttp = (): HttpReturn => {
+export const useHttp = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const errorHandler = (err: any) => {
@@ -22,34 +19,37 @@ export const useHttp = (): HttpReturn => {
     }
   };
 
-  const fetchData = useCallback(async (requestConfig, handleData) => {
-    const configOptions: AxiosRequestConfig = {
+  const fetchData = useCallback(async (requestConfig: RequestConfig, handleData) => {
+    const configOptions: Partial<RequestConfig> = {
       method: REQUEST_METHOD.GET,
       params: requestConfig?.params,
       data: requestConfig?.data,
     };
     try {
       setIsLoading(true);
-      const response = await AxiosPublic(requestConfig.endpoint, configOptions);
-      handleData(response);
+      const { data } = await AxiosPublic(requestConfig.endpoint, configOptions);
+      handleData(data);
     } catch (err: any) {
       errorHandler(err);
     }
     setIsLoading(false);
   }, []);
 
-  const sendApiRequest = async (requestConfig: any, handleData: any, handleError?: any) => {
-    const configOptions = {
+  const sendApiRequest = async (
+    requestConfig: RequestConfig,
+    handleData: any,
+    handleError?: any,
+  ) => {
+    const configOptions: Partial<RequestConfig> = {
       method: requestConfig.method,
-      body: requestConfig?.body,
       params: requestConfig?.params,
       data: requestConfig?.data,
     };
     setIsLoading(true);
     try {
-      const res = await AxiosPublic(requestConfig.endpoint, configOptions);
+      const { data } = await AxiosPublic(requestConfig.endpoint, configOptions);
       setIsLoading(false);
-      handleData(res);
+      handleData(data);
     } catch (err: any) {
       if (handleError) {
         handleError();

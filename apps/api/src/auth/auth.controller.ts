@@ -47,7 +47,7 @@ export class AuthController {
     return kcUserInfo;
   }
 
-  @Post('refreshToken')
+  @Post('refresh')
   @ApiOkResponse({
     description: 'Refresh access token with keycloak sso server ',
   })

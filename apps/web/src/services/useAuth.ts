@@ -1,54 +1,60 @@
 import { useHttp } from '@services';
-import { KeycloakToken } from '@tbcm/common';
+import { KeycloakToken, KeycloakUser } from '@tbcm/common';
 import { useCallback } from 'react';
-import { API_ENDPOINT } from 'src/common';
+import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
+import { getAuthTokens, storeAuthTokens } from 'src/utils/token';
 import { AppStorage, StorageKeys } from '../utils/storage';
 
 export const useAuth = () => {
-  const { sendApiRequest } = useHttp();
+  const { sendApiRequest, fetchData } = useHttp();
 
+  // soft check if the user is authenticated
   const isAuthenticated = useCallback(() => {
     const now = +new Date();
 
     const accessToken = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
     const accessTokenExpiry = AppStorage.getItem(StorageKeys.ACCESS_TOKEN_EXPIRY);
 
-    if (accessToken && accessTokenExpiry && +accessTokenExpiry > now) {
+    const refreshToken = AppStorage.getItem(StorageKeys.REFRESH_TOKEN);
+    const refreshTokenExpiry = AppStorage.getItem(StorageKeys.REFRESH_TOKEN_EXPIRY);
+
+    // both tokens exist, and not expired
+    if (
+      accessToken &&
+      accessTokenExpiry &&
+      +accessTokenExpiry > now &&
+      refreshToken &&
+      refreshTokenExpiry &&
+      +refreshTokenExpiry > now
+    ) {
       return true;
     }
 
     return false;
   }, []);
 
-  const storeAuthTokens = useCallback((data: KeycloakToken) => {
-    const now = Date.now();
-
-    AppStorage.setItem(StorageKeys.ACCESS_TOKEN, data.access_token);
-    AppStorage.setItem(StorageKeys.ACCESS_TOKEN_EXPIRY, now + +data.expires_in * 1000);
-    AppStorage.setItem(StorageKeys.REFRESH_TOKEN, data.refresh_token);
-    AppStorage.setItem(StorageKeys.REFRESH_TOKEN_EXPIRY, now + +data.refresh_expires_in * 1000);
-    AppStorage.setItem(StorageKeys.TOKENS_LAST_REFRESHED_AT, +now);
+  // store user data to the storage
+  const storeUserData = useCallback((data: KeycloakUser) => {
+    AppStorage.setItem(StorageKeys.USERNAME, data.idir_username);
+    AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.display_name);
+    AppStorage.setItem(StorageKeys.ROLES, data.client_roles);
   }, []);
 
+  // clear storage
   const clearStorage = useCallback(() => {
     AppStorage.clear();
   }, []);
 
-  const getAuthTokens = useCallback(() => {
-    return {
-      access_token: AppStorage.getItem(StorageKeys.ACCESS_TOKEN),
-      refresh_token: AppStorage.getItem(StorageKeys.REFRESH_TOKEN),
-    };
-  }, []);
-
+  // fetch authentication token from authorization code
   const fetchAuthTokenFromCode = useCallback(
     (code: string, handler: () => void, errorHandler: () => void) => {
       const config = {
         endpoint: API_ENDPOINT.AUTH_CALLBACK,
-        method: 'POST',
-        body: { code },
+        method: REQUEST_METHOD.POST,
+        data: { code },
       };
 
+      // fetch token from code
       sendApiRequest(
         config,
         (result: KeycloakToken) => {
@@ -61,23 +67,49 @@ export const useAuth = () => {
         errorHandler,
       );
     },
-    [sendApiRequest, storeAuthTokens],
+    [sendApiRequest],
   );
 
+  // fetch user information from authentication token
+  const fetchUser = useCallback(
+    (handler: () => void) => {
+      const config = { endpoint: API_ENDPOINT.AUTH_USER };
+
+      fetchData(config, (result: KeycloakUser) => {
+        // update user to storage
+        storeUserData(result);
+
+        // call success handler
+        handler();
+      });
+    },
+    [fetchData, storeUserData],
+  );
+
+  // redirect user to auth provider login
   const logMeIn = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
     window.location.href = process.env.NEXT_PUBLIC_API_URL + API_ENDPOINT.AUTH_LOGIN;
   }, []);
 
+  // log users out and redirect to the Landing page; Also, clear storage
   const logMeOut = useCallback(
     (handler: () => void, errorHandler: () => void) => {
-      const config = { endpoint: API_ENDPOINT.AUTH_LOGOUT, method: 'POST', body: getAuthTokens() };
+      const config = {
+        endpoint: API_ENDPOINT.AUTH_LOGOUT,
+        method: REQUEST_METHOD.POST,
+        data: getAuthTokens(),
+      };
 
       // execute this handler under either cases - success/failure
+      // clear storage and redirect user to home
       const commonHandler = () => {
         clearStorage();
         window.location.href = '/';
       };
 
+      // send logout request
       sendApiRequest(
         config,
         () => {
@@ -90,35 +122,7 @@ export const useAuth = () => {
         },
       );
     },
-    [clearStorage, getAuthTokens, sendApiRequest],
-  );
-
-  const refreshAuthTokens = useCallback(
-    (handler: () => void, errorHandler: () => void) => {
-      const now = +new Date();
-
-      const refreshToken = AppStorage.getItem(StorageKeys.REFRESH_TOKEN);
-      const refreshTokenExpiry = AppStorage.getItem(StorageKeys.REFRESH_TOKEN_EXPIRY);
-
-      if (refreshToken && refreshTokenExpiry && +refreshTokenExpiry > now) {
-        // request to fetch the refreshed tokens
-        const config = {
-          endpoint: API_ENDPOINT.AUTH_REFRESH,
-          method: 'POST',
-          body: getAuthTokens(),
-        };
-
-        sendApiRequest(
-          config,
-          (result: KeycloakToken) => {
-            storeAuthTokens(result);
-            handler();
-          },
-          errorHandler,
-        );
-      }
-    },
-    [getAuthTokens, sendApiRequest, storeAuthTokens],
+    [clearStorage, sendApiRequest],
   );
 
   return {
@@ -126,6 +130,6 @@ export const useAuth = () => {
     logMeIn,
     logMeOut,
     fetchAuthTokenFromCode,
-    refreshAuthTokens,
+    fetchUser,
   };
 };
