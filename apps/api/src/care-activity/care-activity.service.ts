@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import _ from 'lodash';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
@@ -20,28 +19,18 @@ export class CareActivityService {
       throw new NotFoundException({ message: 'No Care Location id provided.' });
     }
 
-    const careActivities = await this.careActivityRepo
-      .createQueryBuilder('careActivities')
-      .innerJoin('careActivities.careLocations', 'careActivities_careLocations')
-      .where('careActivities_careLocations.id = :careLocationId', { careLocationId })
-      .innerJoinAndSelect('careActivities.bundle', 'careActivities_bundle')
+    const bundles = await this.bundleRepo
+      .createQueryBuilder('bundle')
+      .leftJoinAndSelect('bundle.careActivities', 'bundle_careActivities')
+      .innerJoin(
+        'bundle_careActivities.careLocations',
+        'bundle_careActivities_careLocations',
+        'unit_id = :careLocationId',
+        { careLocationId },
+      )
       .getMany();
 
-    const careActivitiesByBundle = _.groupBy(careActivities, 'bundle.id');
-
-    const result: BundleRO[] = [];
-
-    Object.keys(careActivitiesByBundle).forEach(bundleId => {
-      // taking zeroth index since result is grouped
-      const bundle = careActivitiesByBundle[bundleId][0].bundle;
-
-      // grab care activities
-      bundle.careActivities = careActivitiesByBundle[bundleId];
-
-      result.push(new BundleRO(bundle));
-    });
-
-    return result;
+    return bundles.map(bundle => new BundleRO(bundle));
   }
 
   async getAllBundles(): Promise<Bundle[]> {
