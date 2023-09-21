@@ -14,7 +14,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Unprotected } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
 import { AppTokensDTO } from '@tbcm/common';
-import { KeycloakToken } from './models/keycloak-token.model';
+import { KeycloakToken } from '@tbcm/common';
 
 @Controller('auth')
 @ApiTags('auth')

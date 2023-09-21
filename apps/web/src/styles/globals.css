@@ -153,6 +153,16 @@ tr > th:first-child {
   color: red;
 }
 
+.backdropSpinner {
+  backdrop-filter: blur(2px);
+}
+.backdropSpinner + .spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 @layer base {
   @font-face {
     font-family: BCSans;

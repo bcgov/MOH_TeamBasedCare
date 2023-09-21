@@ -4,8 +4,8 @@ import * as queryString from 'querystring';
 import { catchError, map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
-import { KeycloakToken } from './models/keycloak-token.model';
-import { KeycloakUser } from './models/keycloak-user.model';
+import { KeycloakToken } from '@tbcm/common';
+import { KeycloakUser } from '@tbcm/common';
 
 @Injectable()
 export class AuthService {
