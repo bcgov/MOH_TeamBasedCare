@@ -2,7 +2,11 @@ import { useHttp } from '@services';
 import { KeycloakToken, KeycloakUser } from '@tbcm/common';
 import { useCallback } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
-import { getAuthTokens, storeAuthTokens } from 'src/utils/token';
+import {
+  clearStorageAndRedirectToLandingPage,
+  getAuthTokens,
+  storeAuthTokens,
+} from 'src/utils/token';
 import { AppStorage, StorageKeys } from '../utils/storage';
 
 export const useAuth = () => {
@@ -18,6 +22,8 @@ export const useAuth = () => {
     const refreshToken = AppStorage.getItem(StorageKeys.REFRESH_TOKEN);
     const refreshTokenExpiry = AppStorage.getItem(StorageKeys.REFRESH_TOKEN_EXPIRY);
 
+    const username = AppStorage.getItem(StorageKeys.USERNAME);
+
     // both tokens exist, and not expired
     if (
       accessToken &&
@@ -25,7 +31,8 @@ export const useAuth = () => {
       +accessTokenExpiry > now &&
       refreshToken &&
       refreshTokenExpiry &&
-      +refreshTokenExpiry > now
+      +refreshTokenExpiry > now &&
+      username
     ) {
       return true;
     }
@@ -40,20 +47,14 @@ export const useAuth = () => {
     AppStorage.setItem(StorageKeys.ROLES, data.client_roles);
   }, []);
 
-  // clear storage
-  const clearStorage = useCallback(() => {
-    AppStorage.clear();
-  }, []);
-
   // fetch authentication token from authorization code
   const fetchAuthTokenFromCode = useCallback(
-    (code: string, handler: () => void, errorHandler: () => void) => {
+    (code: string, handler: () => void, errorHandler: () => void, errorToastMessage?: string) => {
       const config = {
         endpoint: API_ENDPOINT.AUTH_CALLBACK,
         method: REQUEST_METHOD.POST,
         data: { code },
       };
-
       // fetch token from code
       sendApiRequest(
         config,
@@ -65,6 +66,7 @@ export const useAuth = () => {
           handler();
         },
         errorHandler,
+        errorToastMessage,
       );
     },
     [sendApiRequest],
@@ -72,16 +74,20 @@ export const useAuth = () => {
 
   // fetch user information from authentication token
   const fetchUserFromCode = useCallback(
-    (handler: () => void) => {
+    (handler: () => void, errorToastMessage?: string) => {
       const config = { endpoint: API_ENDPOINT.AUTH_USER };
 
-      fetchData(config, (result: KeycloakUser) => {
-        // update user to storage
-        storeUserData(result);
+      fetchData(
+        config,
+        (result: KeycloakUser) => {
+          // update user to storage
+          storeUserData(result);
 
-        // call success handler
-        handler();
-      });
+          // call success handler
+          handler();
+        },
+        errorToastMessage,
+      );
     },
     [fetchData, storeUserData],
   );
@@ -105,8 +111,7 @@ export const useAuth = () => {
       // execute this handler under either cases - success/failure
       // clear storage and redirect user to home
       const commonHandler = () => {
-        clearStorage();
-        window.location.href = '/';
+        clearStorageAndRedirectToLandingPage();
       };
 
       // send logout request
@@ -122,7 +127,7 @@ export const useAuth = () => {
         },
       );
     },
-    [clearStorage, sendApiRequest],
+    [sendApiRequest],
   );
 
   return {

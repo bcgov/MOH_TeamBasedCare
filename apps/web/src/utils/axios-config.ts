@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { AppStorage, StorageKeys } from './storage';
-import { refreshAuthTokens } from './token';
+import { clearStorageAndRedirectToLandingPage, refreshAuthTokens } from './token';
 
 export const AxiosPublic = axios.create({
   headers: {
@@ -36,7 +36,7 @@ AxiosPublic.interceptors.response.use(
   response => handleResponseSuccess(response),
   async error => {
     const originalRequest = error.config;
-    if (error?.responspe?.status === 401 && !originalRequest._retry) {
+    if (error?.response?.status === 401 && !originalRequest._retry) {
       // tag a retry
       originalRequest._retry = true;
 
@@ -53,9 +53,8 @@ AxiosPublic.interceptors.response.use(
     // reach here if refresh token expired or call failed again on retry with refresh token
 
     // redirect to login on 401
-    if (error?.responspe?.status === 401 && typeof window !== 'undefined') {
-      window.location.href = '/';
-      return;
+    if (error?.response?.status === 401 && typeof window !== 'undefined') {
+      clearStorageAndRedirectToLandingPage();
     }
 
     // reject otherwise

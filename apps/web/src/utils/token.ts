@@ -20,6 +20,11 @@ export const getAuthTokens = (): AppTokensDTO => {
   };
 };
 
+export const clearStorageAndRedirectToLandingPage = () => {
+  AppStorage.clear();
+  window.location.href = '/';
+};
+
 export const refreshAuthTokens = async () => {
   const response = {
     isRefreshTokenExpired: true,
