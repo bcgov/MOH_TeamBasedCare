@@ -71,7 +71,7 @@ export const useAuth = () => {
   );
 
   // fetch user information from authentication token
-  const fetchUser = useCallback(
+  const fetchUserFromCode = useCallback(
     (handler: () => void) => {
       const config = { endpoint: API_ENDPOINT.AUTH_USER };
 
@@ -95,7 +95,7 @@ export const useAuth = () => {
 
   // log users out and redirect to the Landing page; Also, clear storage
   const logMeOut = useCallback(
-    (handler: () => void, errorHandler: () => void) => {
+    (handler?: () => void, errorHandler?: () => void) => {
       const config = {
         endpoint: API_ENDPOINT.AUTH_LOGOUT,
         method: REQUEST_METHOD.POST,
@@ -114,11 +114,11 @@ export const useAuth = () => {
         config,
         () => {
           commonHandler();
-          handler();
+          handler?.();
         },
         () => {
           commonHandler();
-          errorHandler();
+          errorHandler?.();
         },
       );
     },
@@ -130,6 +130,6 @@ export const useAuth = () => {
     logMeIn,
     logMeOut,
     fetchAuthTokenFromCode,
-    fetchUser,
+    fetchUserFromCode,
   };
 };

@@ -16,7 +16,7 @@ const handleResponseSuccess = (response: any) => {
 
 AxiosPublic.interceptors.request.use(
   config => {
-    const token = AppStorage.getItem<string>(StorageKeys.ACCESS_TOKEN);
+    const token = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
     if (token) {
       if (!config.headers) {
         config.headers = {};

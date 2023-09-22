@@ -9,7 +9,7 @@ const Landing: NextPage = () => {
   const router = useRouter();
   const query = router?.query;
 
-  const { logMeIn, isAuthenticated, fetchAuthTokenFromCode, fetchUser } = useAuth();
+  const { logMeIn, isAuthenticated, fetchAuthTokenFromCode, fetchUserFromCode } = useAuth();
   const [message, setMessage] = useState('Logging in...');
   const [showSpinner, setShowSpinner] = useState(true);
 
@@ -30,7 +30,7 @@ const Landing: NextPage = () => {
       code,
       () => {
         // fetch user data
-        fetchUser(() => {
+        fetchUserFromCode(() => {
           // success callback - redirect to home page
           redirectToHome();
         });

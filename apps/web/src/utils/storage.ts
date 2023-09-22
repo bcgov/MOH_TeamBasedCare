@@ -9,38 +9,66 @@ export enum StorageKeys {
   ROLES = 'roles',
 }
 
+const APP_STORAGE_KEY = 'tbcm';
+type AppStorageType = Record<string, any>;
+
 export class AppStorage {
-  static setItem(key: string, value: any) {
-    if (!key || value === null || value === undefined || typeof window === 'undefined') return;
+  private static getStorage() {
+    if (typeof window === 'undefined') {
+      // Failed to get storage
+      return;
+    }
 
-    localStorage.setItem(key, JSON.stringify(value));
+    const value = localStorage.getItem(APP_STORAGE_KEY);
 
-    return true;
-  }
+    if (!value) return {};
 
-  static getItem<T = any>(key: string) {
-    if (!key || typeof window === 'undefined') return;
+    const parsedValue = JSON.parse(value) as AppStorageType;
 
-    const value = localStorage.getItem(key);
-
-    if (!value) return;
-
-    const parsedValue = JSON.parse(value) as T;
     return parsedValue;
   }
 
-  static removeItem(key: string) {
-    if (!key || typeof window === 'undefined') return;
+  private static updateStorage(value: AppStorageType) {
+    if (typeof window === 'undefined') {
+      // Failed to update storage
+      return;
+    }
 
-    localStorage.removeItem(key);
-
-    return true;
+    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(value));
   }
 
   static clear() {
-    if (typeof window === 'undefined') return;
+    this.updateStorage({});
+  }
 
-    localStorage.clear();
+  static setItem(key: string, value: any) {
+    if (!key || value === null || value === undefined) return;
+
+    const storage = this.getStorage();
+    if (!storage) return; // failed to get the storage
+
+    Object.assign(storage, { [key]: value });
+
+    this.updateStorage(storage);
+  }
+
+  static getItem(key: string) {
+    if (!key) return;
+
+    const storage = this.getStorage();
+    if (!storage) return; // failed to get the storage
+
+    return storage[key];
+  }
+
+  static removeItem(key: string) {
+    if (!key) return;
+
+    const storage = this.getStorage();
+    if (!storage) return; // failed to get the storage
+
+    delete storage[key];
+    this.updateStorage(storage);
   }
 
   static addStorageListener(listener: (event: StorageEvent) => void) {
