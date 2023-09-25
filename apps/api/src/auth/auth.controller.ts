@@ -22,6 +22,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('login')
+  @Unprotected()
   @Redirect('', HttpStatus.MOVED_PERMANENTLY)
   @ApiOkResponse({
     description: 'redirect to keycloak sso server for user login',

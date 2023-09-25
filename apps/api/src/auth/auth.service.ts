@@ -13,8 +13,6 @@ export class AuthService {
 
   private keycloakResponseType: string;
 
-  private keycloakScope: string;
-
   private keycloakRealm: string;
 
   private keycloakRedirectUri: string;
@@ -35,7 +33,6 @@ export class AuthService {
   ) {
     this.keycloakAuthServerUri = this.configService.getValue('KEYCLOAK_AUTH_SERVER_URI');
     this.keycloakResponseType = this.configService.getValue('KEYCLOAK_RESPONSE_TYPE');
-    this.keycloakScope = this.configService.getValue('KEYCLOAK_SCOPE');
     this.keycloakRealm = this.configService.getValue('KEYCLOAK_REALM');
     this.keycloakRedirectUri = this.configService.getValue('KEYCLOAK_REDIRECT_URI');
     this.keycloakClientId = this.configService.getValue('KEYCLOAK_CLIENT_ID');
@@ -52,7 +49,7 @@ export class AuthService {
         `/realms/${this.keycloakRealm}/protocol/openid-connect/auth` +
         `?client_id=${this.keycloakClientId}` +
         `&response_type=${this.keycloakResponseType}` +
-        `&scope=${this.keycloakScope}` +
+        // `&scope=${this.keycloakScope}` + // not applicable to the current client provider
         `&redirect_uri=${this.keycloakRedirectUri}`,
     };
   }

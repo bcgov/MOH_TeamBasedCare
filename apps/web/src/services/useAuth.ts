@@ -42,8 +42,8 @@ export const useAuth = () => {
 
   // store user data to the storage
   const storeUserData = useCallback((data: KeycloakUser) => {
-    AppStorage.setItem(StorageKeys.USERNAME, data.idir_username);
-    AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.display_name);
+    AppStorage.setItem(StorageKeys.USERNAME, data.preferred_username);
+    AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.name);
     AppStorage.setItem(StorageKeys.ROLES, data.client_roles);
   }, []);
 
