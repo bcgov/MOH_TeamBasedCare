@@ -49,7 +49,6 @@ export class AuthService {
         `/realms/${this.keycloakRealm}/protocol/openid-connect/auth` +
         `?client_id=${this.keycloakClientId}` +
         `&response_type=${this.keycloakResponseType}` +
-        // `&scope=${this.keycloakScope}` + // not applicable to the current client provider
         `&redirect_uri=${this.keycloakRedirectUri}`,
     };
   }

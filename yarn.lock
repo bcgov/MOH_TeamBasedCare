@@ -1460,23 +1460,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/mapped-types@npm:*":
-  version: 2.0.2
-  resolution: "@nestjs/mapped-types@npm:2.0.2"
-  peerDependencies:
-    "@nestjs/common": ^8.0.0 || ^9.0.0 || ^10.0.0
-    class-transformer: ^0.4.0 || ^0.5.0
-    class-validator: ^0.13.0 || ^0.14.0
-    reflect-metadata: ^0.1.12
-  peerDependenciesMeta:
-    class-transformer:
-      optional: true
-    class-validator:
-      optional: true
-  checksum: 1fb0dca3838d0dc23107233e95a711e251bfbef9017589d3764c955a1cf190c8372179cee70e3674807896f53a98ab2ba80cd769b4f072fadefb708be1cc911b
-  languageName: node
-  linkType: hard
-
 "@nestjs/mapped-types@npm:1.0.0":
   version: 1.0.0
   resolution: "@nestjs/mapped-types@npm:1.0.0"
@@ -1909,7 +1892,6 @@ __metadata:
     "@nestjs/cli": 8.0.0
     "@nestjs/common": 8.2.3
     "@nestjs/core": 8.2.3
-    "@nestjs/mapped-types": "*"
     "@nestjs/platform-express": 8.2.3
     "@nestjs/schematics": 8.0.0
     "@nestjs/swagger": 5.1.5
@@ -1925,7 +1907,7 @@ __metadata:
     "@types/zen-observable": 0.8.3
     "@vendia/serverless-express": 4.3.11
     aws-sdk: 2.1017.0
-    axios: 1.5.0
+    axios: 1.5.1
     class-transformer: 0.5.1
     csv-parser: 3.0.0
     csv-stringify: 6.0.4
@@ -3819,14 +3801,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.5.0, axios@npm:^1.4.0":
-  version: 1.5.0
-  resolution: "axios@npm:1.5.0"
+"axios@npm:1.5.1":
+  version: 1.5.1
+  resolution: "axios@npm:1.5.1"
   dependencies:
     follow-redirects: ^1.15.0
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
-  checksum: e7405a5dbbea97760d0e6cd58fecba311b0401ddb4a8efbc4108f5537da9b3f278bde566deb777935a960beec4fa18e7b8353881f2f465e4f2c0e949fead35be
+  checksum: 4444f06601f4ede154183767863d2b8e472b4a6bfc5253597ed6d21899887e1fd0ee2b3de792ac4f8459fe2e359d2aa07c216e45fd8b9e4e0688a6ebf48a5a8d
   languageName: node
   linkType: hard
 
@@ -3836,6 +3818,17 @@ __metadata:
   dependencies:
     follow-redirects: ^1.14.0
   checksum: 44245f24ac971e7458f3120c92f9d66d1fc695e8b97019139de5b0cc65d9b8104647db01e5f46917728edfc0cfd88eb30fc4c55e6053eef4ace76768ce95ff3c
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.4.0":
+  version: 1.5.0
+  resolution: "axios@npm:1.5.0"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: e7405a5dbbea97760d0e6cd58fecba311b0401ddb4a8efbc4108f5537da9b3f278bde566deb777935a960beec4fa18e7b8353881f2f465e4f2c0e949fead35be
   languageName: node
   linkType: hard
 
