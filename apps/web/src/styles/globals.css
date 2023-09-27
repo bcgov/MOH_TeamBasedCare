@@ -154,7 +154,8 @@ tr > th:first-child {
 }
 
 .backdropSpinner {
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(15px);
+  background-color: #ffffff10;
 }
 .backdropSpinner + .spinner {
   position: absolute;

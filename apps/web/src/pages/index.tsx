@@ -3,14 +3,17 @@ import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import 'reflect-metadata';
-import { Spinner, SpinnerSize } from 'src/components/generic/Spinner';
+import { Footer } from 'src/components/Footer';
+import { Card } from 'src/components/generic/Card';
+import { Spinner } from 'src/components/generic/Spinner';
+import { HeaderLanding } from 'src/components/HeaderLanding';
 
 const Landing: NextPage = () => {
   const router = useRouter();
   const query = router?.query;
 
   const { logMeIn, isAuthenticated, fetchAuthTokenFromCode, fetchUserFromCode } = useAuth();
-  const [message, setMessage] = useState('Click here to Log in..');
+  const [message, setMessage] = useState('');
   const [showSpinner, setShowSpinner] = useState(false);
 
   // convenient method for redirecting user to Home
@@ -60,12 +63,40 @@ const Landing: NextPage = () => {
   }, [fetchToken, isAuthenticated, logMeIn, query?.code, redirectToHome]);
 
   return (
-    <>
-      <h1 className='w-full text-bcBluePrimary p-40 text-center' onClick={logMeIn}>
-        {message}
-      </h1>
-      <Spinner show={showSpinner} fullScreen={true} size={SpinnerSize.LG} />
-    </>
+    <div className='h-screen flex flex-col'>
+      <HeaderLanding />
+
+      <main className='w-full flex-auto flex justify-center'>
+        <div className='justify-center items-center flex flex-row gap-20 max-w-screen-lg p-10'>
+          <div className='flex-1'>
+            <h1 className='mb-3 font-bold text-4xl'>Welcome to Team based care mapping</h1>
+            <p>
+              The new system allows an easier and quicker way to identify the gaps in care
+              activities with a health care team, providing roles suggestions for better support to
+              the patient’s need.
+            </p>
+          </div>
+
+          <div className='flex-1'>
+            <Card title='Sign In' extraSpacing>
+              <p className='mt-4'>
+                You will go to a secure website to log in and automatically return
+              </p>
+              <button
+                className='bg-bcBluePrimary mt-4 p-4 text-white font-bold rounded'
+                onClick={logMeIn}
+              >
+                Click here to sign in
+              </button>
+            </Card>
+          </div>
+        </div>
+      </main>
+
+      <Spinner show={showSpinner} fullScreen={true} message={message} />
+
+      <Footer />
+    </div>
   );
 };
 

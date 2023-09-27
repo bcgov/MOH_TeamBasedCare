@@ -4,31 +4,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 interface SpinnerProps {
   show: boolean;
   fullScreen?: boolean;
-  size?: SpinnerSize;
+  message?: string;
 }
 
-export enum SpinnerSize {
-  SM = 5,
-  MD = 10,
-  LG = 20,
-}
-
-export const Spinner: React.FC<SpinnerProps> = ({
-  show = false,
-  fullScreen = false,
-  size = SpinnerSize.SM,
-}) => {
+export const Spinner: React.FC<SpinnerProps> = ({ show = false, fullScreen = false, message }) => {
   return (
     <>
       {show && (
         <>
           {fullScreen && <div className='absolute w-full h-screen backdropSpinner'></div>}
 
-          <div className='spinner'>
+          <div className='spinner flex flex-col items-center'>
             <FontAwesomeIcon
               icon={faSpinner}
-              className={`text-bcBluePrimary h-${size} w-${size} animate-spin anim`}
+              className='text-bcBluePrimary h-12 w-12 animate-spin anim'
             />
+            {message && <p className='pt-1 font-bold text-4xl text-bcBluePrimary'>{message}</p>}
           </div>
         </>
       )}
