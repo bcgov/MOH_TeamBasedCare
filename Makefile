@@ -32,7 +32,6 @@ export KEYCLOAK_REALM ?= moh_applications
 export KEYCLOAK_CONFIDENTIAL_PORT ?= 0
 export KEYCLOAK_SSL_REQUIRED ?= true
 export KEYCLOAK_RESOURCE ?= TBCM
-export KEYCLOAK_CLIENT_SECRET ?= 7LgzFdxbOEROGmHbhb8rWLYLEyQtnd7l
 
 # Docker container names
 LOCAL_API_CONTAINER_NAME = $(PROJECT)_api
@@ -68,7 +67,6 @@ KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
 # Keycloak ref variables
-export KEYCLOAK_AUTH_SERVER_URI
 export KEYCLOAK_REDIRECT_URI ?= https://${DOMAIN}/
 export KEYCLOAK_USER_INFO_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
 export KEYCLOAK_TOKEN_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
