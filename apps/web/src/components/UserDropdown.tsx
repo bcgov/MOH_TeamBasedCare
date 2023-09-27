@@ -3,8 +3,9 @@ import { Button } from './Button';
 import { useAuth } from '@services';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
+import { AppMenu, AppMenuGroup } from './generic/AppMenu';
 
 const HIDE_MENU_DELAY = 100;
 
@@ -28,6 +29,10 @@ export const UserDropdown = () => {
     logMeOut();
   };
 
+  const dropdownMenuGroups: Array<AppMenuGroup> = [
+    { items: [{ title: 'Logout', onClick: logout, icon: faSignOutAlt }] },
+  ];
+
   return (
     <div className='relative'>
       <div className='flex'>
@@ -45,11 +50,7 @@ export const UserDropdown = () => {
           <FontAwesomeIcon icon={faCaretDown} className='h-5 ml-2 text-bcBluePrimary' />
         </Button>
       </div>
-      {showMenu && (
-        <Button variant='outline' classes='absolute right-0 z-50' onClick={logout}>
-          Logout
-        </Button>
-      )}
+      {showMenu && <AppMenu groups={dropdownMenuGroups} />}
     </div>
   );
 };
