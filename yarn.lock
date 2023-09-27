@@ -1363,6 +1363,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nestjs/axios@npm:3.0.0":
+  version: 3.0.0
+  resolution: "@nestjs/axios@npm:3.0.0"
+  peerDependencies:
+    "@nestjs/common": ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
+    axios: ^1.3.1
+    reflect-metadata: ^0.1.12
+    rxjs: ^6.0.0 || ^7.0.0
+  checksum: 0483ef5a10ed920eb84756472de59b5bd83d09f152de9b769f68a57bd9c2c922961545c50001ac3ea45584cf991aee355b8fef4fe249b849fded4f1df92244f6
+  languageName: node
+  linkType: hard
+
 "@nestjs/cli@npm:8.0.0":
   version: 8.0.0
   resolution: "@nestjs/cli@npm:8.0.0"
@@ -1876,6 +1888,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tbcm/api@workspace:apps/api"
   dependencies:
+    "@nestjs/axios": 3.0.0
     "@nestjs/cli": 8.0.0
     "@nestjs/common": 8.2.3
     "@nestjs/core": 8.2.3
@@ -1894,6 +1907,7 @@ __metadata:
     "@types/zen-observable": 0.8.3
     "@vendia/serverless-express": 4.3.11
     aws-sdk: 2.1017.0
+    axios: 1.5.1
     class-transformer: 0.5.1
     csv-parser: 3.0.0
     csv-stringify: 6.0.4
@@ -1906,8 +1920,10 @@ __metadata:
     json2csv: 5.0.7
     jsonwebtoken: 8.5.1
     jwks-rsa: 2.0.5
+    keycloak-connect: 22.0.3
     lodash: 4.17.21
     nanoid: 3.3.3
+    nest-keycloak-connect: 1.9.2
     nest-winston: 1.6.2
     pg: 8.7.1
     reflect-metadata: 0.1.13
@@ -1995,6 +2011,13 @@ __metadata:
     xlsx-js-style: 1.2.0
   languageName: unknown
   linkType: soft
+
+"@testim/chrome-version@npm:^1.1.3":
+  version: 1.1.4
+  resolution: "@testim/chrome-version@npm:1.1.4"
+  checksum: 63817db694ab4a49d240217063a30dc2aac9799561132b51da97699207c47cb3355ae043ad1f8b15b770447834cbf36202133641b078f3944d0a502435b40827
+  languageName: node
+  linkType: hard
 
 "@testing-library/dom@npm:^7.28.1":
   version: 7.31.2
@@ -3618,6 +3641,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"asn1.js@npm:^5.3.0":
+  version: 5.4.1
+  resolution: "asn1.js@npm:5.4.1"
+  dependencies:
+    bn.js: ^4.0.0
+    inherits: ^2.0.1
+    minimalistic-assert: ^1.0.0
+    safer-buffer: ^2.1.0
+  checksum: 3786a101ac6f304bd4e9a7df79549a7561950a13d4bcaec0c7790d44c80d147c1a94ba3d4e663673406064642a40b23fcd6c82a9952468e386c1a1376d747f9a
+  languageName: node
+  linkType: hard
+
 "asn1@npm:~0.2.3":
   version: 0.2.6
   resolution: "asn1@npm:0.2.6"
@@ -3766,12 +3801,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:1.5.1":
+  version: 1.5.1
+  resolution: "axios@npm:1.5.1"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 4444f06601f4ede154183767863d2b8e472b4a6bfc5253597ed6d21899887e1fd0ee2b3de792ac4f8459fe2e359d2aa07c216e45fd8b9e4e0688a6ebf48a5a8d
+  languageName: node
+  linkType: hard
+
 "axios@npm:^0.21.1":
   version: 0.21.4
   resolution: "axios@npm:0.21.4"
   dependencies:
     follow-redirects: ^1.14.0
   checksum: 44245f24ac971e7458f3120c92f9d66d1fc695e8b97019139de5b0cc65d9b8104647db01e5f46917728edfc0cfd88eb30fc4c55e6053eef4ace76768ce95ff3c
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.4.0":
+  version: 1.5.0
+  resolution: "axios@npm:1.5.0"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: e7405a5dbbea97760d0e6cd58fecba311b0401ddb4a8efbc4108f5537da9b3f278bde566deb777935a960beec4fa18e7b8353881f2f465e4f2c0e949fead35be
   languageName: node
   linkType: hard
 
@@ -4008,6 +4065,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bn.js@npm:^4.0.0, bn.js@npm:^4.11.9":
+  version: 4.12.0
+  resolution: "bn.js@npm:4.12.0"
+  checksum: 39afb4f15f4ea537b55eaf1446c896af28ac948fdcf47171961475724d1bb65118cca49fa6e3d67706e4790955ec0e74de584e45c8f1ef89f46c812bee5b5a12
+  languageName: node
+  linkType: hard
+
 "body-parser@npm:1.19.0":
   version: 1.19.0
   resolution: "body-parser@npm:1.19.0"
@@ -4092,6 +4156,13 @@ __metadata:
   dependencies:
     fill-range: ^7.0.1
   checksum: e2a8e769a863f3d4ee887b5fe21f63193a891c68b612ddb4b68d82d1b5f3ff9073af066c343e9867a393fe4c2555dcb33e89b937195feb9c1613d259edfcd459
+  languageName: node
+  linkType: hard
+
+"brorand@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "brorand@npm:1.1.0"
+  checksum: 8a05c9f3c4b46572dec6ef71012b1946db6cae8c7bb60ccd4b7dd5a84655db49fe043ecc6272e7ef1f69dc53d6730b9e2a3a03a8310509a3d797a618cbee52be
   languageName: node
   linkType: hard
 
@@ -4504,6 +4575,23 @@ __metadata:
   version: 1.0.3
   resolution: "chrome-trace-event@npm:1.0.3"
   checksum: cb8b1fc7e881aaef973bd0c4a43cd353c2ad8323fb471a041e64f7c2dd849cde4aad15f8b753331a32dda45c973f032c8a03b8177fc85d60eaa75e91e08bfb97
+  languageName: node
+  linkType: hard
+
+"chromedriver@npm:latest":
+  version: 117.0.1
+  resolution: "chromedriver@npm:117.0.1"
+  dependencies:
+    "@testim/chrome-version": ^1.1.3
+    axios: ^1.4.0
+    compare-versions: ^6.0.0
+    extract-zip: ^2.0.1
+    https-proxy-agent: ^5.0.1
+    proxy-from-env: ^1.1.0
+    tcp-port-used: ^1.0.1
+  bin:
+    chromedriver: bin/chromedriver
+  checksum: 3f25074ab946786a770436d2497f3eb4f8cc0b8d2735956f3e6ae28b0b32bc43c46d9cdc813e77969f8be6f053ee333928a5a894ca5347bc8d3fb2f74c1790fb
   languageName: node
   linkType: hard
 
@@ -4973,6 +5061,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"compare-versions@npm:^6.0.0":
+  version: 6.1.0
+  resolution: "compare-versions@npm:6.1.0"
+  checksum: d4e2a45706a023d8d0b6680338b66b79e20bd02d1947f0ac6531dab634cbed89fa373b3f03d503c5e489761194258d6e1bae67a07f88b1efc61648454f2d47e7
+  languageName: node
+  linkType: hard
+
 "component-emitter@npm:^1.2.1, component-emitter@npm:^1.3.0":
   version: 1.3.0
   resolution: "component-emitter@npm:1.3.0"
@@ -5431,6 +5526,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"debug@npm:4.3.1":
+  version: 4.3.1
+  resolution: "debug@npm:4.3.1"
+  dependencies:
+    ms: 2.1.2
+  peerDependenciesMeta:
+    supports-color:
+      optional: true
+  checksum: 2c3352e37d5c46b0d203317cd45ea0e26b2c99f2d9dfec8b128e6ceba90dfb65425f5331bf3020fe9929d7da8c16758e737f4f3bfc0fce6b8b3d503bae03298b
+  languageName: node
+  linkType: hard
+
 "debug@npm:4.3.2":
   version: 4.3.2
   resolution: "debug@npm:4.3.2"
@@ -5854,6 +5961,21 @@ __metadata:
   version: 1.4.264
   resolution: "electron-to-chromium@npm:1.4.264"
   checksum: c716e480224164f7340033956adb95593bf2518571733c66ec647b30c9920b070923787ddfd3b1c466cb493c8e85f36c864e224e55a0e28fba1f1bc0fbf95d13
+  languageName: node
+  linkType: hard
+
+"elliptic@npm:^6.5.4":
+  version: 6.5.4
+  resolution: "elliptic@npm:6.5.4"
+  dependencies:
+    bn.js: ^4.11.9
+    brorand: ^1.1.0
+    hash.js: ^1.0.0
+    hmac-drbg: ^1.0.1
+    inherits: ^2.0.4
+    minimalistic-assert: ^1.0.1
+    minimalistic-crypto-utils: ^1.0.1
+  checksum: d56d21fd04e97869f7ffcc92e18903b9f67f2d4637a23c860492fbbff5a3155fd9ca0184ce0c865dd6eb2487d234ce9551335c021c376cd2d3b7cb749c7d10f4
   languageName: node
   linkType: hard
 
@@ -6845,7 +6967,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"extract-zip@npm:2.0.1, extract-zip@npm:^2.0.0":
+"extract-zip@npm:2.0.1, extract-zip@npm:^2.0.0, extract-zip@npm:^2.0.1":
   version: 2.0.1
   resolution: "extract-zip@npm:2.0.1"
   dependencies:
@@ -7081,6 +7203,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"follow-redirects@npm:^1.15.0":
+  version: 1.15.3
+  resolution: "follow-redirects@npm:1.15.3"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 584da22ec5420c837bd096559ebfb8fe69d82512d5585004e36a3b4a6ef6d5905780e0c74508c7b72f907d1fa2b7bd339e613859e9c304d0dc96af2027fd0231
+  languageName: node
+  linkType: hard
+
 "for-in@npm:^1.0.2":
   version: 1.0.2
   resolution: "for-in@npm:1.0.2"
@@ -7124,6 +7256,17 @@ __metadata:
     combined-stream: ^1.0.8
     mime-types: ^2.1.12
   checksum: b019e8d35c8afc14a2bd8a7a92fa4f525a4726b6d5a9740e8d2623c30e308fbb58dc8469f90415a856698933c8479b01646a9dff33c87cc4e76d72aedbbf860d
+  languageName: node
+  linkType: hard
+
+"form-data@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "form-data@npm:4.0.0"
+  dependencies:
+    asynckit: ^0.4.0
+    combined-stream: ^1.0.8
+    mime-types: ^2.1.12
+  checksum: 01135bf8675f9d5c61ff18e2e2932f719ca4de964e3be90ef4c36aacfc7b9cb2fceb5eca0b7e0190e3383fe51c5b37f4cb80b62ca06a99aaabfcfd6ac7c9328c
   languageName: node
   linkType: hard
 
@@ -7721,6 +7864,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hash.js@npm:^1.0.0, hash.js@npm:^1.0.3":
+  version: 1.1.7
+  resolution: "hash.js@npm:1.1.7"
+  dependencies:
+    inherits: ^2.0.3
+    minimalistic-assert: ^1.0.1
+  checksum: e350096e659c62422b85fa508e4b3669017311aa4c49b74f19f8e1bc7f3a54a584fdfd45326d4964d6011f2b2d882e38bea775a96046f2a61b7779a979629d8f
+  languageName: node
+  linkType: hard
+
 "hex-color-regex@npm:^1.1.0":
   version: 1.1.0
   resolution: "hex-color-regex@npm:1.1.0"
@@ -7732,6 +7885,17 @@ __metadata:
   version: 10.7.3
   resolution: "highlight.js@npm:10.7.3"
   checksum: defeafcd546b535d710d8efb8e650af9e3b369ef53e28c3dc7893eacfe263200bba4c5fcf43524ae66d5c0c296b1af0870523ceae3e3104d24b7abf6374a4fea
+  languageName: node
+  linkType: hard
+
+"hmac-drbg@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "hmac-drbg@npm:1.0.1"
+  dependencies:
+    hash.js: ^1.0.3
+    minimalistic-assert: ^1.0.0
+    minimalistic-crypto-utils: ^1.0.1
+  checksum: bd30b6a68d7f22d63f10e1888aee497d7c2c5c0bb469e66bbdac99f143904d1dfe95f8131f95b3e86c86dd239963c9d972fcbe147e7cffa00e55d18585c43fe0
   languageName: node
   linkType: hard
 
@@ -7892,7 +8056,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^5.0.0":
+"https-proxy-agent@npm:^5.0.0, https-proxy-agent@npm:^5.0.1":
   version: 5.0.1
   resolution: "https-proxy-agent@npm:5.0.1"
   dependencies:
@@ -8142,6 +8306,13 @@ __metadata:
   version: 1.4.0
   resolution: "interpret@npm:1.4.0"
   checksum: 2e5f51268b5941e4a17e4ef0575bc91ed0ab5f8515e3cf77486f7c14d13f3010df9c0959f37063dcc96e78d12dc6b0bb1b9e111cdfe69771f4656d2993d36155
+  languageName: node
+  linkType: hard
+
+"ip-regex@npm:^4.1.0":
+  version: 4.3.0
+  resolution: "ip-regex@npm:4.3.0"
+  checksum: 7ff904b891221b1847f3fdf3dbb3e6a8660dc39bc283f79eb7ed88f5338e1a3d1104b779bc83759159be266249c59c2160e779ee39446d79d4ed0890dfd06f08
   languageName: node
   linkType: hard
 
@@ -8554,6 +8725,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-url@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "is-url@npm:1.2.4"
+  checksum: 100e74b3b1feab87a43ef7653736e88d997eb7bd32e71fd3ebc413e58c1cbe56269699c776aaea84244b0567f2a7d68dfaa512a062293ed2f9fdecb394148432
+  languageName: node
+  linkType: hard
+
 "is-weakref@npm:^1.0.2":
   version: 1.0.2
   resolution: "is-weakref@npm:1.0.2"
@@ -8583,6 +8761,17 @@ __metadata:
   version: 0.3.0
   resolution: "is-yarn-global@npm:0.3.0"
   checksum: bca013d65fee2862024c9fbb3ba13720ffca2fe750095174c1c80922fdda16402b5c233f5ac9e265bc12ecb5446e7b7f519a32d9541788f01d4d44e24d2bf481
+  languageName: node
+  linkType: hard
+
+"is2@npm:^2.0.6":
+  version: 2.0.9
+  resolution: "is2@npm:2.0.9"
+  dependencies:
+    deep-is: ^0.1.3
+    ip-regex: ^4.1.0
+    is-url: ^1.2.4
+  checksum: be778a3bd0770799bd6d9b79916d2467a150a111088858dc00f6ea5a52b0e12d3a0a5cfd350d990bdb562552388be406707ee91ac6d40b96371c3a97aca1e579
   languageName: node
   linkType: hard
 
@@ -10052,6 +10241,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jwk-to-pem@npm:^2.0.0":
+  version: 2.0.5
+  resolution: "jwk-to-pem@npm:2.0.5"
+  dependencies:
+    asn1.js: ^5.3.0
+    elliptic: ^6.5.4
+    safe-buffer: ^5.0.1
+  checksum: 14a8f518e9f81876a0f45233288fd1b611777d4d0fc317b8cd4b4e19602c305e537dc45d44476263667d950664a7ddf3c7a218a39b6b1f5e53e4ad53a44822ef
+  languageName: node
+  linkType: hard
+
 "jwks-rsa@npm:2.0.5":
   version: 2.0.5
   resolution: "jwks-rsa@npm:2.0.5"
@@ -10072,6 +10272,19 @@ __metadata:
     jwa: ^1.4.1
     safe-buffer: ^5.0.1
   checksum: f0213fe5b79344c56cd443428d8f65c16bf842dc8cb8f5aed693e1e91d79c20741663ad6eff07a6d2c433d1831acc9814e8d7bada6a0471fbb91d09ceb2bf5c2
+  languageName: node
+  linkType: hard
+
+"keycloak-connect@npm:22.0.3":
+  version: 22.0.3
+  resolution: "keycloak-connect@npm:22.0.3"
+  dependencies:
+    chromedriver: latest
+    jwk-to-pem: ^2.0.0
+  dependenciesMeta:
+    chromedriver:
+      optional: true
+  checksum: ea3882fb78fb375f7133e2401cb9bc0462b6f70c82cccf77e7fa2b6fc66650381f6d414599a345c81db311e379e034fe87cf24099341e35c8a73bc137f7d5d2e
   languageName: node
   linkType: hard
 
@@ -10774,6 +10987,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"minimalistic-assert@npm:^1.0.0, minimalistic-assert@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "minimalistic-assert@npm:1.0.1"
+  checksum: cc7974a9268fbf130fb055aff76700d7e2d8be5f761fb5c60318d0ed010d839ab3661a533ad29a5d37653133385204c503bfac995aaa4236f4e847461ea32ba7
+  languageName: node
+  linkType: hard
+
+"minimalistic-crypto-utils@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "minimalistic-crypto-utils@npm:1.0.1"
+  checksum: 6e8a0422b30039406efd4c440829ea8f988845db02a3299f372fceba56ffa94994a9c0f2fd70c17f9969eedfbd72f34b5070ead9656a34d3f71c0bd72583a0ed
+  languageName: node
+  linkType: hard
+
 "minimatch@npm:^3.0.4, minimatch@npm:^3.1.1, minimatch@npm:^3.1.2":
   version: 3.1.2
   resolution: "minimatch@npm:3.1.2"
@@ -11064,6 +11291,21 @@ __metadata:
   version: 2.6.2
   resolution: "neo-async@npm:2.6.2"
   checksum: deac9f8d00eda7b2e5cd1b2549e26e10a0faa70adaa6fdadca701cc55f49ee9018e427f424bac0c790b7c7e2d3068db97f3093f1093975f2acb8f8818b936ed9
+  languageName: node
+  linkType: hard
+
+"nest-keycloak-connect@npm:1.9.2":
+  version: 1.9.2
+  resolution: "nest-keycloak-connect@npm:1.9.2"
+  peerDependencies:
+    "@nestjs/common": ">=6.0.0 <11.0.0"
+    "@nestjs/core": ">=6.0.0 <11.0.0"
+    "@nestjs/graphql": ">=6"
+    keycloak-connect: ">=10.0.0 <22.0.0"
+  peerDependenciesMeta:
+    "@nestjs/graphql":
+      optional: true
+  checksum: 00926254d4be3b7fabe237767fd1d2095630c417a82425c1ebd904cc8f9908941635eb205d732626e6f2406722af7d52d7afa7ec079442f8c7341f7d52c6f172
   languageName: node
   linkType: hard
 
@@ -14397,6 +14639,16 @@ __metadata:
     wsrun: 5.2.4
   languageName: unknown
   linkType: soft
+
+"tcp-port-used@npm:^1.0.1":
+  version: 1.0.2
+  resolution: "tcp-port-used@npm:1.0.2"
+  dependencies:
+    debug: 4.3.1
+    is2: ^2.0.6
+  checksum: ea1bd3f7789a79bb228382e7314167357cd2a2dc3e17521393739075b85e3df0009c53aab4aaa9d180a59791ab152fe87079adaf05242c411b1778a41e543863
+  languageName: node
+  linkType: hard
 
 "terminal-link@npm:^2.0.0":
   version: 2.1.1

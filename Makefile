@@ -25,6 +25,15 @@ export TFCTK:=$(shell cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credent
 # FE Env Vars
 export NEXT_PUBLIC_API_URL ?= /api/v1
 
+# Keycloak Env Vars
+export KEYCLOAK_RESPONSE_TYPE ?= code
+export KEYCLOAK_CLIENT_ID ?= TBCM
+export KEYCLOAK_REALM ?= moh_applications
+export KEYCLOAK_CONFIDENTIAL_PORT ?= 0
+export KEYCLOAK_SSL_REQUIRED ?= true
+export KEYCLOAK_RESOURCE ?= TBCM
+export KEYCLOAK_CLIENT_SECRET ?= 7LgzFdxbOEROGmHbhb8rWLYLEyQtnd7l
+
 # Docker container names
 LOCAL_API_CONTAINER_NAME = $(PROJECT)_api
 
@@ -41,19 +50,29 @@ ifeq ($(ENV_NAME), prod)
 DOMAIN=tbcm.gov.bc.ca
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_PROD)
 DB_HOST = $(DB_HOST_PROD)
+KEYCLOAK_AUTH_SERVER_URI = https://common-logon.hlth.gov.bc.ca/auth
 endif
 
 ifeq ($(ENV_NAME), dev)
 DOMAIN=dev.tbcm.freshworks.club
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_DEV)
 DB_HOST = $(DB_HOST_DEV)
+KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
 ifeq ($(ENV_NAME), test)
 DOMAIN=test.tbcm.freshworks.club
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
 DB_HOST = $(DB_HOST_PROD_TEST)
+KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
+
+# Keycloak ref variables
+export KEYCLOAK_AUTH_SERVER_URI
+export KEYCLOAK_REDIRECT_URI ?= https://${DOMAIN}/
+export KEYCLOAK_USER_INFO_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
+export KEYCLOAK_TOKEN_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
+export KEYCLOAK_LOGOUT_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout
 
 define TFVARS_DATA
 target_env = "$(ENV_NAME)"
@@ -66,6 +85,17 @@ db_username = "$(POSTGRES_USERNAME)"
 build_id = "$(COMMIT_SHA)"
 build_info = "$(LAST_COMMIT_MESSAGE)"
 region = "$(AWS_REGION)"
+keycloak_auth_server_uri = "${KEYCLOAK_AUTH_SERVER_URI}"
+keycloak_response_type = "${KEYCLOAK_RESPONSE_TYPE}"
+keycloak_client_id = "${KEYCLOAK_CLIENT_ID}"
+keycloak_realm = "${KEYCLOAK_REALM}"
+keycloak_confidential_port = "${KEYCLOAK_CONFIDENTIAL_PORT}"
+keycloak_ssl_required = "${KEYCLOAK_SSL_REQUIRED}"
+keycloak_resource = "${KEYCLOAK_RESOURCE}"
+keycloak_redirect_uri = "${KEYCLOAK_REDIRECT_URI}"
+keycloak_user_info_uri = "${KEYCLOAK_USER_INFO_URI}"
+keycloak_token_uri = "${KEYCLOAK_TOKEN_URI}"
+keycloak_logout_uri = "${KEYCLOAK_LOGOUT_URI}"
 endef
 export TFVARS_DATA
 

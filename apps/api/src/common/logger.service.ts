@@ -38,8 +38,8 @@ export class AppLogger implements LoggerService {
     if (axios.isAxiosError(e)) {
       const { response, config } = e;
       message = {
-        url: config.url,
-        method: config.method,
+        url: config?.url,
+        method: config?.method,
         ...(response?.data ? { data: response.data } : {}),
       };
     }

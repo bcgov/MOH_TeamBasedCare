@@ -7,6 +7,12 @@ export enum REQUEST_METHOD {
 }
 
 export const API_ENDPOINT = {
+  AUTH_LOGIN: '/auth/login',
+  AUTH_LOGOUT: '/auth/logout',
+  AUTH_CALLBACK: '/auth/callback',
+  AUTH_USER: '/auth/user',
+  AUTH_REFRESH: '/auth/refresh',
+
   CARE_LOCATIONS: '/carelocations',
   CARE_ACTIVITIES: '/care-activity/bundle',
   SESSIONS: '/sessions',

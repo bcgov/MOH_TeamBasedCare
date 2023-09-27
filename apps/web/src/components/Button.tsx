@@ -8,6 +8,7 @@ export interface ButtonProps {
   type?: 'submit' | 'reset' | 'button';
   disabled?: boolean;
   classes?: string;
+  onBlur?: () => void;
 }
 
 export const buttonColor: Record<string, string> = {
@@ -22,7 +23,7 @@ export const buttonBase = `w-auto inline-flex justify-center items-center rounde
   focus:ring-2 focus:ring-offset-2 sm:mt-0 sm:text-sm`;
 
 export const Button: React.FC<ButtonProps> = props => {
-  const { variant, type, children, disabled, classes, loading, onClick } = props;
+  const { variant, type, children, disabled, classes, loading, onClick, onBlur } = props;
   return (
     <button
       onClick={onClick}
@@ -33,6 +34,7 @@ export const Button: React.FC<ButtonProps> = props => {
         ${classes}
       `}
       disabled={disabled}
+      onBlur={onBlur}
     >
       {loading ? (
         <FontAwesomeIcon icon={faSpinner} className='h-5 w-5 animate-spin anim' />
