@@ -8,16 +8,14 @@ import { formatDateFromNow } from '@tbcm/common';
 export const usePlanningSession = () => {
   const { sendApiRequest, isLoading, fetchData } = useHttp();
   const [sessionId, setSessionId] = useState<string>();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>();
 
   useEffect(() => {
     setMessage('Fetching existing planning session..');
     fetchData({ endpoint: API_ENDPOINT.DRAFT_SESSION }, (data: any) => {
       if (data?.id) {
         setSessionId(data.id);
-        toast.info(
-          `Fetched previously saved planning session from ${formatDateFromNow(data.updatedAt)}`,
-        );
+        toast.info(`Fetched previously saved session from ${formatDateFromNow(data.updatedAt)}`);
         return;
       }
 
