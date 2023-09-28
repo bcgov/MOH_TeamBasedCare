@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Radio } from '@components';
+import { Radio, Button } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContent } from '../../services';
 import { SaveProfileDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
+import { Modal } from '../Modal';
+import { useEffect, useState } from 'react';
 
 export interface ProfileProps {
   step: number;
@@ -37,10 +39,20 @@ export const profileOptions = [
 ];
 
 const ProfileForm = () => {
-  const { values } = useFormikContext<ProfileFormProps>();
+  const { values, initialValues } = useFormikContext<ProfileFormProps>();
   const { careLocations, isLoading } = useCareLocations();
+  const [showModal, setShowModal] = useState(false);
 
   usePlanningContent();
+
+  useEffect(() => {
+    if (values?.careLocation) {
+      // if previous care location exists, but the value is not same as initial - show modal
+      if (values.careLocation !== initialValues.careLocation) {
+        setShowModal(true);
+      }
+    }
+  }, [initialValues.careLocation, values.careLocation]);
 
   return (
     <Form className='w-full'>
@@ -76,6 +88,26 @@ const ProfileForm = () => {
           </div>
         </div>
       </div>
+
+      <Modal handleClose={() => void 0} open={showModal}>
+        <Modal.Title
+          as='h1'
+          className='text-lg font-medium leading-6 text-bcBluePrimary border-b p-4'
+        >
+          Changing Care Location?
+        </Modal.Title>
+        <div className='p-5 flex gap-5 flex-col text-sm'>
+          <Modal.Description>
+            Changing Care Locations removes any selected care activities.
+          </Modal.Description>
+
+          <div className='w-full flex justify-between pt-2 p-3 border'>
+            <Button onClick={() => setShowModal(false)} variant='primary' type='button'>
+              Ok
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Form>
   );
 };

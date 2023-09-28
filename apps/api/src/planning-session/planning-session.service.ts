@@ -33,6 +33,13 @@ export class PlanningSessionService {
     private allowedActRepo: Repository<AllowedActivity>,
   ) {}
 
+  // find planning session from id
+  async findOne(sessionId: string): Promise<PlanningSession | undefined> {
+    const planningSession = await this.planningSessionRepo.findOne(sessionId);
+
+    return planningSession;
+  }
+
   // find latest Draft planning sessions
   async getDraftPlanningSession(user: KeycloakUser): Promise<PlanningSession | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
@@ -62,21 +69,38 @@ export class PlanningSessionService {
   }
 
   async saveProfileSelection(sessionId: string, saveProfileDto: SaveProfileDTO): Promise<void> {
-    let careLocation;
+    // get existing profile
+    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+      relations: ['careLocation', 'careActivity'],
+    });
 
+    // if planning session not found, throw
+    if (!planningSession) {
+      throw new NotFoundException('Planning session not found');
+    }
+
+    // handle care Location update,
     if (saveProfileDto.careLocation) {
-      careLocation = (await this.unitService.getById(saveProfileDto.careLocation)) as Unit;
+      // if updated care location not same as existing? clear care activities for the session
+      if (
+        planningSession.careLocation?.id &&
+        planningSession.careLocation?.id !== saveProfileDto.careLocation
+      ) {
+        planningSession.careActivity = [];
+      }
+
+      // handle care location update
+      planningSession.careLocation = (await this.unitService.getById(
+        saveProfileDto.careLocation,
+      )) as Unit;
     }
 
-    const saveProfileSelectionObj: Partial<PlanningSession> = {
-      profileOption: saveProfileDto.profileOption,
-    };
-
-    if (careLocation) {
-      saveProfileSelectionObj.careLocation = careLocation;
+    // handle profile option update
+    if (saveProfileDto.profileOption) {
+      planningSession.profileOption = saveProfileDto.profileOption;
     }
 
-    await this.planningSessionRepo.update(sessionId, saveProfileSelectionObj);
+    await this.planningSessionRepo.save(planningSession);
   }
 
   async getProfileSelection(sessionId: string): Promise<IProfileSelection> {
