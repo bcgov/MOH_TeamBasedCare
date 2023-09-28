@@ -7,11 +7,13 @@ import {
   Patch,
   Post,
   Req,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { SaveCareActivityDTO, SaveOccupationDTO, SaveProfileDTO } from '@tbcm/common';
 import { IRequest } from 'src/common/app-request';
+import { SessionGuard } from 'src/planning-session/guards/session.guard';
 import { SUCCESS_RESPONSE } from '../common/constants';
 import { PlanningSession } from './entity/planning-session.entity';
 import { PlanningSessionService } from './planning-session.service';
@@ -31,6 +33,7 @@ export class PlanningSessionController {
     return this.planningSessionService.createPlanningSession(req.user);
   }
 
+  @UseGuards(SessionGuard)
   @Patch('/:sessionId/profile')
   @ApiBody({ type: SaveProfileDTO })
   async saveCurrentProfileSelection(
@@ -41,17 +44,20 @@ export class PlanningSessionController {
     return SUCCESS_RESPONSE;
   }
 
+  @UseGuards(SessionGuard)
   @Get('/:sessionId/profile')
   getCurrentProfileSelection(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getProfileSelection(sessionId);
   }
 
+  @UseGuards(SessionGuard)
   @Get('/:sessionId/care-activity/bundle')
   @UseInterceptors(ClassSerializerInterceptor)
   getBundlesForProfile(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getBundlesForSelectedCareLocation(sessionId);
   }
 
+  @UseGuards(SessionGuard)
   @Patch('/:sessionId/care-activity')
   @ApiBody({ type: SaveCareActivityDTO })
   async saveCareActivity(
@@ -62,11 +68,13 @@ export class PlanningSessionController {
     return SUCCESS_RESPONSE;
   }
 
+  @UseGuards(SessionGuard)
   @Get('/:sessionId/care-activity')
   getCareActivity(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getCareActivity(sessionId);
   }
 
+  @UseGuards(SessionGuard)
   @Patch('/:sessionId/occupation')
   @ApiBody({ type: SaveOccupationDTO })
   async saveOccupation(
@@ -77,16 +85,19 @@ export class PlanningSessionController {
     return SUCCESS_RESPONSE;
   }
 
+  @UseGuards(SessionGuard)
   @Get('/:sessionId/occupation')
   getOccupation(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getOccupation(sessionId);
   }
 
+  @UseGuards(SessionGuard)
   @Get('/:sessionId/activities-gap')
   getPlanningActivityGap(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getPlanningActivityGap(sessionId);
   }
 
+  @UseGuards(SessionGuard)
   @Post('/:sessionId/export-csv')
   exportCsv(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.exportCsv(sessionId);
