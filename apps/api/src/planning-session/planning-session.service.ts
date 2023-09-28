@@ -2,7 +2,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlanningSession } from './entity/planning-session.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { SaveProfileDTO, SaveCareActivityDTO, SaveOccupationDTO } from '@tbcm/common';
+import {
+  SaveProfileDTO,
+  SaveCareActivityDTO,
+  SaveOccupationDTO,
+  PlanningStatus,
+  KeycloakUser,
+} from '@tbcm/common';
 import { IProfileSelection } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
@@ -27,8 +33,28 @@ export class PlanningSessionService {
     private allowedActRepo: Repository<AllowedActivity>,
   ) {}
 
-  async createPlanningSession(): Promise<PlanningSession> {
-    const planningSession = this.planningSessionRepo.create();
+  // find latest Draft planning sessions
+  async getDraftPlanningSession(user: KeycloakUser): Promise<PlanningSession | undefined> {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: {
+        status: PlanningStatus.DRAFT,
+        createdBy: user.sub,
+      },
+      order: {
+        createdAt: -1,
+      },
+    });
+
+    return planningSession;
+  }
+
+  // create a new planning session
+  async createPlanningSession(user: KeycloakUser): Promise<PlanningSession> {
+    const planningSession = this.planningSessionRepo.create({
+      createdBy: user.sub,
+      createdByUsername: user.preferred_username,
+      createdByName: user.name,
+    });
 
     await this.planningSessionRepo.save(planningSession);
 
