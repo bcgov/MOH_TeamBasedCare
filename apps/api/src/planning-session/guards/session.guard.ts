@@ -2,8 +2,9 @@ import { Injectable, CanActivate, ExecutionContext, Inject } from '@nestjs/commo
 import { PlanningSessionService } from '../planning-session.service';
 
 /**
- * SessionGuard
- * If the endpoint
+ * @name SessionGuard
+ * @description Use this guard if the endpoint contains sessionId access or updates,
+ * @logic Only allow access if the session was created by the user accessing it
  */
 @Injectable()
 export class SessionGuard implements CanActivate {
@@ -17,7 +18,7 @@ export class SessionGuard implements CanActivate {
     // grab user id
     const userId = request?.user?.sub;
 
-    // if user id does not exist, return
+    // if user id does not exist, restrict access
     if (!userId) return false;
 
     // grab session id
