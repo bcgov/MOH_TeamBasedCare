@@ -57,6 +57,7 @@ export const SidebarCollapsible = ({
                 open={open}
                 active={option.active}
                 text={option.text}
+                href={option.href}
               ></SidebarButton>
             ))
           : null}

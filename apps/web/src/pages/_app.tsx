@@ -1,10 +1,17 @@
 import Head from 'next/head';
-import type { AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 import '../styles/globals.css';
+import Layout from 'src/layouts/home-layout';
+import { NextPage } from 'next';
 
-function App({ Component, pageProps }: AppProps) {
+function App({ Component, pageProps }: any) {
+  const renderWithLayout =
+    Component.getLayout ||
+    function (page: NextPage) {
+      return <Layout>{page}</Layout>;
+    };
+
   return (
     <>
       <Head>
@@ -12,9 +19,8 @@ function App({ Component, pageProps }: AppProps) {
         <link rel='icon' href='/assets/img/bc_favicon.ico' />
       </Head>
 
-      <main className='min-h-screen w-full bg-gray-100 text-gray-700'>
-        <Component {...pageProps} />
-      </main>
+      {renderWithLayout(<Component {...pageProps} />)}
+
       <ToastContainer
         style={{ width: '30%', maxWidth: '675px' }}
         position='top-right'

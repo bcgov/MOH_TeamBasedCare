@@ -11,7 +11,7 @@ const HIDE_MENU_DELAY = 100;
 
 export const UserDropdown = () => {
   const { logMeOut } = useAuth();
-  const authUserDisplayName = AppStorage.getItem(StorageKeys.DISPLAY_NAME);
+  const authUserDisplayName = useMemo(() => AppStorage.getItem(StorageKeys.DISPLAY_NAME), []);
 
   const [showMenu, setShowMenu] = useState(false);
 

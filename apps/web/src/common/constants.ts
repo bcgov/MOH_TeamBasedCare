@@ -7,28 +7,31 @@ import {
   faExclamationCircle,
   faTimesCircle,
   faQuestionCircle,
+  faTools,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
+import { UserRole } from '@tbcm/common';
 
 export const sidebarNavItems: SidebarButtonProps[] = [
   {
     id: '001',
     kind: SidebarButtonKind.REGULAR,
     text: 'Resourcing',
-    active: true,
+    active: false,
     faIcon: faUsers,
   },
   {
     id: '002',
     kind: SidebarButtonKind.COLLAPSIBLE,
     text: 'Planning',
-    active: false,
+    active: true,
     faIcon: faClipboardList,
     options: [
       {
         id: '003',
         text: 'Create New',
-        active: false,
+        active: true,
+        href: 'planning',
       },
       {
         id: '004',
@@ -36,6 +39,15 @@ export const sidebarNavItems: SidebarButtonProps[] = [
         active: false,
       },
     ],
+  },
+  {
+    id: '005',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Admin',
+    active: false,
+    faIcon: faTools,
+    href: 'admin',
+    roles: [UserRole.ADMIN],
   },
 ];
 

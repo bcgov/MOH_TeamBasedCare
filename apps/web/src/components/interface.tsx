@@ -1,4 +1,5 @@
 import { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import { UserRole } from '@tbcm/common';
 import { Dispatch, SetStateAction } from 'react';
 
 export enum SidebarButtonKind {
@@ -15,4 +16,6 @@ export interface SidebarButtonProps {
   faIcon?: IconDefinition;
   setButtons?: Dispatch<SetStateAction<SidebarButtonProps[]>>;
   options?: SidebarButtonProps[];
+  href?: string;
+  roles?: Array<UserRole>;
 }

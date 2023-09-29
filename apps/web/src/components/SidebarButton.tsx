@@ -1,6 +1,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SidebarButtonProps } from './interface';
+import { useRouter } from 'next/router';
 
 export const SidebarButton = ({
   id,
@@ -9,7 +10,10 @@ export const SidebarButton = ({
   faIcon,
   setButtons,
   active,
+  href,
 }: SidebarButtonProps) => {
+  const router = useRouter();
+
   const handleClick = () => {
     // Update state
     if (setButtons) {
@@ -35,7 +39,12 @@ export const SidebarButton = ({
         }),
       );
     }
+
+    if (href) {
+      router.replace(href);
+    }
   };
+
   return (
     <li
       className={`${

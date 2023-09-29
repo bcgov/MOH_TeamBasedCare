@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import Home from '../../src/pages/home';
+import Planning from '../../src/pages/planning';
 
 const mockReplace = jest.fn();
 
@@ -10,9 +10,9 @@ jest.mock('next/router', () => ({
   }),
 }));
 
-describe('Home', () => {
+describe('Planning', () => {
   it('does not render content', () => {
-    const { container } = render(<Home />);
+    const { container } = render(<Planning />);
 
     expect(container.firstChild).toBeNull();
   });

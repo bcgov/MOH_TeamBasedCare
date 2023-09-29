@@ -1,20 +1,17 @@
-import type { NextPage } from 'next';
-import 'reflect-metadata';
 import { Header, Sidebar } from '@components';
-import { PlanningWrapper } from '@components';
 
-const Home: NextPage = () => {
+const Layout = ({ children }: any) => {
   return (
-    <>
+    <main className='min-h-screen w-full bg-gray-100 text-gray-700'>
       <div className='flex overflow-x-hidden h-screen mr-auto'>
         <Sidebar />
         <div className='h-screen flex flex-col w-full p-3'>
           <Header />
-          <PlanningWrapper />
+          {children}
         </div>
       </div>
-    </>
+    </main>
   );
 };
 
-export default Home;
+export default Layout;
