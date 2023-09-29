@@ -103,9 +103,9 @@ LZ2_PROJECT = hzy4co
 
 # Terraform Cloud backend config variables
 define TF_BACKEND_CFG
-workspaces { name = "$(LZ2_PROJECT)-$(ENV_NAME)" }
-hostname     = "app.terraform.io"
-organization = "bcgov"
+bucket = "terraform-remote-state-${LZ2_PROJECT}-${ENV_NAME}"
+key = ".terraform/terraform.tfstate"
+dynamodb_table ="terraform-remote-state-lock-${LZ2_PROJECT}"
 endef
 export TF_BACKEND_CFG
 
@@ -273,6 +273,11 @@ init: write-config-tf
 	@terraform -chdir=$(TERRAFORM_DIR) init -input=false \
 		-reconfigure \
 		-backend-config=backend.hcl -upgrade
+
+migrate: write-config-tf
+	# Initializing the terraform environment
+	@terraform -chdir=$(TERRAFORM_DIR) init -backend-config=backend.hcl -migrate-state
+
 
 plan: init
 	# Creating all AWS infrastructure.
