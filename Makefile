@@ -40,6 +40,7 @@ LOCAL_API_CONTAINER_NAME = $(PROJECT)_api
 export AWS_REGION ?= ca-central-1
 NAMESPACE = $(PROJECT)-$(ENV_NAME)
 APP_SRC_BUCKET = $(NAMESPACE)-app
+API_SRC_BUCKET = $(NAMESPACE)-api
 
 # Terraform variables
 TERRAFORM_DIR = terraform
@@ -78,6 +79,7 @@ project_code = "$(PROJECT)"
 api_artifact = "build/api.zip"
 app_sources = "build/app"
 app_sources_bucket = "$(APP_SRC_BUCKET)"
+api_sources_bucket = "$(API_SRC_BUCKET)"
 domain = "$(DOMAIN)"
 db_username = "$(POSTGRES_USERNAME)"
 build_id = "$(COMMIT_SHA)"
@@ -301,14 +303,17 @@ runs:
 sync-app:
 	aws s3 sync ./terraform/build/app s3://$(APP_SRC_BUCKET) --delete
 
+upload-api-zip:
+	aws s3 cp ./terraform/build/api.zip s3://$(API_SRC_BUCKET)/api-lambda-s3 --region $(AWS_REGION)
+
 deploy-app:
 	aws --region $(AWS_REGION) cloudfront create-invalidation --distribution-id $(CLOUDFRONT_ID) --paths "/*"
 
 # Full redirection to /dev/null is required to not leak env variables
 deploy-api:
-	aws lambda update-function-code --function-name tbcm-$(ENV_NAME)-api --zip-file fileb://./terraform/build/api.zip --region $(AWS_REGION) > /dev/null
+	aws lambda update-function-code --function-name tbcm-$(ENV_NAME)-api --s3-bucket $(API_SRC_BUCKET) --s3-key "api-lambda-s3" --region $(AWS_REGION) > /dev/null
 
-deploy-all: sync-app deploy-api
+deploy-all: sync-app upload-api-zip deploy-api
 	@echo "Deploying Webapp and API"
 
 backup-db:
