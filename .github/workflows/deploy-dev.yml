@@ -7,6 +7,10 @@ env:
   TF_VERSION: 1.1.1
   ENV_NAME: dev
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,22 +18,17 @@ jobs:
     concurrency: ci-${{ github.ref }}-dev
     env:
       CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
+      AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
     environment:
       name: dev
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: setup node v16
         uses: actions/setup-node@v3
         with:
           node-version: 16
-      - uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-          cli_config_credentials_token: ${{ secrets.TFC_TEAM_TOKEN }}
-
-      - name: Setup Infra
-        run: make apply
 
       - uses: actions/cache@v3
         name: Cache yarn
@@ -39,15 +38,13 @@ jobs:
           restore-keys: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-skip-session-tagging: true
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
           aws-region: ca-central-1
           role-to-assume: ${{ secrets.AWS_SA_ROLE_ARN }}
-          role-duration-seconds: 900
-          role-session-name: ci-deployment
+
+      - name: Terraform apply
+        run: make apply
 
       - name: Install dependencies
         run: yarn
