@@ -10,11 +10,12 @@ import {
   InternalServerErrorException,
   HttpCode,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Unprotected } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
 import { AppTokensDTO } from '@tbcm/common';
 import { KeycloakToken } from '@tbcm/common';
+import { EmptyResponse } from 'src/common/ro/empty-response.ro';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -34,6 +35,7 @@ export class AuthController {
   @Post('callback')
   @Unprotected()
   @ApiOkResponse({ description: 'Get access token payload with credentials' })
+  @ApiResponse({status: HttpStatus.OK, type: EmptyResponse})
   async getAccessToken(@Body('code') code: string) {
     if (!code) return;
     const keycloakToken: KeycloakToken = await this.authService.getAccessToken(code);
@@ -41,6 +43,7 @@ export class AuthController {
   }
 
   @Get('user')
+  @ApiResponse({status: HttpStatus.OK, type: EmptyResponse})
   async getUserInfo(@Req() req: any) {
     if (!req.headers.authorization.startsWith('Bearer')) return;
     const accessToken = req.headers.authorization.replace('Bearer ', '');
@@ -53,6 +56,7 @@ export class AuthController {
     description: 'Refresh access token with keycloak sso server ',
   })
   @Unprotected()
+  @ApiResponse({status: HttpStatus.OK, type: EmptyResponse})
   refreshAccessToken(@Body() token: AppTokensDTO) {
     try {
       return this.authService.refreshAccessToken(token.refresh_token);
