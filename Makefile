@@ -94,6 +94,7 @@ keycloak_redirect_uri = "${KEYCLOAK_REDIRECT_URI}"
 keycloak_user_info_uri = "${KEYCLOAK_USER_INFO_URI}"
 keycloak_token_uri = "${KEYCLOAK_TOKEN_URI}"
 keycloak_logout_uri = "${KEYCLOAK_LOGOUT_URI}"
+target_aws_account_id = "${AWS_ACCOUNT_ID}"
 endef
 export TFVARS_DATA
 

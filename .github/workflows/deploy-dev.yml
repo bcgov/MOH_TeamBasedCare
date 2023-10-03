@@ -18,6 +18,7 @@ jobs:
     concurrency: ci-${{ github.ref }}-dev
     env:
       CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
+      AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
     environment:
       name: dev
     steps:
