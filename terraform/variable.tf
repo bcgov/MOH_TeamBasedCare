@@ -7,6 +7,7 @@ variable "app_sources" {}
 variable "target_env" {}
 variable "domain" {}
 variable "app_sources_bucket" {}
+variable "api_sources_bucket" {}
 
 variable "function_memory_mb" {
   default = "2048"

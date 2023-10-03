@@ -1,13 +1,29 @@
+resource "aws_s3_bucket" "api" {
+  bucket = var.api_sources_bucket
+  acl    = "private"
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket_object" "api_lambda" {
+  bucket = aws_s3_bucket.api.bucket
+  key    = "api-lambda-s3"
+  source = "./build/empty_lambda.zip"
+}
+
 resource "aws_lambda_function" "api" {
   description      = "API for ${local.namespace}"
   function_name    = local.api_name
   role             = aws_iam_role.lambda.arn
   runtime          = "nodejs16.x"
-  filename         = "./build/empty_lambda.zip"
-  source_code_hash = filebase64sha256("./build/empty_lambda.zip")
   handler          = "api/lambda.handler" # TODO update 
   memory_size      = var.function_memory_mb
   timeout          = 900
+
+  source_code_hash = aws_s3_bucket_object.api_lambda.etag
+  s3_bucket        = aws_s3_bucket.api.bucket
+  s3_key           = aws_s3_bucket_object.api_lambda.key
 
   vpc_config {
     security_group_ids = [data.aws_security_group.app.id]
