@@ -10,8 +10,7 @@ env:
 
 permissions:
   id-token: write # This is required for requesting the JWT
-  contents: read  # This is required for actions/checkout
-
+  contents: read # This is required for actions/checkout
 
 jobs:
   deploy:
@@ -51,7 +50,7 @@ jobs:
         id: plan
         run: make plan
         continue-on-error: true
-      
+
       - name: Show Plan on PR
         uses: actions/github-script@v6
         if: github.rest.event_name == 'pull_request'
