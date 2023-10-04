@@ -4,7 +4,6 @@ import {
   faUsers,
   faCheckCircle,
   faExclamationTriangle,
-  faExclamationCircle,
   faTimesCircle,
   faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
@@ -15,20 +14,20 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     id: '001',
     kind: SidebarButtonKind.REGULAR,
     text: 'Resourcing',
-    active: true,
+    active: false,
     faIcon: faUsers,
   },
   {
     id: '002',
     kind: SidebarButtonKind.COLLAPSIBLE,
     text: 'Planning',
-    active: false,
+    active: true,
     faIcon: faClipboardList,
     options: [
       {
         id: '003',
         text: 'Create New',
-        active: false,
+        active: true,
       },
       {
         id: '004',
@@ -39,7 +38,12 @@ export const sidebarNavItems: SidebarButtonProps[] = [
   },
 ];
 
-export const PlanningSteps = ['Profile', 'Care Activities Bundles', 'Occupation', 'Activities Gap'];
+export const PlanningSteps = [
+  'Profile',
+  'Care Activity Bundles',
+  'Occupations/Roles',
+  'Gaps, Optimization and Suggestions',
+];
 
 export enum TagVariants {
   BASE = 'tag',
@@ -61,35 +65,21 @@ export enum ActivityTagVariants {
 export enum TooltipIconTypes {
   GREEN_CHECKMARK = 'greenCheckmarkIcon',
   YELLOW_CAUTION = 'yellowCautionIcon',
-  YELLOW_EXCLAMATION = 'yellowExclamationIcon',
-  YELLOW_X = 'yellowXIcon',
   RED_X = 'redXIcon',
   YELLOW_QUESTION = 'yellowQuestionIcon',
 }
 
 export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
   greenCheckmarkIcon: {
-    text: `Care activity can be performed as part of profession's scope of practice/provider's role description.`,
+    text: `Within scope of practice or role description`,
     meaning: 'All activities can be performed.',
     icon: faCheckCircle,
     style: 'green-icon',
   },
   yellowCautionIcon: {
-    text: `Care activity can be performed with limits and conditions.`,
+    text: `Can be performed with limits and conditions by employer or regulatory college, e.g., with additional education.`,
     meaning: '',
     icon: faExclamationTriangle,
-    style: 'yellow-icon',
-  },
-  yellowExclamationIcon: {
-    text: `Care activity could be performed with additional education/training.`,
-    meaning: '',
-    icon: faExclamationCircle,
-    style: 'yellow-icon',
-  },
-  yellowXIcon: {
-    text: `Care activity cannot be performed BUT occupation can assist with care activity.`,
-    meaning: '',
-    icon: faTimesCircle,
     style: 'yellow-icon',
   },
   redXIcon: {

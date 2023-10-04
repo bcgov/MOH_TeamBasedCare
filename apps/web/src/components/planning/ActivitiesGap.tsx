@@ -39,10 +39,6 @@ const SwitchTooltip: React.FC<any> = props => {
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} />;
     case 'L':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} />;
-    case 'C(E)':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_EXCLAMATION]} />;
-    case 'A':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_X]} />;
     case '':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} />;
     default:
@@ -140,13 +136,13 @@ const ActivityGapTable: React.FC = () => {
   );
 };
 
-export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
+export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const description =
-    'Based on the roles and tasks that you filled in the previous steps, here are the the gaps that we found. Expanding the row on the left hand side table to view more.';
+    'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
-        <PageTitle title='Overview' description={description} />
+        <PageTitle title={title} description={description} />
         <ActivitiesGapLegend />
         <OverviewCards />
       </div>

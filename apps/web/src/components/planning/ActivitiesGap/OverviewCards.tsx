@@ -13,7 +13,7 @@ export const OverviewCards: React.FC = () => {
       />
       <Card
         color={CardColor.YELLOW}
-        title={initialValues?.overview?.needsTraining || ''}
+        title={initialValues?.overview?.limits || ''}
         subtitle={'Needs additional training'}
       />
       <Card

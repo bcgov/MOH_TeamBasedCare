@@ -22,7 +22,7 @@ export class Occupation extends CustomBaseEntity {
   displayName: string;
 
   @Column({ type: 'boolean', default: false })
-  isRegulated: boolean;
+  isRegulated?: boolean;
 
   @OneToMany(() => AllowedActivity, allowedActivity => allowedActivity.occupation)
   allowedActivities: AllowedActivity[];

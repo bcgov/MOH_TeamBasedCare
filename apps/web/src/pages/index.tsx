@@ -71,9 +71,9 @@ const Landing: NextPage = () => {
           <div className='flex-1'>
             <h1 className='mb-3 font-bold text-4xl'>Welcome to Team based care mapping</h1>
             <p>
-              The new system allows an easier and quicker way to identify the gaps in care
-              activities with a health care team, providing roles suggestions for better support to
-              the patient’s need.
+              The web application is designed to support professional practice by offering resource
+              recommendations for both long-term planning and short-term resource assignments,
+              ensuring the delivery of comprehensive health services across various care settings.
             </p>
           </div>
 
