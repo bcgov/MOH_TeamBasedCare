@@ -1,3 +1,4 @@
+import { PlanningStatus } from '@tbcm/common';
 import { Unit } from 'src/unit/entity/unit.entity';
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
@@ -22,4 +23,16 @@ export class PlanningSession extends CustomBaseEntity {
   @ManyToMany(() => Occupation)
   @JoinTable()
   occupation?: Occupation[];
+
+  @Column()
+  createdBy: string;
+
+  @Column()
+  createdByUsername: string;
+
+  @Column()
+  createdByName: string;
+
+  @Column({ default: PlanningStatus.DRAFT })
+  status: string;
 }

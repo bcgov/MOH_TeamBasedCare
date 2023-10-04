@@ -1,7 +1,7 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faTimesCircle, faCaretUp } from '@fortawesome/free-solid-svg-icons';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
 import { usePlanningActivitiesGap } from '../../services';
@@ -67,8 +67,8 @@ const TableBody: React.FC = () => {
     <tbody>
       {initialValues.data &&
         initialValues.data.map((row: any, index: number) => (
-          <>
-            <tr key={`row${index}`} className='bg-white border-b table-row-fixed'>
+          <React.Fragment key={`row${index}`}>
+            <tr className='bg-white border-b table-row-fixed'>
               <td className={`${tdActivityBundle} flex w-full items-center justify-between`}>
                 <div className='w-full flex inline-flex items-left justify-left'>
                   <h2 className='text-l text-left'>
@@ -122,7 +122,7 @@ const TableBody: React.FC = () => {
                   </tr>
                 );
               })}
-          </>
+          </React.Fragment>
         ))}
     </tbody>
   );

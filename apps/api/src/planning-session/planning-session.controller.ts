@@ -6,10 +6,12 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { SaveCareActivityDTO, SaveOccupationDTO, SaveProfileDTO } from '@tbcm/common';
+import { IRequest } from 'src/common/app-request';
 import { SUCCESS_RESPONSE } from '../common/constants';
 import { PlanningSession } from './entity/planning-session.entity';
 import { PlanningSessionService } from './planning-session.service';
@@ -18,9 +20,15 @@ import { PlanningSessionService } from './planning-session.service';
 @Controller('sessions')
 export class PlanningSessionController {
   constructor(private planningSessionService: PlanningSessionService) {}
+
+  @Get('/draft')
+  getDraftPlanningSession(@Req() req: IRequest) {
+    return this.planningSessionService.getDraftPlanningSession(req.user);
+  }
+
   @Post()
-  createPlanningSession(): Promise<PlanningSession> {
-    return this.planningSessionService.createPlanningSession();
+  createPlanningSession(@Req() req: IRequest): Promise<PlanningSession> {
+    return this.planningSessionService.createPlanningSession(req.user);
   }
 
   @Patch('/:sessionId/profile')

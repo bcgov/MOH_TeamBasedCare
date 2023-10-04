@@ -5,9 +5,10 @@ import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningSession } from '../services/usePlanningSession';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
+import { Spinner } from './generic/Spinner';
 
 const WrapperContent = () => {
-  const { sessionId } = usePlanningSession();
+  const { sessionId, isLoading, message: spinnerMessage } = usePlanningSession();
 
   const {
     state: { canProceedToNext },
@@ -78,6 +79,8 @@ const WrapperContent = () => {
       <div className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
         <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
+
+      <Spinner show={isLoading} fullScreen={true} message={spinnerMessage} />
     </div>
   );
 };

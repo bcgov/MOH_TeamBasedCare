@@ -3,6 +3,8 @@ export interface KeycloakUser {
 
   name: string;
 
+  sub: string;
+
   client_roles?: string[];
 
   preferred_username: string;
