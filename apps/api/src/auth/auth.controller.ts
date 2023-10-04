@@ -14,7 +14,6 @@ import { ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Unprotected } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
 import { AppTokensDTO } from '@tbcm/common';
-import { KeycloakToken } from '@tbcm/common';
 import { EmptyResponse } from 'src/common/ro/empty-response.ro';
 
 @Controller('auth')
@@ -36,9 +35,9 @@ export class AuthController {
   @Unprotected()
   @ApiOkResponse({ description: 'Get access token payload with credentials' })
   @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
-  async getAccessToken(@Body('code') code: string): Promise<KeycloakToken | undefined> {
+  async getAccessToken(@Body('code') code: string) {
     if (!code) return;
-    const keycloakToken: KeycloakToken = await this.authService.getAccessToken(code);
+    const keycloakToken: any = await this.authService.getAccessToken(code);
     return keycloakToken;
   }
 
@@ -57,9 +56,10 @@ export class AuthController {
   })
   @Unprotected()
   @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
-  refreshAccessToken(@Body() token: AppTokensDTO): Promise<KeycloakToken> {
+  async refreshAccessToken(@Body() token: AppTokensDTO) {
     try {
-      return this.authService.refreshAccessToken(token.refresh_token);
+      const refreshToken: any = await this.authService.refreshAccessToken(token.refresh_token);
+      return refreshToken;
     } catch (e) {
       if (e instanceof HttpException) {
         throw new HttpException(' Token failed', e.getStatus());
