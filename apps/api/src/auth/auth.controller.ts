@@ -35,15 +35,15 @@ export class AuthController {
   @Post('callback')
   @Unprotected()
   @ApiOkResponse({ description: 'Get access token payload with credentials' })
-  @ApiResponse({status: HttpStatus.OK, type: EmptyResponse})
-  async getAccessToken(@Body('code') code: string) {
+  @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
+  async getAccessToken(@Body('code') code: string): Promise<KeycloakToken | undefined> {
     if (!code) return;
     const keycloakToken: KeycloakToken = await this.authService.getAccessToken(code);
     return keycloakToken;
   }
 
   @Get('user')
-  @ApiResponse({status: HttpStatus.OK, type: EmptyResponse})
+  @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
   async getUserInfo(@Req() req: any) {
     if (!req.headers.authorization.startsWith('Bearer')) return;
     const accessToken = req.headers.authorization.replace('Bearer ', '');
@@ -56,8 +56,8 @@ export class AuthController {
     description: 'Refresh access token with keycloak sso server ',
   })
   @Unprotected()
-  @ApiResponse({status: HttpStatus.OK, type: EmptyResponse})
-  refreshAccessToken(@Body() token: AppTokensDTO) {
+  @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
+  refreshAccessToken(@Body() token: AppTokensDTO): Promise<KeycloakToken> {
     try {
       return this.authService.refreshAccessToken(token.refresh_token);
     } catch (e) {
