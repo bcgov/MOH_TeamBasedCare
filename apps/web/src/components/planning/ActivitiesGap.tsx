@@ -47,8 +47,8 @@ const SwitchTooltip: React.FC<any> = props => {
 };
 
 const TableBody: React.FC = () => {
-  const [openRow, setOpenRow] = useState<boolean>(false);
-  const [selectedRow, setSelectedRow] = useState<number>();
+  const [openRow, setOpenRow] = useState<boolean>(true);
+  const [selectedRow, setSelectedRow] = useState<number>(0);
   const tdStyles =
     'table-td px-6 py-4 text-center text-sm font-medium text-gray-900 table-firstRow-TD';
   const tdActivityBundle = 'table-firstRow-firstTD';

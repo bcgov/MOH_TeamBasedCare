@@ -9,17 +9,18 @@ import { SaveOccupationDTO } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { Error } from '../Error';
 import { PageTitle } from '../PageTitle';
+import { useState } from 'react';
 
 export interface OccupationProps {
   step: number;
   title: string;
 }
 
-const OccupationForm = () => {
+const OccupationForm = ({ searchValue = '' }) => {
   usePlanningContent();
   return (
     <Form className='flex-1 flex flex-col overflow-auto'>
-      <OccupationSelector></OccupationSelector>
+      <OccupationSelector searchValue={searchValue}></OccupationSelector>
     </Form>
   );
 };
@@ -27,8 +28,14 @@ const OccupationForm = () => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const Occupation: React.FC<OccupationProps> = ({ title }) => {
   const occupationValidationSchema = createValidator(SaveOccupationDTO);
+  const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
 
   const { handleSubmit, initialValues } = usePlanningOccupations();
+
+  // Get search value
+  const handleSearch = (e: { target: { value: string } }) => {
+    setSearchValue(e.target.value);
+  };
 
   return (
     <div className='planning-form-box'>
@@ -42,7 +49,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
           </PageTitle>
 
           <div>
-            <SearchBar placeholderText='Search by keyword'></SearchBar>
+            <SearchBar placeholderText='Search by keyword' handleChange={handleSearch}></SearchBar>
           </div>
 
           <Formik
@@ -59,7 +66,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
                 </p>
                 <Paginator></Paginator>
                 <Error name='occupation'></Error>
-                <OccupationForm></OccupationForm>
+                <OccupationForm searchValue={searchValue}></OccupationForm>
                 <Paginator></Paginator>
               </div>
             )}

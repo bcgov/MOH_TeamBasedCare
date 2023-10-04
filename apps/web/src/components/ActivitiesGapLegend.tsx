@@ -11,11 +11,17 @@ export const ActivitiesGapLegend: React.FC = () => {
         <ul className='flex flex-col items-start my-4'>
           {Object.values(tooltipIcons).map((value: TooltipIconProps, index) => {
             return (
-              <li key={`legendRow-${index}`} className='flex justify-center items-center my-2'>
+              <li
+                key={`legendRow-${index}`}
+                className='flex justify-center items-center my-2 gap-4'
+              >
                 {value.icon && (
-                  <FontAwesomeIcon icon={value.icon} className={`h-6 w-6 ${value.style}`} />
+                  <FontAwesomeIcon
+                    icon={value.icon}
+                    className={`min-w-[2rem] h-6 w-6 ${value.style}`}
+                  />
                 )}
-                <div className='ml-3'>{value.text}</div>
+                <div>{value.text}</div>
               </li>
             );
           })}
