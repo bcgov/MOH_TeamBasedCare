@@ -39,8 +39,8 @@ export class CareActivity extends CustomBaseEntity {
   @Column({ type: 'enum', enum: CareActivityType, nullable: false })
   activityType: CareActivityType;
 
-  @Column({ type: 'enum', enum: ClinicalType, nullable: false })
-  clinicalType: ClinicalType;
+  @Column({ type: 'enum', enum: ClinicalType, nullable: true })
+  clinicalType?: ClinicalType;
 
   @ManyToMany(() => Unit, { cascade: true })
   @JoinTable()

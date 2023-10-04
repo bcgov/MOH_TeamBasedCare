@@ -34,7 +34,10 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
     <div className='planning-form-box'>
       <div className='flex-1 flex flex-col min-h-0'>
         <div className='flex-1 min-h-0 flex flex-col'>
-          <PageTitle title={'Select Occupation'} description={'Select all the roles on your team'}>
+          <PageTitle
+            title={'Select Occupations/Roles'}
+            description={'Select all the occupations/roles on your team'}
+          >
             <FontAwesomeIcon className='text-bcBluePrimary inline w-6 h-6' icon={faUserCircle} />
           </PageTitle>
 

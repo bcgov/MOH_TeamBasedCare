@@ -9,8 +9,6 @@ export const SUCCESS_RESPONSE = {
 
 export enum Permissions {
   PERFORM = 'X',
-  ASSIST = 'A',
-  CONTINUED_EDUCATION = 'C(E)',
   LIMITS = 'L',
 }
 

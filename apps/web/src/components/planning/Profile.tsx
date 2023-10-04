@@ -26,15 +26,15 @@ interface ProfileFormProps {
 
 export const profileOptions = [
   {
+    label: 'Start a new profile from scratch',
+    value: ProfileOptions.FROM_SCRATCH,
+    selected: false,
+  },
+  {
     label: 'Start from a generic profile',
     value: ProfileOptions.GENERIC,
     selected: false,
     disabled: true,
-  },
-  {
-    label: 'Start a new profile from scratch',
-    value: ProfileOptions.FROM_SCRATCH,
-    selected: false,
   },
 ];
 
@@ -68,9 +68,7 @@ const ProfileForm = () => {
             className='p-4 mb-4 text-sm text-blue-700 bg-blue-100 rounded-lg dark:bg-blue-200 dark:text-blue-800'
             role='alert'
           >
-            <span className='font-bold'>Start from a generic profile</span> is currently under
-            development. Please select{' '}
-            <span className='font-bold'>Start a new profile from scratch</span>
+            <span className='font-bold'>This feature is currently under development</span>
           </div>
         </div>
 
@@ -79,7 +77,7 @@ const ProfileForm = () => {
             {values.profileOption === ProfileOptions.FROM_SCRATCH && !isLoading && (
               <div className='planning-form-box'>
                 <RenderSelect
-                  label={'Select Care Location Profile'}
+                  label={'Select Care Setting'}
                   options={careLocations}
                   name='careLocation'
                 />

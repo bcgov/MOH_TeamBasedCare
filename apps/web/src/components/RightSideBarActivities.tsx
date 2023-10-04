@@ -110,10 +110,12 @@ export const RightSideBarActivites: React.FC = () => {
                         text={item.activityType}
                         tagStyle={pickTagStyle(item.activityType)}
                       ></Tag>
-                      <Tag
-                        text={item.clinicalType}
-                        tagStyle={pickTagStyle(item.clinicalType)}
-                      ></Tag>
+                      {item.clinicalType && (
+                        <Tag
+                          text={item.clinicalType}
+                          tagStyle={pickTagStyle(item.clinicalType)}
+                        ></Tag>
+                      )}
                     </div>
                   </div>
                 );

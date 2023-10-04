@@ -8,7 +8,7 @@ import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { Occupation } from 'src/occupation/entity/occupation.entity';
-import { CareActivityType, ClinicalType, Permissions } from '../../common/constants';
+import { CareActivityType, Permissions } from '../../common/constants';
 import { Readable } from 'stream';
 import { Unit } from '../../unit/entity/unit.entity';
 import { UnitService } from 'src/unit/unit.service';
@@ -31,7 +31,7 @@ export class SeedService {
 
   async updateOccupations(file: Buffer): Promise<void> {
     let headers: string[];
-    const occupations: { name: string; isRegulated: boolean }[] = [];
+    const occupations: { name: string }[] = [];
 
     const readable = new Readable();
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -46,8 +46,7 @@ export class SeedService {
           headers = Object.keys(data);
         }
         const name = data[headers[0]].trim().replace(/"/g, '');
-        const isRegulated = data[headers[1]].trim().replace(/"/g, '') === 'Regulated';
-        occupations.push({ name, isRegulated });
+        occupations.push({ name });
       })
       .on('end', async () => {
         // Save the result
@@ -57,10 +56,9 @@ export class SeedService {
           .insert()
           .into(Occupation)
           .values(
-            occupations.map(({ name, isRegulated }) => {
+            occupations.map(({ name }) => {
               return this.occupationRepo.create({
                 name,
-                isRegulated,
               });
             }),
           )
@@ -75,7 +73,6 @@ export class SeedService {
       [key: string]: {
         name: string;
         activityType: CareActivityType;
-        clinicalType: ClinicalType;
         careLocation: string;
       }[];
     } = {};
@@ -97,37 +94,31 @@ export class SeedService {
           headers = Object.keys(data);
         }
         bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
-        const activityName = data[headers[2]].trim().replace(/"/g, '');
-        const careLocation = data[headers[0]].trim().replace(/"/g, '');
+        const activityName = data[headers[0]].trim().replace(/"/g, '');
+        const careLocation = 'Intensive Care Unit';
         careLocations.add(careLocation);
 
         let activityList: {
           name: string;
           activityType: CareActivityType;
-          clinicalType: ClinicalType;
           careLocation: string;
         }[] = [];
 
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
         }
-        const activityType = data[headers[headers.length - 1]].trim().replace(/"/g, '');
-        const clinicalType = data[headers[headers.length - 2]].trim().replace(/"/g, '');
+        const activityType = data[headers[2]].trim().replace(/"/g, '');
 
-        activityList.push({ name: activityName, activityType, clinicalType, careLocation });
+        activityList.push({ name: activityName, activityType, careLocation });
         bundleVsCareActivity[bundleName] = activityList;
-        for (let index = 3; index < headers.length - 2; index++) {
+        for (let index = 3; index < headers.length; index++) {
           const e = headers[index];
           let action: string = data[e];
           let allowedAction;
           if (action?.length > 0) {
             action = cleanText(action);
-            if (action.includes('x')) {
+            if (action.includes('y')) {
               allowedAction = Permissions.PERFORM;
-            } else if (action.includes('a')) {
-              allowedAction = Permissions.ASSIST;
-            } else if (action.includes('c')) {
-              allowedAction = Permissions.CONTINUED_EDUCATION;
             } else if (action.includes('l')) {
               allowedAction = Permissions.LIMITS;
             }
@@ -150,7 +141,7 @@ export class SeedService {
         const consolidatedCareActivities: {
           name: string;
           activityType: CareActivityType;
-          clinicalType: ClinicalType;
+          // clinicalType: ClinicalType;
           careLocation: string;
         }[] = Object.values(bundleVsCareActivity).flat(1);
 
@@ -170,7 +161,6 @@ export class SeedService {
             const careActivitiesWithUnit: {
               name: string;
               activityType: CareActivityType;
-              clinicalType: ClinicalType;
               careLocation: Unit | undefined;
             }[] = [];
 
@@ -266,19 +256,17 @@ export class SeedService {
     careActivities: {
       name: string;
       activityType: CareActivityType;
-      clinicalType: ClinicalType;
       careLocation: Unit | undefined;
     }[],
   ): Promise<void> {
     const bundle = await this.findOrCreateBundle(bundleName);
 
     await Promise.all(
-      careActivities.map(({ name, activityType, clinicalType, careLocation }) =>
+      careActivities.map(({ name, activityType, careLocation }) =>
         this.upsertCareActivity({
           name,
           bundle,
           activityType,
-          clinicalType,
           careLocations: careLocation ? [careLocation] : [],
         }),
       ),

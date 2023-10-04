@@ -278,7 +278,7 @@ export class PlanningSessionService {
      **/
     const overview: {
       inScope?: string;
-      needsTraining?: string;
+      limits?: string;
       outOfScope?: string;
     } = {};
 
@@ -290,14 +290,11 @@ export class PlanningSessionService {
     overview.inScope = `${
       Math.round(((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100) || 0
     }%`;
-    overview.needsTraining = `${
-      Math.round(((permissionsGroupedCount[Permissions.CONTINUED_EDUCATION] || 0) / total) * 100) ||
-      0
+    overview.limits = `${
+      Math.round(((permissionsGroupedCount[Permissions.LIMITS] || 0) / total) * 100) || 0
     }%`;
 
     const allowedActivitiesTotal =
-      (permissionsGroupedCount[Permissions.ASSIST] || 0) +
-      (permissionsGroupedCount[Permissions.CONTINUED_EDUCATION] || 0) +
       (permissionsGroupedCount[Permissions.LIMITS] || 0) +
       (permissionsGroupedCount[Permissions.PERFORM] || 0);
     const outOfScope = total - allowedActivitiesTotal;
