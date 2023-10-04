@@ -3,9 +3,16 @@ import { OccupationItem } from './OccupationItem';
 import { isOdd } from 'src/common/util';
 import { useFormikContext } from 'formik';
 
-export const OccupationSelector = ({}) => {
+export const OccupationSelector = ({ searchValue = '' }) => {
   const { occupations } = useOccupations();
   const { values, setFieldValue } = useFormikContext<any>();
+
+  const filteredOccupations = occupations.filter(o => {
+    if (!searchValue) return true;
+
+    return o.name?.toLowerCase().includes(searchValue?.toLowerCase());
+  });
+
   return (
     <>
       <div className='flex items-center p-4'>
@@ -16,22 +23,31 @@ export const OccupationSelector = ({}) => {
           className='mr-3 h-5 w-5 min-w-5 accent-bcBlueLink'
           onChange={(e: any) => {
             if (e.target.checked) {
-              setFieldValue(
-                'occupation',
-                occupations.map((e: any) => e.id),
-              );
+              const selectedOccupationIdsSet = new Set(values.occupation);
+
+              filteredOccupations.forEach(o => {
+                selectedOccupationIdsSet.add(o.id);
+              });
+
+              setFieldValue('occupation', Array.from(selectedOccupationIdsSet));
             } else {
-              setFieldValue('occupation', []);
+              const selectedOccupationIdsSet = new Set(values.occupation);
+
+              filteredOccupations.forEach(o => {
+                selectedOccupationIdsSet.delete(o.id);
+              });
+
+              setFieldValue('occupation', Array.from(selectedOccupationIdsSet));
             }
           }}
-          checked={values.occupation.length === occupations.length}
+          checked={filteredOccupations.every(o => values.occupation.includes(o.id))}
         />
         <label className='font-bold' htmlFor={'selectAll'}>
           Select all
         </label>
       </div>
       <div className='flex-1 flex flex-col'>
-        {occupations.map((occupation, index) => {
+        {filteredOccupations.map((occupation, index) => {
           const styling = isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white';
           return (
             <div key={index} className={`occupation-item-box ${styling}`}>

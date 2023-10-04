@@ -3,9 +3,9 @@ import {
   faClipboardList,
   faUsers,
   faCheckCircle,
-  faExclamationTriangle,
   faTimesCircle,
   faQuestionCircle,
+  faExclamationCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
 
@@ -42,7 +42,7 @@ export const PlanningSteps = [
   'Profile',
   'Care Activity Bundles',
   'Occupations/Roles',
-  'Gaps, Optimization and Suggestions',
+  'Gaps, Optimizations and Suggestions',
 ];
 
 export enum TagVariants {
@@ -79,11 +79,11 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
   yellowCautionIcon: {
     text: `Can be performed with limits and conditions by employer or regulatory college, e.g., with additional education.`,
     meaning: '',
-    icon: faExclamationTriangle,
+    icon: faExclamationCircle,
     style: 'yellow-icon',
   },
   redXIcon: {
-    text: `Care activity cannot be performed; not part of profession's scope of practice/provider's role description.`,
+    text: `Outside scope of practice or role description`,
     meaning: 'All activities cannot be performed.',
     icon: faTimesCircle,
     style: 'red-icon',
