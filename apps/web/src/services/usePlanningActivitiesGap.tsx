@@ -11,7 +11,7 @@ export const usePlanningActivitiesGap = () => {
   const [initialValues, setInitialValues] = useState<any>({
     data: [],
   });
-  const { sendApiRequest, fetchData } = useHttp();
+  const { sendApiRequest, fetchData, isLoading } = useHttp();
 
   const handleSubmit = (values: any) => {
     sendApiRequest(
@@ -36,5 +36,5 @@ export const usePlanningActivitiesGap = () => {
     }
   }, [sessionId]);
 
-  return { handleSubmit, initialValues };
+  return { handleSubmit, initialValues, isLoading };
 };

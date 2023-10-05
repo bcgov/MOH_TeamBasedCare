@@ -13,9 +13,15 @@ export interface ActivitiesGapProps {
 }
 
 const TableHeader: React.FC = () => {
-  const { initialValues } = usePlanningActivitiesGap();
+  const { initialValues, isLoading } = usePlanningActivitiesGap();
   const tdStyles =
     'table-td table-header px-6 py-4 text-left text-sm font-strong text-bcBluePrimary border-b-4';
+
+  // already a loader in the overview section
+  if (isLoading) {
+    return <></>;
+  }
+
   return (
     <thead className='border-b bg-gray-50 table-row-fixed table-header '>
       <tr>
@@ -52,7 +58,7 @@ const TableBody: React.FC = () => {
   const tdStyles =
     'table-td px-6 py-4 text-center text-sm font-medium text-gray-900 table-firstRow-TD';
   const tdActivityBundle = 'table-firstRow-firstTD';
-  const { initialValues } = usePlanningActivitiesGap();
+  const { initialValues, isLoading } = usePlanningActivitiesGap();
 
   const handleSelectRow = (index: number) => {
     // toggle if selected row, open otherwise
@@ -64,6 +70,11 @@ const TableBody: React.FC = () => {
 
     setSelectedRow(index);
   };
+
+  // already a loader in the overview section
+  if (isLoading) {
+    return <></>;
+  }
 
   return (
     <tbody>
