@@ -55,7 +55,13 @@ const TableBody: React.FC = () => {
   const { initialValues } = usePlanningActivitiesGap();
 
   const handleSelectRow = (index: number) => {
-    setOpenRow(!openRow);
+    // toggle if selected row, open otherwise
+    if (selectedRow === index) {
+      setOpenRow(!openRow);
+    } else {
+      setOpenRow(true);
+    }
+
     setSelectedRow(index);
   };
 
