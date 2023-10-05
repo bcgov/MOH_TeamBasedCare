@@ -1,8 +1,13 @@
 import { usePlanningActivitiesGap } from '@services';
 import { Card, CardColor } from 'src/components/generic/Card';
+import { Spinner } from 'src/components/generic/Spinner';
 
 export const OverviewCards: React.FC = () => {
-  const { initialValues } = usePlanningActivitiesGap();
+  const { initialValues, isLoading } = usePlanningActivitiesGap();
+
+  if (isLoading) {
+    return <Spinner show={isLoading} />;
+  }
 
   return (
     <div className='grid grid-cols-3 gap-8'>

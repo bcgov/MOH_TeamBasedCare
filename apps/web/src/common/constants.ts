@@ -1,7 +1,6 @@
 import { SidebarButtonProps, SidebarButtonKind } from '../components/interface';
 import {
   faClipboardList,
-  faUsers,
   faCheckCircle,
   faTimesCircle,
   faQuestionCircle,
@@ -10,13 +9,13 @@ import {
 import { TooltipIconProps } from './interfaces';
 
 export const sidebarNavItems: SidebarButtonProps[] = [
-  {
-    id: '001',
-    kind: SidebarButtonKind.REGULAR,
-    text: 'Resourcing',
-    active: false,
-    faIcon: faUsers,
-  },
+  // {
+  //   id: '001',
+  //   kind: SidebarButtonKind.REGULAR,
+  //   text: 'Resourcing',
+  //   active: false,
+  //   faIcon: faUsers,
+  // },
   {
     id: '002',
     kind: SidebarButtonKind.COLLAPSIBLE,
@@ -29,11 +28,11 @@ export const sidebarNavItems: SidebarButtonProps[] = [
         text: 'Create New',
         active: true,
       },
-      {
-        id: '004',
-        text: 'All Plan',
-        active: false,
-      },
+      // {
+      //   id: '004',
+      //   text: 'All Plan',
+      //   active: false,
+      // },
     ],
   },
 ];

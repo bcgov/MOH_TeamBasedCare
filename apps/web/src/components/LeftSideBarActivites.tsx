@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { useCareActivities } from '../services';
 import { Field, useFormikContext } from 'formik';
 import { SearchBar } from './generic/SearchBar';
+import { Spinner } from './generic/Spinner';
 
 export interface LeftSideBarActivitesProps {
   title: string;
@@ -14,7 +15,7 @@ export interface SearchInputProps {
 }
 
 export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ title }) => {
-  const { careActivities } = useCareActivities();
+  const { careActivities, isLoading } = useCareActivities();
   const [items, setItems] = useState<any>();
   const [selectedItem, setSelectedItem] = useState<any>();
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
@@ -76,6 +77,8 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
                 </label>
               );
             })
+          ) : isLoading ? (
+            <Spinner show={isLoading} />
           ) : (
             <p className='text-center text-sm mt-4'>No available Care Activity Bundles.</p>
           )}

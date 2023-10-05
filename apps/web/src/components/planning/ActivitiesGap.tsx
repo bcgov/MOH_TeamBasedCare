@@ -13,9 +13,15 @@ export interface ActivitiesGapProps {
 }
 
 const TableHeader: React.FC = () => {
-  const { initialValues } = usePlanningActivitiesGap();
+  const { initialValues, isLoading } = usePlanningActivitiesGap();
   const tdStyles =
     'table-td table-header px-6 py-4 text-left text-sm font-strong text-bcBluePrimary border-b-4';
+
+  // already a loader in the overview section
+  if (isLoading) {
+    return <></>;
+  }
+
   return (
     <thead className='border-b bg-gray-50 table-row-fixed table-header '>
       <tr>
@@ -35,9 +41,9 @@ const SwitchTooltip: React.FC<any> = props => {
   switch (item) {
     case 'MIXED':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_QUESTION]} />;
-    case 'X':
+    case 'Y':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} />;
-    case 'L':
+    case 'LC':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} />;
     case '':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} />;
@@ -52,12 +58,23 @@ const TableBody: React.FC = () => {
   const tdStyles =
     'table-td px-6 py-4 text-center text-sm font-medium text-gray-900 table-firstRow-TD';
   const tdActivityBundle = 'table-firstRow-firstTD';
-  const { initialValues } = usePlanningActivitiesGap();
+  const { initialValues, isLoading } = usePlanningActivitiesGap();
 
   const handleSelectRow = (index: number) => {
-    setOpenRow(!openRow);
+    // toggle if selected row, open otherwise
+    if (selectedRow === index) {
+      setOpenRow(!openRow);
+    } else {
+      setOpenRow(true);
+    }
+
     setSelectedRow(index);
   };
+
+  // already a loader in the overview section
+  if (isLoading) {
+    return <></>;
+  }
 
   return (
     <tbody>
