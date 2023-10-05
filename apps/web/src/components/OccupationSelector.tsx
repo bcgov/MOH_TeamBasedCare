@@ -45,7 +45,10 @@ export const OccupationSelector = ({ searchValue = '' }) => {
               setFieldValue('occupation', Array.from(selectedOccupationIdsSet));
             }
           }}
-          checked={filteredOccupations.every(o => values.occupation.includes(o.id))}
+          checked={
+            filteredOccupations.length > 0 &&
+            filteredOccupations.every(o => values.occupation.includes(o.id))
+          }
         />
         <label className='font-bold' htmlFor={'selectAll'}>
           Select all
