@@ -8,8 +8,8 @@ export const SUCCESS_RESPONSE = {
 };
 
 export enum Permissions {
-  PERFORM = 'X',
-  LIMITS = 'L',
+  PERFORM = 'Y',
+  LIMITS = 'LC',
 }
 
 export enum CareActivityType {
@@ -24,10 +24,10 @@ export enum ClinicalType {
 }
 
 export enum ActivitiesActionType {
-  GREEN_CHECK = 'X',
+  GREEN_CHECK = 'Y',
   YELLOW = 'A',
   YELLOW_EXCLAMATION = 'C(E)',
-  YELLOW_CAUTION = 'L',
+  YELLOW_CAUTION = 'LC',
   RED = '',
   GREY = 'MIXED',
 }

@@ -35,9 +35,9 @@ const SwitchTooltip: React.FC<any> = props => {
   switch (item) {
     case 'MIXED':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_QUESTION]} />;
-    case 'X':
+    case 'Y':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} />;
-    case 'L':
+    case 'LC':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} />;
     case '':
       return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} />;

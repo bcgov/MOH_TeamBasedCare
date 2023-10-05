@@ -119,7 +119,7 @@ export class SeedService {
             action = cleanText(action);
             if (action.includes('y')) {
               allowedAction = Permissions.PERFORM;
-            } else if (action.includes('l')) {
+            } else if (action.includes('lc')) {
               allowedAction = Permissions.LIMITS;
             }
           }

@@ -15,6 +15,14 @@ export const convertActivityGapTableToCSV = (data: any) => {
   const resultData = data.data
     .map((element: any) => {
       const { careActivities, ...remainder } = element;
+
+      // add N to empty values [not in Permissions]
+      careActivities?.forEach((activity: any) => {
+        Object.keys(activity).map((key: string) => {
+          if (activity[key] === '') activity[key] = 'N';
+        });
+      });
+
       return [{ ...emptyRow, name: remainder.name }, ...careActivities, emptyRow];
     })
     .flat();
