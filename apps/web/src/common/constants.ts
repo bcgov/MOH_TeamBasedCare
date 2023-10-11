@@ -88,7 +88,7 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     style: 'red-icon',
   },
   blueQuestionIcon: {
-    text: `Can perform some care activities with organizational support or additional education.`,
+    text: `Can perform some care activities with organizational support or additional education`,
     meaning: 'Some activities have restrictions.',
     icon: faQuestionCircle,
     style: 'blue-icon',

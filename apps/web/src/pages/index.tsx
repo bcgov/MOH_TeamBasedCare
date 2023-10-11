@@ -71,11 +71,11 @@ const Landing: NextPage = () => {
           <div className='flex-1'>
             <h1 className='mb-3 font-bold text-4xl'>Welcome to Team-based Care</h1>
             <p>
-              This pilot web application is a tool designed to support professional practice to
-              optimize team-based models of care to best meet patient needs based on available
-              resources for both short-term and long-term resource planning. Note that this tool
-              helps to inform, but does not replace the judgement of professional practice in the
-              development of models of care.
+              The Team-Based Care application supports Professional Practice team-based care models.
+              It aids in aligning patient need with available resources, both in the short-term and
+              long-term, thereby assisting in resource planning. It is important to note that while
+              this tool provides valuable insights, it does not replace the expertise and judgment
+              of healthcare professionals in the development of care models.
             </p>
           </div>
 
