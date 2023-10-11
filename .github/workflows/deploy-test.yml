@@ -15,7 +15,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     concurrency: ci-${{ github.ref }}-test
     env:
       CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
