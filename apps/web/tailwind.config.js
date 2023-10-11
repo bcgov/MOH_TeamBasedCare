@@ -23,6 +23,7 @@ module.exports = {
         bcBlueAccent: '#38598A',
         bcBlueLink: '#1A5A96',
         bcBlueIndicator: '#0053A4',
+        bcBlueIcon: '#007BFF',
         bcBrown: '#6C4A00',
         bcRedError: '#D8292F',
         bcDarkRed: '#d02c2f',

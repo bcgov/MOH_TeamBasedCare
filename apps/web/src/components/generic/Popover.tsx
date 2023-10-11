@@ -1,10 +1,9 @@
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Popover as PopoverUI, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 
 interface PopoverProps {
   title: string;
+  children: (close: () => void) => void;
 }
 
 export const Popover: React.FC<PopoverProps> = ({ title, children }) => {
@@ -31,13 +30,7 @@ export const Popover: React.FC<PopoverProps> = ({ title, children }) => {
           >
             <PopoverUI.Panel className='absolute left-1/4 top-5 z-10 mt-3 w-screen max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl'>
               <div className='overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5'>
-                {children}
-              </div>
-              <div
-                className='absolute right-0 top-0 font-strong cursor-pointer'
-                onClick={() => close()}
-              >
-                <FontAwesomeIcon title='Close' icon={faTimes} className='h-5 m-4' />
+                {children?.(close)}
               </div>
             </PopoverUI.Panel>
           </Transition>
