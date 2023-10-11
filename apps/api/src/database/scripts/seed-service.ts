@@ -31,7 +31,7 @@ export class SeedService {
 
   async updateOccupations(file: Buffer): Promise<void> {
     let headers: string[];
-    const occupations: { name: string }[] = [];
+    const occupations: { name: string; displayOrder: number | undefined }[] = [];
 
     const readable = new Readable();
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -46,24 +46,21 @@ export class SeedService {
           headers = Object.keys(data);
         }
         const name = data[headers[0]].trim().replace(/"/g, '');
-        occupations.push({ name });
+        const displayOrderString = data[headers[1]].trim().replace(/"/g, '');
+        const displayOrder = displayOrderString ? Number(displayOrderString) : undefined;
+        occupations.push({ name, displayOrder });
       })
       .on('end', async () => {
         // Save the result
 
-        await this.occupationRepo
-          .createQueryBuilder()
-          .insert()
-          .into(Occupation)
-          .values(
-            occupations.map(({ name }) => {
-              return this.occupationRepo.create({
-                name,
-              });
+        await Promise.all(
+          occupations.map(({ name, displayOrder }) =>
+            this.upsertOccupation({
+              name,
+              displayOrder,
             }),
-          )
-          .orIgnore()
-          .execute();
+          ),
+        );
       });
   }
 
@@ -271,6 +268,35 @@ export class SeedService {
         }),
       ),
     );
+  }
+
+  /**
+   * @method upsertOccupation
+   * @description Method takes a partial entity, and upserts the entity
+   * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
+   */
+  private async upsertOccupation(partialEntity: Partial<Occupation>): Promise<Occupation> {
+    // throw error if name not provided; @Unique constraint on the entity
+    if (!partialEntity.name) {
+      throw new BadRequestException({
+        message: 'Cannot save Occupation: Name not found',
+      });
+    }
+
+    // find occupation with the same name
+    let occupation = await this.occupationRepo.findOne({
+      where: { name: cleanText(partialEntity.name) },
+    });
+
+    // if found, and partial activity does not contain the id
+    if (occupation && !partialEntity.id) {
+      partialEntity.id = occupation.id;
+    }
+
+    // upsert
+    occupation = await this.occupationRepo.save(this.occupationRepo.create(partialEntity));
+
+    return occupation;
   }
 
   //TODO: Move this logic to the appropriate service file

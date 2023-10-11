@@ -10,7 +10,14 @@ import { cleanText } from '../../common/utils';
 import { AllowedActivity } from '../../entities/allowed-activities.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 
-@Entity()
+@Entity({
+  // defining default sort order for the entity
+  // Note: this is default order, and will get overridden if query supplies one
+  orderBy: {
+    displayOrder: 'ASC',
+    name: 'ASC',
+  },
+})
 export class Occupation extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -20,6 +27,9 @@ export class Occupation extends CustomBaseEntity {
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   displayName: string;
+
+  @Column({ type: 'smallint', nullable: true })
+  displayOrder?: number;
 
   @Column({ type: 'boolean', default: false })
   isRegulated?: boolean;

@@ -211,7 +211,14 @@ export class PlanningSessionService {
     const occupations = planningSession.occupation;
     const groupedBundles = _.groupBy(careActivities, 'bundle_name');
 
-    const headers = ['Activities Bundle'].concat(occupations.map(e => e.displayName));
+    // adding manual sorting after values are fetched as nested sorts are only part of typeorm 0.3.0 onwards
+    // https://github.com/typeorm/typeorm/issues/2620
+    // adding infinity as default display order, giving last position to the occupations whose display order is undefined
+    const headers = ['Activities Bundle'].concat(
+      occupations
+        .sort((a, b) => (a.displayOrder || Infinity) - (b.displayOrder || Infinity))
+        .map(e => e.displayName),
+    );
 
     const query = await this.planningSessionRepo
       .createQueryBuilder('ps')
