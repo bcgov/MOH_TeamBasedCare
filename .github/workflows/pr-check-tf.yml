@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'terraform/**'
+  workflow_dispatch:
 
 env:
   TF_VERSION: 1.1.1
