@@ -1,9 +1,9 @@
 import { Popover as PopoverUI, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
+import { Fragment, ReactNode } from 'react';
 
 interface PopoverProps {
   title: string;
-  children: (close: () => void) => void;
+  children: (close: () => void) => ReactNode;
 }
 
 export const Popover: React.FC<PopoverProps> = ({ title, children }) => {
