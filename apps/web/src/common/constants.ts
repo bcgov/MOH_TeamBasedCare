@@ -65,7 +65,7 @@ export enum TooltipIconTypes {
   GREEN_CHECKMARK = 'greenCheckmarkIcon',
   YELLOW_CAUTION = 'yellowCautionIcon',
   RED_X = 'redXIcon',
-  YELLOW_QUESTION = 'yellowQuestionIcon',
+  BLUE_QUESTION = 'blueQuestionIcon',
 }
 
 export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
@@ -76,7 +76,7 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     style: 'green-icon',
   },
   yellowCautionIcon: {
-    text: `Can be performed with limits and conditions by employer or regulatory college, e.g., with additional education.`,
+    text: `Can be performed with standards, limits, and conditions by regulatory college or employer (e.g., additional education)`,
     meaning: '',
     icon: faExclamationCircle,
     style: 'yellow-icon',
@@ -87,10 +87,10 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     icon: faTimesCircle,
     style: 'red-icon',
   },
-  yellowQuestionIcon: {
-    text: `This occupation can perform some activities in this bundle with different restrictions. Please expand the care activities bundle on the left for more details.`,
+  blueQuestionIcon: {
+    text: `Can perform some care activities with organizational support or additional education.`,
     meaning: 'Some activities have restrictions.',
     icon: faQuestionCircle,
-    style: 'yellow-icon',
+    style: 'blue-icon',
   },
 };

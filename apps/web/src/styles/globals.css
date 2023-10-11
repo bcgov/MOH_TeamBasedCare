@@ -80,6 +80,10 @@ body,
   @apply text-bcGray;
 }
 
+.blue-icon {
+  @apply text-bcBlueIcon;
+}
+
 table {
   border-collapse: collapse;
   font-family: helvetica;

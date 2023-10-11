@@ -69,11 +69,13 @@ const Landing: NextPage = () => {
       <main className='w-full flex-auto flex justify-center'>
         <div className='justify-center items-center flex flex-row gap-20 max-w-screen-lg p-10'>
           <div className='flex-1'>
-            <h1 className='mb-3 font-bold text-4xl'>Welcome to Team based care mapping</h1>
+            <h1 className='mb-3 font-bold text-4xl'>Welcome to Team-based Care</h1>
             <p>
-              The web application is designed to support professional practice by offering resource
-              recommendations for both long-term planning and short-term resource assignments,
-              ensuring the delivery of comprehensive health services across various care settings.
+              This pilot web application is a tool designed to support professional practice to
+              optimize team-based models of care to best meet patient needs based on available
+              resources for both short-term and long-term resource planning. Note that this tool
+              helps to inform, but does not replace the judgement of professional practice in the
+              development of models of care.
             </p>
           </div>
 

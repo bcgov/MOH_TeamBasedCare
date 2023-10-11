@@ -8,7 +8,7 @@ export const IconContaner = () => {
       <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]}></TooltipIcon>
       <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]}></TooltipIcon>
       <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]}></TooltipIcon>
-      <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_QUESTION]}></TooltipIcon>
+      <TooltipIcon {...tooltipIcons[TooltipIconTypes.BLUE_QUESTION]}></TooltipIcon>
     </div>
   );
 };
