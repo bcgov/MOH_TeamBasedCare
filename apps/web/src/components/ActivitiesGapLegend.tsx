@@ -6,8 +6,13 @@ import { Button } from './Button';
 import { Popover } from './generic/Popover';
 
 export const ActivitiesGapLegend: React.FC = () => {
+  const title = (
+    <span className='mx-2 text-sm font-bold text-bcBluePrimary group inline-flex items-center rounded-md focus:ring-blue-500'>
+      Click here to view table legend
+    </span>
+  );
   return (
-    <Popover title='Click here to view table legend'>
+    <Popover title={title}>
       {(close: () => void) => (
         <>
           <div className={`legend-box`}>
