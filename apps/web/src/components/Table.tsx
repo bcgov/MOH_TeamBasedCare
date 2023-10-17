@@ -69,7 +69,7 @@ export default function Table<T extends MinTableItem>(props: TableProps<T>) {
             <table className='min-w-full divide-y divide-gray-200'>
               <thead className='bg-white border-b'>
                 {objectValues(props.headers).map(headerValue => (
-                  <th scope='col' className='text-sm font-bold text-gray-900 px-6 py-4 text-left'>
+                  <th scope='col' className='text-sm font-bold text-gray-900 px-6 py-4 text-center'>
                     {headerValue}
                   </th>
                 ))}

@@ -6,6 +6,7 @@ import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
 import { usePlanningActivitiesGap } from '../../services';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
+import { PopoverPosition } from '../generic/Popover';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -15,7 +16,7 @@ export interface ActivitiesGapProps {
 const TableHeader: React.FC = () => {
   const { initialValues, isLoading } = usePlanningActivitiesGap();
   const tdStyles =
-    'table-td table-header px-6 py-4 text-left text-sm font-strong text-bcBluePrimary border-b-4';
+    'table-td table-header px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
 
   // already a loader in the overview section
   if (isLoading) {
@@ -37,16 +38,19 @@ const TableHeader: React.FC = () => {
 };
 
 const SwitchTooltip: React.FC<any> = props => {
-  const { item } = props;
+  const { item, positionBottomLeft } = props;
+  const position = positionBottomLeft ? PopoverPosition.BOTTOM_LEFT : PopoverPosition.BOTTOM_RIGHT;
   switch (item) {
     case 'MIXED':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.BLUE_QUESTION]} />;
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.BLUE_QUESTION]} position={position} />;
     case 'Y':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} />;
+      return (
+        <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} position={position} />
+      );
     case 'LC':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} />;
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} position={position} />;
     case '':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} />;
+      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} position={position} />;
     default:
       return item;
   }
@@ -111,7 +115,10 @@ const TableBody: React.FC = () => {
                 return (
                   item != 'Activities Bundle' && (
                     <td key={`rowTd${index}`} className={`table-row-td-bg ${tdStyles}`}>
-                      <SwitchTooltip item={row[item]} />
+                      <SwitchTooltip
+                        item={row[item]}
+                        positionBottomLeft={index > initialValues.headers.length / 2}
+                      />
                     </td>
                   )
                 );
@@ -128,7 +135,10 @@ const TableBody: React.FC = () => {
                           key={`toggledRowTd${index}`}
                           className={`${tdStyles} ${index == 0 ? 'firstTDinsideRow' : ''}`}
                         >
-                          <SwitchTooltip item={item} />
+                          <SwitchTooltip
+                            item={item}
+                            positionBottomLeft={index > Object.values(value).length / 2}
+                          />
                         </td>
                       );
                     })}

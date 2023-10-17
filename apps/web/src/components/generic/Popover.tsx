@@ -1,22 +1,23 @@
 import { Popover as PopoverUI, Transition } from '@headlessui/react';
 import { Fragment, ReactNode } from 'react';
 
+export enum PopoverPosition {
+  BOTTOM_RIGHT = 'bottom-right',
+  BOTTOM_LEFT = 'bottom-left',
+}
 interface PopoverProps {
-  title: string;
+  title: string | JSX.Element;
   children: (close: () => void) => ReactNode;
+  position?: 'bottom-right' | 'bottom-left';
 }
 
-export const Popover: React.FC<PopoverProps> = ({ title, children }) => {
+export const Popover: React.FC<PopoverProps> = ({ title, children, position = 'bottom-right' }) => {
   return (
     <PopoverUI className='relative'>
       {({ open, close }) => (
         <>
-          <PopoverUI.Button
-            className={`${
-              open ? '' : 'text-opacity-90'
-            } ml-2 text-sm font-bold text-bcBluePrimary mb-4 group inline-flex items-center rounded-md hover:text-opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75`}
-          >
-            <span>{title}</span>
+          <PopoverUI.Button className={`${open ? '' : 'text-opacity-90'}`}>
+            {title}
           </PopoverUI.Button>
 
           <Transition
@@ -28,7 +29,11 @@ export const Popover: React.FC<PopoverProps> = ({ title, children }) => {
             leaveFrom='opacity-100 translate-y-0'
             leaveTo='opacity-0 translate-y-1'
           >
-            <PopoverUI.Panel className='absolute left-1/4 top-5 z-10 mt-3 w-screen max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl'>
+            <PopoverUI.Panel
+              className={`absolute left-3 top-7 ${
+                position === 'bottom-left' && '-translate-x-full'
+              } z-10 max-w-sm transform px-4 sm:px-0 lg:max-w-3xl`}
+            >
               <div className='overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5'>
                 {children?.(close)}
               </div>

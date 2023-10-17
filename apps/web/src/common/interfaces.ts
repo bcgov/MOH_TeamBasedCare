@@ -1,4 +1,5 @@
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { PopoverPosition } from 'src/components/generic/Popover';
 export interface CommonDBItem {
   id: string;
   createdAt: Date;
@@ -16,4 +17,5 @@ export interface TooltipIconProps {
   icon?: IconDefinition;
   meaning?: string;
   style?: string;
+  position?: PopoverPosition;
 }
