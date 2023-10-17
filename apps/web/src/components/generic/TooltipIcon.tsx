@@ -26,7 +26,7 @@ export const TooltipIcon = ({
           {() => (
             <>
               <div
-                className={`absolute w-5 h-5 rotate-60 bg-bcBlueAccent ${
+                className={`absolute w-4 h-4 rotate-60 bg-bcBlueAccent ${
                   position === PopoverPosition.BOTTOM_LEFT && 'right-0'
                 }`}
               ></div>

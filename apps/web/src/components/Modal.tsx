@@ -1,14 +1,15 @@
 import { Dialog, Transition } from '@headlessui/react';
 import React, { Fragment, PropsWithChildren, ReactNode } from 'react';
+import { Button } from './Button';
 
 export interface ModalProps {
   open: boolean;
-  handleClose: () => void;
+  handleClose?: () => void;
 }
 
 const { Root, Child } = Transition;
 
-const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose }) => {
+const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose = void 0 }) => {
   return (
     <Root show={open} as={Fragment}>
       <Dialog
@@ -16,7 +17,7 @@ const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose }) =
         static
         className='fixed z-10 inset-0 overflow-y-auto'
         open={open}
-        onClose={handleClose}
+        onClose={() => handleClose?.()}
       >
         <div className='flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0'>
           <Child
@@ -54,15 +55,45 @@ const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose }) =
   );
 };
 
-export interface ModalInterface extends React.FC<ModalProps> {
+interface ModalInterface extends React.FC<ModalProps> {
   Title: typeof Dialog.Title;
   Description: typeof Dialog.Description;
 }
 
-export const Modal = ModalContainer as ModalInterface;
+const Modal = ModalContainer as ModalInterface;
 Modal.Title = Dialog.Title;
 Modal.Description = Dialog.Description;
 
-export const ModalFooter = ({ children }: PropsWithChildren<ReactNode>) => {
+const ModalFooter = ({ children }: PropsWithChildren<ReactNode>) => {
   return <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse'>{children}</div>;
+};
+
+interface ModalWrapperProps {
+  isOpen: boolean;
+  setIsOpen: (value: React.SetStateAction<boolean>) => void;
+  title?: string;
+  description?: string;
+}
+
+export const ModalWrapper = ({ isOpen, setIsOpen, title, description }: ModalWrapperProps) => {
+  return (
+    <Modal open={isOpen}>
+      <Modal.Title
+        as='h1'
+        className='text-lg font-medium leading-6 text-bcBluePrimary border-b p-4'
+      >
+        {title}
+      </Modal.Title>
+
+      <Modal.Description className='p-5 flex gap-5 flex-col text-sm'>
+        {description}
+      </Modal.Description>
+
+      <ModalFooter>
+        <Button onClick={() => setIsOpen(false)} variant='primary' type='button'>
+          Ok
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
 };
