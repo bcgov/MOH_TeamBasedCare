@@ -4,7 +4,7 @@ import { isOdd } from 'src/common/util';
 import { useFormikContext } from 'formik';
 import { Spinner } from './generic/Spinner';
 
-export const OccupationSelector = ({ searchValue = '' }) => {
+export const OccupationSelector = ({ searchValue = '', showDescriptionModal = false }) => {
   const { occupations, isLoading } = useOccupations();
   const { values, setFieldValue } = useFormikContext<any>();
 
@@ -54,12 +54,17 @@ export const OccupationSelector = ({ searchValue = '' }) => {
           Select all
         </label>
       </div>
+      <hr />
       <div className='flex-1 flex flex-col'>
         {filteredOccupations.map((occupation, index) => {
           const styling = isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white';
           return (
             <div key={index} className={`occupation-item-box ${styling}`}>
-              <OccupationItem key={occupation.id} {...occupation}></OccupationItem>
+              <OccupationItem
+                key={occupation.id}
+                showDescriptionModal={showDescriptionModal}
+                {...occupation}
+              ></OccupationItem>
             </div>
           );
         })}

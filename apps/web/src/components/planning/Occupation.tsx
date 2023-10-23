@@ -20,7 +20,7 @@ const OccupationForm = ({ searchValue = '' }) => {
   usePlanningContent();
   return (
     <Form className='flex-1 flex flex-col overflow-auto'>
-      <OccupationSelector searchValue={searchValue}></OccupationSelector>
+      <OccupationSelector searchValue={searchValue} showDescriptionModal></OccupationSelector>
     </Form>
   );
 };
@@ -30,7 +30,8 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
   const occupationValidationSchema = createValidator(SaveOccupationDTO);
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
 
-  const { handleSubmit, initialValues } = usePlanningOccupations();
+  // proceed to next step after submission
+  const { handleSubmit, initialValues } = usePlanningOccupations({ proceedToNextOnSubmit: true });
 
   // Get search value
   const handleSearch = (e: { target: { value: string } }) => {

@@ -5,8 +5,9 @@ import { usePlanningContext } from './usePlanningContext';
 
 export const usePlanningActivitiesGap = () => {
   const {
-    state: { sessionId },
+    state: { sessionId, refetchActivityGap },
     updateProceedToNext,
+    updateRefetchActivityGap,
   } = usePlanningContext();
   const [initialValues, setInitialValues] = useState<any>({
     data: [],
@@ -27,14 +28,17 @@ export const usePlanningActivitiesGap = () => {
   };
 
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId || refetchActivityGap) {
+      // after initiating trigger of updated date, mark it false;
+      updateRefetchActivityGap(false);
+
       fetchData({ endpoint: API_ENDPOINT.getPlanningActivityGap(sessionId) }, (data: any) => {
         if (data && Object.keys(data).length > 0) {
           setInitialValues(data);
         }
       });
     }
-  }, [sessionId]);
+  }, [sessionId, refetchActivityGap, fetchData]);
 
   return { handleSubmit, initialValues, isLoading };
 };

@@ -8,6 +8,7 @@ import { usePlanningActivitiesGap } from '../../services';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
+import { OccupationListDropdown } from '../OccupationListDropdown';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -186,6 +187,7 @@ const ActivityGapTable: React.FC = () => {
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
   const description =
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
+
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
@@ -195,7 +197,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
       </div>
 
       <div className='planning-form-box'>
-        <PageTitle title='Role Optimization Matrix' />
+        <PageTitle title='Role Optimization Matrix' secondaryChild={<OccupationListDropdown />} />
         <ActivityGapTable />
       </div>
     </div>
