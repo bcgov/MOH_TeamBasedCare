@@ -12,14 +12,19 @@ export interface AppMenuGroup {
 }
 
 interface AppMenuProps {
-  groups: Array<AppMenuGroup>;
+  groups?: Array<AppMenuGroup>;
+  size?: 'lg';
 }
 
-export const AppMenu: React.FC<AppMenuProps> = ({ groups = [] }) => {
+export const HIDE_MENU_DELAY = 100;
+
+export const AppMenu: React.FC<AppMenuProps> = ({ groups = [], children, size }) => {
   return (
     <>
       <div
-        className='absolute right-0 z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'
+        className={`absolute right-0 z-10 mt-2 ${
+          size === 'lg' ? 'w-96' : 'w-56'
+        } origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
         role='menu'
         aria-orientation='vertical'
         aria-labelledby='menu-button'
@@ -51,6 +56,8 @@ export const AppMenu: React.FC<AppMenuProps> = ({ groups = [] }) => {
             </div>
           );
         })}
+
+        {children}
       </div>
     </>
   );
