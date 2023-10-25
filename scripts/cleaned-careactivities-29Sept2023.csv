@@ -1,0 +1,63 @@
+Care Activities                                                                                                                                                                                     ,Care Activity Bundle,Aspect of Practice,Respiratory Therapist,Physiotherapist,Rehabilitation Assistant,Occupational Therapist,Clinical Pharmacist,Registered Social Worker,Registered Nurse (RN),Registered Psychiatric Nurse (RPN),Licensed Practical Nurse (LPN),Health Care Assistant (HCA),Indigenous Liaison,Unit Clerk,Housekeeper
+Receive patient admission report ,Admission,Task,Y,N,N,N,N,Y,Y,Y,Y,LC,N,Y,N
+Complete intake process (confirm non-clinical/demographic information) ,Admission,Task,N,N,N,N,N,Y,Y,Y,Y,LC,LC,Y,N
+Coordinate referrals to complete discipline specific intake/consent.,Admission,Task,N,N,N,N,N,Y,Y,Y,Y,N,N,Y,N
+"Confirm if MOST exists, flag if not ",Admission,Task,Y,Y,LC,Y,Y,Y,Y,Y,Y,Y,Y,Y,N
+Prepare for patient admission - (room cleaning),Admission,Task,N,N,N,N,N,N,Y,Y,Y,Y,N,LC,Y
+Prepare for patient admission - room set up (basic supplies),Admission,Task,N,N,N,N,N,N,Y,Y,Y,Y,N,LC,LC
+Prepare for patient admission (patient specific needs - equipment),Admission,Task,Y,Y,N,Y,N,N,Y,Y,Y,LC,N,LC,N
+"Prepare for patient admission (patient specific needs - psychosocial/spiritual, translation services, cultural safety)",Admission,Task,N,N,N,N,N,Y,Y,Y,Y,N,LC,LC,N
+Orientate patient and family to unit and hospital,Admission,Task,N,Y,N,N,N,Y,Y,Y,Y,Y,Y,Y,N
+Screen for patient ability to perform ADLs.,Activities of Daily Living (ADL),Task,Y,Y,LC,Y,Y,Y,Y,Y,Y,LC,Y,N,N
+Assess for patient ability to complete ADLs.,Activities of Daily Living (ADL),Aspect of Practice,N,Y,N,Y,N,N,Y,Y,N,N,N,N,N
+Assist with patient personal care tasks to support activities of daily living,Activities of Daily Living (ADL),Task,N,Y,Y,Y,N,Y,Y,Y,Y,Y,N,N,N
+Perform patient personal care tasks to support activities of daily living,Activities of Daily Living (ADL),Task,N,Y,Y,Y,N,N,Y,Y,Y,Y,N,N,N
+Encourage patient to complete personal care tasks to support activities of daily living,Activities of Daily Living (ADL),Task,N,Y,Y,Y,N,Y,Y,Y,Y,Y,LC,N,N
+Trim nails on hands/feet (no chronic conditions),Activities of Daily Living (ADL),Task,N,N,N,LC,N,N,Y,Y,Y,LC,N,N,N
+Trim nails on hands/feet (chronic conditions),Activities of Daily Living (ADL),Aspect of Practice,N,N,N,N,N,N,Y,Y,LC,N,N,N,N
+Apply therapeutic hot applications (as directed in care plan).,Activities of Daily Living (ADL),Task,N,Y,Y,Y,N,N,Y,Y,Y,LC,LC,N,N
+Apply therapeutic cold applications (as directed in care plan).,Activities of Daily Living (ADL),Task,N,Y,Y,Y,N,N,Y,Y,Y,LC,LC,N,N
+Insert hearing aid,Activities of Daily Living (ADL),Restricted Activity,N,N,N,N,N,N,Y,Y,Y,LC,N,N,N
+Screen for patient ability to perform instrumental activities of daily living (iADsL),Instrumental Activities of Daily Living (iADL),Task,N,N,LC,Y,N,Y,Y,Y,Y,LC,LC,N,N
+Assess for patient ability to perform instrumental activities of daily living (IADL),Instrumental Activities of Daily Living (iADL),Aspect of Practice,N,N,N,Y,N,N,Y,Y,N,N,N,N,N
+Refer to community resources for support for ADLs/iADLs,Instrumental Activities of Daily Living (iADL),Task,N,N,LC,Y,N,Y,Y,Y,Y,N,N,N,N
+Screen for mobility ambulation,Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,LC,N,N,N
+Screen for mobility transfers,Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,LC,N,N,N
+Assess patient positioning including turns,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,Y,Y,LC,N,N,N,N
+Assist with patient positioning,Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Assess patient transfers,Musculoskeletal,Aspect of Practice,N,Y,N,Y,,N,Y,Y,LC,N,N,N,N
+"Assist with patient transfer (with mechanical aids (e.g. slings, lifts)",Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Assist with patient transfer (without mechanical aids),Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Transfer patient (with mechanical aids),Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Transfer patient (without mechanical aids),Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Position patient in bed,Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Assist with patient positioning in bed,Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+"Monitor physical restraints (i.e., soft, hard, lock)",Musculoskeletal,Task,N,Y,N,Y,N,N,Y,Y,Y,LC,N,N,N
+Assess need for patient physical restraints - LC,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,Y,Y,LC,N,N,N,N
+"Assist registered health professional with application of physical restraints (i.e., soft, hard, lock)",Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,LC,N,N,N
+Screen patient for risk factors for falls and fall-related injuries,Musculoskeletal,Task,Y,Y,LC,,,,,,,,,,
+Assess patient for risk factors for falls and fall-related injuries,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,Y,Y,LC,N,N,N,N
+Observe and report risk of falls,Musculoskeletal,Task,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y
+Conduct spasticity assessment,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+Screens patient mobility (e.g. pre-handling checklist),Musculoskeletal,Task,Y,Y,LC,Y,N,N,Y,Y,Y,N,N,N,N
+"Assess patient functional mobility and determine level of complexity
+",Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+Assess patient for ongoing functional and therapeutic mobilization,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+Assess patient mobility (complex) for the purpose of monitoring a patient's progress as documented in care plan,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+Develop mobility/musculoskeletal care plan based on assessment,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+"Assists with mobility/functional, range of motion and strength exercises",Musculoskeletal,Task,Y,Y,LC,Y,N,N,Y,Y,Y,LC,N,N,N
+Assess patient need for mobility aids,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+Prescribe mobility aids (medical device) based on assessment,Musculoskeletal,Aspect of Practice,N,Y,N,Y,N,N,N,N,N,N,N,N,N
+Assist with assessment of patient need for mobility aids,Musculoskeletal,Task,N,Y,LC,Y,N,N,Y,Y,Y,Y,N,N,N
+Take an x-ray image of the indicated body part of the patient at their bed location using a portable x-ray machine,Musculoskeletal,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N
+Perform venipuncture,Musculoskeletal,Restricted Activity,LC,N,N,N,N,N,Y,LC,LC,N,N,N,N
+Remove staples and sutures,Musculoskeletal,Aspect of Practice,N,N,N,N,N,N,Y,LC,LC,N,N,N,N
+Administers prescription drugs (schedule 1 drugs) by any method,Medications,Restricted Activity,LC,N,N,N,N,N,LC,LC,LC,N,N,N,N
+Administer controlled drugs and substances (schedule 1A drugs) by any method),Medications,Restricted Activity,LC,N,N,N,N,N,LC,LC,LC,N,N,N,N
+Obtain Best Possible Medication History,Medications,Aspect of Practice,N,N,N,N,Y,N,Y,Y,Y,N,N,N,N
+Compound prescription drugs (schedule 1 drugs),Medications,Restricted Activity,N,N,N,N,Y,N,LC,LC,LC,N,N,N,N
+Compound controlled drugs and substance (schedule 1A drugs),Medications,Restricted Activity,N,N,N,N,Y,N,LC,LC,LC,N,N,N,N
+Dispense controlled drugs and substance (schedule 1A drugs),Medications,Restricted Activity,N,N,N,N,Y,N,LC,LC,LC,N,N,N,N
+Dispense prescription drugs (schedule 1 drugs),Medications,Restricted Activity,N,N,N,N,Y,N,LC,LC,LC,N,N,N,N
+Prescribe controlled drugs and substance (schedule 1A drugs),Medications,Restricted Activity,N,N,N,N,N,N,LC,LC,N,N,N,N,N
+Prescribe prescription drugs (schedule 1 drugs),Medications,Restricted Activity,N,N,N,N,N,N,LC,LC,N,N,N,N,N

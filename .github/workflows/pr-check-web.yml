@@ -1,0 +1,37 @@
+name: Web PR Checks
+on:
+  pull_request:
+    paths:
+      - 'apps/web/**'
+      - 'packages/common/**'
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v2
+        name: checkout
+      - uses: actions/cache@v2
+        name: Cache yarn
+        with:
+          path: ./.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn workspace @tbcm/web install
+
+      - name: Run formatting check
+        run: yarn format:check
+
+      - name: Build dependencies
+        run: yarn build-common
+
+      - name: Lint web package
+        run: yarn workspace @tbcm/web lint
+
+      - name: Build web package
+        run: yarn workspace @tbcm/web export

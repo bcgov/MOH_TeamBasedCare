@@ -1,0 +1,62 @@
+name: TEST - Deploy Apps
+on:
+  push:
+    tags:
+      - test
+env:
+  TF_VERSION: 1.1.1
+  ENV_NAME: test
+  POSTGRES_USERNAME: testuser
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: ci-${{ github.ref }}-test
+    env:
+      CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
+      AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
+    environment:
+      name: test
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup node v16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: actions/cache@v3
+        name: Cache yarn
+        with:
+          path: ./.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-region: ca-central-1
+          role-to-assume: ${{ secrets.AWS_SA_ROLE_ARN }}
+
+      - name: Terraform apply
+        run: make apply
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Clean Build Folder
+        run: make pre-build
+
+      - name: Build web app
+        run: make build-web
+
+      - name: Build api
+        run: make build-api
+
+      - name: Deploy All
+        run: make deploy-all

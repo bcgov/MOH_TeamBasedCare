@@ -1,0 +1,9 @@
+*.tfstate
+*.tfstate.backup
+.terraform
+.terraform.lock.hcl
+.auto.tfvars
+backend.hcl
+debug.tf
+*.zip
+build

@@ -1,0 +1,83 @@
+name: Terraform PR Checks
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Select the environment
+        options:
+          - dev
+          - test
+          - prod
+
+env:
+  TF_VERSION: 1.1.1
+  ENV_NAME: ${{ github.event.inputs.environment || 'dev' }}
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency: ci-${{ github.ref }}-dev
+    env:
+      CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
+      AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
+
+    environment:
+      name: dev
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup node v16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: actions/cache@v3
+        name: Cache yarn
+        with:
+          path: ./.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+
+      - name: Git clone the repository
+        uses: actions/checkout@v4
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{secrets.AWS_SA_ROLE_ARN}}
+          aws-region: ca-central-1
+
+      - name: Terraform Plan
+        id: plan
+        run: make plan
+        continue-on-error: true
+
+      - name: Show Plan on PR
+        uses: actions/github-script@v6
+        if: github.rest.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            <details><summary>Show Plan</summary>
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+            </details>`;
+              
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
