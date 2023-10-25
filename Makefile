@@ -50,7 +50,9 @@ ifeq ($(ENV_NAME), prod)
 DOMAIN=d2xshb1uuel3zq.cloudfront.net
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_PROD)
 DB_HOST = $(DB_HOST_PROD)
-KEYCLOAK_AUTH_SERVER_URI = https://common-logon.hlth.gov.bc.ca/auth
+# TODO: revert to prod once client is set up on 
+# KEYCLOAK_AUTH_SERVER_URI = https://common-logon.hlth.gov.bc.ca/auth
+KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
 ifeq ($(ENV_NAME), dev)
