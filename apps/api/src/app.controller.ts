@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiProperty, ApiResponse } from '@nestjs/swagger';
+import { Role } from '@tbcm/common';
+import { Roles } from 'nest-keycloak-connect';
 import { AppService } from './app.service';
 import { SUCCESS_RESPONSE } from './common/constants';
 
@@ -43,6 +45,7 @@ export class AppController {
     summary: 'Runs script to update care activities',
   })
   @Patch('/update-care-activities')
+  @Roles({ roles: [Role.ADMIN] })
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
@@ -55,6 +58,7 @@ export class AppController {
     summary: 'Runs script to update occupation list',
   })
   @Patch('/update-occupation')
+  @Roles({ roles: [Role.ADMIN] })
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
