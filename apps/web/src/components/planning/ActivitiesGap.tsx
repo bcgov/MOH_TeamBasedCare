@@ -7,6 +7,7 @@ import { TooltipIcon } from '../generic/TooltipIcon';
 import { usePlanningActivitiesGap } from '../../services';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
+import { ModalWrapper } from '../Modal';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -16,7 +17,10 @@ export interface ActivitiesGapProps {
 const TableHeader: React.FC = () => {
   const { initialValues, isLoading } = usePlanningActivitiesGap();
   const tdStyles =
-    'table-td table-header px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
+    'table-td table-header cursor-pointer px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedOccupation, setSelectedOccupation] = useState({ title: '', description: '' });
 
   // already a loader in the overview section
   if (isLoading) {
@@ -27,12 +31,28 @@ const TableHeader: React.FC = () => {
     <thead className='border-b bg-gray-50 table-row-fixed table-header '>
       <tr>
         {initialValues.headers &&
-          initialValues.headers.map((title: string, index: number) => (
-            <th key={`th${index}`} className={tdStyles}>
-              {title}
-            </th>
-          ))}
+          initialValues.headers.map(
+            ({ title, description }: { title: string; description: string }, index: number) => (
+              <th
+                key={`th${index}`}
+                className={tdStyles}
+                onClick={() => {
+                  setSelectedOccupation({ title, description });
+                  setShowModal(true);
+                }}
+              >
+                {title}
+              </th>
+            ),
+          )}
       </tr>
+
+      <ModalWrapper
+        isOpen={showModal}
+        setIsOpen={setShowModal}
+        title={selectedOccupation.title}
+        description={selectedOccupation.description || 'No description available'}
+      />
     </thead>
   );
 };
@@ -111,12 +131,12 @@ const TableBody: React.FC = () => {
                   />
                 </Button>
               </td>
-              {initialValues.headers.map((item: any, index: number) => {
+              {initialValues.headers.map(({ title }: { title: string }, index: number) => {
                 return (
-                  item != 'Activities Bundle' && (
+                  title != 'Activities Bundle' && (
                     <td key={`rowTd${index}`} className={`table-row-td-bg ${tdStyles}`}>
                       <SwitchTooltip
-                        item={row[item]}
+                        item={row[title]}
                         positionBottomLeft={index > initialValues.headers.length / 2}
                       />
                     </td>

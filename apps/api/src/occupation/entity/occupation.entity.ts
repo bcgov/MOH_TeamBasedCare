@@ -31,6 +31,9 @@ export class Occupation extends CustomBaseEntity {
   @Column({ type: 'smallint', nullable: true })
   displayOrder?: number;
 
+  @Column({ type: 'varchar', length: 4096, nullable: true })
+  description?: string;
+
   @Column({ type: 'boolean', default: false })
   isRegulated?: boolean;
 

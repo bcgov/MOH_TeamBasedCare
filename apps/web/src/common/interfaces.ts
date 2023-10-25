@@ -10,6 +10,7 @@ export interface OccupationItemProps extends CommonDBItem {
   name: string;
   displayName: string;
   isRegulated: boolean;
+  description: string;
 }
 
 export interface TooltipIconProps {

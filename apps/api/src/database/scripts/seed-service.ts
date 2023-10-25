@@ -31,7 +31,11 @@ export class SeedService {
 
   async updateOccupations(file: Buffer): Promise<void> {
     let headers: string[];
-    const occupations: { name: string; displayOrder: number | undefined }[] = [];
+    const occupations: {
+      name: string;
+      displayOrder: number | undefined;
+      description: string;
+    }[] = [];
 
     const readable = new Readable();
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -48,16 +52,18 @@ export class SeedService {
         const name = data[headers[0]].trim().replace(/"/g, '');
         const displayOrderString = data[headers[1]].trim().replace(/"/g, '');
         const displayOrder = displayOrderString ? Number(displayOrderString) : undefined;
-        occupations.push({ name, displayOrder });
+        const description = data[headers[2]].trim().replace(/"/g, '');
+        occupations.push({ name, displayOrder, description });
       })
       .on('end', async () => {
         // Save the result
 
         await Promise.all(
-          occupations.map(({ name, displayOrder }) =>
+          occupations.map(({ name, displayOrder, description }) =>
             this.upsertOccupation({
               name,
               displayOrder,
+              description,
             }),
           ),
         );
