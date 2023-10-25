@@ -5,9 +5,7 @@ import { AppStorage, StorageKeys } from 'src/utils/storage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
-import { AppMenu, AppMenuGroup } from './generic/AppMenu';
-
-const HIDE_MENU_DELAY = 100;
+import { AppMenu, AppMenuGroup, HIDE_MENU_DELAY } from './generic/AppMenu';
 
 export const UserDropdown = () => {
   const { logMeOut } = useAuth();

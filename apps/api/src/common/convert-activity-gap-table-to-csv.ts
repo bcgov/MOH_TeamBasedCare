@@ -1,7 +1,7 @@
 const { parse } = require('json2csv');
 
 export const convertActivityGapTableToCSV = (data: any) => {
-  const fields = data.headers.map((element: string | { label: string; value: string }) => {
+  const fields = data.headers.map(({ title: element }: { title: string }) => {
     if (element === 'Activities Bundle') return { label: 'Activities Bundle', value: 'name' };
     return element;
   });

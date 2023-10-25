@@ -4,12 +4,14 @@ export interface PlanningContextStateProps {
   isNextTriggered: boolean;
   canProceedToNext: boolean;
   sessionId: string;
+  refetchActivityGap: boolean; // state to trigger re-render gap activity step
 }
 
 const initialState: PlanningContextStateProps = {
   isNextTriggered: false,
   canProceedToNext: false,
   sessionId: '',
+  refetchActivityGap: false,
 };
 
 export type PlanningContextType = {
@@ -18,6 +20,7 @@ export type PlanningContextType = {
   updateProceedToNext: () => void;
   updateWaitForValidation: () => void;
   updateSessionId: (sessionId: string) => void;
+  updateRefetchActivityGap: (fetch: boolean) => void;
 };
 
 const enum PlanningActions {
@@ -25,6 +28,7 @@ const enum PlanningActions {
   PROCEED_TO_NEXT = 'PROCEED_TO_NEXT',
   WAIT_FOR_VALIDATION = 'WAIT_FOR_VALIDATION',
   UPDATE_SESSION_ID = 'UPDATE_SESSION_ID',
+  REFETCH_ACTIVITY_GAP = 'REFETCH_ACTIVITY_GAP',
 }
 
 function reducer(state: any, action: any): PlanningContextStateProps {
@@ -34,23 +38,31 @@ function reducer(state: any, action: any): PlanningContextStateProps {
         ...state,
         isNextTriggered: true,
         canProceedToNext: false,
+        refetchActivityGap: false,
       };
     case PlanningActions.PROCEED_TO_NEXT:
       return {
         ...state,
         isNextTriggered: false,
         canProceedToNext: true,
+        refetchActivityGap: false,
       };
     case PlanningActions.WAIT_FOR_VALIDATION:
       return {
         ...state,
         isNextTriggered: false,
         canProceedToNext: false,
+        refetchActivityGap: false,
       };
     case PlanningActions.UPDATE_SESSION_ID:
       return {
         ...state,
         ...action.payload,
+      };
+    case PlanningActions.REFETCH_ACTIVITY_GAP:
+      return {
+        ...state,
+        refetchActivityGap: action?.payload?.fetch ?? false,
       };
     default:
       return {
@@ -69,6 +81,8 @@ export const PlanningProvider = ({ children }: any) => {
   const updateWaitForValidation = () => dispatch({ type: PlanningActions.WAIT_FOR_VALIDATION });
   const updateSessionId = (sessionId: string) =>
     dispatch({ type: PlanningActions.UPDATE_SESSION_ID, payload: { sessionId } });
+  const updateRefetchActivityGap = (fetch: boolean) =>
+    dispatch({ type: PlanningActions.REFETCH_ACTIVITY_GAP, payload: { fetch } });
 
   return (
     <PlanningContext.Provider
@@ -78,6 +92,7 @@ export const PlanningProvider = ({ children }: any) => {
         updateProceedToNext,
         updateWaitForValidation,
         updateSessionId,
+        updateRefetchActivityGap,
       }}
     >
       {children}

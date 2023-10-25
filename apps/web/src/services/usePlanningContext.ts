@@ -8,6 +8,7 @@ export const usePlanningContext = () => {
     updateProceedToNext,
     updateWaitForValidation,
     updateSessionId,
+    updateRefetchActivityGap,
   } = useContext(PlanningContext) as PlanningContextType;
 
   return {
@@ -15,6 +16,7 @@ export const usePlanningContext = () => {
     updateProceedToNext: () => updateProceedToNext(),
     updateWaitForValidation: () => updateWaitForValidation(),
     updateSessionId: (sessionId: string) => updateSessionId(sessionId),
+    updateRefetchActivityGap: (fetch: boolean) => updateRefetchActivityGap(fetch),
     state,
   };
 };

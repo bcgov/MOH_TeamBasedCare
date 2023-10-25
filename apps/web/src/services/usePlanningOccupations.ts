@@ -1,16 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { useHttp } from './useHttp';
 import { usePlanningContext } from './usePlanningContext';
 
-export const usePlanningOccupations = () => {
+interface usePlanningOccupationsProps {
+  proceedToNextOnSubmit?: boolean;
+  triggerActivityGapFetchOnSubmit?: boolean;
+}
+
+export const usePlanningOccupations = ({
+  proceedToNextOnSubmit = false,
+}: usePlanningOccupationsProps) => {
   const {
     state: { sessionId },
     updateProceedToNext,
   } = usePlanningContext();
+
   const [initialValues, setInitialValues] = useState<any>({
     occupation: [],
   });
+
   const { sendApiRequest, fetchData } = useHttp();
 
   const handleSubmit = (values: any) => {
@@ -21,20 +30,27 @@ export const usePlanningOccupations = () => {
         endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
       },
       () => {
-        updateProceedToNext();
+        // proceed to next step (planning context changes) if requested
+        if (proceedToNextOnSubmit) {
+          updateProceedToNext();
+        }
       },
     );
   };
 
+  const updateOccupationsForSessionId = useCallback(() => {
+    fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: any) => {
+      if (data && data?.length > 0) {
+        setInitialValues({ occupation: data });
+      }
+    });
+  }, [fetchData, sessionId]);
+
   useEffect(() => {
     if (sessionId) {
-      fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: any) => {
-        if (data && data?.length > 0) {
-          setInitialValues({ occupation: data });
-        }
-      });
+      updateOccupationsForSessionId();
     }
-  }, [sessionId]);
+  }, [sessionId, updateOccupationsForSessionId]);
 
-  return { handleSubmit, initialValues };
+  return { handleSubmit, initialValues, updateOccupationsForSessionId };
 };
