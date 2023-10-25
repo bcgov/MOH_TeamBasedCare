@@ -50,7 +50,7 @@ resource "aws_cloudfront_distribution" "app" {
   comment = local.app_name
   
   # TODO: add gov.bc.ca domain here when ready.
-  aliases = local.has_domain ? [var.domain] : [""]
+  aliases = local.fw_domain ? [var.domain] : null
 
   origin {
     domain_name = aws_s3_bucket.app.bucket_regional_domain_name

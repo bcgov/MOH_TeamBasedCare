@@ -1,5 +1,7 @@
 name: PROD - Deploy Apps
 on:
+  # TODO: remove workflow dispatch after first successful deploy
+  workflow_dispatch:
   push:
     tags:
       - prod
