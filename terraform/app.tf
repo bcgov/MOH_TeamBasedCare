@@ -1,7 +1,7 @@
 
 
 resource "aws_s3_bucket" "app" {
-  bucket = "tbcm-prod-app"
+  bucket = var.app_sources_bucket
   acl    = "private"
   versioning {
     enabled = true
