@@ -16,6 +16,7 @@ on:
 env:
   TF_VERSION: 1.1.1
   ENV_NAME: ${{ github.event.inputs.environment || 'dev' }}
+  POSTGRES_USERNAME: ${{ github.event.inputs.environment == 'prod' && 'tbcm_admin' || github.event.inputs.environment == 'test' && 'testuser' || 'dev' }}
 
 permissions:
   id-token: write # This is required for requesting the JWT

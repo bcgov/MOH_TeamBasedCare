@@ -284,7 +284,7 @@ migrate: write-config-tf
 
 plan: init
 	# Creating all AWS infrastructure.
-	@terraform -chdir=$(TERRAFORM_DIR) plan -no-color
+	@terraform -chdir=$(TERRAFORM_DIR) plan
 
 apply: init 
 	# Creating all AWS infrastructure.
