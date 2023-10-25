@@ -21,7 +21,8 @@ resource "aws_cloudfront_origin_access_identity" "app" {
 }
 
 data "aws_acm_certificate" "domain" {
-  count    = local.has_domain ? 1 : 0
+  # TODO: Update this once gov.bc.ca domain is available
+  count    = local.fw_domain ? 1 : 0
   provider = aws.us-east-1
   domain   = var.domain
   statuses = ["ISSUED"]
