@@ -4,6 +4,20 @@ export class initialSchema1664816378062 implements MigrationInterface {
   name = 'initialSchema1664816378062';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Issue: the enum does not exist in PROD
+    // weirdly, it exists in dev and test. Perhaps, the types/enum were created manually there :shrug:
+    // Fix: Creating the necessary types in the migration yet to be run in the PROD
+    await queryRunner.query(
+      `CREATE TYPE "public"."allowed_activity_permission_enum" AS ENUM('X', 'A', 'C(E)', 'L')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."care_activity_activity_type_enum" AS ENUM('Aspect of Practice', 'Task', 'Restricted Activity')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."care_activity_clinical_type_enum" AS ENUM('Clinical', 'Clinical Support')`,
+    );
+
+    // Rest of queries
     await queryRunner.query(
       `CREATE TABLE "occupation" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "display_name" character varying(255) NOT NULL, "is_regulated" boolean NOT NULL DEFAULT false, CONSTRAINT "UQ_47dc90a06f122e0b7256fa1e5fd" UNIQUE ("name"), CONSTRAINT "PK_07cfcefef555693d96dce8805c5" PRIMARY KEY ("id"))`,
     );
@@ -121,5 +135,8 @@ export class initialSchema1664816378062 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "care_activity"`);
     await queryRunner.query(`DROP TABLE "allowed_activity"`);
     await queryRunner.query(`DROP TABLE "occupation"`);
+    await queryRunner.query(`DROP TYPE "public"."allowed_activity_permission_enum"`);
+    await queryRunner.query(`DROP TYPE "public"."care_activity_activity_type_enum"`);
+    await queryRunner.query(`DROP TYPE "public"."care_activity_clinical_type_enum"`);
   }
 }
