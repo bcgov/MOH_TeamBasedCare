@@ -34,6 +34,8 @@ jobs:
       name: $ENV_NAME
 
     steps:
+      - name: echo
+        run: echo "ENV_NAME = $ENV_NAME or $NAME"
       - name: checkout
         uses: actions/checkout@v3
       - name: setup node v16
