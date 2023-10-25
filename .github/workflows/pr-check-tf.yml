@@ -25,13 +25,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    concurrency: ci-${{ github.ref }}-dev
+    concurrency: ci-${{ github.ref }}-${{ env.ENV_NAME }}
     env:
       CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
       AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
 
     environment:
-      name: dev
+      name: ${{ env.ENV_NAME }}
+
     steps:
       - name: checkout
         uses: actions/checkout@v3
