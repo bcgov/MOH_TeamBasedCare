@@ -16,6 +16,7 @@ on:
 env:
   TF_VERSION: 1.1.1
   ENV_NAME: ${{ github.event.inputs.environment || 'dev' }}
+  POSTGRES_USERNAME: ${{ github.event.inputs.environment == 'prod' && 'tbcm_admin' || github.event.inputs.environment == 'test' && 'testuser' || 'localdev' }}
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -25,14 +26,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    concurrency: ci-${{ github.ref }}-dev
+    concurrency: ci-${{ github.ref }}-${{ github.event.inputs.environment || 'dev' }}
     env:
       CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
       AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
 
     environment:
-      name: dev
+      name: ${{ github.event.inputs.environment || 'dev' }}
     steps:
+      - name: echo
+        run: echo "ENV_NAME = ${{env.ENV_NAME}} or ${{env.NAME}}" >> $GITHUB_OUTPUT
       - name: checkout
         uses: actions/checkout@v3
       - name: setup node v16

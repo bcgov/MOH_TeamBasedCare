@@ -1,14 +1,12 @@
 name: PROD - Deploy Apps
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - prod
 env:
   TF_VERSION: 1.1.1
   ENV_NAME: prod
-  POSTGRES_USERNAME: tbcmadmin
+  POSTGRES_USERNAME: tbcm_admin
 
 permissions:
   id-token: write # This is required for requesting the JWT
