@@ -47,7 +47,7 @@ TERRAFORM_DIR = terraform
 export BOOTSTRAP_ENV=terraform/bootstrap
 
 ifeq ($(ENV_NAME), prod)
-DOMAIN=tbcm.gov.bc.ca
+DOMAIN=d2xshb1uuel3zq.cloudfront.net
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_PROD)
 DB_HOST = $(DB_HOST_PROD)
 KEYCLOAK_AUTH_SERVER_URI = https://common-logon.hlth.gov.bc.ca/auth
