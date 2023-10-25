@@ -4,10 +4,18 @@ on:
     paths:
       - 'terraform/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Select the environment
+        options:
+          - dev
+          - test
+          - prod
 
 env:
   TF_VERSION: 1.1.1
-  ENV_NAME: dev
+  ENV_NAME: ${{ github.event.inputs.environment || 'dev' }}
 
 permissions:
   id-token: write # This is required for requesting the JWT
