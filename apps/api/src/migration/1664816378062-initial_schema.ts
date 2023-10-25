@@ -5,7 +5,7 @@ export class initialSchema1664816378062 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Issue: the enum does not exist in PROD
-    // weirdly, it is working ok in dev and test. Perhaps, the types/enum were created manually there :shrug:
+    // weirdly, it exists in dev and test. Perhaps, the types/enum were created manually there :shrug:
     // Fix: Creating the necessary types in the migration yet to be run in the PROD
     await queryRunner.query(
       `CREATE TYPE "public"."allowed_activity_permission_enum" AS ENUM('X', 'A', 'C(E)', 'L')`,
