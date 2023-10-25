@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: echo
-        run: echo "ENV_NAME = $ENV_NAME or $NAME"
+        run: echo "ENV_NAME = $ENV_NAME or $NAME" >> $GITHUB_OUTPUT
       - name: checkout
         uses: actions/checkout@v3
       - name: setup node v16
