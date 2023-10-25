@@ -25,14 +25,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    concurrency: ci-${{ github.ref }}-${{env.ENV_NAME}}
+    concurrency: ci-${{ github.ref }}-${{ github.event.inputs.environment || 'dev' }}
     env:
       CLOUDFRONT_ID: '${{ secrets.CLOUDFRONT_ID }}'
       AWS_ACCOUNT_ID: '${{ secrets.AWS_ACCOUNT_ID}}'
 
     environment:
-      name: ${{env.ENV_NAME}}
-
+      name: ${{ github.event.inputs.environment || 'dev' }}
     steps:
       - name: echo
         run: echo "ENV_NAME = ${{env.ENV_NAME}} or ${{env.NAME}}" >> $GITHUB_OUTPUT
