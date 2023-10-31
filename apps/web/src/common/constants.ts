@@ -10,6 +10,7 @@ import {
 import { TooltipIconProps } from './interfaces';
 
 export enum AllowedPath {
+  LANDING = '/',
   PLANNING = '/planning',
   OCCUPATIONAL_SCOPE = '/occupational-scope',
 }
@@ -30,6 +31,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     active: false,
     faIcon: faUsers,
     path: AllowedPath.OCCUPATIONAL_SCOPE,
+    hidden: true,
   },
 ];
 

@@ -17,4 +17,5 @@ export interface SidebarButtonProps {
   faIcon?: IconDefinition;
   setButtons?: Dispatch<SetStateAction<SidebarButtonProps[]>>;
   options?: SidebarButtonProps[];
+  hidden?: boolean;
 }

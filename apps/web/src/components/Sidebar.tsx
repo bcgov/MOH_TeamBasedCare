@@ -40,35 +40,19 @@ export const Sidebar: React.FC = () => {
 
       <div className='py-14'>
         <ul>
-          {state.sidebarButtons.map(button => {
-            if (button.kind === SidebarButtonKind.REGULAR) {
-              return (
-                <SidebarButton
-                  key={button.id}
-                  id={button.id}
-                  open={open}
-                  active={button.active}
-                  path={button.path}
-                  text={button.text}
-                  faIcon={button.faIcon}
-                ></SidebarButton>
-              );
-            }
-            if (button.kind === SidebarButtonKind.COLLAPSIBLE) {
-              return (
-                <SidebarCollapsible
-                  key={button.id}
-                  id={button.id}
-                  open={open}
-                  active={button.active}
-                  text={button.text}
-                  path={button.path}
-                  faIcon={button.faIcon}
-                  options={button.options}
-                ></SidebarCollapsible>
-              );
-            }
-          })}
+          {state.sidebarButtons
+            .filter(button => !button.hidden)
+            .map(button => {
+              if (button.kind === SidebarButtonKind.REGULAR) {
+                return <SidebarButton key={button.id} open={open} {...button}></SidebarButton>;
+              }
+
+              if (button.kind === SidebarButtonKind.COLLAPSIBLE) {
+                return (
+                  <SidebarCollapsible key={button.id} open={open} {...button}></SidebarCollapsible>
+                );
+              }
+            })}
         </ul>
       </div>
     </aside>

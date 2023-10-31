@@ -32,7 +32,7 @@ function reducer(state: AppContextStateProps, action: ReducerAction): AppContext
   switch (action.type) {
     case AppContextActions.UPDATE_ACTIVE_PATH:
       if (action.payload?.path) {
-        if (action.payload?.router && action.payload?.path !== action.payload?.router.pathname) {
+        if (action.payload?.router && action.payload?.path !== action.payload?.router?.pathname) {
           action.payload.router.push(action.payload.path);
         }
 
@@ -97,7 +97,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 export const useAppContext = () => {
   const appContext = useContext(AppContext);
   if (appContext === undefined) {
-    throw new Error('useAppContext must be inside a AppContextProvider');
+    throw new Error('useAppContext must be inside AppContextProvider');
   }
   return appContext as AppContextType;
 };
