@@ -5,7 +5,11 @@ export interface KeycloakUser {
 
   sub: string;
 
-  client_roles?: string[];
+  resource_access?: {
+    TBCM?: {
+      roles?: string[];
+    };
+  };
 
   preferred_username: string;
 
