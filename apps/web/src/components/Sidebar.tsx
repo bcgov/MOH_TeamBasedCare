@@ -6,11 +6,11 @@ import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { SidebarButton } from './SidebarButton';
 import { SidebarCollapsible } from './SidebarCollapsible';
 import { SidebarButtonKind } from './interface';
-import { sidebarNavItems } from '../common/constants';
+import { useAppContext } from './AppContext';
 
 export const Sidebar: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [buttons, setButtons] = useState(sidebarNavItems);
+  const { state } = useAppContext();
 
   return (
     <aside
@@ -40,15 +40,15 @@ export const Sidebar: React.FC = () => {
 
       <div className='py-14'>
         <ul>
-          {buttons.map(button => {
+          {state.sidebarButtons.map(button => {
             if (button.kind === SidebarButtonKind.REGULAR) {
               return (
                 <SidebarButton
                   key={button.id}
                   id={button.id}
-                  setButtons={setButtons}
                   open={open}
                   active={button.active}
+                  path={button.path}
                   text={button.text}
                   faIcon={button.faIcon}
                 ></SidebarButton>
@@ -59,10 +59,10 @@ export const Sidebar: React.FC = () => {
                 <SidebarCollapsible
                   key={button.id}
                   id={button.id}
-                  setButtons={setButtons}
                   open={open}
                   active={button.active}
                   text={button.text}
+                  path={button.path}
                   faIcon={button.faIcon}
                   options={button.options}
                 ></SidebarCollapsible>

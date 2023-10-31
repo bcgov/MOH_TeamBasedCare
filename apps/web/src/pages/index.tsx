@@ -3,6 +3,8 @@ import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import 'reflect-metadata';
+import { AllowedPath } from 'src/common';
+import { useAppContext } from 'src/components/AppContext';
 import { Footer } from 'src/components/Footer';
 import { Card } from 'src/components/generic/Card';
 import { Spinner } from 'src/components/generic/Spinner';
@@ -16,12 +18,14 @@ const Landing: NextPage = () => {
   const [message, setMessage] = useState('');
   const [showSpinner, setShowSpinner] = useState(false);
 
-  // convenient method for redirecting user to Home
-  const redirectToHome = useCallback(() => {
+  const { updateActivePath } = useAppContext();
+
+  // convenient method for redirecting user to app
+  const redirectToApp = useCallback(() => {
     setShowSpinner(true);
-    setMessage('Redirecting to home..');
-    router.push('home');
-  }, [router]);
+    setMessage('Redirecting to app..');
+    updateActivePath(AllowedPath.PLANNING);
+  }, [updateActivePath]);
 
   const fetchToken = useCallback(() => {
     const code = query?.code as string;
@@ -39,8 +43,8 @@ const Landing: NextPage = () => {
 
         // fetch user data
         fetchUserFromCode(() => {
-          // success callback - redirect to home page
-          redirectToHome();
+          // success callback - redirect to app
+          redirectToApp();
         });
       },
       () => {
@@ -50,17 +54,17 @@ const Landing: NextPage = () => {
       },
       'Failed to authenticate the request...',
     );
-  }, [fetchAuthTokenFromCode, fetchUserFromCode, query?.code, redirectToHome]);
+  }, [fetchAuthTokenFromCode, fetchUserFromCode, query?.code, redirectToApp]);
 
   useEffect(() => {
     if (isAuthenticated()) {
-      // if authenticated, move to home
-      return redirectToHome();
+      // if authenticated, move to app
+      return redirectToApp();
     } else if (query?.code) {
       // if not, but has a code, move to fetch user
       return fetchToken();
     }
-  }, [fetchToken, isAuthenticated, logMeIn, query?.code, redirectToHome]);
+  }, [fetchToken, isAuthenticated, logMeIn, query?.code, redirectToApp]);
 
   return (
     <div className='h-screen flex flex-col'>
