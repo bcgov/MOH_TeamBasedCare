@@ -44,7 +44,7 @@ export const useAuth = () => {
   const storeUserData = useCallback((data: KeycloakUser) => {
     AppStorage.setItem(StorageKeys.USERNAME, data.preferred_username);
     AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.name);
-    AppStorage.setItem(StorageKeys.ROLES, data.client_roles);
+    AppStorage.setItem(StorageKeys.ROLES, data.resource_access?.TBCM?.roles || []);
   }, []);
 
   // fetch authentication token from authorization code
@@ -109,7 +109,7 @@ export const useAuth = () => {
       };
 
       // execute this handler under either cases - success/failure
-      // clear storage and redirect user to home
+      // clear storage and redirect user to landing page
       const commonHandler = () => {
         clearStorageAndRedirectToLandingPage();
       };
