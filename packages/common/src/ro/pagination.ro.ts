@@ -1,13 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
-
 export class PaginationRO<T> {
-  @ApiProperty({ isArray: true })
   result: T[];
 
-  @ApiProperty()
   total: number;
 
-  @ApiProperty()
   count: number;
 
   constructor(data: [any[], number]) {

@@ -34,7 +34,7 @@ body,
 }
 
 .occupation-item-box-white {
-  @apply shadow-xs;
+  @apply bg-white shadow-xs;
 }
 
 .tag {
@@ -84,20 +84,25 @@ body,
   @apply text-bcBlueIcon;
 }
 
-table {
+.activity-gap-table table {
   border-collapse: collapse;
   font-family: helvetica;
   caption-side: top;
   text-transform: capitalize;
 }
 
-td,
-th {
+.activity-gap-table td,
+.activity-gap-table th {
   /* border:  1px solid; */
   padding: 10px;
+
+  box-sizing: border-box;
+}
+
+.activity-gap-table td,
+.activity-gap-table th {
   min-width: 100px;
   background: white;
-  box-sizing: border-box;
   text-align: left;
 }
 
@@ -109,26 +114,32 @@ overflow: scroll;
 } */
 
 thead th {
+  border-bottom: 2px solid #fcba19;
+}
+
+.activity-gap-table thead th {
   position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 2;
-  border-bottom: 2px solid #fcba19;
+}
+
+.activity-gap-table thead th {
   background: #fff;
 }
 
-thead th:first-child {
+.activity-gap-table thead th:first-child {
   left: 0;
   z-index: 3;
 }
 
-tbody {
+.activity-gap-table tbody {
   overflow: scroll;
   height: 200px;
 }
 
 /* MAKE LEFT COLUMN FIXED */
-tr > :first-child {
+.activity-gap-table tr > :first-child {
   position: -webkit-sticky;
   position: sticky;
   background: #eaf5ff;
@@ -136,11 +147,11 @@ tr > :first-child {
   z-index: 2;
   width: 350px;
 }
-tr > th:first-child {
+.activity-gap-table tr > th:first-child {
   position: sticky;
   background: #fff;
 }
-.customTable {
+.activity-gap-table {
   width: 1200px;
   float: left;
   overflow: auto;

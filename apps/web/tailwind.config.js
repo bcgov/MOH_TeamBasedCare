@@ -63,6 +63,9 @@ module.exports = {
       minWidth: {
         5: '1.25rem',
       },
+      maxWidth: {
+        10: '10rem',
+      },
       width: {
         layout: '1140px',
         xl: '1215px',

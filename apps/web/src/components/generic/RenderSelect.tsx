@@ -1,4 +1,4 @@
-import { FastField } from 'formik';
+import { Field as FormikField } from 'formik';
 import { Error } from '../Error';
 
 export interface OptionType {
@@ -19,7 +19,7 @@ export const RenderSelect: React.FC<DropdownProps> = ({ name, label, disabled, o
   return (
     <div>
       <legend className='font-bold mb-4'>{label}</legend>
-      <FastField
+      <FormikField
         name={name}
         label={label}
         disabled={disabled}
@@ -41,7 +41,7 @@ export const RenderSelect: React.FC<DropdownProps> = ({ name, label, disabled, o
             </option>
           );
         })}
-      </FastField>
+      </FormikField>
       <Error name={name} />
     </div>
   );
