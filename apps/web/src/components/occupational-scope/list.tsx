@@ -21,8 +21,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
     'table-header occupation-item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-4';
 
   const headers = [
-    { label: 'Occupations', name: 'displayName' as OccupationsFindSortKeys },
-    { label: 'Regulation status', name: 'isRegulated' as OccupationsFindSortKeys },
+    { label: 'Occupations', name: OccupationsFindSortKeys.DISPLAY_NAME },
+    { label: 'Regulation status', name: OccupationsFindSortKeys.IS_REGULATED },
     { label: '' },
   ];
 
@@ -132,7 +132,7 @@ export const OccupationalScopeList: React.FC<OccupationalScopeListProps> = ({
   }
 
   return (
-    <div className='w-full flex-1 flex flex-col overflow-auto gap-3 p-4 bg-white'>
+    <div className='max-h-full w-full flex-1 flex flex-col overflow-auto gap-3 p-4 bg-white'>
       <div> Showing {total} members. </div>
       <table className='table-auto'>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />

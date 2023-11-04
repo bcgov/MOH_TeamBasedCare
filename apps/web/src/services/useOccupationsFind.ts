@@ -15,6 +15,7 @@ export const useOccupationsFind = () => {
   const [total, setTotal] = useState(0);
   const [sortKey, setSortKey] = useState<OccupationsFindSortKeys>();
   const [sortOrder, setSortOrder] = useState<SortOrder>();
+  const [searchText, setSearchText] = useState('');
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {
     if (size !== pageSize) {
@@ -52,16 +53,20 @@ export const useOccupationsFind = () => {
     setPageIndex(1);
   };
 
+  const onSearchTextChange = ({ text }: { text: string }) => {
+    setSearchText(text);
+  };
+
   useEffect(() => {
     const config = {
-      endpoint: API_ENDPOINT.findOccupations(pageIndex, pageSize, sortKey, sortOrder),
+      endpoint: API_ENDPOINT.findOccupations(pageIndex, pageSize, sortKey, sortOrder, searchText),
     };
 
     fetchData(config, (data: PaginationRO<OccupationItemProps>) => {
       setOccupations(data.result);
       setTotal(data.total);
     });
-  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder]);
+  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText]);
 
   return {
     occupations,
@@ -72,6 +77,8 @@ export const useOccupationsFind = () => {
     sortKey,
     sortOrder,
     onSortChange,
+    searchText,
+    onSearchTextChange,
     isLoading,
   };
 };

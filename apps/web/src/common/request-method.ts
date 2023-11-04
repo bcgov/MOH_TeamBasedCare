@@ -33,14 +33,12 @@ export const API_ENDPOINT = {
     pageSize: number,
     sortKey?: OccupationsFindSortKeys,
     sortOrder?: SortOrder,
+    searchText?: string,
   ) => {
     let endpoint = `/occupations/find?pageSize=${pageSize}&page=${pageIndex}`;
-    if (sortKey) {
-      endpoint += `&sortBy=${sortKey}`;
-    }
-    if (sortOrder) {
-      endpoint += `&sortOrder=${sortOrder}`;
-    }
+    if (sortKey) endpoint += `&sortBy=${sortKey}`;
+    if (sortOrder) endpoint += `&sortOrder=${sortOrder}`;
+    if (searchText) endpoint += `&searchText=${searchText}`;
     return endpoint;
   },
 };

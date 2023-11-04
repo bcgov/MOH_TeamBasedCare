@@ -47,9 +47,9 @@ const AppLayout: React.FC = ({ children }) => {
 
   return (
     <>
-      <div className='flex overflow-x-hidden h-screen mr-auto'>
+      <div className='h-screen flex mr-auto'>
         <Sidebar />
-        <div className='h-screen flex flex-col w-full p-3'>
+        <div className='flex flex-1 flex-col w-full p-3 overflow-auto'>
           <Header />
           {children}
         </div>

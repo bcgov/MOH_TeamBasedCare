@@ -51,7 +51,7 @@ export class FindOccupationsDto {
     type: SortOrder,
     example: SortOrder.DESC,
   })
-  @Transform(({ value }) => Number(value))
+  @IsString()
   @IsEnum(SortOrder)
   @IsOptional()
   readonly sortOrder?: SortOrder;

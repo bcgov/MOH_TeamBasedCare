@@ -3,7 +3,6 @@ import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
 import { Injectable } from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
-import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
 
 @Injectable()
 export class OccupationService {
@@ -17,17 +16,23 @@ export class OccupationService {
   }
 
   async findOccupations(query: FindOccupationsDto): Promise<[Occupation[], number]> {
-    // sort order
-    const order: Partial<Record<OccupationsFindSortKeys, SortOrder>> = {};
-    if (query.sortBy) {
-      order[query.sortBy] = query.sortOrder;
-    }
+    const queryBuilder = this.occupationrepository.createQueryBuilder('o');
 
-    return this.occupationrepository.findAndCount({
-      order,
-      skip: (query.page - 1) * query.pageSize,
-      take: query.pageSize,
-    });
+    if (query.searchText)
+      queryBuilder
+        .innerJoin('o.allowedActivities', 'o_aa') // join allowed activities
+        .innerJoin('o_aa.careActivity', 'o_aa_ca') // add relation care activity
+        .where('o_aa_ca.displayName ILIKE :name', { name: `%${query.searchText}%` }) // care activity name matching
+        .orWhere('o.displayName ILIKE :name', { name: `%${query.searchText}%` }) // occupation display name matching
+        .orWhere('o.description ILIKE :name', { name: `%${query.searchText}%` }); // occupation description matching
+
+    if (query.sortBy) queryBuilder.orderBy(`o.${query.sortBy}`, query.sortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+
+    // return the paginated response
+    return queryBuilder
+      .skip((query.page - 1) * query.pageSize)
+      .take(query.pageSize)
+      .getManyAndCount();
   }
 
   findAllOccupation(occupationIds: string[]): Promise<Occupation[]> {
