@@ -13,6 +13,7 @@ export enum AllowedPath {
   LANDING = '/',
   PLANNING = '/planning',
   OCCUPATIONAL_SCOPE = '/occupational-scope',
+  OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [
@@ -31,7 +32,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     active: false,
     faIcon: faUsers,
     path: AllowedPath.OCCUPATIONAL_SCOPE,
-    hidden: true,
+    hidden: false,
   },
 ];
 

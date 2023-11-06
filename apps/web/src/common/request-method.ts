@@ -21,6 +21,7 @@ export const API_ENDPOINT = {
   DRAFT_SESSION: '/sessions/draft',
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
   OCCUPATIONS: '/occupations',
+  getOccupationsById: (id: string) => `/occupations/${id}`,
   getPlanningCareActivityBundlesForSessionCareLocation: (sessionId: string) =>
     `/sessions/${sessionId}/care-activity/bundle`,
   getPlanningOccupation: (sessionId: string) => `/sessions/${sessionId}/occupation`,

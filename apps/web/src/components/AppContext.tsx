@@ -1,6 +1,6 @@
 import { NextRouter, useRouter } from 'next/router';
 import { createContext, ReactNode, useCallback, useContext, useReducer } from 'react';
-import { AllowedPath, sidebarNavItems } from 'src/common';
+import { sidebarNavItems } from 'src/common';
 import { SidebarButtonProps } from './interface';
 
 export interface AppContextStateProps {
@@ -11,7 +11,7 @@ export interface AppContextStateProps {
 
 export interface AppContextType {
   state: AppContextStateProps;
-  updateActivePath: (path: AllowedPath) => void;
+  updateActivePath: (path: string) => void;
   updateSidebarButtons: (data: SidebarButtonProps[]) => void;
   toggleSidebarOpen: () => void;
 }
@@ -25,7 +25,7 @@ const enum AppContextActions {
 interface ReducerAction {
   type: AppContextActions;
   payload?: {
-    path?: AllowedPath;
+    path?: string;
     router?: NextRouter;
     data?: SidebarButtonProps[];
   };
@@ -80,7 +80,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const updateActivePath = useCallback(
-    (path: AllowedPath) =>
+    (path: string) =>
       dispatch({ type: AppContextActions.UPDATE_ACTIVE_PATH, payload: { path, router } }),
     [router],
   );
