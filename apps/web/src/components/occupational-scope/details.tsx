@@ -30,7 +30,7 @@ export const OccupationalScopeDetails: React.FC<OccupationalScopeDetailsProps> =
           shouldExpand={true}
           btnIcon={faSuitcase}
           buttonText='Professional Description'
-          content={occupation?.description}
+          content={occupation?.description || 'No description available'}
         />
       </Card>
     </div>
