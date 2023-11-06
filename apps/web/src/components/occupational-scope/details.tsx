@@ -17,7 +17,7 @@ export const OccupationalScopeDetails: React.FC<OccupationalScopeDetailsProps> =
       {/* Back button */}
       <BackButtonLink path={AllowedPath.OCCUPATIONAL_SCOPE} />
 
-      {/* text 2xl name of occupation */}
+      {/* occupation heading */}
       <Heading
         className='mt-2'
         title={occupation?.name}
