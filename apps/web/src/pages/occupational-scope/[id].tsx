@@ -10,13 +10,10 @@ const OccupationalScopeId: NextPage = () => {
   const { id } = router.query as { id: string };
   const { occupation, isLoading } = useOccupationById(id);
 
-  if (isLoading) {
-    return <Spinner show={isLoading} fullScreen />;
-  }
-
   return (
-    <AppLayout title={occupation?.name}>
-      <OccupationalScopeDetails occupation={occupation}></OccupationalScopeDetails>
+    <AppLayout>
+      <Spinner show={isLoading} fullScreen />
+      {!isLoading && <OccupationalScopeDetails occupation={occupation}></OccupationalScopeDetails>}
     </AppLayout>
   );
 };

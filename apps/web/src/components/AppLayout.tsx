@@ -6,11 +6,7 @@ import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
 import { Sidebar } from './Sidebar';
 
-interface AppLayoutProps {
-  title?: string;
-}
-
-const AppLayout: React.FC<AppLayoutProps> = ({ children, title }) => {
+const AppLayout: React.FC = ({ children }) => {
   const router = useRouter();
   const { state, updateActivePath, updateSidebarButtons } = useAppContext();
 
@@ -55,7 +51,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, title }) => {
         <Sidebar />
         <div className='flex flex-1 flex-col w-full p-3 overflow-auto'>
           <Header
-            title={title || activeSidebarButton.current?.text}
+            title={activeSidebarButton.current?.text}
             icon={activeSidebarButton.current?.faIcon}
           />
           {children}

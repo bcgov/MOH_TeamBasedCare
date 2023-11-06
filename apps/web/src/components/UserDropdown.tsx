@@ -45,7 +45,12 @@ export const UserDropdown = () => {
             {authInitials}
           </div>
           <p className='text-bcBluePrimary'>{authUserDisplayName}</p>
-          <FontAwesomeIcon icon={faCaretDown} className='h-5 ml-2 text-bcBluePrimary' />
+          <FontAwesomeIcon
+            icon={faCaretDown}
+            className={`h-5 ml-2 text-bcBluePrimary ${
+              showMenu ? 'transform rotate-180 duration-300' : 'duration-300'
+            }`}
+          />
         </Button>
       </div>
       {showMenu && <AppMenu groups={dropdownMenuGroups} />}
