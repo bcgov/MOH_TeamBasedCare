@@ -1,6 +1,6 @@
 import { ClassSerializerInterceptor, Controller, Get, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { PaginationRO } from '../common/ro/pagination.ro';
+import { PaginationRO } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
 import { BundleRO } from './ro/get-bundle.ro';
 

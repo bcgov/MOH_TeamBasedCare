@@ -12,7 +12,7 @@ import { Error } from './Error';
 
 // Component to view the occupation list in the gap-activity step
 export const OccupationListDropdown = () => {
-  const { handleSubmit, initialValues, updateOccupationsForSessionId } = usePlanningOccupations({
+  const { handleSubmit, initialValues } = usePlanningOccupations({
     proceedToNextOnSubmit: false,
   });
   const occupationValidationSchema = createValidator(SaveOccupationDTO);
@@ -32,10 +32,8 @@ export const OccupationListDropdown = () => {
     // formik update isSubmitting state
     actions.setSubmitting(false);
 
-    // update selected occupations list
-    updateOccupationsForSessionId();
-
     // trigger refresh of the page by re-evaluating the activity gap data
+    // this also triggers update to the selected occupations list
     updateRefetchActivityGap(true);
 
     // hide the dropdown menu

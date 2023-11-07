@@ -1,3 +1,5 @@
+import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
+
 export enum REQUEST_METHOD {
   GET = 'get',
   POST = 'post',
@@ -25,4 +27,20 @@ export const API_ENDPOINT = {
   getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
   getPlanningActivityGap: (sessionId: string) => `/sessions/${sessionId}/activities-gap`,
   getExportCsv: (sessionId: string) => `/sessions/${sessionId}/export-csv`,
+
+  findOccupations: (
+    pageIndex: number,
+    pageSize: number,
+    sortKey?: OccupationsFindSortKeys,
+    sortOrder?: SortOrder,
+  ) => {
+    let endpoint = `/occupations/find?pageSize=${pageSize}&page=${pageIndex}`;
+    if (sortKey) {
+      endpoint += `&sortBy=${sortKey}`;
+    }
+    if (sortOrder) {
+      endpoint += `&sortOrder=${sortOrder}`;
+    }
+    return endpoint;
+  },
 };

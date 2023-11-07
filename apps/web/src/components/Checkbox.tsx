@@ -1,4 +1,4 @@
-import { FastField } from 'formik';
+import { Field as FormikField } from 'formik';
 
 interface CheckboxProps {
   name: string;
@@ -22,7 +22,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ name, label, value, styles =
   const identifier = value ?? name;
   return (
     <div className='flex'>
-      <FastField
+      <FormikField
         name={name}
         id={identifier}
         value={value}

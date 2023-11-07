@@ -12,7 +12,7 @@ export const usePlanningOccupations = ({
   proceedToNextOnSubmit = false,
 }: usePlanningOccupationsProps) => {
   const {
-    state: { sessionId },
+    state: { sessionId, refetchActivityGap },
     updateProceedToNext,
   } = usePlanningContext();
 
@@ -44,7 +44,7 @@ export const usePlanningOccupations = ({
         setInitialValues({ occupation: data });
       }
     });
-  }, [fetchData, sessionId]);
+  }, [fetchData, sessionId, refetchActivityGap]);
 
   useEffect(() => {
     if (sessionId) {
