@@ -1,20 +1,16 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SidebarButtonProps } from './interface';
+import { useAppContext } from './AppContext';
 
-export const SidebarButton = ({
-  id,
-  open,
-  text,
-  faIcon,
-  setButtons,
-  active,
-}: SidebarButtonProps) => {
+export const SidebarButton = ({ id, open, path, text, faIcon, active }: SidebarButtonProps) => {
+  const { state, updateActivePath, updateSidebarButtons } = useAppContext();
+
   const handleClick = () => {
     // Update state
-    if (setButtons) {
-      setButtons(current =>
-        current.map(obj => {
+    if (updateSidebarButtons) {
+      updateSidebarButtons(
+        state.sidebarButtons.map(obj => {
           if (obj.id === id) {
             return { ...obj, active: true };
           }
@@ -35,6 +31,8 @@ export const SidebarButton = ({
         }),
       );
     }
+
+    path && updateActivePath(path);
   };
   return (
     <li

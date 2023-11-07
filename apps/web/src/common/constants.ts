@@ -5,35 +5,33 @@ import {
   faTimesCircle,
   faQuestionCircle,
   faExclamationCircle,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
 
+export enum AllowedPath {
+  LANDING = '/',
+  PLANNING = '/planning',
+  OCCUPATIONAL_SCOPE = '/occupational-scope',
+}
+
 export const sidebarNavItems: SidebarButtonProps[] = [
-  // {
-  //   id: '001',
-  //   kind: SidebarButtonKind.REGULAR,
-  //   text: 'Resourcing',
-  //   active: false,
-  //   faIcon: faUsers,
-  // },
+  {
+    id: '001',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Planning',
+    active: false,
+    faIcon: faClipboardList,
+    path: AllowedPath.PLANNING,
+  },
   {
     id: '002',
-    kind: SidebarButtonKind.COLLAPSIBLE,
-    text: 'Planning',
-    active: true,
-    faIcon: faClipboardList,
-    options: [
-      {
-        id: '003',
-        text: 'Create New',
-        active: true,
-      },
-      // {
-      //   id: '004',
-      //   text: 'All Plan',
-      //   active: false,
-      // },
-    ],
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Occupational scope',
+    active: false,
+    faIcon: faUsers,
+    path: AllowedPath.OCCUPATIONAL_SCOPE,
+    hidden: true,
   },
 ];
 

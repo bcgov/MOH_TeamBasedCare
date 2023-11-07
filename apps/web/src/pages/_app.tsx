@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 import '../styles/globals.css';
+import { AppContextProvider } from 'src/components/AppContext';
 
 function App({ Component, pageProps }: AppProps) {
   return (
@@ -13,7 +14,9 @@ function App({ Component, pageProps }: AppProps) {
       </Head>
 
       <main className='min-h-screen w-full bg-gray-100 text-gray-700'>
-        <Component {...pageProps} />
+        <AppContextProvider>
+          <Component {...pageProps} />
+        </AppContextProvider>
       </main>
       <ToastContainer
         style={{ width: '30%', maxWidth: '675px' }}

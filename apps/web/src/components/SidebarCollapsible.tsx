@@ -4,14 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import { SidebarButtonProps } from './interface';
 
-export const SidebarCollapsible = ({
-  setButtons,
-  active,
-  open,
-  faIcon,
-  options,
-  text,
-}: SidebarButtonProps) => {
+export const SidebarCollapsible = ({ active, open, faIcon, options, text }: SidebarButtonProps) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   return (
@@ -53,9 +46,9 @@ export const SidebarCollapsible = ({
               <SidebarButton
                 key={option.id}
                 id={option.id}
-                setButtons={setButtons}
                 open={open}
                 active={option.active}
+                path={option.path}
                 text={option.text}
               ></SidebarButton>
             ))
