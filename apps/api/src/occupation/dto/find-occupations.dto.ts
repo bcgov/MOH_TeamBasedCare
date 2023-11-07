@@ -38,13 +38,13 @@ export class FindOccupationsDto {
 
   @ApiProperty({
     required: false,
-    type: String,
-    example: 'displayName',
+    type: OccupationsFindSortKeys,
+    example: OccupationsFindSortKeys.DISPLAY_NAME,
   })
   @IsString()
   @IsEnum(OccupationsFindSortKeys)
   @IsOptional()
-  readonly sortBy?: OccupationsFindSortKeys;
+  readonly sortBy?: any; // TODO - fix here - explicitly changing type to "any" for now to fix the Runtime.ImportModuleError after file compiles to .js and not handle @tbcm/common path properly in the _OPENAPI_METADATA_FACTORY section
 
   @ApiProperty({
     required: false,
@@ -54,5 +54,5 @@ export class FindOccupationsDto {
   @IsString()
   @IsEnum(SortOrder)
   @IsOptional()
-  readonly sortOrder?: SortOrder;
+  readonly sortOrder?: any; // TODO - fix here - explicitly changing type to "any" for now to fix the Runtime.ImportModuleError after file compiles to .js and not handle @tbcm/common path properly in the _OPENAPI_METADATA_FACTORY section
 }
