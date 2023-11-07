@@ -1,9 +1,10 @@
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
-import { TagVariants } from 'src/common';
+import { AllowedPath, TagVariants } from 'src/common';
 import { OccupationItemProps } from 'src/common/interfaces';
 import { isOdd } from 'src/common/util';
+import { useAppContext } from '../AppContext';
 import { Button } from '../Button';
 import { Spinner } from '../generic/Spinner';
 import { Tag } from '../generic/Tag';
@@ -51,6 +52,11 @@ interface TableBodyProps {
 
 const TableBody: React.FC<TableBodyProps> = ({ occupations = [] }) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
+  const { updateActivePath } = useAppContext();
+
+  const onViewDetailsClick = (id: string) => {
+    updateActivePath(AllowedPath.OCCUPATIONAL_SCOPE_ID.replace(':id', id));
+  };
 
   return (
     <tbody>
@@ -68,7 +74,12 @@ const TableBody: React.FC<TableBodyProps> = ({ occupations = [] }) => {
             />
           </td>
           <td className={`${tdStyles} flex justify-end`}>
-            <Button classes='gap-2 h-8' variant='outline' type='button'>
+            <Button
+              classes='gap-2 h-8'
+              variant='outline'
+              type='button'
+              onClick={() => onViewDetailsClick(occupation.id)}
+            >
               View details
               <FontAwesomeIcon icon={faAngleRight} className='h-4 text-bcBluePrimary' />
             </Button>

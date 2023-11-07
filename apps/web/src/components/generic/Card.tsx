@@ -1,11 +1,14 @@
 import { faCheck, faExclamation, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Heading } from '../Heading';
 
 export interface CardProps {
   color?: CardColor;
-  title: string;
+  title?: string;
   subtitle?: string;
   extraSpacing?: boolean;
+  bgWhite?: boolean;
+  className?: string;
 }
 
 export enum CardColor {
@@ -14,7 +17,15 @@ export enum CardColor {
   RED = 'red',
 }
 
-export const Card: React.FC<CardProps> = ({ color, title, subtitle, children, extraSpacing }) => {
+export const Card: React.FC<CardProps> = ({
+  color,
+  title,
+  subtitle,
+  children,
+  extraSpacing,
+  bgWhite,
+  className = '',
+}) => {
   let icon = faExclamation;
   switch (color) {
     case CardColor.GREEN:
@@ -29,7 +40,7 @@ export const Card: React.FC<CardProps> = ({ color, title, subtitle, children, ex
   }
 
   return (
-    <div className='p-3 shadow-md'>
+    <div className={`p-3 shadow-md ${className} ${bgWhite ? 'bg-white' : ''}`}>
       <div className={`flex items-center space-x-5 ${extraSpacing ? 'px-8 my-4' : ''}`}>
         {color && (
           <div
@@ -54,8 +65,7 @@ export const Card: React.FC<CardProps> = ({ color, title, subtitle, children, ex
           </div>
         )}
         <div className='flex-1 min-w-0'>
-          <p className='text-2xl font-extrabold text-gray-900 truncate dark:text-white'>{title}</p>
-          {subtitle && <p className='text-sm text-gray-500 dark:text-gray-400'>{subtitle}</p>}
+          <Heading title={title} subTitle={subtitle} />
           {children}
         </div>
       </div>

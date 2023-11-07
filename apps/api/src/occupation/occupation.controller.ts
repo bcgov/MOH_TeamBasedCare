@@ -2,6 +2,8 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  NotFoundException,
+  Param,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
@@ -26,5 +28,16 @@ export class OccupationController {
   async findOccupations(@Query() query: FindOccupationsDto): Promise<PaginationRO<OccupationRO[]>> {
     const [occupations, total] = await this.occupationService.findOccupations(query);
     return new PaginationRO([occupations.map(occupation => new OccupationRO(occupation)), total]);
+  }
+
+  @Get(':id')
+  async getOccupationsById(@Param() id: string): Promise<OccupationRO> {
+    const occupation = await this.occupationService.findOccupationById(id);
+
+    if (!occupation) {
+      throw new NotFoundException();
+    }
+
+    return new OccupationRO(occupation);
   }
 }

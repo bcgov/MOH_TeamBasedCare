@@ -15,6 +15,10 @@ export class OccupationService {
     return this.occupationrepository.find();
   }
 
+  findOccupationById(id: string): Promise<Occupation | undefined> {
+    return this.occupationrepository.findOne(id);
+  }
+
   async findOccupations(query: FindOccupationsDto): Promise<[Occupation[], number]> {
     const queryBuilder = this.occupationrepository.createQueryBuilder('o');
 

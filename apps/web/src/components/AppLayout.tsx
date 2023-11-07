@@ -17,7 +17,7 @@ const AppLayout: React.FC = ({ children }) => {
   const updatedSidebarButtons = useMemo(
     () =>
       state.sidebarButtons.map(item => {
-        if (item.path === router.pathname) {
+        if (router.pathname.includes(item.path)) {
           item.active = true;
           activeSidebarButton.current = item;
         } else {
@@ -37,7 +37,7 @@ const AppLayout: React.FC = ({ children }) => {
         updateActivePath(AllowedPath.LANDING);
       } else {
         // else, move to the supplied url
-        updateActivePath(router.pathname as AllowedPath);
+        updateActivePath(router.pathname);
       }
     }
 
@@ -50,7 +50,10 @@ const AppLayout: React.FC = ({ children }) => {
       <div className='h-screen flex mr-auto'>
         <Sidebar />
         <div className='flex flex-1 flex-col w-full p-3 overflow-auto'>
-          <Header />
+          <Header
+            title={activeSidebarButton.current?.text}
+            icon={activeSidebarButton.current?.faIcon}
+          />
           {children}
         </div>
       </div>
