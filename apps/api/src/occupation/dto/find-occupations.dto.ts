@@ -39,7 +39,7 @@ export class FindOccupationsDto {
   @ApiProperty({
     required: false,
     type: OccupationsFindSortKeys,
-    example: 'displayName',
+    example: OccupationsFindSortKeys.DISPLAY_NAME,
   })
   @IsString()
   @IsEnum(OccupationsFindSortKeys)
