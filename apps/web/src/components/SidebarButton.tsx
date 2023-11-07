@@ -40,6 +40,7 @@ export const SidebarButton = ({ id, open, path, text, faIcon, active }: SidebarB
         active ? 'bg-bcBluePrimary' : 'hover:bg-bcBlueBorder'
       } left-0 flex items-center py-4 rounded-md`}
       onClick={handleClick}
+      title={text}
     >
       <a
         href='#'

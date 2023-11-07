@@ -6,17 +6,20 @@ import { SidebarButtonProps } from './interface';
 export interface AppContextStateProps {
   activePath: string;
   sidebarButtons: SidebarButtonProps[];
+  sidebarOpen: boolean;
 }
 
 export interface AppContextType {
   state: AppContextStateProps;
   updateActivePath: (path: AllowedPath) => void;
   updateSidebarButtons: (data: SidebarButtonProps[]) => void;
+  toggleSidebarOpen: () => void;
 }
 
 const enum AppContextActions {
   UPDATE_ACTIVE_PATH = 'UPDATE_ACTIVE_PATH',
   UPDATE_SIDEBAR_BUTTONS = 'UPDATE_SIDEBAR_BUTTONS',
+  TOGGLE_SIDEBAR_OPEN = 'TOGGLE_SIDEBAR_OPEN',
 }
 
 interface ReducerAction {
@@ -50,6 +53,12 @@ function reducer(state: AppContextStateProps, action: ReducerAction): AppContext
         };
       }
 
+    case AppContextActions.TOGGLE_SIDEBAR_OPEN:
+      return {
+        ...state,
+        sidebarOpen: !state.sidebarOpen,
+      };
+
     // explicitly not breaking the switch; If payload values not supplied, default case be returned.
     default:
       return {
@@ -63,6 +72,7 @@ export const AppContext = createContext<AppContextType | null>(null);
 const initialState: AppContextStateProps = {
   activePath: '',
   sidebarButtons: sidebarNavItems,
+  sidebarOpen: false,
 };
 
 export const AppContextProvider = ({ children }: { children: ReactNode }) => {
@@ -81,12 +91,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     [],
   );
 
+  const toggleSidebarOpen = useCallback(() => {
+    dispatch({ type: AppContextActions.TOGGLE_SIDEBAR_OPEN });
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
         state,
         updateActivePath,
         updateSidebarButtons,
+        toggleSidebarOpen,
       }}
     >
       {children}
