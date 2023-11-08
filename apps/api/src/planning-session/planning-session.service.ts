@@ -13,7 +13,7 @@ import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
-import { AllowedActivity } from '../entities/allowed-activities.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { ActivitiesActionType } from '../common/constants';
 import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
 import { UnitService } from 'src/unit/unit.service';
@@ -28,9 +28,6 @@ export class PlanningSessionService {
     private careActivityService: CareActivityService,
     private occupationService: OccupationService,
     private unitService: UnitService,
-
-    @InjectRepository(AllowedActivity)
-    private allowedActRepo: Repository<AllowedActivity>,
   ) {}
 
   // find planning session from id
