@@ -9,12 +9,12 @@ import {
   PlanningStatus,
   KeycloakUser,
 } from '@tbcm/common';
-import { IProfileSelection } from '@tbcm/common';
+import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
 import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from '../entities/allowed-activities.entity';
-import { ActivitiesActionType, Permissions } from '../common/constants';
+import { ActivitiesActionType } from '../common/constants';
 import { convertActivityGapTableToCSV } from '../common/convert-activity-gap-table-to-csv';
 import { UnitService } from 'src/unit/unit.service';
 import { Unit } from 'src/unit/entity/unit.entity';

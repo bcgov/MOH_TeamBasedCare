@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from './config/config.module';
 import { KeycloakConfigService } from './config/keycloak-config.service';
 import { APP_GUARD } from '@nestjs/core';
+import { AllowedActivityModule } from './allowed-activity/allowed-activity.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { APP_GUARD } from '@nestjs/core';
     PlanningSessionModule,
     CareActivityModule,
     OccupationModule,
+    AllowedActivityModule,
     AuthModule,
     ConfigModule,
     KeycloakConnectModule.registerAsync({

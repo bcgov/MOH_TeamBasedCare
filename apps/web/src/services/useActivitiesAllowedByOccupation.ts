@@ -1,21 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
 import { useHttp } from './useHttp';
-import { OccupationItemProps } from '../common/interfaces';
+import { AllowedActivityByOccupation } from '../common/interfaces';
 import { PageOptions } from 'src/components/Pagination';
-import { PaginationRO, OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
+import {
+  OccupationalScopeOfPracticeSortKeys,
+  PaginationRO,
+  Permissions,
+  SortOrder,
+} from '@tbcm/common';
 
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 5;
 
-export const useOccupationsFind = () => {
+export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
   const { fetchData, isLoading } = useHttp();
-  const [occupations, setOccupations] = useState<OccupationItemProps[]>([]);
+  const [allowedActivities, setAllowedActivities] = useState<AllowedActivityByOccupation[]>([]);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
   const [total, setTotal] = useState(0);
-  const [sortKey, setSortKey] = useState<OccupationsFindSortKeys>();
+  const [sortKey, setSortKey] = useState<OccupationalScopeOfPracticeSortKeys>();
   const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [searchText, setSearchText] = useState('');
+  const [filterByPermission, setFilterByPermission] = useState<Permissions>();
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {
     if (size !== pageSize) {
@@ -37,7 +43,7 @@ export const useOccupationsFind = () => {
     }
   }, []);
 
-  const onSortChange = ({ key }: { key: OccupationsFindSortKeys }) => {
+  const onSortChange = ({ key }: { key: OccupationalScopeOfPracticeSortKeys }) => {
     if (key === sortKey) {
       const updatedSortOrder = nextSortOrder(sortOrder);
       if (updatedSortOrder === undefined) {
@@ -57,25 +63,41 @@ export const useOccupationsFind = () => {
     setSearchText(text);
   };
 
+  const onFilterByPermissionChange = ({ value }: { value?: Permissions }) => {
+    setFilterByPermission(value);
+  };
+
   useEffect(() => {
+    if (!occupationId) return;
+
     const config = {
-      endpoint: API_ENDPOINT.findOccupations({
+      endpoint: API_ENDPOINT.getActivitiesAllowedByOccupation(occupationId, {
         pageIndex,
         pageSize,
         sortKey,
         sortOrder,
         searchText,
+        filterByPermission,
       }),
     };
 
-    fetchData(config, (data: PaginationRO<OccupationItemProps>) => {
-      setOccupations(data.result);
+    fetchData(config, (data: PaginationRO<AllowedActivityByOccupation>) => {
+      setAllowedActivities(data.result);
       setTotal(data.total);
     });
-  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText]);
+  }, [
+    fetchData,
+    pageIndex,
+    pageSize,
+    sortKey,
+    sortOrder,
+    searchText,
+    occupationId,
+    filterByPermission,
+  ]);
 
   return {
-    occupations,
+    allowedActivities,
     pageIndex,
     pageSize,
     total,
@@ -85,6 +107,8 @@ export const useOccupationsFind = () => {
     onSortChange,
     searchText,
     onSearchTextChange,
+    filterByPermission,
+    onFilterByPermissionChange,
     isLoading,
   };
 };

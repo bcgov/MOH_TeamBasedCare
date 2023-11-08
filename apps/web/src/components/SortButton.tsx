@@ -1,16 +1,22 @@
 import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
+import { SortOrder } from '@tbcm/common';
 
-export interface SortButtonProps {
+export interface SortButtonProps<T> {
   label: string;
-  name?: OccupationsFindSortKeys;
-  sortKey?: OccupationsFindSortKeys;
+  name?: T;
+  sortKey?: T;
   sortOrder?: SortOrder;
-  onChange: ({ key }: { key: OccupationsFindSortKeys }) => void;
+  onChange: ({ key }: { key: T }) => void;
 }
 
-export const SortButton = ({ label, name, onChange, sortKey, sortOrder }: SortButtonProps) => {
+export const SortButton = <T,>({
+  label,
+  name,
+  onChange,
+  sortKey,
+  sortOrder,
+}: SortButtonProps<T>) => {
   let sortIcon = faSort;
   if (name === sortKey) {
     switch (sortOrder) {
