@@ -8,10 +8,11 @@ import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { Occupation } from 'src/occupation/entity/occupation.entity';
-import { CareActivityType, Permissions } from '../../common/constants';
+import { CareActivityType } from '../../common/constants';
 import { Readable } from 'stream';
 import { Unit } from '../../unit/entity/unit.entity';
 import { UnitService } from 'src/unit/unit.service';
+import { Permissions } from '@tbcm/common';
 
 @Injectable()
 export class SeedService {

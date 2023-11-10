@@ -7,11 +7,6 @@ export const SUCCESS_RESPONSE = {
   status: RESPONSE_STATUS.SUCCESS,
 };
 
-export enum Permissions {
-  PERFORM = 'Y',
-  LIMITS = 'LC',
-}
-
 export enum CareActivityType {
   ASPECT_OF_PRACTICE = 'Aspect of Practice',
   TASK = 'Task',

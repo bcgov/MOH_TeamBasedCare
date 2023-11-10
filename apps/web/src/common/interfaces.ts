@@ -20,3 +20,11 @@ export interface TooltipIconProps {
   style?: string;
   position?: PopoverPosition;
 }
+
+export interface AllowedActivityByOccupation {
+  id: string;
+  careSetting: string;
+  careActivityName: string;
+  bundleName: string;
+  permission: Permissions;
+}

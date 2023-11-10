@@ -56,7 +56,7 @@ export const Disclosure: React.FC<DisclosureProps> = ({
             enter='transition ease-in duration-500 transform'
             enterFrom='opacity-0 '
             enterTo='opacity-100 '
-            leave='transition ease duration-300 transform'
+            leave='transition ease duration-100 transform'
             leaveFrom='opacity-100 '
             leaveTo='opacity-0 '
           >

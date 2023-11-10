@@ -1,10 +1,11 @@
-import { faSuitcase } from '@fortawesome/free-solid-svg-icons';
+import { faList, faSuitcase } from '@fortawesome/free-solid-svg-icons';
 import { AllowedPath } from 'src/common';
 import { OccupationItemProps } from 'src/common/interfaces';
 import { BackButtonLink } from '../BackButtonLink';
 import { Disclosure } from '../Disclosure';
 import { Card } from '../generic/Card';
 import { Heading } from '../Heading';
+import { OccupationalScopeDetailsScopeOfPractice } from './scopeOfPractice';
 
 interface OccupationalScopeDetailsProps {
   occupation?: OccupationItemProps;
@@ -31,6 +32,15 @@ export const OccupationalScopeDetails: React.FC<OccupationalScopeDetailsProps> =
           btnIcon={faSuitcase}
           buttonText='Professional Description'
           content={occupation?.description || 'No description available'}
+        />
+      </Card>
+
+      <Card bgWhite className='mt-4'>
+        <Disclosure
+          shouldExpand={true}
+          btnIcon={faList}
+          buttonText='Scope of practice'
+          content={<OccupationalScopeDetailsScopeOfPractice occupation={occupation} />}
         />
       </Card>
     </div>

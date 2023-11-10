@@ -32,7 +32,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
       <tr className='w-full'>
         {headers.map(({ label, name }, index: number) => (
           <th key={`th${index}`} className={tdStyles}>
-            <SortButton
+            <SortButton<OccupationsFindSortKeys>
               label={label}
               name={name}
               sortKey={sortKey}
