@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { AppLogger } from '../../common/logger.service';
 import csv from 'csv-parser';
-import { AllowedActivity } from '../../entities/allowed-activities.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { cleanText } from '../../common/utils';
 import { Bundle } from '../../care-activity/entity/bundle.entity';
 import { In, Repository } from 'typeorm';

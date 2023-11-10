@@ -4,7 +4,7 @@ import { join } from 'path';
 
 import { LoggerOptions } from 'typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-import { AllowedActivity } from '../entities/allowed-activities.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from 'src/occupation/entity/occupation.entity';

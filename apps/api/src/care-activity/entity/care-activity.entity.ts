@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { CareActivityType, ClinicalType } from '../../common/constants';
 import { cleanText } from '../../common/utils';
-import { AllowedActivity } from '../../entities/allowed-activities.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { Bundle } from './bundle.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Unit } from 'src/unit/entity/unit.entity';

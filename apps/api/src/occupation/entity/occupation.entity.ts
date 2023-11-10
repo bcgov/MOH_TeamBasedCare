@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { cleanText } from '../../common/utils';
-import { AllowedActivity } from '../../entities/allowed-activities.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 
 @Entity({
