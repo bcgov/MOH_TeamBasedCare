@@ -38,6 +38,7 @@ const TableHeader: React.FC = () => {
                 key={`th${index}`}
                 className={tdStyles}
                 onClick={() => {
+                  if (index === 0) return; // no description modal to be shown for the first column header - Activities Bundle
                   setSelectedOccupation({ title, description });
                   setShowModal(true);
                 }}
