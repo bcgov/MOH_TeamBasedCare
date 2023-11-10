@@ -23,8 +23,7 @@ const DropdownIndicator = <T extends OptionValueType>(
 ) => {
   return (
     <components.DropdownIndicator {...props}>
-      <FontAwesomeIcon icon={faCaretDown} />
-      {/* <img src={downCaret.src} alt='down caret' /> */}
+      <FontAwesomeIcon className='w-5 h-5' icon={faCaretDown} />
     </components.DropdownIndicator>
   );
 };
@@ -63,7 +62,7 @@ export const BasicSelect = <T extends OptionValueType>(props: BasicSelectProps<T
         options={options}
         styles={getNoBorderSelectStyle<SelectOption<T>>(textAlign, underline, optionStyle)}
         components={{ DropdownIndicator, Input }}
-        menuPlacement='auto'
+        menuPlacement='top'
       />
     </div>
   );
