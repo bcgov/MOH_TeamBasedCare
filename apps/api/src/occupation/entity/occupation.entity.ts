@@ -9,6 +9,7 @@ import {
 import { cleanText } from '../../common/utils';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
+import { OccupationRelatedResource } from '../dto/occupation-related-resource.dto';
 
 @Entity({
   // defining default sort order for the entity
@@ -36,6 +37,9 @@ export class Occupation extends CustomBaseEntity {
 
   @Column({ type: 'boolean', default: false })
   isRegulated?: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  relatedResources?: OccupationRelatedResource[];
 
   @OneToMany(() => AllowedActivity, allowedActivity => allowedActivity.occupation)
   allowedActivities: AllowedActivity[];

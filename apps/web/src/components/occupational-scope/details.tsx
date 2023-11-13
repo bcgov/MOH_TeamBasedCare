@@ -5,6 +5,7 @@ import { BackButtonLink } from '../BackButtonLink';
 import { Disclosure } from '../Disclosure';
 import { Card } from '../generic/Card';
 import { Heading } from '../Heading';
+import { OccupationalScopeRelatedResources } from './RelatedResources';
 import { OccupationalScopeDetailsScopeOfPractice } from './scopeOfPractice';
 
 interface OccupationalScopeDetailsProps {
@@ -43,6 +44,17 @@ export const OccupationalScopeDetails: React.FC<OccupationalScopeDetailsProps> =
           content={<OccupationalScopeDetailsScopeOfPractice occupation={occupation} />}
         />
       </Card>
+
+      {Number(occupation?.relatedResources?.length) > 0 && (
+        <Card bgWhite className='mt-4'>
+          <Disclosure
+            shouldExpand={true}
+            btnIcon={faList}
+            buttonText='Related resources'
+            content={<OccupationalScopeRelatedResources occupation={occupation} />}
+          />
+        </Card>
+      )}
     </div>
   );
 };

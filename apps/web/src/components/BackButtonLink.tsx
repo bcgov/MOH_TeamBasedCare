@@ -15,7 +15,7 @@ export const BackButtonLink: React.FC<BackButtonLinkProps> = ({ path }) => {
   return (
     <Button
       variant='link'
-      classes='flex flex-row gap-1 text-bcBlueLink font-bold'
+      classes='flex flex-row gap-1 text-bcBluePrimary font-bold'
       onClick={() => {
         if (path) {
           updateActivePath(path);
