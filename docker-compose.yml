@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:14-alpine
+    image: postgres:15-alpine
     container_name: ${PROJECT}_db
     volumes:
       - ./database:/database
@@ -12,7 +12,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DATABASE}
-      - PGDATA=./database/postgresql/data/pgdata
+      - PGDATA=./database/postgresql_15/data/pgdata
     restart: always
     networks:
       - local
