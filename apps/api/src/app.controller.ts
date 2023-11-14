@@ -4,6 +4,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   Patch,
+  Post,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -64,6 +65,20 @@ export class AppController {
   @ApiConsumes('multipart/form-data')
   async updateOccupations(@UploadedFile() file: any) {
     await this.appService.updateOccupations(file.buffer);
+    return SUCCESS_RESPONSE;
+  }
+
+  /**
+   * Convenient API to remove master data and allow uploading new set of records
+   * Should be removed once data is managed from within the app via Admin Portal
+   */
+  @ApiOperation({
+    summary: 'Removes all the data from the database including the master data',
+  })
+  @Post('prune-data')
+  @Roles({ roles: [Role.ADMIN] })
+  async pruneData() {
+    await this.appService.pruneData();
     return SUCCESS_RESPONSE;
   }
 }

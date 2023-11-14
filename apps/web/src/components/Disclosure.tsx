@@ -45,10 +45,12 @@ export const Disclosure: React.FC<DisclosureProps> = ({
             {dropdownIconPosition === 'left' && caretIcon(open)}
 
             {btnIcon && (
-              <FontAwesomeIcon icon={btnIcon} className='text-bcBlueLink h-4 w-4 my-auto' />
+              <FontAwesomeIcon icon={btnIcon} className='text-bcBluePrimary h-4 w-4 my-auto' />
             )}
 
-            <div className='flex flex-row p-2 text-left text-bcBlueLink'>{buttonText}</div>
+            <div className='flex flex-row p-2 text-left text-bcBluePrimary font-bold'>
+              {buttonText}
+            </div>
 
             {dropdownIconPosition === 'right' && caretIcon(open)}
           </HeadlessDisclosure.Button>
