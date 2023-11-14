@@ -6,11 +6,16 @@ export interface CommonDBItem {
   updatedAt: Date;
 }
 
+export interface OccupationalScopeRelatedResource {
+  label: string;
+  link?: string;
+}
 export interface OccupationItemProps extends CommonDBItem {
   name: string;
   displayName: string;
   isRegulated: boolean;
   description: string;
+  relatedResources?: Array<OccupationalScopeRelatedResource>;
 }
 
 export interface TooltipIconProps {

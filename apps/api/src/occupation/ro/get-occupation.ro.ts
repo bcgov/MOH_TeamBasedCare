@@ -1,4 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
+import { OccupationRelatedResource } from '../dto/occupation-related-resource.dto';
 import { Occupation } from '../entity/occupation.entity';
 
 @Exclude()
@@ -14,6 +15,9 @@ export class OccupationRO {
 
   @Expose()
   isRegulated: string;
+
+  @Expose()
+  relatedResources?: OccupationRelatedResource;
 
   constructor(data: Occupation) {
     Object.assign(this, data);

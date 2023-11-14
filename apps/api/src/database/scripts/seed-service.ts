@@ -13,6 +13,7 @@ import { Readable } from 'stream';
 import { Unit } from '../../unit/entity/unit.entity';
 import { UnitService } from 'src/unit/unit.service';
 import { Permissions } from '@tbcm/common';
+import { OccupationRelatedResource } from 'src/occupation/dto/occupation-related-resource.dto';
 
 @Injectable()
 export class SeedService {
@@ -36,6 +37,7 @@ export class SeedService {
       name: string;
       displayOrder: number | undefined;
       description: string;
+      relatedResources: OccupationRelatedResource[];
     }[] = [];
 
     const readable = new Readable();
@@ -54,17 +56,42 @@ export class SeedService {
         const displayOrderString = data[headers[1]].trim().replace(/"/g, '');
         const displayOrder = displayOrderString ? Number(displayOrderString) : undefined;
         const description = data[headers[2]].trim().replace(/"/g, '');
-        occupations.push({ name, displayOrder, description });
+
+        // related resources
+        const relatedResources = headers.reduce((result, value, index) => {
+          if (index <= 2) return result; // related resources pair start exist from index 3 and onwards
+
+          // even index - 4,6,8,.. - contains link
+          if (index % 2 === 0) return result; // even indexes need not be traversed; to be added to result when labels are added
+
+          // odd index - 3,5,7,.. - contains labels
+          if (index % 2 === 1) {
+            const label = data[headers[index]];
+            if (!label) return result; // no label = no resource to add
+
+            const link = data[headers[index + 1]];
+
+            result.push({
+              label: label?.trim(),
+              link: link?.trim() || undefined,
+            });
+          }
+
+          return result;
+        }, [] as OccupationRelatedResource[]);
+
+        occupations.push({ name, displayOrder, description, relatedResources });
       })
       .on('end', async () => {
         // Save the result
 
         await Promise.all(
-          occupations.map(({ name, displayOrder, description }) =>
+          occupations.map(({ name, displayOrder, description, relatedResources }) =>
             this.upsertOccupation({
               name,
               displayOrder,
               description,
+              relatedResources,
             }),
           ),
         );
