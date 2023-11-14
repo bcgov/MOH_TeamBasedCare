@@ -38,6 +38,7 @@ export class SeedService {
       displayOrder: number | undefined;
       description: string;
       relatedResources: OccupationRelatedResource[];
+      isRegulated: boolean;
     }[] = [];
 
     const readable = new Readable();
@@ -56,16 +57,17 @@ export class SeedService {
         const displayOrderString = data[headers[1]].trim().replace(/"/g, '');
         const displayOrder = displayOrderString ? Number(displayOrderString) : undefined;
         const description = data[headers[2]].trim().replace(/"/g, '');
+        const isRegulated = data[headers[3]].trim().replace(/"/g, '') === 'Regulated';
 
         // related resources
         const relatedResources = headers.reduce((result, value, index) => {
-          if (index <= 2) return result; // related resources pair start exist from index 3 and onwards
+          if (index < 4) return result; // related resources pair start exist from index 4 and onwards
 
-          // even index - 4,6,8,.. - contains link
-          if (index % 2 === 0) return result; // even indexes need not be traversed; to be added to result when labels are added
+          // odd index - 5,7,9,.. - contains link
+          if (index % 2 === 1) return result; // odd indexes need not be traversed; to be added to result when labels are added
 
-          // odd index - 3,5,7,.. - contains labels
-          if (index % 2 === 1) {
+          // even index - 4,6,8,.. - contains labels
+          if (index % 2 === 0) {
             const label = data[headers[index]];
             if (!label) return result; // no label = no resource to add
 
@@ -80,18 +82,19 @@ export class SeedService {
           return result;
         }, [] as OccupationRelatedResource[]);
 
-        occupations.push({ name, displayOrder, description, relatedResources });
+        occupations.push({ name, displayOrder, description, relatedResources, isRegulated });
       })
       .on('end', async () => {
         // Save the result
 
         await Promise.all(
-          occupations.map(({ name, displayOrder, description, relatedResources }) =>
+          occupations.map(({ name, displayOrder, description, relatedResources, isRegulated }) =>
             this.upsertOccupation({
               name,
               displayOrder,
               description,
               relatedResources,
+              isRegulated,
             }),
           ),
         );

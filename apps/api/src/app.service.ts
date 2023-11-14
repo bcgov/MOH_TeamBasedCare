@@ -33,6 +33,7 @@ export class AppService {
       delete from bundle;
       delete from planning_session;
       delete from unit;
+      delete from occupation;
     `);
   }
 }
