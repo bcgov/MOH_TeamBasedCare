@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { InjectConnection } from '@nestjs/typeorm';
+import { Connection } from 'typeorm';
 import { SeedService } from './database/scripts/seed-service';
 
 @Injectable()
 export class AppService {
-  constructor(private readonly seedService: SeedService) {}
+  constructor(
+    private readonly seedService: SeedService,
+    @InjectConnection() private readonly connection: Connection,
+  ) {}
 
   getVersionInfo(): object {
     return {
@@ -19,5 +24,15 @@ export class AppService {
 
   async updateOccupations(file: Buffer) {
     await this.seedService.updateOccupations(file);
+  }
+
+  async pruneData() {
+    return this.connection.query(`
+      delete from allowed_activity;
+      delete from care_activity;
+      delete from bundle;
+      delete from planning_session;
+      delete from unit;
+    `);
   }
 }
