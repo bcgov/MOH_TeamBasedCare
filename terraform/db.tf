@@ -18,6 +18,7 @@ resource "aws_rds_cluster" "pgsql" {
   engine              = "aurora-postgresql"
   engine_version      = "15.4"
   allow_major_version_upgrade = true
+  apply_immediately   = true
   availability_zones  = ["ca-central-1a", "ca-central-1b"]
   database_name       = replace(var.project_code, "-", "_")
   master_username     = var.db_username
