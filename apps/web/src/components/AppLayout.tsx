@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { AllowedPath } from 'src/common';
 import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
+import { Alert } from './Alert';
 import { useAppContext } from './AppContext';
-import { AppErrorMessage } from './AppErrorMessage';
 import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
 import { Sidebar } from './Sidebar';
@@ -64,15 +64,14 @@ const AppLayout: React.FC = ({ children }) => {
     activeSidebarButton?.current?.roles &&
     !activeSidebarButton.current.roles?.some(role => userRoles.includes(role))
   ) {
-    accessError = 'You do not have access to this link.';
+    accessError = `You don't currently have permission to access this link.`;
   }
 
   /**
    * If a user does not have ANY role to view the application
    */
   if (userRoles?.length === 0) {
-    accessError =
-      'You have successfully logged into the application. However, no role has been assigned to you.';
+    accessError = `You don't currently have permission to access the application.`;
   }
 
   return (
@@ -85,7 +84,11 @@ const AppLayout: React.FC = ({ children }) => {
             icon={activeSidebarButton.current?.faIcon}
           />
           {!accessError && children}
-          {accessError && <AppErrorMessage message={accessError} />}
+          {accessError && (
+            <div className='flex justify-center mt-2'>
+              <Alert type='warning'> {accessError} </Alert>
+            </div>
+          )}
         </div>
       </div>
     </>
