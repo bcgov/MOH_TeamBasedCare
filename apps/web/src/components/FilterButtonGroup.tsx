@@ -12,7 +12,7 @@ export const FilterButtonGroup = <T,>({
   onFilterChange,
 }: FilterButtonGroupProps<T>) => {
   return (
-    <div className='flex align-middle gap-3 flex-row'>
+    <div className='flex align-middle gap-1 md:gap-3 flex-row'>
       {options.map((option, i) => (
         <FilterButton
           label={option.label}
