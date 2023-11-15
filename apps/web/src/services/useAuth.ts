@@ -134,6 +134,15 @@ export const useAuth = () => {
     return AppStorage.getItem(StorageKeys.ROLES) as Role[];
   }, []);
 
+  const hasUserRole = useCallback(
+    (roles: Role[]) => {
+      if (!Array.isArray(roles) || !Array.isArray(userRoles)) return false;
+
+      return userRoles.some(role => roles.includes(role));
+    },
+    [userRoles],
+  );
+
   return {
     isAuthenticated,
     logMeIn,
@@ -141,5 +150,6 @@ export const useAuth = () => {
     fetchAuthTokenFromCode,
     fetchUserFromCode,
     userRoles,
+    hasUserRole,
   };
 };

@@ -6,7 +6,7 @@ interface AlertProps {
   className?: string;
 }
 
-export const Alert: React.FC<AlertProps> = ({ type, className, children }) => {
+export const Alert: React.FC<AlertProps> = ({ type, className = '', children }) => {
   return (
     <div
       role='alert'

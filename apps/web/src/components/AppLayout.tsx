@@ -12,7 +12,7 @@ import { Sidebar } from './Sidebar';
 const AppLayout: React.FC = ({ children }) => {
   const router = useRouter();
   const { state, updateActivePath, updateSidebarButtons } = useAppContext();
-  const { isAuthenticated, userRoles } = useAuth();
+  const { isAuthenticated, userRoles, hasUserRole } = useAuth();
 
   // active sidebar button
   const activeSidebarButton = useRef<SidebarButtonProps | null>(null);
@@ -60,10 +60,7 @@ const AppLayout: React.FC = ({ children }) => {
   let accessError = '';
 
   /** if nav based role exist, and user does not have the required access */
-  if (
-    activeSidebarButton?.current?.roles &&
-    !activeSidebarButton.current.roles?.some(role => userRoles.includes(role))
-  ) {
+  if (activeSidebarButton?.current?.roles && !hasUserRole(activeSidebarButton?.current?.roles)) {
     accessError = `You don't currently have permission to access this link.`;
   }
 

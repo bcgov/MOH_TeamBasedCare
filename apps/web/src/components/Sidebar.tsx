@@ -10,7 +10,7 @@ import { useAuth } from '@services';
 
 export const Sidebar: React.FC = () => {
   const { state, toggleSidebarOpen } = useAppContext();
-  const { userRoles } = useAuth();
+  const { hasUserRole } = useAuth();
 
   return (
     <aside
@@ -39,7 +39,7 @@ export const Sidebar: React.FC = () => {
             .filter(button => !button.hidden)
             .filter(button => {
               if (!button.roles) return true; // allow if no role is needed to view the menu item
-              return userRoles.some(role => button.roles?.includes(role)); // if specified, filter the ones user has access to
+              return hasUserRole(button.roles); // if specified, filter the ones user has access to
             })
             .map(button => {
               if (button.kind === SidebarButtonKind.REGULAR) {
