@@ -8,6 +8,7 @@ import {
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
+import { Role } from '@tbcm/common';
 
 export enum AllowedPath {
   LANDING = '/',
@@ -24,6 +25,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     active: false,
     faIcon: faClipboardList,
     path: AllowedPath.PLANNING,
+    roles: [Role.USER],
   },
   {
     id: '002',
@@ -33,6 +35,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     faIcon: faUsers,
     path: AllowedPath.OCCUPATIONAL_SCOPE,
     hidden: false,
+    roles: [Role.USER],
   },
 ];
 

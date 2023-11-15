@@ -1,4 +1,5 @@
 import { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import { Role } from '@tbcm/common';
 import { Dispatch, SetStateAction } from 'react';
 import { AllowedPath } from 'src/common';
 
@@ -18,4 +19,5 @@ export interface SidebarButtonProps {
   setButtons?: Dispatch<SetStateAction<SidebarButtonProps[]>>;
   options?: SidebarButtonProps[];
   hidden?: boolean;
+  roles?: Array<Role>;
 }

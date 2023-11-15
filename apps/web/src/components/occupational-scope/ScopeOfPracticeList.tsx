@@ -1,6 +1,7 @@
 import { OccupationalScopeOfPracticeSortKeys, SortOrder } from '@tbcm/common';
 import { AllowedActivityByOccupation } from 'src/common/interfaces';
 import { isOdd } from 'src/common/util';
+import { AppErrorMessage } from '../AppErrorMessage';
 import { Spinner } from '../generic/Spinner';
 import { PageOptions, Pagination } from '../Pagination';
 import { SortButton } from '../SortButton';
@@ -51,9 +52,7 @@ const TableBody: React.FC<TableBodyProps> = ({ allowedActivities = [] }) => {
   return (
     <tbody>
       {allowedActivities.length === 0 && (
-        <div className='p-4 alert text-bcRedError'>
-          No care activities found with the matching filter
-        </div>
+        <AppErrorMessage message='No care activities found with the matching filter' />
       )}
 
       {allowedActivities?.map((allowedActivity: AllowedActivityByOccupation, index: number) => (

@@ -6,9 +6,11 @@ import { SidebarButton } from './SidebarButton';
 import { SidebarCollapsible } from './SidebarCollapsible';
 import { SidebarButtonKind } from './interface';
 import { useAppContext } from './AppContext';
+import { useAuth } from '@services';
 
 export const Sidebar: React.FC = () => {
   const { state, toggleSidebarOpen } = useAppContext();
+  const { userRoles } = useAuth();
 
   return (
     <aside
@@ -35,6 +37,10 @@ export const Sidebar: React.FC = () => {
         <ul>
           {state.sidebarButtons
             .filter(button => !button.hidden)
+            .filter(button => {
+              if (!button.roles) return true; // allow if no role is needed to view the menu item
+              return userRoles.some(role => button.roles?.includes(role)); // if specified, filter the ones user has access to
+            })
             .map(button => {
               if (button.kind === SidebarButtonKind.REGULAR) {
                 return (
