@@ -1,4 +1,4 @@
-import { faList, faSuitcase } from '@fortawesome/free-solid-svg-icons';
+import { faBookOpen, faList, faSuitcase } from '@fortawesome/free-solid-svg-icons';
 import { AllowedPath } from 'src/common';
 import { OccupationItemProps } from 'src/common/interfaces';
 import { BackButtonLink } from '../BackButtonLink';
@@ -49,7 +49,7 @@ export const OccupationalScopeDetails: React.FC<OccupationalScopeDetailsProps> =
         <Card bgWhite className='mt-4'>
           <Disclosure
             shouldExpand={true}
-            btnIcon={faList}
+            btnIcon={faBookOpen}
             buttonText='Related resources'
             content={<OccupationalScopeRelatedResources occupation={occupation} />}
           />
