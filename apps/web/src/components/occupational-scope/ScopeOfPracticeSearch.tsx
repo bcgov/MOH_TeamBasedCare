@@ -14,7 +14,5 @@ export const ScopeOfPracticeSearch: React.FC<ScopeOfPracticeSearchProps> = ({
 
   const debouncedSearch = debounce(handleSearch, 500);
 
-  return (
-    <SearchBar handleChange={debouncedSearch} placeholderText='Search care activities...' bgWhite />
-  );
+  return <SearchBar handleChange={debouncedSearch} placeholderText='Care activities' bgWhite />;
 };

@@ -30,7 +30,7 @@ export const OccupationalScopeDetailsScopeOfPractice: React.FC<OccupationalScope
       <>
         <Heading subTitle='Understand what activities that can/can not be perform by this occupations by search a topics.' />
 
-        <div className='pt-3 flex justify-between flex-row'>
+        <div className='pt-3 flex gap-1 md:gap-3 justify-between items-center flex-row'>
           <ScopeOfPracticeFilters
             filterByPermission={filterByPermission}
             onFilterByPermissionChange={onFilterByPermissionChange}

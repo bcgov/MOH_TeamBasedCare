@@ -18,13 +18,11 @@ export const ScopeOfPracticeFilters: React.FC<ScopeOfPracticeFiltersProps> = ({
 
   return (
     <>
-      <div className='flex flex-row gap-1'>
-        <FilterButtonGroup<Permissions>
-          options={options}
-          selectedValue={filterByPermission}
-          onFilterChange={onFilterByPermissionChange}
-        />
-      </div>
+      <FilterButtonGroup<Permissions>
+        options={options}
+        selectedValue={filterByPermission}
+        onFilterChange={onFilterByPermissionChange}
+      />
     </>
   );
 };

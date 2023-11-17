@@ -17,7 +17,9 @@ export const OccupationalScopeRelatedResources: React.FC<OccupationalScopeRelate
       <ul>
         {occupation?.relatedResources?.map(resource => (
           <li
-            className='w-full space-y-1 list-disc list-inside text-bcBlueLink cursor-pointer'
+            className={`w-full space-y-1 list-disc list-inside text-bcBlueLink cursor-pointer ${
+              resource.link ? 'underline' : ''
+            }`}
             key={resource.label}
             onClick={() => onResourceClick(resource.link)}
           >
