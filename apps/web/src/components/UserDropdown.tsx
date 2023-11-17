@@ -5,7 +5,7 @@ import { AppStorage, StorageKeys } from 'src/utils/storage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
-import { AppMenu, AppMenuGroup, HIDE_MENU_DELAY } from './generic/AppMenu';
+import { AppMenu, AppMenuGroup } from './generic/AppMenu';
 import { ModalWrapper } from './Modal';
 
 export const UserDropdown = () => {
@@ -18,10 +18,6 @@ export const UserDropdown = () => {
   const authInitials = useMemo(() => {
     return getInitials(authUserDisplayName);
   }, [authUserDisplayName]);
-
-  const hideMenu = () => {
-    setTimeout(() => setShowMenu(false), HIDE_MENU_DELAY);
-  };
 
   if (!authUserDisplayName) return null;
 
@@ -55,7 +51,6 @@ export const UserDropdown = () => {
           variant='default'
           type='button'
           onClick={() => setShowMenu(!showMenu)}
-          onBlur={hideMenu}
         >
           <div className='inline-flex items-center justify-center h-9 w-9 overflow-hidden rounded-full bg-bcBluePrimary text-white mr-4'>
             {authInitials}
@@ -69,7 +64,7 @@ export const UserDropdown = () => {
           />
         </Button>
       </div>
-      {showMenu && <AppMenu groups={dropdownMenuGroups} />}
+      {showMenu && <AppMenu hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />}
 
       <ModalWrapper
         isOpen={showFeedbackModal}

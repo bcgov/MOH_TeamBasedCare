@@ -13,13 +13,21 @@ export interface AppMenuGroup {
 }
 
 interface AppMenuProps {
+  setShowMenu?: (show: boolean) => void;
+  hideOnClick?: boolean;
   groups?: Array<AppMenuGroup>;
   size?: 'lg';
 }
 
 export const HIDE_MENU_DELAY = 100;
 
-export const AppMenu: React.FC<AppMenuProps> = ({ groups = [], children, size }) => {
+export const AppMenu: React.FC<AppMenuProps> = ({
+  setShowMenu,
+  hideOnClick,
+  groups = [],
+  children,
+  size,
+}) => {
   return (
     <>
       <div
@@ -39,7 +47,12 @@ export const AppMenu: React.FC<AppMenuProps> = ({ groups = [], children, size })
                   <div
                     key={i}
                     className='px-4 py-2 flex flex-column items-center hover:bg-gray-100 hover:text-gray-900 cursor-pointer'
-                    onClick={item.onClick}
+                    onClick={() => {
+                      item?.onClick?.();
+                      if (hideOnClick) {
+                        setTimeout(() => setShowMenu?.(false), HIDE_MENU_DELAY);
+                      }
+                    }}
                   >
                     {item?.icon && <FontAwesomeIcon className='w-4 h-4' icon={item.icon} />}
                     <a
