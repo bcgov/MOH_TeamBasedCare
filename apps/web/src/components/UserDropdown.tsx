@@ -3,7 +3,7 @@ import { Button } from './Button';
 import { useAuth } from '@services';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faComment, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
 import { AppMenu, AppMenuGroup, HIDE_MENU_DELAY } from './generic/AppMenu';
 import { ModalWrapper } from './Modal';
@@ -41,8 +41,8 @@ export const UserDropdown = () => {
   const dropdownMenuGroups: Array<AppMenuGroup> = [
     {
       items: [
-        { title: 'Feedback', onClick: onFeedbackClick, icon: faComment },
-        { title: 'Logout', onClick: logout, icon: faSignOutAlt },
+        { title: 'Feedback', onClick: onFeedbackClick, color: 'blue' },
+        { title: 'Logout', onClick: logout, color: 'red' },
       ],
     },
   ];
