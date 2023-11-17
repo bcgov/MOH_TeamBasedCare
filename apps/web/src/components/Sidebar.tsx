@@ -15,7 +15,7 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       className={`${
-        state.sidebarOpen ? 'w-14' : 'w-60'
+        !state.sidebarOpen ? 'w-14' : 'w-60'
       } sidebar  top-0 bottom-0 lg:left-0 flex flex-col p-3 shadow duration-300 bg-bcDarkBlue`}
       aria-label='Sidebar'
     >
@@ -24,7 +24,7 @@ export const Sidebar: React.FC = () => {
           <img
             src={logo.src}
             alt='Government of British Columbia'
-            className={state.sidebarOpen ? 'w-0 duration-300' : 'w-36 duration-300'}
+            className={!state.sidebarOpen ? 'w-0 duration-300' : 'w-36 duration-300'}
             height='45px'
           />
           <button className='p-1 text-white' onClick={() => toggleSidebarOpen()}>

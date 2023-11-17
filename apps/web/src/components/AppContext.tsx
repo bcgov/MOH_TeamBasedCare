@@ -72,7 +72,12 @@ export const AppContext = createContext<AppContextType | null>(null);
 const initialState: AppContextStateProps = {
   activePath: '',
   sidebarButtons: sidebarNavItems,
-  sidebarOpen: false,
+  sidebarOpen: (() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 1000;
+    }
+    return false;
+  })(),
 };
 
 export const AppContextProvider = ({ children }: { children: ReactNode }) => {
