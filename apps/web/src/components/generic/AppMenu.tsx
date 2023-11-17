@@ -5,6 +5,7 @@ interface AppMenuItem {
   title: string;
   onClick?: () => void;
   icon?: IconProp;
+  color?: 'red' | 'blue';
 }
 
 export interface AppMenuGroup {
@@ -43,7 +44,13 @@ export const AppMenu: React.FC<AppMenuProps> = ({ groups = [], children, size })
                     {item?.icon && <FontAwesomeIcon className='w-4 h-4' icon={item.icon} />}
                     <a
                       href='#'
-                      className='text-gray-700 block px-4 py-2 text-sm'
+                      className={`text-gray-700 block px-4 py-2 text-sm ${
+                        item.color === 'red'
+                          ? 'text-bcRedError'
+                          : item.color === 'blue'
+                          ? 'text-bcBlueAccent'
+                          : ''
+                      }`}
                       role='menuitem'
                       tabIndex={-1}
                       id={`menu-item-${i}`}
