@@ -39,14 +39,17 @@ const Step: React.FC<StepProps> = ({ index, step, label, isLast, currentStep }) 
       <div aria-hidden className='flex justify-center items-center'>
         <Check number={index + 1} step={step} currentStep={currentStep} />
         <label
-          className={`hidden md:block text-base w-min font-bold ${
-            currentStep == index + 1 ? 'text-bcBluePrimary' : 'text-gray-400'
-          } whitespace-nowrap mr-4`}
+          className={`hidden text-base w-min font-bold whitespace-nowrap ${
+            currentStep == index + 1 ? 'text-bcBluePrimary lg:block' : 'text-gray-400 xl:block'
+          } `}
         >
           {label}
         </label>
         {!isLast ? (
-          <FontAwesomeIcon icon={faGreaterThan} className='h-3 mr-4 text-gray-400' />
+          <FontAwesomeIcon
+            icon={faGreaterThan}
+            className={`h-3 text-gray-400 mx-2 ${currentStep == index + 1 ? '' : ''}`}
+          />
         ) : null}
       </div>
     </div>

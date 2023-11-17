@@ -45,7 +45,7 @@ export const SidebarButton = ({ id, open, path, text, faIcon, active }: SidebarB
       <a
         href='#'
         className={`${
-          open ? 'justify-center' : 'justify-left px-2'
+          !open ? 'justify-center' : 'justify-left px-2'
         } flex items-center p-1 space-x-3 rounded-md`}
       >
         {faIcon ? (
@@ -57,7 +57,7 @@ export const SidebarButton = ({ id, open, path, text, faIcon, active }: SidebarB
           ''
         )}
 
-        <span className={`${open ? 'hidden' : ''} ${active ? 'text-gray-100' : 'text-gray-400'} `}>
+        <span className={`${!open ? 'hidden' : ''} ${active ? 'text-gray-100' : 'text-gray-400'} `}>
           {text}
         </span>
       </a>

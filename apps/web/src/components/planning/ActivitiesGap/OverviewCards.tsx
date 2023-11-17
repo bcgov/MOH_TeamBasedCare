@@ -14,17 +14,17 @@ export const OverviewCards: React.FC = () => {
       <Card
         color={CardColor.GREEN}
         title={initialValues?.overview?.inScope || ''}
-        subtitle={'Within scope'}
+        subtitle={'Within scope of practice'}
       />
       <Card
         color={CardColor.YELLOW}
         title={initialValues?.overview?.limits || ''}
-        subtitle={'Needs additional training'}
+        subtitle={'With limit and conditions'}
       />
       <Card
         color={CardColor.RED}
         title={initialValues?.overview?.outOfScope || ''}
-        subtitle={'Out of scope'}
+        subtitle={'Outside scope of practice'}
       />
     </div>
   );
