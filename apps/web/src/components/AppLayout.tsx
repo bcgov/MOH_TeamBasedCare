@@ -1,6 +1,9 @@
+import { useAuth } from '@services';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { AllowedPath } from 'src/common';
+import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
+import { Alert } from './Alert';
 import { useAppContext } from './AppContext';
 import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
@@ -9,6 +12,7 @@ import { Sidebar } from './Sidebar';
 const AppLayout: React.FC = ({ children }) => {
   const router = useRouter();
   const { state, updateActivePath, updateSidebarButtons } = useAppContext();
+  const { isAuthenticated, userRoles, hasUserRole } = useAuth();
 
   // active sidebar button
   const activeSidebarButton = useRef<SidebarButtonProps | null>(null);
@@ -45,6 +49,28 @@ const AppLayout: React.FC = ({ children }) => {
     updateSidebarButtons(updatedSidebarButtons);
   }, [router.pathname, updateActivePath, updateSidebarButtons, updatedSidebarButtons]);
 
+  /**
+   * App Layout is only accessible when the user is signed in. It acts as a Home screen
+   */
+  if (!isAuthenticated()) {
+    clearStorageAndRedirectToLandingPage();
+    return <></>;
+  }
+
+  let accessError = '';
+
+  /** if nav based role exist, and user does not have the required access */
+  if (activeSidebarButton?.current?.roles && !hasUserRole(activeSidebarButton?.current?.roles)) {
+    accessError = `You don't currently have permission to access this link.`;
+  }
+
+  /**
+   * If a user does not have ANY role to view the application
+   */
+  if (userRoles?.length === 0) {
+    accessError = `You don't currently have permission to access the application.`;
+  }
+
   return (
     <>
       <div className='h-screen flex mr-auto'>
@@ -54,7 +80,12 @@ const AppLayout: React.FC = ({ children }) => {
             title={activeSidebarButton.current?.text}
             icon={activeSidebarButton.current?.faIcon}
           />
-          {children}
+          {!accessError && children}
+          {accessError && (
+            <div className='flex justify-center mt-2'>
+              <Alert type='warning'> {accessError} </Alert>
+            </div>
+          )}
         </div>
       </div>
     </>

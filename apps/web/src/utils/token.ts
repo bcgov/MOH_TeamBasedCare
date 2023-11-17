@@ -22,7 +22,7 @@ export const getAuthTokens = (): AppTokensDTO => {
 
 export const clearStorageAndRedirectToLandingPage = () => {
   AppStorage.clear();
-  window.location.href = '/';
+  if (typeof window != 'undefined') window.location.href = '/';
 };
 
 export const refreshAuthTokens = async () => {

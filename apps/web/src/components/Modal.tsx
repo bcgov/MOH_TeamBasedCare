@@ -65,17 +65,33 @@ Modal.Title = Dialog.Title;
 Modal.Description = Dialog.Description;
 
 const ModalFooter = ({ children }: PropsWithChildren<ReactNode>) => {
-  return <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse'>{children}</div>;
+  return (
+    <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3'>{children}</div>
+  );
 };
+
+interface ModalButtonProps {
+  title: string;
+  onClick?: () => void;
+}
 
 interface ModalWrapperProps {
   isOpen: boolean;
   setIsOpen: (value: React.SetStateAction<boolean>) => void;
   title?: string;
   description?: string;
+  closeButton?: ModalButtonProps;
+  actionButton?: ModalButtonProps;
 }
 
-export const ModalWrapper = ({ isOpen, setIsOpen, title, description }: ModalWrapperProps) => {
+export const ModalWrapper = ({
+  isOpen,
+  setIsOpen,
+  title,
+  description,
+  closeButton,
+  actionButton,
+}: ModalWrapperProps) => {
   return (
     <Modal open={isOpen}>
       <Modal.Title
@@ -90,8 +106,17 @@ export const ModalWrapper = ({ isOpen, setIsOpen, title, description }: ModalWra
       </Modal.Description>
 
       <ModalFooter>
-        <Button onClick={() => setIsOpen(false)} variant='primary' type='button'>
-          Ok
+        {actionButton && (
+          <Button onClick={() => actionButton?.onClick?.()} variant='primary' type='button'>
+            {actionButton.title}
+          </Button>
+        )}
+        <Button
+          onClick={() => (closeButton?.onClick ? closeButton?.onClick?.() : setIsOpen(false))}
+          variant={`${actionButton ? 'secondary' : 'primary'}`}
+          type='button'
+        >
+          {closeButton?.title || 'Ok'}
         </Button>
       </ModalFooter>
     </Modal>

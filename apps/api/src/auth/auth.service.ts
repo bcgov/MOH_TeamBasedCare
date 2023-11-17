@@ -1,5 +1,6 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import * as jwt from 'jsonwebtoken';
 import * as queryString from 'querystring';
 import { catchError, map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
@@ -91,7 +92,13 @@ export class AuthService {
     };
     const data = await firstValueFrom(
       this.httpService.get(this.keycloakUserInfoUri, params).pipe(
-        map((res: any) => res.data as KeycloakUser),
+        map((res: any) => {
+          // roles does not exist in the userinfo, extracting from the token
+          const { resource_access } = jwt.decode(accessToken) as KeycloakUser;
+
+          // return response + roles
+          return { resource_access, ...res.data } as KeycloakUser;
+        }),
         catchError(e => {
           throw new HttpException(e.response.data, e.response.status);
         }),

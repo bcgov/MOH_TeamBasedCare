@@ -1,6 +1,6 @@
 import { useHttp } from '@services';
-import { KeycloakToken, KeycloakUser } from '@tbcm/common';
-import { useCallback } from 'react';
+import { KeycloakToken, KeycloakUser, Role } from '@tbcm/common';
+import { useCallback, useMemo } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
 import {
   clearStorageAndRedirectToLandingPage,
@@ -130,11 +130,26 @@ export const useAuth = () => {
     [sendApiRequest],
   );
 
+  const userRoles = useMemo(() => {
+    return AppStorage.getItem(StorageKeys.ROLES) as Role[];
+  }, []);
+
+  const hasUserRole = useCallback(
+    (roles: Role[]) => {
+      if (!Array.isArray(roles) || !Array.isArray(userRoles)) return false;
+
+      return userRoles.some(role => roles.includes(role));
+    },
+    [userRoles],
+  );
+
   return {
     isAuthenticated,
     logMeIn,
     logMeOut,
     fetchAuthTokenFromCode,
     fetchUserFromCode,
+    userRoles,
+    hasUserRole,
   };
 };
