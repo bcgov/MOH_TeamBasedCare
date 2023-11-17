@@ -3,15 +3,17 @@ import { Button } from './Button';
 import { useAuth } from '@services';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faComment, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
 import { AppMenu, AppMenuGroup, HIDE_MENU_DELAY } from './generic/AppMenu';
+import { ModalWrapper } from './Modal';
 
 export const UserDropdown = () => {
   const { logMeOut } = useAuth();
   const authUserDisplayName = AppStorage.getItem(StorageKeys.DISPLAY_NAME);
 
   const [showMenu, setShowMenu] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const authInitials = useMemo(() => {
     return getInitials(authUserDisplayName);
@@ -27,8 +29,22 @@ export const UserDropdown = () => {
     logMeOut();
   };
 
+  const onFeedbackClick = () => {
+    setShowFeedbackModal(true);
+  };
+
+  const sendFeedbackEmailClick = () => {
+    window.open('mailto:kushal.arora1@ca.ey.com');
+    setShowFeedbackModal(false);
+  };
+
   const dropdownMenuGroups: Array<AppMenuGroup> = [
-    { items: [{ title: 'Logout', onClick: logout, icon: faSignOutAlt }] },
+    {
+      items: [
+        { title: 'Feedback', onClick: onFeedbackClick, icon: faComment },
+        { title: 'Logout', onClick: logout, icon: faSignOutAlt },
+      ],
+    },
   ];
 
   return (
@@ -54,6 +70,17 @@ export const UserDropdown = () => {
         </Button>
       </div>
       {showMenu && <AppMenu groups={dropdownMenuGroups} />}
+
+      <ModalWrapper
+        isOpen={showFeedbackModal}
+        setIsOpen={setShowFeedbackModal}
+        title={'Feedback'}
+        description={
+          'Should you encounter any issues while using the application, please reach out by sending a message to us.'
+        }
+        closeButton={{ title: 'Cancel' }}
+        actionButton={{ title: 'Send an email', onClick: sendFeedbackEmailClick }}
+      />
     </div>
   );
 };
