@@ -11,12 +11,13 @@ import {
 } from '@tbcm/common';
 
 const DEFAULT_PAGE_SIZE = 5;
+const DEFAULT_PAGE_INDEX = 1;
 
 export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
   const { fetchData, isLoading } = useHttp();
   const [allowedActivities, setAllowedActivities] = useState<AllowedActivityByOccupation[]>([]);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [pageIndex, setPageIndex] = useState(1);
+  const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
   const [total, setTotal] = useState(0);
   const [sortKey, setSortKey] = useState<OccupationalScopeOfPracticeSortKeys>();
   const [sortOrder, setSortOrder] = useState<SortOrder>();
@@ -31,6 +32,10 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
       setPageIndex(pgIndex);
     }
   };
+
+  const resetPageIndex = useCallback(() => {
+    setPageIndex(DEFAULT_PAGE_INDEX);
+  }, []);
 
   const nextSortOrder = useCallback((order?: SortOrder) => {
     switch (order) {
@@ -55,16 +60,22 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
       setSortOrder(SortOrder.ASC);
     }
 
-    // reset to default page
-    setPageIndex(1);
+    // reset to first page
+    resetPageIndex();
   };
 
   const onSearchTextChange = ({ text }: { text: string }) => {
     setSearchText(text);
+
+    // reset to first page
+    resetPageIndex();
   };
 
   const onFilterByPermissionChange = ({ value }: { value?: Permissions }) => {
     setFilterByPermission(value);
+
+    // reset to first page
+    resetPageIndex();
   };
 
   useEffect(() => {
