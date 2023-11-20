@@ -174,9 +174,8 @@ const TableBody: React.FC = () => {
 };
 
 const ActivityGapTable: React.FC = () => {
-  const width = screen.width - 290;
   return (
-    <div className='activity-gap-table' style={{ width: width }}>
+    <div className='activity-gap-table'>
       <table className='min-w-full text-center'>
         <TableHeader />
         <TableBody />
