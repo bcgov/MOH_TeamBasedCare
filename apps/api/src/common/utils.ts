@@ -1,4 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
+import { SortOrder } from '@tbcm/common';
 import { GenericError } from './generic-exception';
 
 export const getGenericError = (error: any): GenericError => {
@@ -19,4 +20,13 @@ export const getGenericError = (error: any): GenericError => {
 export const cleanText = (text: string): string => {
   const regex = /\W/gm;
   return text.toLowerCase().replace(regex, '');
+};
+
+/**
+ * reverse sort order
+ */
+export const reverseSortOrder = (order: SortOrder): SortOrder => {
+  if (order === SortOrder.ASC) return SortOrder.DESC;
+
+  return SortOrder.ASC;
 };
