@@ -30,7 +30,7 @@ export const UserDropdown = () => {
   };
 
   const sendFeedbackEmailClick = () => {
-    window.open('mailto:kushal.arora1@ca.ey.com');
+    window.open('mailto:carolyn.morris@gov.bc.ca');
     setShowFeedbackModal(false);
   };
 
