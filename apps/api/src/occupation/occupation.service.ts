@@ -3,6 +3,8 @@ import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
 import { Injectable } from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
+import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
+import { reverseSortOrder } from 'src/common/utils';
 
 @Injectable()
 export class OccupationService {
@@ -22,15 +24,32 @@ export class OccupationService {
   async findOccupations(query: FindOccupationsDto): Promise<[Occupation[], number]> {
     const queryBuilder = this.occupationrepository.createQueryBuilder('o');
 
-    if (query.searchText)
+    // Search logic below
+    if (query.searchText) {
       queryBuilder
         .innerJoin('o.allowedActivities', 'o_aa') // join allowed activities
         .innerJoin('o_aa.careActivity', 'o_aa_ca') // add relation care activity
         .where('o_aa_ca.displayName ILIKE :name', { name: `%${query.searchText}%` }) // care activity name matching
         .orWhere('o.displayName ILIKE :name', { name: `%${query.searchText}%` }) // occupation display name matching
         .orWhere('o.description ILIKE :name', { name: `%${query.searchText}%` }); // occupation description matching
+    }
 
-    if (query.sortBy) queryBuilder.orderBy(`o.${query.sortBy}`, query.sortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+    // Sort logic below
+    let sortOrder = query.sortOrder;
+
+    if (query.sortBy === OccupationsFindSortKeys.IS_REGULATED && sortOrder) {
+      /**
+       * Bug Fix: https://eydscanada.atlassian.net/browse/TBCM-165: Sorting on regulation status is not correct
+       * Details: Key("isRegulated") in database is a boolean; and will always sort based on True/false and not Regulated/Unregulated key as in FE
+       * Solution: Modify the sort order to reflect correct sort values based on FE key rather than the boolean
+       * Current Sort order: ASC => False(unregulated) followed by True(regulated); DESC => True followed by False
+       * Expected sort order: ASC => Regulated followed by Unregulated; DESC => Unregulated followed by Regulated
+       * Fix: Reverse the order provided by the user
+       */
+      sortOrder = reverseSortOrder(query.sortOrder as SortOrder);
+    }
+
+    if (query.sortBy) queryBuilder.orderBy(`o.${query.sortBy}`, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
 
     // return the paginated response
     return queryBuilder
