@@ -103,7 +103,6 @@ body,
 .activity-gap-table th {
   min-width: 100px;
   background: white;
-  text-align: left;
 }
 
 /* .table-container {
@@ -131,6 +130,7 @@ thead th {
 .activity-gap-table thead th:first-child {
   left: 0;
   z-index: 3;
+  text-align: left;
 }
 
 .activity-gap-table tbody {
@@ -152,7 +152,6 @@ thead th {
   background: #fff;
 }
 .activity-gap-table {
-  width: 1200px;
   float: left;
   overflow: auto;
 }
