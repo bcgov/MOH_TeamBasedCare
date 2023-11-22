@@ -73,13 +73,15 @@ const Landing: NextPage = () => {
       <main className='w-full flex-auto flex justify-center'>
         <div className='justify-center items-center flex flex-row gap-20 max-w-screen-lg p-10'>
           <div className='flex-1'>
-            <h1 className='mb-3 font-bold text-4xl'>Welcome to Team-based Care</h1>
+            <h1 className='mb-3 font-bold text-4xl'>
+              Welcome to Team-Based Model of Care Application
+            </h1>
             <p>
-              The Team-Based Care application supports Professional Practice team-based care models.
-              It aids in aligning patient need with available resources, both in the short-term and
-              long-term, thereby assisting in resource planning. It is important to note that while
-              this tool provides valuable insights, it does not replace the expertise and judgment
-              of healthcare professionals in the development of care models.
+              The Team-Based Model of Care Application supports Professional Practice team-based
+              care models. It aids in aligning patient need with available resources, both in the
+              short-term and long-term, thereby assisting in resource planning. It is important to
+              note that while this tool provides valuable insights, it does not replace the
+              expertise and judgment of healthcare professionals in the development of care models.
             </p>
           </div>
 

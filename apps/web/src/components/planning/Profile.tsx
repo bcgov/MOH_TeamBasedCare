@@ -46,7 +46,7 @@ const ProfileForm = () => {
   usePlanningContent();
 
   useEffect(() => {
-    if (values?.careLocation) {
+    if (values?.careLocation && initialValues?.careLocation) {
       // if previous care location exists, but the value is not same as initial - show modal
       if (values.careLocation !== initialValues.careLocation) {
         setShowModal(true);
@@ -90,8 +90,8 @@ const ProfileForm = () => {
       <ModalWrapper
         isOpen={showModal}
         setIsOpen={setShowModal}
-        title='Changing Care Location?'
-        description='Changing Care Locations removes any selected care activities.'
+        title='Changing Care Setting?'
+        description='Changing Care settings removes any previously selected care activities.'
       />
     </Form>
   );

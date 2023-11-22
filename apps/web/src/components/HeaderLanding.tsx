@@ -28,7 +28,7 @@ export const HeaderLanding: React.FC = () => {
                 ref={headerRef}
                 className=' font-semibold tracking-wider text-white lg:text-xl md:text-xl text-sm focus:outline-none'
               >
-                Team-based Care
+                Team-Based Model of Care Application
               </h1>
             </div>
           </div>

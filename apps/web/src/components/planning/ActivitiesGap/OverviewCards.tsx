@@ -19,7 +19,7 @@ export const OverviewCards: React.FC = () => {
       <Card
         color={CardColor.YELLOW}
         title={initialValues?.overview?.limits || ''}
-        subtitle={'With limit and conditions'}
+        subtitle={'With limits and conditions'}
       />
       <Card
         color={CardColor.RED}

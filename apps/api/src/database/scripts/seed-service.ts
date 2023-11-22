@@ -129,7 +129,7 @@ export class SeedService {
         }
         bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
         const activityName = data[headers[0]].trim().replace(/"/g, '');
-        const careLocation = 'Intensive Care Unit';
+        const careLocation = 'Acute care medicine';
         careLocations.add(careLocation);
 
         let activityList: {

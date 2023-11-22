@@ -13,7 +13,7 @@ export const ScopeOfPracticeFilters: React.FC<ScopeOfPracticeFiltersProps> = ({
   const options = [
     { label: 'All' },
     { label: 'Within scope of practice', value: Permissions.PERFORM },
-    { label: 'With limit and conditions', value: Permissions.LIMITS },
+    { label: 'With limits and conditions', value: Permissions.LIMITS },
   ];
 
   return (
