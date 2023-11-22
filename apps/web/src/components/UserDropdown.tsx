@@ -30,7 +30,9 @@ export const UserDropdown = () => {
   };
 
   const sendFeedbackEmailClick = () => {
-    window.open('mailto:carolyn.morris@gov.bc.ca?subject=Team-based Care :: UAT Feedback');
+    window.open(
+      'mailto:carolyn.morris@gov.bc.ca?subject=Team-Based Model of Care Application :: UAT Feedback',
+    );
     setShowFeedbackModal(false);
   };
 

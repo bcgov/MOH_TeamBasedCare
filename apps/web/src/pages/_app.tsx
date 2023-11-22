@@ -9,7 +9,7 @@ function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Team-based Care</title>
+        <title>Team-Based Model of Care Application</title>
         <link rel='icon' href='/assets/img/bc_favicon.ico' />
       </Head>
 
