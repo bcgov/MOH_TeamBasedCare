@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AuthModule } from 'src/auth/auth.module';
+import { FeedbackModule } from 'src/feedback/feedback.module';
 import { AppModule } from '../app.module';
 import { CareActivityModule } from '../care-activity/care-activity.module';
 import { OccupationModule } from '../occupation/occupation.module';
@@ -23,6 +24,7 @@ export const Documentation = (app: INestApplication) => {
       CareActivityModule,
       OccupationModule,
       AuthModule,
+      FeedbackModule,
     ],
   });
 

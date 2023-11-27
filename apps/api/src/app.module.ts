@@ -15,6 +15,7 @@ import { ConfigModule } from './config/config.module';
 import { KeycloakConfigService } from './config/keycloak-config.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AllowedActivityModule } from './allowed-activity/allowed-activity.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AllowedActivityModule } from './allowed-activity/allowed-activity.modul
       useExisting: KeycloakConfigService,
       imports: [ConfigModule],
     }),
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [
