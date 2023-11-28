@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { KeycloakUser } from '@tbcm/common';
+import { CreateFeedbackDto, KeycloakUser } from '@tbcm/common';
 import { Repository } from 'typeorm';
-import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { Feedback } from './entities/feedback.entity';
 
 @Injectable()
