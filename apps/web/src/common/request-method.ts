@@ -48,6 +48,7 @@ export const API_ENDPOINT = {
   DRAFT_SESSION: '/sessions/draft',
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
   OCCUPATIONS: '/occupations',
+  FEEDBACK: '/feedback',
   getOccupationsById: (id: string) => `/occupations/${id}`,
   getPlanningCareActivityBundlesForSessionCareLocation: (sessionId: string) =>
     `/sessions/${sessionId}/care-activity/bundle`,
@@ -55,12 +56,10 @@ export const API_ENDPOINT = {
   getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
   getPlanningActivityGap: (sessionId: string) => `/sessions/${sessionId}/activities-gap`,
   getExportCsv: (sessionId: string) => `/sessions/${sessionId}/export-csv`,
-
   getActivitiesAllowedByOccupation: (
     occupationId: string,
     params: EndpointQueryParams<OccupationalScopeOfPracticeSortKeys>,
   ) => appendQueryParams(`/allowedActivities/occupation/${occupationId}`, params),
-
   findOccupations: (params: EndpointQueryParams<OccupationsFindSortKeys>) =>
     appendQueryParams('/occupations/find', params),
 };

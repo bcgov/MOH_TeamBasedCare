@@ -72,6 +72,7 @@ const ModalFooter = ({ children }: PropsWithChildren<ReactNode>) => {
 
 interface ModalButtonProps {
   title: string;
+  type?: 'submit' | 'reset' | 'button';
   onClick?: () => void;
 }
 
@@ -82,6 +83,7 @@ interface ModalWrapperProps {
   description?: string;
   closeButton?: ModalButtonProps;
   actionButton?: ModalButtonProps;
+  children?: ReactNode;
 }
 
 export const ModalWrapper = ({
@@ -91,6 +93,7 @@ export const ModalWrapper = ({
   description,
   closeButton,
   actionButton,
+  children,
 }: ModalWrapperProps) => {
   return (
     <Modal open={isOpen}>
@@ -103,22 +106,32 @@ export const ModalWrapper = ({
 
       <Modal.Description className='p-5 flex gap-5 flex-col text-sm'>
         {description}
+        {children}
       </Modal.Description>
 
-      <ModalFooter>
-        {actionButton && (
-          <Button onClick={() => actionButton?.onClick?.()} variant='primary' type='button'>
-            {actionButton.title}
-          </Button>
-        )}
-        <Button
-          onClick={() => (closeButton?.onClick ? closeButton?.onClick?.() : setIsOpen(false))}
-          variant={`${actionButton ? 'secondary' : 'primary'}`}
-          type='button'
-        >
-          {closeButton?.title || 'Ok'}
-        </Button>
-      </ModalFooter>
+      {(actionButton || closeButton) && (
+        <ModalFooter>
+          {actionButton && (
+            <Button
+              onClick={() => actionButton?.onClick?.()}
+              variant='primary'
+              type={actionButton.type || 'button'}
+            >
+              {actionButton.title}
+            </Button>
+          )}
+
+          {closeButton && (
+            <Button
+              onClick={() => (closeButton?.onClick ? closeButton?.onClick?.() : setIsOpen(false))}
+              variant={`${actionButton ? 'secondary' : 'primary'}`}
+              type={closeButton?.type || 'button'}
+            >
+              {closeButton?.title || 'Ok'}
+            </Button>
+          )}
+        </ModalFooter>
+      )}
     </Modal>
   );
 };

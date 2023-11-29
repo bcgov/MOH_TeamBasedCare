@@ -17,3 +17,7 @@ export * from './Sidebar';
 export * from './LeftSideBarActivites';
 export * from './RightSideBarActivities';
 export * from './ActivitiesGapLegend';
+
+export * from './Textarea';
+export * from './Field';
+export * from './FeedbackForm';
