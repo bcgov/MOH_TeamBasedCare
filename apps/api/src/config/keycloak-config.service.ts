@@ -23,7 +23,7 @@ export class KeycloakConfigService implements KeycloakConnectOptionsFactory {
       'confidential-port': process.env.KEYCLOAK_CONFIDENTIAL_PORT,
 
       policyEnforcement: PolicyEnforcementMode.PERMISSIVE,
-      tokenValidation: TokenValidation.ONLINE,
+      tokenValidation: TokenValidation.OFFLINE,
     };
   }
 }
