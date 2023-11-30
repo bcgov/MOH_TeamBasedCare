@@ -58,6 +58,7 @@ export class PlanningSessionService {
       createdBy: user.sub,
       createdByUsername: user.preferred_username,
       createdByName: user.name,
+      createdByEmail: user.email,
     });
 
     await this.planningSessionRepo.save(planningSession);

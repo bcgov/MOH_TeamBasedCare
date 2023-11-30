@@ -10,11 +10,15 @@ export class Feedback extends CustomBaseEntity {
   text: string;
 
   @Column({ type: 'varchar', length: 255 })
+  createdBy: string;
+
+  @Column({ type: 'varchar', length: 255 })
   createdByEmail: string;
 
   @Column({ type: 'varchar', length: 255 })
   createdByName: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  /** TODO: update nullable to false during next data cleanup */
+  @Column({ type: 'varchar', length: 255, nullable: true })
   createdByUsername: string;
 }
