@@ -24,14 +24,18 @@ export class PlanningSession extends CustomBaseEntity {
   @JoinTable()
   occupation?: Occupation[];
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   createdBy: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   createdByUsername: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   createdByName: string;
+
+  /** TODO: update nullable to false during next data cleanup */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  createdByEmail: string;
 
   @Column({ default: PlanningStatus.DRAFT })
   status: string;
