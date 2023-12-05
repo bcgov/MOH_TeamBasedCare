@@ -8,6 +8,7 @@ import { useCareActivities } from '../services';
 import { Tag } from './generic/Tag';
 import { SearchBar } from './generic/SearchBar';
 import { pickTagStyle } from 'src/common/util';
+import { AppErrorMessage } from './AppErrorMessage';
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
@@ -46,14 +47,59 @@ export const RightSideBarActivites: React.FC = () => {
 
   const handleSelectAll = (e: any) => {
     if (e.target.checked) {
-      setFieldValue(
-        'careActivities',
-        items?.careActivities?.map((e: any) => e.id),
-      );
+      const careActivitiesSelectedInBundleSet = new Set<string>(values.careActivities);
+      (filteredData || []).forEach((activity: any) => {
+        careActivitiesSelectedInBundleSet.add(activity.id);
+      });
+      setFieldValue('careActivities', Array.from(careActivitiesSelectedInBundleSet));
     } else {
-      setFieldValue('careActivities', []);
+      const careActivitiesSelectedInBundleSet = new Set<string>(values.careActivities);
+      (filteredData || []).forEach((activity: any) => {
+        careActivitiesSelectedInBundleSet.delete(activity.id);
+      });
+      setFieldValue('careActivities', Array.from(careActivitiesSelectedInBundleSet));
     }
   };
+
+  const SelectAllCheckbox = (
+    <div className='flex items-center pt-4 pb-2 px-1.5'>
+      <input
+        type='checkbox'
+        name='selectAll'
+        id='selectAll'
+        className='mr-3 h-5 w-5 min-w-5 accent-bcBlueLink'
+        onChange={handleSelectAll}
+        checked={
+          filteredData?.length > 0 &&
+          filteredData.every((a: any) => values.careActivities.includes(a.id))
+        }
+      />
+      <label className='font-bold' htmlFor={'selectAll'}>
+        Select all
+      </label>
+    </div>
+  );
+
+  const FilteredList = filteredData?.map((item: any) => {
+    return (
+      <div key={item.id} className={`flex flex-1 items-center p-1.5`}>
+        <div className='flex-initial w-5/6'>
+          <Checkbox
+            name='careActivities'
+            styles='accent-bcBlueLink'
+            value={item.id}
+            label={item.name}
+          />
+        </div>
+        <div className='flex flex-initial w-3/6 justify-end'>
+          <Tag text={item.activityType} tagStyle={pickTagStyle(item.activityType)}></Tag>
+          {item.clinicalType && (
+            <Tag text={item.clinicalType} tagStyle={pickTagStyle(item.clinicalType)}></Tag>
+          )}
+        </div>
+      </div>
+    );
+  });
 
   return (
     <div className='flex-2 flex flex-col min-h-0 w-2/3 ml-4 mt-4 border-2 border-gray-200 p-4'>
@@ -63,66 +109,23 @@ export const RightSideBarActivites: React.FC = () => {
         </p>
       ) : (
         <>
-          <div className='flex items-center pb-4'>
-            <input
-              type='checkbox'
-              name='selectAll'
-              id='selectAll'
-              className='mr-3 h-5 w-5 min-w-5 accent-bcBlueLink'
-              onChange={handleSelectAll}
-              checked={
-                values.careActivityBundle[values.careActivityID]?.length ===
-                items?.careActivities?.length
-              }
-            />
-            <label className='font-bold' htmlFor={'selectAll'}>
-              Select all
-            </label>
-          </div>
-
           <SearchBar handleChange={handleSearch} />
 
           <p className='text-sm text-gray-400'>
-            {items && items.careActivities.length} Care Activities Tasks and Restricted Tasks
+            {values.careActivityBundle[values.careActivityID]?.length} care activities selected
           </p>
 
-          <div
-            className='mt-4'
-            role='group'
-            aria-labelledby='checkbox-group'
-            style={{ overflow: 'auto', maxHeight: '500px' }}
-          >
-            {!_.isEmpty(filteredData) ? (
-              filteredData &&
-              filteredData.map((item: any) => {
-                return (
-                  <div key={item.id} className='flex flex-1 items-center p-1.5'>
-                    <div className='flex-initial w-5/6'>
-                      <Checkbox
-                        name='careActivities'
-                        styles='accent-bcBlueLink'
-                        value={item.id}
-                        label={item.name}
-                      />
-                    </div>
-                    <div className='flex flex-initial w-3/6 justify-end'>
-                      <Tag
-                        text={item.activityType}
-                        tagStyle={pickTagStyle(item.activityType)}
-                      ></Tag>
-                      {item.clinicalType && (
-                        <Tag
-                          text={item.clinicalType}
-                          tagStyle={pickTagStyle(item.clinicalType)}
-                        ></Tag>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className='text-center text-sm mt-4'>No available Care Activity Tasks.</p>
-            )}
+          <div className='overflow-auto'>
+            <div role='group' aria-labelledby='checkbox-group'>
+              {!_.isEmpty(filteredData) ? (
+                <>
+                  {SelectAllCheckbox}
+                  {FilteredList}
+                </>
+              ) : (
+                <AppErrorMessage message={`No available care activity tasks.`} />
+              )}
+            </div>
           </div>
         </>
       )}
