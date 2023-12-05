@@ -38,7 +38,7 @@ export class PlanningSessionService {
   }
 
   // find latest Draft planning sessions
-  async getDraftPlanningSession(user: KeycloakUser): Promise<PlanningSession | undefined> {
+  async getLastDraftPlanningSession(user: KeycloakUser): Promise<PlanningSession | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: {
         status: PlanningStatus.DRAFT,
@@ -53,13 +53,20 @@ export class PlanningSessionService {
   }
 
   // create a new planning session
-  async createPlanningSession(user: KeycloakUser): Promise<PlanningSession> {
-    const planningSession = this.planningSessionRepo.create({
+  async createPlanningSession(
+    saveProfileDto: SaveProfileDTO,
+    user: KeycloakUser,
+  ): Promise<PlanningSession> {
+    const session: Partial<PlanningSession> = {
+      profileOption: saveProfileDto.profileOption,
+      careLocation: (await this.unitService.getById(saveProfileDto.careLocation)) as Unit,
       createdBy: user.sub,
       createdByUsername: user.preferred_username,
       createdByName: user.name,
       createdByEmail: user.email,
-    });
+    };
+
+    const planningSession = this.planningSessionRepo.create(session);
 
     await this.planningSessionRepo.save(planningSession);
 
@@ -137,6 +144,7 @@ export class PlanningSessionService {
     await this.planningSessionRepo.save({
       ...planningSession,
       careActivity,
+      updatedAt: new Date(), // Manually updating as TypeORM does not update this field when relations are updated;
     });
   }
 
@@ -171,6 +179,7 @@ export class PlanningSessionService {
     await this.planningSessionRepo.save({
       ...planningSession,
       occupation,
+      updatedAt: new Date(), // Manually updating as TypeORM does not update this field when relations are updated;
     });
   }
 

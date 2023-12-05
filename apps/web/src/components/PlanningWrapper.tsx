@@ -2,18 +2,13 @@ import { useState, useEffect } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
 import { PlanningSteps } from '../common/constants';
 import { PlanningProvider } from './planning/PlanningContext';
-import { usePlanningSession } from '../services/usePlanningSession';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
-import { Spinner } from './generic/Spinner';
 
 const WrapperContent = () => {
-  const { sessionId, isLoading, message: spinnerMessage } = usePlanningSession();
-
   const {
-    state: { canProceedToNext },
+    state: { canProceedToNext, sessionId },
     updateNextTriggered,
-    updateSessionId,
   } = usePlanningContext();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,12 +21,6 @@ const WrapperContent = () => {
     if (isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
   };
-
-  useEffect(() => {
-    if (sessionId) {
-      updateSessionId(sessionId);
-    }
-  }, [sessionId]);
 
   useEffect(() => {
     if (canProceedToNext) {
@@ -79,8 +68,6 @@ const WrapperContent = () => {
       <div className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
         <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
-
-      <Spinner show={isLoading} fullScreen={true} message={spinnerMessage} />
     </div>
   );
 };

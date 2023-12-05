@@ -14,6 +14,8 @@ export interface RadioOptionType {
   label: string;
   value: string;
   disabled?: boolean;
+  hidden?: boolean;
+  hoverText?: string;
 }
 
 export interface BooleanRadioProps {
@@ -34,25 +36,28 @@ export const Radio: React.FC<BooleanRadioProps> = ({ legend, name, options, hori
           { 'flex-row gap-8': horizontal },
         )}
       >
-        {options.map((option, index) => (
-          <label
-            key={option.label + index}
-            className={`flex items-center ${
-              option.disabled === true ? '' : 'cursor-pointer'
-            } leading-none`}
-          >
-            <FormikField
-              type='radio'
-              name={name}
-              value={option.value}
-              className={`mr-2 h-5 w-5 min-w-5 checked:bg-bcBluePrimary ${
+        {options
+          .filter(option => !option.hidden)
+          .map((option, index) => (
+            <label
+              key={option.label + index}
+              className={`flex items-center ${
                 option.disabled === true ? '' : 'cursor-pointer'
-              }`}
-              disabled={option.disabled}
-            />
-            {option.label}
-          </label>
-        ))}
+              } leading-none`}
+              title={option.hoverText}
+            >
+              <FormikField
+                type='radio'
+                name={name}
+                value={option.value}
+                className={`mr-2 h-5 w-5 min-w-5 checked:bg-bcBluePrimary ${
+                  option.disabled === true ? '' : 'cursor-pointer'
+                }`}
+                disabled={option.disabled}
+              />
+              {option.label}
+            </label>
+          ))}
       </div>
       <Error name={name} />
     </fieldset>

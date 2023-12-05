@@ -1,22 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Radio } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
-import { useCareLocations, usePlanningContent } from '../../services';
-import { SaveProfileDTO } from '@tbcm/common';
+import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
+import {
+  PlanningSessionRO,
+  ProfileOptions,
+  SaveProfileDTO,
+  formatDateFromNow,
+  formatDateTime,
+} from '@tbcm/common';
 import createValidator from 'class-validator-formik';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Spinner } from '../generic/Spinner';
 
 export interface ProfileProps {
   step: number;
   title: string;
-}
-
-export const enum ProfileOptions {
-  GENERIC = 'generic',
-  FROM_SCRATCH = 'scratch',
 }
 
 interface ProfileFormProps {
@@ -24,24 +26,47 @@ interface ProfileFormProps {
   careLocation: string;
 }
 
-export const profileOptions = [
-  {
-    label: 'Start a new profile from scratch',
-    value: ProfileOptions.FROM_SCRATCH,
-    selected: false,
-  },
-  {
-    label: 'Start from a generic profile',
-    value: ProfileOptions.GENERIC,
-    selected: false,
-    disabled: true,
-  },
-];
-
-const ProfileForm = () => {
-  const { values, initialValues } = useFormikContext<ProfileFormProps>();
+const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
+  const { values, initialValues, setValues } = useFormikContext<ProfileFormProps>();
   const { careLocations, isLoading } = useCareLocations();
   const [showModal, setShowModal] = useState(false);
+  const {
+    state: { sessionId },
+    updateSessionId,
+  } = usePlanningContext();
+
+  const handleLastDraft = useCallback(() => {
+    if (!lastDraft) return;
+
+    updateSessionId(lastDraft.id);
+
+    setValues({
+      profileOption: ProfileOptions.DRAFT,
+      careLocation: lastDraft.careLocationId || '',
+    });
+  }, [lastDraft]);
+
+  const handleScratch = useCallback(() => {
+    updateSessionId(); // reset session id
+
+    // reset care location to default value
+    setValues({
+      profileOption: ProfileOptions.FROM_SCRATCH,
+      careLocation: '',
+    });
+  }, []);
+
+  // handle profileOption change
+  useEffect(() => {
+    switch (values.profileOption) {
+      case ProfileOptions.FROM_SCRATCH:
+        return handleScratch();
+      case ProfileOptions.DRAFT:
+        return handleLastDraft();
+      default:
+        return handleLastDraft();
+    }
+  }, [values.profileOption, lastDraft]);
 
   usePlanningContent();
 
@@ -53,6 +78,29 @@ const ProfileForm = () => {
       }
     }
   }, [initialValues.careLocation, values.careLocation]);
+
+  const profileOptions = useMemo(
+    () => [
+      {
+        label: 'Start a new profile from scratch',
+        value: ProfileOptions.FROM_SCRATCH,
+      },
+      {
+        label: `Continue working on your last draft (Last saved ${formatDateFromNow(
+          lastDraft?.updatedAt,
+        )})`,
+        hoverText: `Last saved - ${formatDateTime(lastDraft?.updatedAt)}`,
+        value: ProfileOptions.DRAFT,
+        hidden: !lastDraft,
+      },
+      {
+        label: 'Start from a generic profile',
+        value: ProfileOptions.GENERIC,
+        disabled: true,
+      },
+    ],
+    [lastDraft],
+  );
 
   return (
     <Form className='w-full'>
@@ -74,7 +122,8 @@ const ProfileForm = () => {
 
         <div>
           <div>
-            {values.profileOption === ProfileOptions.FROM_SCRATCH && !isLoading && (
+            {isLoading && <Spinner show />}
+            {values.profileOption !== ProfileOptions.GENERIC && !isLoading && (
               <div className='planning-form-box'>
                 <RenderSelect
                   label={'Select Care Setting'}
@@ -99,7 +148,7 @@ const ProfileForm = () => {
 
 export const Profile: React.FC<ProfileProps> = () => {
   const profileValidationSchema = createValidator(SaveProfileDTO);
-  const { handleSubmit, initialValues } = usePlanningProfile();
+  const { handleSubmit, initialValues, lastDraft } = usePlanningProfile();
   return (
     <Formik
       initialValues={initialValues}
@@ -109,7 +158,7 @@ export const Profile: React.FC<ProfileProps> = () => {
       validateOnMount={true}
       enableReinitialize={true}
     >
-      <ProfileForm />
+      <ProfileForm lastDraft={lastDraft} />
     </Formik>
   );
 };
