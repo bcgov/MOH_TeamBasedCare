@@ -30,10 +30,7 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
   const { values, initialValues, setValues } = useFormikContext<ProfileFormProps>();
   const { careLocations, isLoading } = useCareLocations();
   const [showModal, setShowModal] = useState(false);
-  const {
-    state: { sessionId },
-    updateSessionId,
-  } = usePlanningContext();
+  const { updateSessionId } = usePlanningContext();
 
   const handleLastDraft = useCallback(() => {
     if (!lastDraft) return;
