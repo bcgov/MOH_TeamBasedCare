@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
 import { AppMenu, AppMenuGroup } from './generic/AppMenu';
+import { FeedbackForm } from './FeedbackForm';
 import { ModalWrapper } from './Modal';
 
 export const UserDropdown = () => {
@@ -27,13 +28,6 @@ export const UserDropdown = () => {
 
   const onFeedbackClick = () => {
     setShowFeedbackModal(true);
-  };
-
-  const sendFeedbackEmailClick = () => {
-    window.open(
-      'mailto:carolyn.morris@gov.bc.ca?subject=Team-Based Model of Care Application :: UAT Feedback',
-    );
-    setShowFeedbackModal(false);
   };
 
   const dropdownMenuGroups: Array<AppMenuGroup> = [
@@ -68,16 +62,9 @@ export const UserDropdown = () => {
       </div>
       {showMenu && <AppMenu hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />}
 
-      <ModalWrapper
-        isOpen={showFeedbackModal}
-        setIsOpen={setShowFeedbackModal}
-        title={'Feedback'}
-        description={
-          'Should you encounter any issues while using the application, please reach out by sending a message to us.'
-        }
-        closeButton={{ title: 'Cancel' }}
-        actionButton={{ title: 'Send an email', onClick: sendFeedbackEmailClick }}
-      />
+      <ModalWrapper isOpen={showFeedbackModal} setIsOpen={setShowFeedbackModal} title={'Feedback'}>
+        <FeedbackForm setIsOpen={setShowFeedbackModal} />
+      </ModalWrapper>
     </div>
   );
 };
