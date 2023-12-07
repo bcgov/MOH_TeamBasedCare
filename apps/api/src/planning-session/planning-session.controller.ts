@@ -6,12 +6,18 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
-import { SaveCareActivityDTO, SaveOccupationDTO, SaveProfileDTO } from '@tbcm/common';
+import {
+  PlanningSessionRO,
+  SaveCareActivityDTO,
+  SaveOccupationDTO,
+  SaveProfileDTO,
+} from '@tbcm/common';
 import { IRequest } from 'src/common/app-request';
 import { SessionGuard } from 'src/planning-session/guards/session.guard';
 import { SUCCESS_RESPONSE } from '../common/constants';
@@ -20,17 +26,28 @@ import { PlanningSessionService } from './planning-session.service';
 
 @ApiTags('session')
 @Controller('sessions')
+@UseInterceptors(ClassSerializerInterceptor)
 export class PlanningSessionController {
   constructor(private planningSessionService: PlanningSessionService) {}
 
-  @Get('/draft')
-  getDraftPlanningSession(@Req() req: IRequest) {
-    return this.planningSessionService.getDraftPlanningSession(req.user);
+  @Get('/last_draft')
+  async getDraftPlanningSession(@Req() req: IRequest): Promise<PlanningSessionRO> {
+    const session = await this.planningSessionService.getLastDraftPlanningSession(req.user);
+
+    return new PlanningSessionRO(session);
   }
 
   @Post()
-  createPlanningSession(@Req() req: IRequest): Promise<PlanningSession> {
-    return this.planningSessionService.createPlanningSession(req.user);
+  async createPlanningSession(
+    @Req() req: IRequest,
+    @Body() saveProfileDto: SaveProfileDTO,
+  ): Promise<PlanningSessionRO> {
+    const session = await this.planningSessionService.createPlanningSession(
+      saveProfileDto,
+      req.user,
+    );
+
+    return new PlanningSessionRO(session);
   }
 
   @UseGuards(SessionGuard)
@@ -52,7 +69,6 @@ export class PlanningSessionController {
 
   @UseGuards(SessionGuard)
   @Get('/:sessionId/care-activity/bundle')
-  @UseInterceptors(ClassSerializerInterceptor)
   getBundlesForProfile(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getBundlesForSelectedCareLocation(sessionId);
   }

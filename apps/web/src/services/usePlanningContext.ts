@@ -15,7 +15,7 @@ export const usePlanningContext = () => {
     updateNextTriggered: () => updateNextTriggered(),
     updateProceedToNext: () => updateProceedToNext(),
     updateWaitForValidation: () => updateWaitForValidation(),
-    updateSessionId: (sessionId: string) => updateSessionId(sessionId),
+    updateSessionId: (sessionId?: string) => updateSessionId(sessionId),
     updateRefetchActivityGap: (fetch: boolean) => updateRefetchActivityGap(fetch),
     state,
   };

@@ -45,7 +45,7 @@ export const API_ENDPOINT = {
   CARE_LOCATIONS: '/carelocations',
   CARE_ACTIVITIES: '/care-activity/bundle',
   SESSIONS: '/sessions',
-  DRAFT_SESSION: '/sessions/draft',
+  LAST_DRAFT_SESSION: '/sessions/last_draft',
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
   OCCUPATIONS: '/occupations',
   FEEDBACK: '/feedback',

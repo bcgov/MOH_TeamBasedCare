@@ -15,3 +15,9 @@ export const formatDateFromNow = (value: ConfigType) => {
   dayjs.extend(relativeTime);
   return dayjs(value).fromNow();
 };
+
+export const formatDateTime = (value: ConfigType) => {
+  if (!value) return;
+
+  return dayjs(value).format('MMMM DD, YYYY h:mm A');
+};
