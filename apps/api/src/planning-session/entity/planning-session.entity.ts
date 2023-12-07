@@ -46,7 +46,7 @@ export class PlanningSession extends CustomBaseEntity {
 
   /** TODO: update nullable to false during next data cleanup */
   @Column({ type: 'varchar', length: 255, nullable: true })
-  createdByEmail: string;
+  createdByEmail?: string;
 
   @Column({ default: PlanningStatus.DRAFT })
   status: string;

@@ -9,8 +9,9 @@ export class Feedback extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 4096 })
   text: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  createdBy: string;
+  /** TODO: update nullable to false during next data cleanup */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  createdBy?: string;
 
   @Column({ type: 'varchar', length: 255 })
   createdByEmail: string;
@@ -18,7 +19,6 @@ export class Feedback extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255 })
   createdByName: string;
 
-  /** TODO: update nullable to false during next data cleanup */
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255 })
   createdByUsername: string;
 }
