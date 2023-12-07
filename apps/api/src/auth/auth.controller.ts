@@ -79,9 +79,9 @@ export class AuthController {
   @Unprotected()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOkResponse({ description: 'Logout from keycloak sso server' })
-  async logout(@Body() token: AppTokensDTO) {
+  async logout(@Body() tokens: AppTokensDTO) {
     try {
-      await this.authService.logout(token.refresh_token);
+      await this.authService.logout(tokens);
     } catch (e) {
       if (e instanceof HttpException) {
         throw new HttpException('Logout failed', e.getStatus());

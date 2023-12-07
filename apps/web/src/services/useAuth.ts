@@ -8,6 +8,7 @@ import {
   storeAuthTokens,
 } from 'src/utils/token';
 import { AppStorage, StorageKeys } from '../utils/storage';
+import { toast } from 'react-toastify';
 
 export const useAuth = () => {
   const { sendApiRequest, fetchData } = useHttp();
@@ -100,35 +101,31 @@ export const useAuth = () => {
   }, []);
 
   // log users out and redirect to the Landing page; Also, clear storage
-  const logMeOut = useCallback(
-    (handler?: () => void, errorHandler?: () => void) => {
-      const config = {
-        endpoint: API_ENDPOINT.AUTH_LOGOUT,
-        method: REQUEST_METHOD.POST,
-        data: getAuthTokens(),
-      };
+  const logMeOut = useCallback(() => {
+    // revoke refresh token
+    const config = {
+      endpoint: API_ENDPOINT.AUTH_LOGOUT,
+      method: REQUEST_METHOD.POST,
+      data: getAuthTokens(),
+    };
 
-      // execute this handler under either cases - success/failure
-      // clear storage and redirect user to landing page
-      const commonHandler = () => {
-        clearStorageAndRedirectToLandingPage();
-      };
+    // execute this handler under either cases - success/failure
+    // clear storage and redirect user to landing page
+    const commonHandler = () => {
+      clearStorageAndRedirectToLandingPage();
+    };
 
-      // send logout request
-      sendApiRequest(
-        config,
-        () => {
-          commonHandler();
-          handler?.();
-        },
-        () => {
-          commonHandler();
-          errorHandler?.();
-        },
-      );
-    },
-    [sendApiRequest],
-  );
+    // send revocation for refresh token request
+    sendApiRequest(
+      config,
+      () => {
+        commonHandler();
+      },
+      () => {
+        toast.error('Something went wrong logging out, please try again');
+      },
+    );
+  }, [sendApiRequest]);
 
   const userRoles = useMemo(() => {
     return AppStorage.getItem(StorageKeys.ROLES) as Role[];

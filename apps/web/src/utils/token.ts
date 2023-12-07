@@ -21,8 +21,16 @@ export const getAuthTokens = (): AppTokensDTO => {
 };
 
 export const clearStorageAndRedirectToLandingPage = () => {
+  const accessToken = getAuthTokens().access_token;
+  const origin = window.location.origin;
   AppStorage.clear();
-  if (typeof window != 'undefined') window.location.href = '/';
+
+  // const url =
+  //   'https://common-logon-test.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/logout?id_token_hint=' +
+  //   accessToken +
+  //   '&post_logout_redirect_uri=' +
+  //   origin;
+  // if (typeof window != 'undefined') window.location.href = '/';
 };
 
 export const refreshAuthTokens = async () => {

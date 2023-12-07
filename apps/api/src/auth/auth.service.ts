@@ -5,7 +5,7 @@ import * as queryString from 'querystring';
 import { catchError, map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
-import { KeycloakToken } from '@tbcm/common';
+import { AppTokensDTO, KeycloakToken } from '@tbcm/common';
 import { KeycloakUser } from '@tbcm/common';
 
 @Injectable()
@@ -77,7 +77,11 @@ export class AuthService {
               ),
           ),
           catchError(e => {
-            throw new HttpException(e.response.data, e.response.status);
+            console.error('AuthService::getAccessToken');
+            throw new HttpException(
+              e?.response?.data?.error || 'Error data unknown, Something Went wrong',
+              e?.response?.status || 500,
+            );
           }),
         ),
     );
@@ -100,7 +104,11 @@ export class AuthService {
           return { resource_access, ...res.data } as KeycloakUser;
         }),
         catchError(e => {
-          throw new HttpException(e.response.data, e.response.status);
+          console.error('AuthService::getUserInfo');
+          throw new HttpException(
+            e?.response?.data?.error || 'Error data unknown, Something Went wrong',
+            e?.response?.status || 500,
+          );
         }),
       ),
     );
@@ -131,8 +139,9 @@ export class AuthService {
               ),
           ),
           catchError(e => {
+            console.error('AuthService::refreshAccessToken');
             throw new HttpException(
-              e?.response?.data || 'Error data unknown, Something Went wrong',
+              e?.response?.data?.error || 'Error data unknown, Something Went wrong',
               e?.response?.status || 500,
             );
           }),
@@ -141,11 +150,13 @@ export class AuthService {
     return data;
   }
 
-  async logout(refresh_token: string) {
+  async logout(tokens: AppTokensDTO) {
     const params = {
       client_id: this.keycloakClientId,
       client_secret: this.keycloakClientSecret,
-      refresh_token: refresh_token,
+      refresh_token: tokens.refresh_token,
+      id_token_hint: tokens.access_token,
+      post_logout_redirect_uri: '/'
     };
 
     const data = await firstValueFrom(
@@ -154,8 +165,9 @@ export class AuthService {
         .pipe(
           map((res: any) => res.data),
           catchError(e => {
+            console.error('AuthService::revokeRefresh');
             throw new HttpException(
-              e?.response?.data || 'Error data unknown, Something Went wrong',
+              e?.response?.data?.error || 'Error data unknown, Something Went wrong',
               e?.response?.status || 500,
             );
           }),
