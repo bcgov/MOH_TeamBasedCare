@@ -21,7 +21,6 @@ import {
 import { IRequest } from 'src/common/app-request';
 import { SessionGuard } from 'src/planning-session/guards/session.guard';
 import { SUCCESS_RESPONSE } from '../common/constants';
-import { PlanningSession } from './entity/planning-session.entity';
 import { PlanningSessionService } from './planning-session.service';
 
 @ApiTags('session')
@@ -31,23 +30,22 @@ export class PlanningSessionController {
   constructor(private planningSessionService: PlanningSessionService) {}
 
   @Get('/last_draft')
-  async getDraftPlanningSession(@Req() req: IRequest): Promise<PlanningSessionRO> {
+  async getDraftPlanningSession(@Req() req: IRequest) {
     const session = await this.planningSessionService.getLastDraftPlanningSession(req.user);
 
-    return new PlanningSessionRO(session);
+    // explicitly added any to the return type to counter Runtime.ImportModuleError for classes in @tbcm/common package
+    return new PlanningSessionRO(session) as any;
   }
 
   @Post()
-  async createPlanningSession(
-    @Req() req: IRequest,
-    @Body() saveProfileDto: SaveProfileDTO,
-  ): Promise<PlanningSessionRO> {
+  async createPlanningSession(@Req() req: IRequest, @Body() saveProfileDto: SaveProfileDTO) {
     const session = await this.planningSessionService.createPlanningSession(
       saveProfileDto,
       req.user,
     );
 
-    return new PlanningSessionRO(session);
+    // explicitly added any to the return type to counter Runtime.ImportModuleError for classes in @tbcm/common package
+    return new PlanningSessionRO(session) as any;
   }
 
   @UseGuards(SessionGuard)
