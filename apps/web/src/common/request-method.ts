@@ -1,4 +1,5 @@
 import {
+  CareActivitiesFindSortKeys,
   OccupationalScopeOfPracticeSortKeys,
   OccupationsFindSortKeys,
   Permissions,
@@ -62,4 +63,6 @@ export const API_ENDPOINT = {
   ) => appendQueryParams(`/allowedActivities/occupation/${occupationId}`, params),
   findOccupations: (params: EndpointQueryParams<OccupationsFindSortKeys>) =>
     appendQueryParams('/occupations/find', params),
+  findCareActivities: (params: EndpointQueryParams<CareActivitiesFindSortKeys>) =>
+    appendQueryParams('/care-activity/find', params),
 };
