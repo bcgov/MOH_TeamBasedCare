@@ -1,7 +1,7 @@
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CareActivitiesFindSortKeys, CareActivityRO, SortOrder } from '@tbcm/common';
-import { AllowedPath, TagVariants } from 'src/common';
+import { AllowedPath } from 'src/common';
 import { isOdd } from 'src/common/util';
 import { useAppContext } from '../AppContext';
 import { Button } from '../Button';
