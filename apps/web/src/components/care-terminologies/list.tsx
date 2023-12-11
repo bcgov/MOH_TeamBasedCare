@@ -66,6 +66,7 @@ const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
               variant='outline'
               type='button'
               onClick={() => onViewDetailsClick(careActivity.id)}
+              disabled
             >
               View details
               <FontAwesomeIcon icon={faAngleRight} className='h-4 text-bcBluePrimary' />
