@@ -8,3 +8,7 @@ export enum OccupationalScopeOfPracticeSortKeys {
   BUNDLE_NAME = 'bundleName',
   CARE_ACTIVITY_NAME = 'careActivityName',
 }
+
+export enum CareActivitiesFindSortKeys {
+  DISPLAY_NAME = 'displayName',
+}
