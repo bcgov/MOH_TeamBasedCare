@@ -4,6 +4,8 @@ import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { BundleRO } from './ro/get-bundle.ro';
+import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
+import { SortOrder } from '@tbcm/common';
 
 @Injectable()
 export class CareActivityService {
@@ -46,5 +48,25 @@ export class CareActivityService {
     return this.careActivityRepo.find({
       where: { id: In(careActivityIds) },
     });
+  }
+
+  async findCareActivities(query: FindCareActivitiesDto): Promise<[CareActivity[], number]> {
+    const queryBuilder = this.careActivityRepo.createQueryBuilder('ca');
+
+    // Search logic below
+    if (query.searchText) {
+      queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+    }
+
+    // Sort logic below
+    let sortOrder = query.sortOrder;
+
+    if (query.sortBy) queryBuilder.orderBy(`o.${query.sortBy}`, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+
+    // return the paginated response
+    return queryBuilder
+      .skip((query.page - 1) * query.pageSize)
+      .take(query.pageSize)
+      .getManyAndCount();
   }
 }

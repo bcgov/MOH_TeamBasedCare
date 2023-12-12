@@ -9,14 +9,20 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { CareActivityType, ClinicalType } from '../../common/constants';
 import { cleanText } from '../../common/utils';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { Bundle } from './bundle.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Unit } from 'src/unit/entity/unit.entity';
+import { CareActivityType, ClinicalType } from '@tbcm/common';
 
-@Entity()
+@Entity({
+  // defining default sort order for the entity
+  // Note: this is default order, and will get overridden if query supplies one
+  orderBy: {
+    displayName: 'ASC',
+  },
+})
 export class CareActivity extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

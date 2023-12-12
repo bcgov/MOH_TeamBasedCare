@@ -1,8 +1,15 @@
-import { ClassSerializerInterceptor, Controller, Get, UseInterceptors } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Controller,
+  Get,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { PaginationRO } from '@tbcm/common';
+import { CareActivityRO, PaginationRO } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
 import { BundleRO } from './ro/get-bundle.ro';
+import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 
 @ApiTags('care-activity')
 @Controller('care-activity')
@@ -16,6 +23,17 @@ export class CareActivityController {
     return new PaginationRO<BundleRO[]>([
       bundles.map(bundle => new BundleRO(bundle)),
       bundles?.length,
+    ]);
+  }
+
+  @Get('find')
+  async findCareActivities(
+    @Query() query: FindCareActivitiesDto,
+  ): Promise<PaginationRO<CareActivityRO[]>> {
+    const [careActivities, total] = await this.careActivityService.findCareActivities(query);
+    return new PaginationRO([
+      careActivities.map(careActivity => new CareActivityRO(careActivity)),
+      total,
     ]);
   }
 }
