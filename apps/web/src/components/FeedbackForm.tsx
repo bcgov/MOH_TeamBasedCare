@@ -1,6 +1,6 @@
 import { CreateFeedbackDto } from '@tbcm/common';
 import createValidator from 'class-validator-formik';
-import { Formik, Form as FormikForm } from 'formik';
+import { Formik, Form as FormikForm, FormikHelpers } from 'formik';
 import { Button, Textarea } from '@components';
 import { useFeedback } from 'src/services/useFeedback';
 import { Spinner } from './generic/Spinner';
@@ -14,7 +14,20 @@ export const FeedbackForm = ({ setIsOpen }: FeedbackFormProps) => {
   const initialValues = { text: '' };
   const { createFeedback, isLoading } = useFeedback();
 
-  const handleSubmit = async (values: CreateFeedbackDto) => {
+  const handleSubmit = async (
+    values: CreateFeedbackDto,
+    { validateForm, setFieldValue }: FormikHelpers<CreateFeedbackDto>,
+  ) => {
+    /**
+     * Bug: https://eydscanada.atlassian.net/browse/TBCM-182
+     * Fix: createValidator method inside class-validator-formik does not support transformations.
+     *   And since we are using common validators in BE & FE - handling it manually for FE
+     */
+    await setFieldValue('text', values.text?.trim());
+    const errors = await validateForm();
+    if (Object.keys(errors).length > 0) return;
+
+    // post feedback to BE
     createFeedback(values, () => {
       setIsOpen(false);
       toast.info(`Your feedback recorded successfully. Thank you!`);
