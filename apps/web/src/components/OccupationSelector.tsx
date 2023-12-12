@@ -57,7 +57,7 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
       <hr />
       <div className='flex-1 flex flex-col'>
         {filteredOccupations.map((occupation, index) => {
-          const styling = isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white';
+          const styling = isOdd(index) ? 'item-box-gray' : 'item-box-white';
           return (
             <div key={index} className={`occupation-item-box ${styling}`}>
               <OccupationItem

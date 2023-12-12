@@ -14,7 +14,7 @@ interface TableHeaderProps {
 
 const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortChange }) => {
   const tdStyles =
-    'table-header occupation-item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-4';
+    'table-header item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-4';
 
   const headers = [
     { label: 'Care setting', name: OccupationalScopeOfPracticeSortKeys.CARE_SETTING_NAME },
@@ -56,10 +56,7 @@ const TableBody: React.FC<TableBodyProps> = ({ allowedActivities = [] }) => {
       )}
 
       {allowedActivities?.map((allowedActivity: AllowedActivityByOccupation, index: number) => (
-        <tr
-          className={`${isOdd(index) ? 'occupation-item-box-gray' : 'occupation-item-box-white'}`}
-          key={`row${index}`}
-        >
+        <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{allowedActivity.careSetting}</td>
           <td className={tdStyles}>{allowedActivity.bundleName}</td>
           <td className={tdStyles}>{allowedActivity.careActivityName}</td>

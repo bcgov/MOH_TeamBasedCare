@@ -1,20 +1,18 @@
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
-import { AllowedPath, TagVariants } from 'src/common';
-import { OccupationItemProps } from 'src/common/interfaces';
+import { CareActivitiesFindSortKeys, CareActivityRO, SortOrder } from '@tbcm/common';
+import { AllowedPath } from 'src/common';
 import { isOdd } from 'src/common/util';
 import { useAppContext } from '../AppContext';
 import { Button } from '../Button';
 import { Spinner } from '../generic/Spinner';
-import { Tag } from '../generic/Tag';
 import { PageOptions, Pagination } from '../Pagination';
 import { SortButton } from '../SortButton';
 
 interface TableHeaderProps {
-  sortKey?: OccupationsFindSortKeys;
+  sortKey?: CareActivitiesFindSortKeys;
   sortOrder?: SortOrder;
-  onSortChange: ({ key }: { key: OccupationsFindSortKeys }) => void;
+  onSortChange: ({ key }: { key: CareActivitiesFindSortKeys }) => void;
 }
 
 const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortChange }) => {
@@ -22,8 +20,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
     'table-header item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-4';
 
   const headers = [
-    { label: 'Occupations', name: OccupationsFindSortKeys.DISPLAY_NAME },
-    { label: 'Regulation status', name: OccupationsFindSortKeys.IS_REGULATED },
+    { label: 'Care activities', name: CareActivitiesFindSortKeys.DISPLAY_NAME },
     { label: '' },
   ];
 
@@ -32,7 +29,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
       <tr className='w-full'>
         {headers.map(({ label, name }, index: number) => (
           <th key={`th${index}`} className={tdStyles}>
-            <SortButton<OccupationsFindSortKeys>
+            <SortButton<CareActivitiesFindSortKeys>
               label={label}
               name={name}
               sortKey={sortKey}
@@ -47,35 +44,29 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 };
 
 interface TableBodyProps {
-  occupations?: OccupationItemProps[];
+  careActivities?: CareActivityRO[];
 }
 
-const TableBody: React.FC<TableBodyProps> = ({ occupations = [] }) => {
+const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
   const { updateActivePath } = useAppContext();
 
   const onViewDetailsClick = (id: string) => {
-    updateActivePath(AllowedPath.OCCUPATIONAL_SCOPE_ID.replace(':id', id));
+    updateActivePath(AllowedPath.CARE_TERMINOLOGIES_ID.replace(':id', id));
   };
 
   return (
     <tbody>
-      {occupations?.map((occupation: OccupationItemProps, index: number) => (
+      {careActivities?.map((careActivity: CareActivityRO, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
-          <td className={tdStyles}>{occupation.name}</td>
-          <td className={tdStyles}>
-            <Tag
-              text={occupation.isRegulated ? 'Regulated' : 'Unregulated'}
-              tagStyle={occupation.isRegulated ? TagVariants.BLUE : TagVariants.GREEN}
-              className='max-w-10 h-8'
-            />
-          </td>
+          <td className={tdStyles}>{careActivity.name}</td>
           <td className={`${tdStyles} flex justify-end`}>
             <Button
               classes='gap-2 h-8'
               variant='outline'
               type='button'
-              onClick={() => onViewDetailsClick(occupation.id)}
+              onClick={() => onViewDetailsClick(careActivity.id)}
+              disabled
             >
               View details
               <FontAwesomeIcon icon={faAngleRight} className='h-4 text-bcBluePrimary' />
@@ -103,7 +94,7 @@ const TableFooter: React.FC<TableFooterProps> = ({
   return (
     <td colSpan={100}>
       <Pagination
-        id='tbcm-occupational-scope-list-table'
+        id='tbcm-care-terminologies-list-table'
         pageOptions={{ pageIndex, pageSize, total }}
         onChange={onPageOptionsChange}
       />
@@ -111,21 +102,21 @@ const TableFooter: React.FC<TableFooterProps> = ({
   );
 };
 
-interface OccupationalScopeListProps {
+interface CareTerminologiesListProps {
   searchTerm?: string;
-  occupations: OccupationItemProps[];
+  careActivities: CareActivityRO[];
   pageIndex: number;
   pageSize: number;
   total: number;
   onPageOptionsChange: (options: PageOptions) => void;
-  sortKey?: OccupationsFindSortKeys;
+  sortKey?: CareActivitiesFindSortKeys;
   sortOrder?: SortOrder;
-  onSortChange: ({ key }: { key: OccupationsFindSortKeys }) => void;
+  onSortChange: ({ key }: { key: CareActivitiesFindSortKeys }) => void;
   isLoading?: boolean;
 }
 
-export const OccupationalScopeList: React.FC<OccupationalScopeListProps> = ({
-  occupations,
+export const CareTerminologiesList: React.FC<CareTerminologiesListProps> = ({
+  careActivities,
   pageIndex,
   pageSize,
   total,
@@ -144,7 +135,7 @@ export const OccupationalScopeList: React.FC<OccupationalScopeListProps> = ({
       <div> Showing {total} members. </div>
       <table className='table-auto'>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <TableBody occupations={occupations} />
+        <TableBody careActivities={careActivities} />
         <TableFooter
           pageIndex={pageIndex}
           pageSize={pageSize}

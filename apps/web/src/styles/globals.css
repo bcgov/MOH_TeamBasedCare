@@ -29,11 +29,11 @@ body,
   @apply flex items-center h-16 px-4;
 }
 
-.occupation-item-box-gray {
+.item-box-gray {
   @apply bg-bcLightGray shadow-xs;
 }
 
-.occupation-item-box-white {
+.item-box-white {
   @apply bg-white shadow-xs;
 }
 

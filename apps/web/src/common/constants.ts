@@ -6,6 +6,7 @@ import {
   faQuestionCircle,
   faExclamationCircle,
   faUsers,
+  faBook,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
 import { Role } from '@tbcm/common';
@@ -15,6 +16,8 @@ export enum AllowedPath {
   PLANNING = '/planning',
   OCCUPATIONAL_SCOPE = '/occupational-scope',
   OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
+  CARE_TERMINOLOGIES = '/care-terminologies',
+  CARE_TERMINOLOGIES_ID = '/care-terminologies/:id',
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [
@@ -34,6 +37,16 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     active: false,
     faIcon: faUsers,
     path: AllowedPath.OCCUPATIONAL_SCOPE,
+    hidden: false,
+    roles: [Role.USER],
+  },
+  {
+    id: '003',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Modal of Care Terminologies',
+    active: false,
+    faIcon: faBook,
+    path: AllowedPath.CARE_TERMINOLOGIES,
     hidden: false,
     roles: [Role.USER],
   },
