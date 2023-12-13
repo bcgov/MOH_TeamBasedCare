@@ -232,11 +232,20 @@ pre-build:
 	@mkdir -p ./terraform/build
 	@echo "++\n*****"
 
+
+sed-common-module:
+	@echo 'Replacing all missed entity relative paths to @tbcm/common inside node_modules :: fixes Module.Import errors'
+	@if [[ $(shell uname) == "Darwin"* ]]; \
+	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.entity.js; \
+	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.entity.js; \
+	fi
+	
 build-api:
 	@echo "++\n***** Building API for AWS\n++"
 	@rm -rf ./apps/api/dist || true
 	@echo 'Building api package... \n' 
 	@yarn workspace @tbcm/api build
+	@make sed-common-module
 	@echo 'Updating prod dependencies...\n'
 	@yarn workspaces focus @tbcm/api --production
 	@echo 'Deleting existing build dir...\n'
