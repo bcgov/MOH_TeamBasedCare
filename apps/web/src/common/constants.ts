@@ -61,6 +61,7 @@ export const PlanningSteps = [
 
 export enum TagVariants {
   BASE = 'tag',
+  GRAY = 'tag-gray',
   BLUE = 'tag-blue',
   GREEN = 'tag-green',
   YELLOW = 'tag-yellow',
