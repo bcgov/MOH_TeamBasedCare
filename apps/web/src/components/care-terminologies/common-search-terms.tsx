@@ -1,9 +1,6 @@
-import { debounce } from 'lodash';
-import { SearchBar } from '../generic/SearchBar';
 import { Tag } from '../generic/Tag';
 import { useCareActivitySearchTerms } from 'src/services/useCareActivitiesCommonSearchTerms';
 import { TagVariants } from 'src/common';
-import { MutableRefObject, SetStateAction } from 'react';
 
 interface CareTerminologiesCommonSearchTermsProps {
   handleSearch: (text: string) => void;
@@ -21,6 +18,7 @@ export const CareTerminologiesCommonSearchTerms: React.FC<CareTerminologiesCommo
           <p className='font-bold'>Common search topics:</p>
           {careActivitySearchTerms.map(searchTerm => (
             <Tag
+              key={searchTerm}
               text={searchTerm}
               tagStyle={TagVariants.GRAY}
               className='cursor-pointer'

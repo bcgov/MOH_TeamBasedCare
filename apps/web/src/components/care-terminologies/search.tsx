@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 import { SearchBar } from '../generic/SearchBar';
 import { CareTerminologiesCommonSearchTerms } from './common-search-terms';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 interface CareTerminologiesSearchProps {
   onSearchTextChange: ({ text }: { text: string }) => void;
