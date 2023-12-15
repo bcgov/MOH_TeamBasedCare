@@ -5,7 +5,8 @@ import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { SortOrder } from '@tbcm/common';
+import { KeycloakUser, SortOrder } from '@tbcm/common';
+import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
 
 @Injectable()
 export class CareActivityService {
@@ -14,6 +15,8 @@ export class CareActivityService {
     private readonly bundleRepo: Repository<Bundle>,
     @InjectRepository(CareActivity)
     private readonly careActivityRepo: Repository<CareActivity>,
+    @InjectRepository(CareActivitySearchTerm)
+    private readonly careActivitySearchTermRepo: Repository<CareActivitySearchTerm>,
   ) {}
 
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
@@ -50,11 +53,18 @@ export class CareActivityService {
     });
   }
 
-  async findCareActivities(query: FindCareActivitiesDto): Promise<[CareActivity[], number]> {
+  async findCareActivities(
+    query: FindCareActivitiesDto,
+    user: KeycloakUser,
+  ): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo.createQueryBuilder('ca');
 
     // Search logic below
     if (query.searchText) {
+      // Non blocking call to save search terms for commonly used terms
+      this.createCareActivitySearchTerm(query.searchText, user);
+
+      // add where clause to the query
       queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
     }
 
@@ -68,5 +78,36 @@ export class CareActivityService {
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();
+  }
+
+  async createCareActivitySearchTerm(term: string, user: KeycloakUser) {
+    const createSearchTerm: Partial<CareActivitySearchTerm> = {
+      term,
+      createdBy: user.sub,
+      createdByUsername: user.preferred_username,
+      createdByName: user.name,
+      createdByEmail: user.email,
+    };
+
+    const searchTerm = this.careActivitySearchTermRepo.create(createSearchTerm);
+
+    await this.careActivitySearchTermRepo.save(searchTerm);
+
+    return searchTerm;
+  }
+
+  async getCommonSearchTerms() {
+    const result: Array<{ word: string; ndoc: number; nentry: number }> = await this
+      .careActivitySearchTermRepo.query(`
+        SELECT * 
+        FROM ts_stat(format($$
+          select to_tsvector(term)
+          FROM care_activity_search_term
+        $$))
+        ORDER BY nentry DESC, ndoc DESC, word
+        LIMIT 3
+    `);
+
+    return result.map(r => r.word);
   }
 }
