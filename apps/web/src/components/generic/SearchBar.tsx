@@ -1,14 +1,27 @@
+import { MutableRefObject, useEffect, useRef } from 'react';
+
 interface SearchBarProps {
   placeholderText?: string;
   handleChange?: ({ target }: React.ChangeEvent<HTMLInputElement>) => void;
   bgWhite?: boolean;
+  value?: string;
+  ref?: MutableRefObject<HTMLInputElement | null>;
 }
 
 export const SearchBar = ({
   placeholderText = 'Search',
   handleChange,
   bgWhite,
+  value,
 }: SearchBarProps) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current && inputRef.current.value !== value) {
+      inputRef.current.value = value || '';
+    }
+  }, [inputRef.current, value]);
+
   return (
     <div>
       <div className='relative w-full'>
@@ -39,6 +52,9 @@ export const SearchBar = ({
           } dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500`}
           placeholder={placeholderText}
           onChange={handleChange}
+          autoComplete='off'
+          defaultValue={value}
+          ref={inputRef}
           required
         />
       </div>

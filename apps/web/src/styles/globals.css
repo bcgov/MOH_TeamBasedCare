@@ -41,6 +41,10 @@ body,
   @apply flex justify-center items-center px-2  border rounded font-bold text-xs mr-1;
 }
 
+.tag-gray {
+  @apply bg-bcLightGray text-bcGrayLabel border-bcGray;
+}
+
 .tag-green {
   @apply bg-bcBannerSuccessBg text-bcBannerSuccessText border-bcBannerSuccessText;
 }
