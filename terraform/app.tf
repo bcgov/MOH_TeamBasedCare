@@ -1,10 +1,18 @@
-
+resource "aws_kms_key" "app_kms_key" {}
 
 resource "aws_s3_bucket" "app" {
   bucket = var.app_sources_bucket
   acl    = "private"
   versioning {
     enabled = true
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.app_kms_key.id
+        sse_algorithm = "aws:kms"
+      }
+    }
   }
 }
 
