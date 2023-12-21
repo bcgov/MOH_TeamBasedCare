@@ -94,7 +94,26 @@ resource "aws_iam_role_policy" "lambda_s3" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_vpc" {
+resource "aws_iam_role_policy" "lambda_vpc" {
   role       = aws_iam_role.lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+  # Derived policy from AWSLambdaVPCAccessExecutionRole. However, updated to a sepcific resource [lambda]
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface",
+          "ec2:AssignPrivateIpAddresses",
+          "ec2:UnassignPrivateIpAddresses"
+        ],
+        "Resource" : "arn:aws:logs:${var.region}:${var.target_aws_account_id}:log-group:/aws/lambda/${local.namespace}-api:*"
+      }
+    ]
+  })
 }
