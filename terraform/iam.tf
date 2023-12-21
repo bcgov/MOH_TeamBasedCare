@@ -76,9 +76,22 @@ resource "aws_iam_role_policy" "lambda_execute" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_s3" {
-  role       = aws_iam_role.lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+resource "aws_iam_role_policy" "lambda_s3" {
+  role    = aws_iam_role.lambda.name
+  # Derived policy from AmazonS3FullAccess. However, updated to a sepcific resource [lambda]
+  policy  = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:*",
+          "s3-object-lambda:*"
+        ],
+        "Resource" : "arn:aws:logs:${var.region}:${var.target_aws_account_id}:log-group:/aws/lambda/${local.namespace}-api:*"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_vpc" {
