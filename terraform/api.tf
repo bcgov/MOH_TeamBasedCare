@@ -23,6 +23,25 @@ resource "aws_s3_bucket_object" "api_lambda" {
   source = "./build/empty_lambda.zip"
 }
 
+resource "aws_s3_bucket_policy" "api_s3_policy_deny_http" {
+  bucket = aws_s3_bucket.api.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid = "IPAllow"
+      Effect = "Deny"
+      Principal = "*"
+      Action = "s3:*"
+      Resource = [ "${aws_s3_bucket.api.arn}/*" ]
+      Condition = {
+        Bool = {
+          "aws:SecureTransport" = "false"
+        }
+      }
+    }]
+  })
+}
+
 resource "aws_lambda_function" "api" {
   description      = "API for ${local.namespace}"
   function_name    = local.api_name
