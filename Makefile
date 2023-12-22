@@ -9,7 +9,7 @@ export PROJECT := tbcm
 
 # Runtime and application Environments specific variable
 # POSTGRES_USERNAME=testuser
-export ENV_NAME ?= dev
+export ENV_NAME = dev
 export POSTGRES_USERNAME ?= localdev
 export POSTGRES_PASSWORD ?= password
 export POSTGRES_DATABASE ?= tbcm

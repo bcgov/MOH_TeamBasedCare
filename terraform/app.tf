@@ -36,6 +36,18 @@ resource "aws_s3_bucket_policy" "app" {
         Principal = {
           AWS = aws_cloudfront_origin_access_identity.app.iam_arn
         }
+      },
+      {
+        Sid = "IPAllow"
+        Effect = "Deny"
+        Principal = "*"
+        Action = "s3:*"
+        Resource = [ "${aws_s3_bucket.app.arn}", "${aws_s3_bucket.app.arn}/*" ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
       }
     ]
   })
