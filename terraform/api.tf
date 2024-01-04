@@ -1,8 +1,19 @@
+resource "aws_kms_key" "api_kms_key" {}
+
 resource "aws_s3_bucket" "api" {
   bucket = var.api_sources_bucket
   acl    = "private"
   versioning {
     enabled = true
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.api_kms_key.id
+        sse_algorithm = "aws:kms"
+      }
+    }
   }
 }
 
@@ -10,6 +21,25 @@ resource "aws_s3_bucket_object" "api_lambda" {
   bucket = aws_s3_bucket.api.bucket
   key    = "api-lambda-s3"
   source = "./build/empty_lambda.zip"
+}
+
+resource "aws_s3_bucket_policy" "api_s3_policy_deny_http" {
+  bucket = aws_s3_bucket.api.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid = "IPAllow"
+      Effect = "Deny"
+      Principal = "*"
+      Action = "s3:*"
+      Resource = [ "${aws_s3_bucket.api.arn}/*" ]
+      Condition = {
+        Bool = {
+          "aws:SecureTransport" = "false"
+        }
+      }
+    }]
+  })
 }
 
 resource "aws_lambda_function" "api" {

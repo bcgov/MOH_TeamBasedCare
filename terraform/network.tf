@@ -25,7 +25,6 @@ locals {
 
 	web_security_group_name = "Web${local.security_group_name_suffix}"
 	app_security_group_name = "App${local.security_group_name_suffix}"
-	data_security_group_name = "Data${local.security_group_name_suffix}"
 }
 
 data "aws_vpc" "main" {
@@ -83,6 +82,18 @@ data "aws_security_group" "app" {
 	name = local.app_security_group_name
 }
 
-data "aws_security_group" "data" {
-	name = local.data_security_group_name
+resource "aws_security_group" "data" {
+	name = "Db_sg"
+	description = "Custom-created Database Security Group"
+	vpc_id 	= data.aws_vpc.main.id
+}
+
+resource "aws_security_group_rule" "data_sg_ingress_rule" {
+  description = "Postgres DB Traffic Inbound from Lambda"
+  type = "ingress"
+  security_group_id = aws_security_group.data.id
+  source_security_group_id = data.aws_security_group.app.id
+  protocol = "tcp"
+  to_port = 5432
+  from_port = 5432
 }

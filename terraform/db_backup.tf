@@ -21,7 +21,7 @@
 #   deletion_protection = true
 
 #   db_subnet_group_name   = aws_db_subnet_group.pgsql.name
-#   vpc_security_group_ids = [data.aws_security_group.data.id]
+#   vpc_security_group_ids = [aws_security_group.data.id]
 
 #   preferred_backup_window = "09:00-11:00"
 #   backup_retention_period = var.target_env == "prod" ? 14 : 3
