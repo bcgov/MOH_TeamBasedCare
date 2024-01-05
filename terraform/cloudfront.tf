@@ -44,6 +44,13 @@ resource "aws_cloudfront_function" "request" {
   code     = file("${path.module}/cloudfront/request.js")
 }
 
+resource "aws_cloudfront_origin_access_control" "app_oac" {
+  name                              = "app_oac"
+  description                       = "Origin Access Control for App distribution"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
 
 resource "aws_cloudfront_distribution" "app" {
   comment = local.app_name
@@ -53,10 +60,7 @@ resource "aws_cloudfront_distribution" "app" {
   origin {
     domain_name = aws_s3_bucket.app.bucket_regional_domain_name
     origin_id   = local.s3_origin_id
-
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.app.cloudfront_access_identity_path
-    }
+    origin_access_control_id = aws_cloudfront_origin_access_control.app_oac.id
   }
 
   origin {
