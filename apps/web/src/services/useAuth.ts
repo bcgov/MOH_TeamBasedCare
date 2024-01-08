@@ -16,24 +16,13 @@ export const useAuth = () => {
   const isAuthenticated = useCallback(() => {
     const now = +new Date();
 
-    const accessToken = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
-    const accessTokenExpiry = AppStorage.getItem(StorageKeys.ACCESS_TOKEN_EXPIRY);
-
     const refreshToken = AppStorage.getItem(StorageKeys.REFRESH_TOKEN);
     const refreshTokenExpiry = AppStorage.getItem(StorageKeys.REFRESH_TOKEN_EXPIRY);
 
     const username = AppStorage.getItem(StorageKeys.USERNAME);
 
     // both tokens exist, and not expired
-    if (
-      accessToken &&
-      accessTokenExpiry &&
-      +accessTokenExpiry > now &&
-      refreshToken &&
-      refreshTokenExpiry &&
-      +refreshTokenExpiry > now &&
-      username
-    ) {
+    if (refreshToken && refreshTokenExpiry && +refreshTokenExpiry > now && username) {
       return true;
     }
 
@@ -108,21 +97,14 @@ export const useAuth = () => {
         data: getAuthTokens(),
       };
 
-      // execute this handler under either cases - success/failure
-      // clear storage and redirect user to landing page
-      const commonHandler = () => {
-        clearStorageAndRedirectToLandingPage();
-      };
-
       // send logout request
       sendApiRequest(
         config,
         () => {
-          commonHandler();
+          clearStorageAndRedirectToLandingPage();
           handler?.();
         },
         () => {
-          commonHandler();
           errorHandler?.();
         },
       );

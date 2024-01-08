@@ -1,7 +1,6 @@
 import { useAuth } from '@services';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { AllowedPath } from 'src/common';
 import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
 import { Alert } from './Alert';
 import { useAppContext } from './AppContext';
@@ -11,7 +10,7 @@ import { Sidebar } from './Sidebar';
 
 const AppLayout: React.FC = ({ children }) => {
   const router = useRouter();
-  const { state, updateActivePath, updateSidebarButtons } = useAppContext();
+  const { state, updateSidebarButtons } = useAppContext();
   const { isAuthenticated, userRoles, hasUserRole } = useAuth();
 
   // active sidebar button
@@ -33,34 +32,31 @@ const AppLayout: React.FC = ({ children }) => {
     [], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  // Update the app context when refreshing the page or using the direct link to this page;
   useEffect(() => {
-    if (activeSidebarButton?.current) {
-      if (activeSidebarButton.current.hidden) {
-        // if the path is hidden, return to landing page
-        updateActivePath(AllowedPath.LANDING);
-      } else {
-        // else, move to the supplied url
-        updateActivePath(router.pathname);
-      }
+    if (!isAuthenticated()) {
+      // if the user is not authenticated anymore, clear storage and return to landing page
+      clearStorageAndRedirectToLandingPage();
     }
 
     // update sidebar buttons activeness
     updateSidebarButtons(updatedSidebarButtons);
-  }, [router.pathname, updateActivePath, updateSidebarButtons, updatedSidebarButtons]);
+  }, [isAuthenticated, updateSidebarButtons, updatedSidebarButtons]);
 
   /**
    * App Layout is only accessible when the user is signed in. It acts as a Home screen
    */
   if (!isAuthenticated()) {
-    clearStorageAndRedirectToLandingPage();
     return <></>;
   }
 
   let accessError = '';
 
   /** if nav based role exist, and user does not have the required access */
-  if (activeSidebarButton?.current?.roles && !hasUserRole(activeSidebarButton?.current?.roles)) {
+  /** OR the sidebar nav is hidden */
+  if (
+    activeSidebarButton?.current?.hidden ||
+    (activeSidebarButton?.current?.roles && !hasUserRole(activeSidebarButton?.current?.roles))
+  ) {
     accessError = `You don't currently have permission to access this link.`;
   }
 
