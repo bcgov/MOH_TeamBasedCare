@@ -21,8 +21,32 @@ export const getAuthTokens = (): AppTokensDTO => {
 };
 
 export const clearStorageAndRedirectToLandingPage = () => {
+  // fetch environment
+  const isTest = isTestEnv();
+
+  // clear all app storage
   AppStorage.clear();
-  if (typeof window != 'undefined') window.location.href = '/';
+
+  // Extract redirectUri
+  let redirectUri = '/';
+  if (typeof window != 'undefined') redirectUri = window.location.origin;
+
+  // logout URLs
+  const logoutUrl = `https://logon7.gov.bc.ca/clp-cgi/logoff.cgi?retnow=1&returl=${redirectUri}`;
+  const testLogoutUrl = `https://logontest7.gov.bc.ca/clp-cgi/logoff.cgi?retnow=1&returl=${redirectUri}`;
+
+  // redirect and logout
+  if (typeof window != 'undefined') window.location.href = isTest ? testLogoutUrl : logoutUrl;
+};
+
+export const isTestEnv = () => {
+  try {
+    const token: string = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
+    const payload = JSON.parse(window.atob(token.split('.')[1]));
+    if (payload.iss?.includes('common-logon-test')) return true;
+  } catch (e) {}
+
+  return false;
 };
 
 export const refreshAuthTokens = async () => {
