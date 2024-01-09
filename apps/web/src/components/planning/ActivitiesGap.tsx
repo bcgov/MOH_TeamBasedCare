@@ -1,6 +1,6 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faTimesCircle, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
@@ -54,6 +54,7 @@ const TableHeader: React.FC = () => {
         setIsOpen={setShowModal}
         title={selectedOccupation.title}
         description={selectedOccupation.description || 'No description available'}
+        closeButton={{ title: 'Ok' }}
       />
     </thead>
   );
@@ -115,14 +116,10 @@ const TableBody: React.FC = () => {
                     <p className='text-left text-xs mt-1'>
                       {row.careActivities.length} care & restricted activities
                     </p>
-                    <p className='text-left text-xs flex mt-1 justify-left items-center'>
-                      <FontAwesomeIcon icon={faTimesCircle} className='h-4 mr-1 numberOfGaps' />
-                      {row.numberOfGaps}
-                    </p>
                   </h2>
                 </div>
                 <Button
-                  classes='flex inline-flex items-center justify-end h-5 w-5 !p-0 overflow-hidden rounded-full bg-white ml-4'
+                  classes='flex inline-flex items-center justify-end h-4 w-4 !p-0 overflow-hidden rounded-full bg-white ml-4'
                   variant='default'
                   type='button'
                   onClick={() => handleSelectRow(index)}
