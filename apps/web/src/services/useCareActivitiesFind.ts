@@ -30,12 +30,12 @@ export const useCareActivitiesFind = () => {
     setPageIndex(DEFAULT_PAGE_INDEX);
   }, []);
 
+  // Allowed Sort Orders for Care Activities - ASC / DESC; Default = ASC
+  // No undefined SortOrder is allowed like in Occupational Scope
   const nextSortOrder = useCallback((order?: SortOrder) => {
     switch (order) {
       case SortOrder.ASC:
         return SortOrder.DESC;
-      case SortOrder.DESC:
-        return undefined;
       default:
         return SortOrder.ASC;
     }
@@ -44,13 +44,10 @@ export const useCareActivitiesFind = () => {
   const onSortChange = ({ key }: { key: CareActivitiesFindSortKeys }) => {
     if (key === sortKey) {
       const updatedSortOrder = nextSortOrder(sortOrder);
-      if (updatedSortOrder === undefined) {
-        setSortKey(undefined);
-      }
       setSortOrder(updatedSortOrder);
     } else {
       setSortKey(key);
-      setSortOrder(SortOrder.ASC);
+      setSortOrder(SortOrder.DESC); // since the default sort order is already ASC, start with descending
     }
 
     // reset to first page

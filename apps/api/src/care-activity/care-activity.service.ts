@@ -71,7 +71,7 @@ export class CareActivityService {
     // Sort logic below
     let sortOrder = query.sortOrder;
 
-    if (query.sortBy) queryBuilder.orderBy(`o.${query.sortBy}`, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+    if (query.sortBy) queryBuilder.orderBy(`ca.${query.sortBy}`, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
 
     // return the paginated response
     return queryBuilder
