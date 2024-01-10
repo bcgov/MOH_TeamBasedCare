@@ -2107,7 +2107,6 @@ __metadata:
     handlebars: 4.7.7
     jest: 27.4.7
     js-yaml: 4.1.0
-    json2csv: 5.0.7
     jsonwebtoken: 8.5.1
     jwks-rsa: 2.0.5
     keycloak-connect: 22.0.3
@@ -5352,13 +5351,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^6.1.0, commander@npm:~6.2.1":
-  version: 6.2.1
-  resolution: "commander@npm:6.2.1"
-  checksum: d7090410c0de6bc5c67d3ca41c41760d6d268f3c799e530aafb73b7437d1826bbf0d2a3edac33f8b57cc9887b4a986dce307fa5557e109be40eadb7c43b21742
-  languageName: node
-  linkType: hard
-
 "commander@npm:^8.0.0":
   version: 8.3.0
   resolution: "commander@npm:8.3.0"
@@ -5377,6 +5369,13 @@ __metadata:
   version: 2.17.1
   resolution: "commander@npm:2.17.1"
   checksum: 22e7ed5b422079a13a496e5eb8f73f36c15b5809d46f738e168e20f9ad485c12951bdc2cb366a36eb5f4927dae4f17b355b8adb96a5b9093f5fa4c439e8b9419
+  languageName: node
+  linkType: hard
+
+"commander@npm:~6.2.1":
+  version: 6.2.1
+  resolution: "commander@npm:6.2.1"
+  checksum: d7090410c0de6bc5c67d3ca41c41760d6d268f3c799e530aafb73b7437d1826bbf0d2a3edac33f8b57cc9887b4a986dce307fa5557e109be40eadb7c43b21742
   languageName: node
   linkType: hard
 
@@ -10617,19 +10616,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json2csv@npm:5.0.7":
-  version: 5.0.7
-  resolution: "json2csv@npm:5.0.7"
-  dependencies:
-    commander: ^6.1.0
-    jsonparse: ^1.3.1
-    lodash.get: ^4.4.2
-  bin:
-    json2csv: bin/json2csv.js
-  checksum: 81b511e4f5abba1dcda90593c193d15e5f05f1def91377b6289536e31fdb629889da6a2b4612b9ff699116a29b1758d20c0d71f7921fcfb09863da5b2d883139
-  languageName: node
-  linkType: hard
-
 "json5@npm:2.x, json5@npm:^2.2.0, json5@npm:^2.2.1":
   version: 2.2.1
   resolution: "json5@npm:2.2.1"
@@ -10667,13 +10653,6 @@ __metadata:
     graceful-fs:
       optional: true
   checksum: 7af3b8e1ac8fe7f1eccc6263c6ca14e1966fcbc74b618d3c78a0a2075579487547b94f72b7a1114e844a1e15bb00d440e5d1720bfc4612d790a6f285d5ea8354
-  languageName: node
-  linkType: hard
-
-"jsonparse@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "jsonparse@npm:1.3.1"
-  checksum: 6514a7be4674ebf407afca0eda3ba284b69b07f9958a8d3113ef1005f7ec610860c312be067e450c569aab8b89635e332cee3696789c750692bb60daba627f4d
   languageName: node
   linkType: hard
 
@@ -11076,13 +11055,6 @@ __metadata:
   version: 4.4.0
   resolution: "lodash.flatten@npm:4.4.0"
   checksum: 0ac34a393d4b795d4b7421153d27c13ae67e08786c9cbb60ff5b732210d46f833598eee3fb3844bb10070e8488efe390ea53bb567377e0cb47e9e630bf0811cb
-  languageName: node
-  linkType: hard
-
-"lodash.get@npm:^4.4.2":
-  version: 4.4.2
-  resolution: "lodash.get@npm:4.4.2"
-  checksum: e403047ddb03181c9d0e92df9556570e2b67e0f0a930fcbbbd779370972368f5568e914f913e93f3b08f6d492abc71e14d4e9b7a18916c31fa04bd2306efe545
   languageName: node
   linkType: hard
 

@@ -45,7 +45,6 @@
     "express": "4.17.1",
     "handlebars": "4.7.7",
     "js-yaml": "4.1.0",
-    "json2csv": "5.0.7",
     "jsonwebtoken": "8.5.1",
     "jwks-rsa": "2.0.5",
     "keycloak-connect": "22.0.3",
