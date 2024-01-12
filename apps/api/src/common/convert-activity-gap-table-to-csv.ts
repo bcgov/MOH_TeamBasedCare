@@ -76,6 +76,10 @@ export const convertActivityGapTableToXLSX = (data: any) => {
         bgColor: { argb: fill.bgColor },
         fgColor: { argb: fill.fgColor },
       },
+      alignment: {
+        vertical: 'middle',
+        horizontal: 'center',
+      },
     },
   }));
 
@@ -115,7 +119,6 @@ export const convertActivityGapTableToXLSX = (data: any) => {
       style: {
         ...headerStyle,
         font: { bold: true },
-        alignment: { vertical: 'middle', horizontal: 'center' },
       },
     },
     {
@@ -125,7 +128,6 @@ export const convertActivityGapTableToXLSX = (data: any) => {
       style: {
         ...headerStyle,
         font: { bold: true },
-        alignment: { vertical: 'middle', horizontal: 'center' },
       },
     },
   ];
