@@ -17,7 +17,7 @@ export const OccupationalScopeSearch: React.FC<OccupationalScopeSearchProps> = (
   return (
     <SearchBar
       handleChange={debouncedSearch}
-      placeholderText='Search for occupations, care activities, keywords...'
+      placeholderText='Search for occupations, care activities that can/can not be performed'
       bgWhite
     />
   );
