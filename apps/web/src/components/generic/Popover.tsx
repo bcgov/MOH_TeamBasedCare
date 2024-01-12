@@ -9,9 +9,15 @@ interface PopoverProps {
   title: string | JSX.Element;
   children: (close: () => void) => ReactNode;
   position?: 'bottom-right' | 'bottom-left';
+  elevatedZ?: boolean;
 }
 
-export const Popover: React.FC<PopoverProps> = ({ title, children, position = 'bottom-right' }) => {
+export const Popover: React.FC<PopoverProps> = ({
+  title,
+  children,
+  position = 'bottom-right',
+  elevatedZ = false,
+}) => {
   return (
     <PopoverUI className='relative'>
       {({ open, close }) => (
@@ -32,7 +38,7 @@ export const Popover: React.FC<PopoverProps> = ({ title, children, position = 'b
             <PopoverUI.Panel
               className={`absolute left-3 top-7 ${
                 position === 'bottom-left' && '-translate-x-full'
-              } z-10 max-w-sm transform px-4 sm:px-0 lg:max-w-3xl`}
+              } ${elevatedZ ? 'z-50' : 'z-10'} max-w-sm transform px-4 sm:px-0 lg:max-w-3xl`}
             >
               <div className='overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5'>
                 {children?.(close)}

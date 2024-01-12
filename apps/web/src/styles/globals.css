@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  overflow-y: scroll;
-}
-
 html,
 body,
 #__next {
@@ -18,7 +14,7 @@ body,
 }
 
 .planning-form-box {
-  @apply flex-1 flex flex-col min-h-0 overflow-auto w-full border-2 bg-white rounded p-3 mt-4;
+  @apply flex-1 flex flex-col min-h-0 w-full border-2 bg-white rounded p-3 mt-4;
 }
 
 .planning-form-box.overflow-visible {
@@ -88,62 +84,54 @@ body,
   @apply text-bcBlueIcon;
 }
 
-.activity-gap-table table {
+.activity-gap-table div[role="table"] {
   border-collapse: collapse;
   font-family: helvetica;
   caption-side: top;
   text-transform: capitalize;
 }
 
-.activity-gap-table td,
-.activity-gap-table th {
-  /* border:  1px solid; */
+.activity-gap-table div[role="td"],
+.activity-gap-table div[role="th"] {
   padding: 10px;
 
   box-sizing: border-box;
 }
 
-.activity-gap-table td,
-.activity-gap-table th {
+.activity-gap-table div[role="td"],
+.activity-gap-table div[role="th"] {
   min-width: 100px;
   background: white;
 }
 
-/* .table-container {
-position: relative;
-max-height:  300px;
-width: 500px;
-overflow: scroll;
-} */
-
-thead th {
+div[role="thead"] div[role="th"] {
   border-bottom: 2px solid #fcba19;
 }
 
-.activity-gap-table thead th {
+.activity-gap-table div[role="thead"] div[role="th"] {
   position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 2;
 }
 
-.activity-gap-table thead th {
+.activity-gap-table div[role="thead"] div[role="th"] {
   background: #fff;
 }
 
-.activity-gap-table thead th:first-child {
+.activity-gap-table div[role="thead"] div[role="th"]:first-child {
   left: 0;
   z-index: 3;
   text-align: left;
 }
 
-.activity-gap-table tbody {
+.activity-gap-table div[role="tbody"] {
   overflow: scroll;
   height: 200px;
 }
 
 /* MAKE LEFT COLUMN FIXED */
-.activity-gap-table tr > :first-child {
+.activity-gap-table div[role="tr"] > :first-child {
   position: -webkit-sticky;
   position: sticky;
   background: #eaf5ff;
@@ -151,13 +139,13 @@ thead th {
   z-index: 2;
   width: 350px;
 }
-.activity-gap-table tr > th:first-child {
+.activity-gap-table div[role="tr"] > div[role="th"]:first-child {
   position: sticky;
   background: #fff;
 }
 .activity-gap-table {
   float: left;
-  overflow: auto;
+  overflow-x: auto;
 }
 .firstTDinsideRow {
   background: #fff !important;
@@ -219,3 +207,118 @@ thead th {
 .careActivityIDlabel > input[type='radio'] {
   display: none;
 }
+
+/* SCROLL SYNC TABLE styles :: START */
+
+.scrollsync_table.wrap {
+  position: relative;
+  width: 100%;
+  overscroll-behavior: contain;
+  background: #f2f2f2;
+}
+
+.scrollsync_table .headers {
+  top: 0;
+  position: -webkit-sticky;
+  position: sticky;
+  z-index: 20;
+  background: #ffffff;
+  border-bottom: 4px solid #fcba19
+}
+
+.scrollsync_table .headers .firstColumn {
+  background: #ffffff;
+}
+
+.scrollsync_table .tracks,
+.scrollsync_table .scroller {
+  display: flex;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollsync_table .scroller {
+  overflow-x: hidden;
+}
+
+.scrollsync_table .tracks {
+  overflow: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.scrollsync_table .scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollsync_table .column {
+  scroll-snap-align: start;
+}
+
+.scrollsync_table .column + .scrollsync_table .column {
+  margin-left: -1px;
+}
+
+.scrollsync_table .cell {
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  max-width: 165px;
+  width: 165px;
+}
+
+.scrollsync_table .firstColumn .cell {
+  justify-content: start;
+}
+
+.scrollsync_table .headers .firstColumn .cell {
+  justify-content: center;
+}
+
+.scrollsync_table .firstColumn .cell {
+  max-width: 100%;
+  width: 100%;
+}
+
+.scrollsync_table .firstColumn {
+  position: -webkit-sticky;
+  position: sticky;
+  background: #eaf5ff;
+  left: 0;
+  min-width: 350px;
+  width: 350px;
+  z-index: 2;
+  box-shadow: 5px 5px 5px #eaf5ff;
+}
+
+.scrollsync_table .innerFirstColumn {
+  background: #ffffff;
+}
+
+
+
+.scrollsync_table .heading {
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  border: solid #fff;
+  border-width: 0 1px;
+  z-index: 1;
+  background: #efefef;
+  font-weight: 700;
+}
+
+.scrollsync_table .entry {
+  border: 1px solid #ebebeb;
+  border-top: 0;
+  background: #fff;
+  height: 8em;
+  padding: 1em;
+}
+
+/* SCROLL SYNC TABLE styles :: END */

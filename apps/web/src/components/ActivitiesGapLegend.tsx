@@ -12,7 +12,7 @@ export const ActivitiesGapLegend: React.FC = () => {
     </span>
   );
   return (
-    <Popover title={title}>
+    <Popover title={title} elevatedZ>
       {(close: () => void) => (
         <>
           <div className={`legend-box`}>

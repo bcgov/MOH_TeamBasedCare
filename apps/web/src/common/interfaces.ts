@@ -20,6 +20,7 @@ export interface OccupationItemProps extends CommonDBItem {
 
 export interface TooltipIconProps {
   text?: string;
+  textWithOccupation?: string;
   icon?: IconDefinition;
   meaning?: string;
   style?: string;

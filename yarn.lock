@@ -2163,6 +2163,7 @@ __metadata:
     react: 17.0.2
     react-dom: 17.0.2
     react-keycloak: 8.0.1-191210
+    react-scroll-sync: 0.11.2
     react-select: 5.2.1
     react-test-renderer: 17.0.2
     react-toastify: 8.2.0
@@ -12919,7 +12920,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:^15.6.0, prop-types@npm:^15.6.2, prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
+"prop-types@npm:^15.5.7, prop-types@npm:^15.6.0, prop-types@npm:^15.6.2, prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:
@@ -13228,6 +13229,18 @@ __metadata:
     keycloak-js: ^8.0.1
     react: ^16.0.0
   checksum: 4837d9e90cdea4b6984a5815efe9e53519a951e12f8dfa41b492aaca5f072e4ab67a6447956ab0206f4580909d0cbc941cc322b56d2af3ef4be99be1efd20682
+  languageName: node
+  linkType: hard
+
+"react-scroll-sync@npm:0.11.2":
+  version: 0.11.2
+  resolution: "react-scroll-sync@npm:0.11.2"
+  dependencies:
+    prop-types: ^15.5.7
+  peerDependencies:
+    react: 16.x || 17.x || 18.x
+    react-dom: 16.x || 17.x || 18.x
+  checksum: 42220e7606c3f28a58ce579313044d5dc2c370c2db25737432e74065805ff50baf7f94136597ae7b1c192657c13ee16d6a9274316ab9481ba05595cefd7a2f07
   languageName: node
   linkType: hard
 
