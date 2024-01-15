@@ -38,6 +38,7 @@ export const OccupationItem = ({
               setIsOpen={setShowModal}
               title={displayName}
               description={description || 'No description available'}
+              closeButton={{ title: 'Ok' }}
             />
           </>
         )}

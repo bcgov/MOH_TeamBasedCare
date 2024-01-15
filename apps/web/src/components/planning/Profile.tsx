@@ -138,6 +138,7 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
         setIsOpen={setShowModal}
         title='Changing Care Setting?'
         description='Changing Care settings removes any previously selected care activities.'
+        closeButton={{ title: 'Ok' }}
       />
     </Form>
   );
