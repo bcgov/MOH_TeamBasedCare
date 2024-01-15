@@ -6,8 +6,8 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -112,8 +112,19 @@ export class PlanningSessionController {
   }
 
   @UseGuards(SessionGuard)
-  @Post('/:sessionId/export-csv')
-  exportCsv(@Param('sessionId') sessionId: string) {
-    return this.planningSessionService.exportCsv(sessionId);
+  @Post('/:sessionId/export-xlsx')
+  async exportXlsx(@Param('sessionId') sessionId: string, @Res() res: any) {
+    const xlsx = await this.planningSessionService.exportXlsx(sessionId);
+
+    res.status(200);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename=' + 'activity_gap_summary.xlsx');
+
+    await xlsx.write(res);
+
+    res.end();
   }
 }

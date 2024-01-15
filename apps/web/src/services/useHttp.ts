@@ -27,6 +27,7 @@ export const useHttp = () => {
         method: REQUEST_METHOD.GET,
         params: requestConfig?.params,
         data: requestConfig?.data,
+        ...requestConfig,
       };
       try {
         setIsLoading(true);
@@ -51,6 +52,7 @@ export const useHttp = () => {
         method: requestConfig.method,
         params: requestConfig?.params,
         data: requestConfig?.data,
+        ...requestConfig,
       };
       setIsLoading(true);
       try {
