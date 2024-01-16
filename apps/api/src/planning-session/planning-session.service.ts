@@ -15,7 +15,6 @@ import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { ActivitiesActionType } from '../common/constants';
-import { convertActivityGapTableToXLSX } from '../common/convert-activity-gap-table-to-csv';
 import { UnitService } from 'src/unit/unit.service';
 import { Unit } from 'src/unit/entity/unit.entity';
 import { BundleRO } from 'src/care-activity/ro/get-bundle.ro';
@@ -193,11 +192,6 @@ export class PlanningSessionService {
     }
 
     return;
-  }
-
-  async exportXlsx(sessionId: string): Promise<any> {
-    const activityGaps = await this.getPlanningActivityGap(sessionId);
-    return convertActivityGapTableToXLSX(activityGaps);
   }
 
   async getPlanningActivityGap(sessionId: string): Promise<any> {

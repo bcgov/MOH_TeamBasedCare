@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
   Req,
-  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -109,22 +108,5 @@ export class PlanningSessionController {
   @Get('/:sessionId/activities-gap')
   getPlanningActivityGap(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getPlanningActivityGap(sessionId);
-  }
-
-  @UseGuards(SessionGuard)
-  @Post('/:sessionId/export-xlsx')
-  async exportXlsx(@Param('sessionId') sessionId: string, @Res() res: any) {
-    const xlsx = await this.planningSessionService.exportXlsx(sessionId);
-
-    res.status(200);
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-    res.setHeader('Content-Disposition', 'attachment; filename=' + 'activity_gap_summary.xlsx');
-
-    await xlsx.write(res);
-
-    res.end();
   }
 }
