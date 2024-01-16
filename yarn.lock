@@ -2101,7 +2101,6 @@ __metadata:
     csv-stringify: 6.0.4
     dotenv: 10.0.0
     eslint: 8.0.1
-    exceljs: 4.4.0
     express: 4.17.1
     handlebars: 4.7.7
     jest: 27.4.7
@@ -2180,10 +2179,10 @@ __metadata:
     eslint-plugin-jest-dom: 3.9.2
     eslint-plugin-testing-library: 5.0.0
     eventemitter3: 4.0.7
+    exceljs: 4.4.0
     formik: 2.4.5
     identity-obj-proxy: 3.0.0
     jest: 27.4.2
-    js-file-download: 0.4.12
     keycloak-js: 16.1.1
     lodash: 4.17.21
     next: 12.1.4
@@ -10407,13 +10406,6 @@ __metadata:
   version: 2.2.1
   resolution: "js-cookie@npm:2.2.1"
   checksum: 9b1fb980a1c5e624fd4b28ea4867bb30c71e04c4484bb3a42766344c533faa684de9498e443425479ec68609e96e27b60614bfe354877c449c631529b6d932f2
-  languageName: node
-  linkType: hard
-
-"js-file-download@npm:0.4.12":
-  version: 0.4.12
-  resolution: "js-file-download@npm:0.4.12"
-  checksum: a03847eef0184fbf34a7b7fd365ea6aa1a6cc142efeac52c4baa0cdde845dc93718eb66808dfcffd6c91b37ddc9d058d352ac9698b4280744bad3587240c93b6
   languageName: node
   linkType: hard
 

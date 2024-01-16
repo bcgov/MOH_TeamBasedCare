@@ -57,7 +57,6 @@ export const API_ENDPOINT = {
   getPlanningOccupation: (sessionId: string) => `/sessions/${sessionId}/occupation`,
   getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
   getPlanningActivityGap: (sessionId: string) => `/sessions/${sessionId}/activities-gap`,
-  getExportXlsx: (sessionId: string) => `/sessions/${sessionId}/export-xlsx`,
   getActivitiesAllowedByOccupation: (
     occupationId: string,
     params: EndpointQueryParams<OccupationalScopeOfPracticeSortKeys>,
