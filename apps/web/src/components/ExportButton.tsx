@@ -65,7 +65,11 @@ const convertActivityGapTableToXLSX = (data: any) => {
 
   // header style
   const headerStyle = {
-    fill: { type: 'pattern', pattern: 'lightGray' },
+    fill: {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'D3D3D3' },
+    },
   };
 
   // text and fills configuration
