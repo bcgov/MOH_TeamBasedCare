@@ -47,7 +47,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     active: false,
     faIcon: faBook,
     path: AllowedPath.CARE_TERMINOLOGIES,
-    hidden: false,
+    hidden: true,
     roles: [Role.USER],
   },
 ];
