@@ -205,14 +205,14 @@ const ActivityGapTable: React.FC = () => {
   );
 };
 
-export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
+export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
   const description =
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
-        <PageTitle title={title} description={description} />
+        <PageTitle description={description} />
         <ActivitiesGapLegend />
         <OverviewCards />
       </div>

@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { SearchBar } from '../generic/SearchBar';
 import { Paginator } from '../generic/Paginator';
 import { OccupationSelector } from '../OccupationSelector';
@@ -26,7 +24,7 @@ const OccupationForm = ({ searchValue = '' }) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const Occupation: React.FC<OccupationProps> = ({ title }) => {
+export const Occupation: React.FC<OccupationProps> = () => {
   const occupationValidationSchema = createValidator(SaveOccupationDTO);
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
 
@@ -42,12 +40,7 @@ export const Occupation: React.FC<OccupationProps> = ({ title }) => {
     <div className='planning-form-box'>
       <div className='flex-1 flex flex-col min-h-0'>
         <div className='flex-1 min-h-0 flex flex-col'>
-          <PageTitle
-            title={'Select Occupations/Roles'}
-            description={'Select all the occupations/roles on your team'}
-          >
-            <FontAwesomeIcon className='text-bcBluePrimary inline w-6 h-6' icon={faUserCircle} />
-          </PageTitle>
+          <PageTitle description={'Select all the occupations/roles on your team'} />
 
           <div>
             <SearchBar placeholderText='Search by keyword' handleChange={handleSearch}></SearchBar>

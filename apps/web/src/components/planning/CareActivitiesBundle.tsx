@@ -1,6 +1,4 @@
 import { PageTitle } from '@components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFile } from '@fortawesome/free-solid-svg-icons';
 import { LeftSideBarActivites, RightSideBarActivites } from '@components';
 import { Formik, Form } from 'formik';
 
@@ -40,9 +38,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
   return (
     <>
       <div className='planning-form-box'>
-        <PageTitle title={title} description={description}>
-          <FontAwesomeIcon icon={faFile} className='h-6 text-bcBluePrimary' />
-        </PageTitle>
+        <PageTitle description={description} />
 
         <Formik
           initialValues={initialValues}
