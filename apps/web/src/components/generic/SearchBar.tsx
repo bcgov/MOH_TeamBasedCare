@@ -6,6 +6,7 @@ interface SearchBarProps {
   bgWhite?: boolean;
   value?: string;
   ref?: MutableRefObject<HTMLInputElement | null>;
+  className?: string;
 }
 
 export const SearchBar = ({
@@ -13,6 +14,7 @@ export const SearchBar = ({
   handleChange,
   bgWhite,
   value,
+  className = '',
 }: SearchBarProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -23,7 +25,7 @@ export const SearchBar = ({
   }, [inputRef.current, value]);
 
   return (
-    <div>
+    <div className={className}>
       <div className='relative w-full'>
         <div className='flex absolute inset-y-0 left-0 items-center pointer-events-none'>
           <div className='pl-2 pr-1 border-r-2'>

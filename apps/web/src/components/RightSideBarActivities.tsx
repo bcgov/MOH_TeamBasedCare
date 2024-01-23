@@ -76,8 +76,16 @@ export const RightSideBarActivites: React.FC = () => {
           filteredData.every((a: any) => values.careActivities.includes(a.id))
         }
       />
-      <label className='font-bold' htmlFor={'selectAll'}>
+      <label htmlFor={'selectAll'}>
         Select all
+        <span className='pl-1 font-bold'>
+          (
+          {
+            (filteredData?.filter((d: any) => (values?.careActivities || []).includes(d.id)) || [])
+              .length
+          }{' '}
+          / {(filteredData || []).length} Selected)
+        </span>
       </label>
     </div>
   );
@@ -137,7 +145,7 @@ export const RightSideBarActivites: React.FC = () => {
             {values.careActivityBundle[values.careActivityID]?.length} care activities selected
           </p>
 
-          <div className='flex-1 overflow-auto'>
+          <div className='overflow-auto'>
             <div role='group' aria-labelledby='checkbox-group'>
               {!_.isEmpty(filteredData) ? (
                 <>

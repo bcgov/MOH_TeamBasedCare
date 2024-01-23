@@ -40,10 +40,13 @@ export const Occupation: React.FC<OccupationProps> = () => {
     <div className='planning-form-box'>
       <div className='flex-1 flex flex-col min-h-0'>
         <div className='flex-1 min-h-0 flex flex-col'>
-          <PageTitle description={'Select all the occupations/roles on your team'} />
-
-          <div>
-            <SearchBar placeholderText='Search by keyword' handleChange={handleSearch}></SearchBar>
+          <div className='flex gap-1 justify-between items-center flex-row'>
+            <PageTitle description={'Select all the occupations/roles on your team'} />
+            <SearchBar
+              className='min-w-[200px] w-1/3'
+              placeholderText='Search by keyword'
+              handleChange={handleSearch}
+            ></SearchBar>
           </div>
 
           <Formik
@@ -53,11 +56,8 @@ export const Occupation: React.FC<OccupationProps> = () => {
             validateOnBlur={true}
             enableReinitialize={true}
           >
-            {({ values }) => (
-              <div className='flex-1 flex flex-col min-h-0 p-2'>
-                <p className='text-sm font-extralight font-sans text-gray-400'>
-                  {values.occupation?.length} occupations selected
-                </p>
+            {() => (
+              <div className='flex-1 flex flex-col min-h-0'>
                 <Paginator></Paginator>
                 <Error name='occupation'></Error>
                 <OccupationForm searchValue={searchValue}></OccupationForm>

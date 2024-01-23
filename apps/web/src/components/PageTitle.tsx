@@ -24,7 +24,7 @@ export const PageTitle: React.FC<PageTitleProps> = ({
           {secondaryChild}
         </div>
       )}
-      {description && <p className='text-sm text-gray-400 p-2'>{description}</p>}
+      {description && <p className='text-sm text-gray-400'>{description}</p>}
     </>
   );
 };

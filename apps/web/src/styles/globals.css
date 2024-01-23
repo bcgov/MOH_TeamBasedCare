@@ -26,7 +26,7 @@ body,
 }
 
 .occupation-item-box {
-  @apply flex items-center h-16 px-4;
+  @apply flex items-center h-12 p-3;
 }
 
 .item-box-gray {
