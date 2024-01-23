@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as jwt from 'jsonwebtoken';
 import * as queryString from 'querystring';
@@ -27,6 +27,8 @@ export class AuthService {
   private keycloakUserInfoUri: string;
 
   private keycloakLogoutUri: string;
+
+  private readonly logger = new Logger();
 
   constructor(
     private readonly httpService: HttpService,
@@ -77,6 +79,9 @@ export class AuthService {
               ),
           ),
           catchError(e => {
+            this.logger.error('auth.service.ts :: getAccessToken');
+            this.logger.error(JSON.stringify(params));
+            this.logger.error(e);
             throw new HttpException(e.response.data, e.response.status);
           }),
         ),
@@ -100,6 +105,9 @@ export class AuthService {
           return { resource_access, ...res.data } as KeycloakUser;
         }),
         catchError(e => {
+          this.logger.error('auth.service.ts :: getUserInfo');
+          this.logger.error(JSON.stringify(params));
+          this.logger.error(e);
           throw new HttpException(e.response.data, e.response.status);
         }),
       ),
@@ -131,6 +139,9 @@ export class AuthService {
               ),
           ),
           catchError(e => {
+            this.logger.error('auth.service.ts :: refreshAccessToken');
+            this.logger.error(JSON.stringify(params));
+            this.logger.error(e);
             throw new HttpException(
               e?.response?.data || 'Error data unknown, Something Went wrong',
               e?.response?.status || 500,
@@ -154,6 +165,9 @@ export class AuthService {
         .pipe(
           map((res: any) => res.data),
           catchError(e => {
+            this.logger.error('auth.service.ts :: logout');
+            this.logger.error(JSON.stringify(params));
+            this.logger.error(e);
             throw new HttpException(
               e?.response?.data || 'Error data unknown, Something Went wrong',
               e?.response?.status || 500,
