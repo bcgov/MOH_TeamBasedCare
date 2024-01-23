@@ -32,7 +32,7 @@ const WrapperContent = () => {
   return (
     <div className='flex-1 flex flex-col min-h-0'>
       <div
-        className='w-full overflow-x-scroll flex items-center justify-between print:hidden rounded border-2 bg-white p-1 mt-4'
+        className='w-full overflow-x-auto flex items-center justify-between print:hidden rounded border-2 bg-white p-1 mt-4'
         aria-hidden
       >
         <div className='flex items-center space-x-2'>
