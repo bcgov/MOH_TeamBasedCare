@@ -32,13 +32,11 @@ const WrapperContent = () => {
   return (
     <div className='flex-1 flex flex-col min-h-0'>
       <div
-        className='w-full overflow-x-auto flex items-center justify-between print:hidden rounded border-2 bg-white p-1 mt-4'
+        className='w-full overflow-x-auto flex items-center justify-between print:hidden rounded border-2 bg-white p-4 mt-4'
         aria-hidden
       >
-        <div className='flex items-center space-x-2'>
-          <Stepper steps={PlanningSteps} currentStep={currentStep} />
-        </div>
-        <div className='flex p-2'>
+        <Stepper steps={PlanningSteps} currentStep={currentStep} />
+        <div className='flex'>
           <Button
             variant='outline'
             type='button'
@@ -65,7 +63,7 @@ const WrapperContent = () => {
         </div>
       </div>
       {/* Works here */}
-      <div className='flex-1 flex flex-col min-h-0 overflow-y-auto'>
+      <div className='flex-1 flex flex-col min-h-0 overflow-y-auto mt-4'>
         <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
     </div>

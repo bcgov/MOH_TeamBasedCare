@@ -64,14 +64,22 @@ export const Stepper: React.FC<{ steps: string[]; currentStep: number }> = ({
         {currentStep <= stepCount ? `Form step ${currentStep} of ${stepCount}` : 'Form Complete'}
       </p>
 
-      {steps.map((step, index) => (
-        <>
-          <Step key={index} index={index} currentStep={currentStep} label={step} step={index + 1} />
-          {stepCount !== index + 1 ? (
-            <FontAwesomeIcon icon={faGreaterThan} className={`h-3 text-gray-400 px-1`} />
-          ) : null}
-        </>
-      ))}
+      <div className='flex items-center space-x-2'>
+        {steps.map((step, index) => (
+          <>
+            <Step
+              key={index}
+              index={index}
+              currentStep={currentStep}
+              label={step}
+              step={index + 1}
+            />
+            {stepCount !== index + 1 ? (
+              <FontAwesomeIcon icon={faGreaterThan} className={`h-3 text-gray-400 px-1`} />
+            ) : null}
+          </>
+        ))}
+      </div>
     </>
   );
 };

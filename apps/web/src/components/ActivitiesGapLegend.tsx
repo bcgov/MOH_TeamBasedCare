@@ -1,21 +1,23 @@
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faList, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TooltipIconProps } from 'src/common/interfaces';
 import { tooltipIcons } from '../common';
 import { Button } from './Button';
-import { Popover } from './generic/Popover';
+import { Popover, PopoverPosition } from './generic/Popover';
 
 export const ActivitiesGapLegend: React.FC = () => {
   const title = (
-    <span className='mt-2 text-sm font-bold text-bcBluePrimary group inline-flex items-center rounded-md focus:ring-blue-500'>
-      Click here to view table legend
-    </span>
+    <Button variant='secondary' type='button'>
+      Table legend
+      <FontAwesomeIcon title='Close' icon={faList} className='h-4 ml-2 mr-1' />
+    </Button>
   );
   return (
-    <Popover title={title}>
+    <Popover title={title} position={PopoverPosition.BOTTOM_LEFT}>
       {(close: () => void) => (
         <>
-          <div className={`legend-box`}>
+          <div className={`legend-box w-[24rem] lg:w-[44rem]`}>
+            {/* width based on Popover max widths and screen equivalents*/}
             <h2>Table Legend</h2>
             <ul className='flex flex-col items-start my-4'>
               {Object.values(tooltipIcons).map((value: TooltipIconProps, index) => {
@@ -35,7 +37,6 @@ export const ActivitiesGapLegend: React.FC = () => {
                 );
               })}
             </ul>
-
             <Button variant='outline' type='button' classes={`ml-2`} onClick={close}>
               <FontAwesomeIcon title='Close' icon={faTimes} className='h-4 mr-2' />
               Dismiss

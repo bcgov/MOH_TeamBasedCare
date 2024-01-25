@@ -15,16 +15,19 @@ export const OverviewCards: React.FC = () => {
         color={CardColor.GREEN}
         title={initialValues?.overview?.inScope || ''}
         subtitle={'Within scope of practice'}
+        className='hover:shadow-xl'
       />
       <Card
         color={CardColor.YELLOW}
         title={initialValues?.overview?.limits || ''}
         subtitle={'With limits and conditions'}
+        className='hover:shadow-xl'
       />
       <Card
         color={CardColor.RED}
         title={initialValues?.overview?.outOfScope || ''}
         subtitle={'Outside scope of practice'}
+        className='hover:shadow-xl'
       />
     </div>
   );
