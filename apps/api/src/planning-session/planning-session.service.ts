@@ -255,7 +255,7 @@ export class PlanningSessionService {
 
       let numberOfGaps = 0;
       const careActivitiesForBundle: any[] = [];
-      value.forEach(eachCA => {
+      _.sortBy(value, 'name').forEach(eachCA => {
         const eachActivity: { [key: string]: any } = {
           name: eachCA.name,
         };
@@ -310,7 +310,7 @@ export class PlanningSessionService {
 
     return {
       headers,
-      data: result,
+      data: _.sortBy(result, 'name'),
       overview,
     };
   }

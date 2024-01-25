@@ -21,6 +21,7 @@ import { CareActivityType, ClinicalType } from '@tbcm/common';
   // Note: this is default order, and will get overridden if query supplies one
   orderBy: {
     displayName: 'ASC',
+    name: 'ASC',
   },
 })
 export class CareActivity extends CustomBaseEntity {
