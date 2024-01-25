@@ -155,7 +155,6 @@ thead th {
   background: #fff;
 }
 .activity-gap-table {
-  float: left;
   overflow: auto;
 }
 .firstTDinsideRow {
