@@ -114,3 +114,15 @@ export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
     style: 'blue-icon',
   },
 };
+
+export const ActivityTagDefinitions: Partial<{ [key in ActivityTagVariants]: { text: string } }> = {
+  [ActivityTagVariants.ASPECT]: {
+    text: `Aspects of Practice are care activities, other than a restricted activity, which are part of providing a health service that is within the scope of practice of a designated health profession and requires professional knowledge, skills, ability, and judgement.`,
+  },
+  [ActivityTagVariants.RESTRICTED]: {
+    text: `Restricted activities are a narrowly defined list of invasive, higher risk activities and are written in health profession specific regulations.`,
+  },
+  [ActivityTagVariants.TASK]: {
+    text: `Tasks are lower risk care activities which are not a ‘restricted activity’ or an ‘aspect of practice.’`,
+  },
+};
