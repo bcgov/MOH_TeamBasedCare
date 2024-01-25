@@ -24,6 +24,8 @@ export interface TooltipIconProps {
   meaning?: string;
   style?: string;
   position?: PopoverPosition;
+  textWithOccupation?: string;
+  occupation?: string;
 }
 
 export interface AllowedActivityByOccupation {

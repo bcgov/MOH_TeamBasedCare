@@ -11,10 +11,11 @@ const tooltipDefaultValues = {
 };
 
 export const TooltipIcon = ({
-  text = tooltipDefaultValues.text,
   icon = tooltipDefaultValues.icon,
   style = tooltipDefaultValues.style,
   position,
+  textWithOccupation = tooltipDefaultValues.text,
+  occupation = '',
 }: TooltipIconProps) => {
   return (
     <div className={`inline-block w-[25px]`}>
@@ -31,7 +32,7 @@ export const TooltipIcon = ({
                 }`}
               ></div>
               <div className='w-[200px] w-auto p-3 text-sm text-white bg-bcBlueAccent shadow-xl rounded-lg'>
-                {text}
+                {textWithOccupation.replaceAll('<OCCUPATION>', occupation)}
               </div>
             </>
           )}

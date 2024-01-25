@@ -24,7 +24,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
   ];
 
   return (
-    <thead className='border-b table-row-fixed table-header'>
+    <thead className='border-b table-row-fixed table-header shadow-lg sticky top-[-12px]'>
       <tr className='w-full'>
         {headers.map(({ label, name }, index: number) => (
           <th key={`th${index}`} className={tdStyles}>

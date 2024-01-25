@@ -87,24 +87,28 @@ export enum TooltipIconTypes {
 export const tooltipIcons: { [key in TooltipIconTypes]: TooltipIconProps } = {
   greenCheckmarkIcon: {
     text: `Within scope of practice or role description`,
+    textWithOccupation: `Within scope of practice or role description for <OCCUPATION>`,
     meaning: 'All activities can be performed.',
     icon: faCheckCircle,
     style: 'green-icon',
   },
   yellowCautionIcon: {
     text: `Can be performed with standards, limits, and conditions by regulatory college or employer (e.g., additional education)`,
+    textWithOccupation: `<OCCUPATION> can perform with standards, limits, and conditions by regulatory college or employer (e.g., additional education)`,
     meaning: '',
     icon: faExclamationCircle,
     style: 'yellow-icon',
   },
   redXIcon: {
     text: `Outside scope of practice or role description`,
+    textWithOccupation: `Outside scope of practice or role description for <OCCUPATION>`,
     meaning: 'All activities cannot be performed.',
     icon: faTimesCircle,
     style: 'red-icon',
   },
   blueQuestionIcon: {
     text: `Can perform some care activities with organizational support or additional education`,
+    textWithOccupation: `<OCCUPATION> can perform some care activities with organizational support or additional education`,
     meaning: 'Some activities have restrictions.',
     icon: faQuestionCircle,
     style: 'blue-icon',

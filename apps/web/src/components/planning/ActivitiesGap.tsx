@@ -61,19 +61,41 @@ const TableHeader: React.FC = () => {
 };
 
 const SwitchTooltip: React.FC<any> = props => {
-  const { item, positionBottomLeft } = props;
+  const { item, positionBottomLeft, occupation } = props;
   const position = positionBottomLeft ? PopoverPosition.BOTTOM_LEFT : PopoverPosition.BOTTOM_RIGHT;
   switch (item) {
     case 'MIXED':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.BLUE_QUESTION]} position={position} />;
+      return (
+        <TooltipIcon
+          {...tooltipIcons[TooltipIconTypes.BLUE_QUESTION]}
+          position={position}
+          occupation={occupation}
+        />
+      );
     case 'Y':
       return (
-        <TooltipIcon {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]} position={position} />
+        <TooltipIcon
+          {...tooltipIcons[TooltipIconTypes.GREEN_CHECKMARK]}
+          position={position}
+          occupation={occupation}
+        />
       );
     case 'LC':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]} position={position} />;
+      return (
+        <TooltipIcon
+          {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]}
+          position={position}
+          occupation={occupation}
+        />
+      );
     case '':
-      return <TooltipIcon {...tooltipIcons[TooltipIconTypes.RED_X]} position={position} />;
+      return (
+        <TooltipIcon
+          {...tooltipIcons[TooltipIconTypes.RED_X]}
+          position={position}
+          occupation={occupation}
+        />
+      );
     default:
       return item;
   }
@@ -137,6 +159,7 @@ const TableBody: React.FC = () => {
                       <SwitchTooltip
                         item={row[title]}
                         positionBottomLeft={index > initialValues.headers.length / 2}
+                        occupation={title}
                       />
                     </td>
                   )
@@ -148,15 +171,16 @@ const TableBody: React.FC = () => {
               row.careActivities.map((value: any, index: number) => {
                 return (
                   <tr key={`toggledRow${index}`} className='bg-white border-b table-row-fixed'>
-                    {Object.values(value).map((item: any, index) => {
+                    {Object.keys(value).map((key: any, index) => {
                       return (
                         <td
                           key={`toggledRowTd${index}`}
                           className={`${tdStyles} ${index == 0 ? 'firstTDinsideRow' : ''}`}
                         >
                           <SwitchTooltip
-                            item={item}
+                            item={value[key]}
                             positionBottomLeft={index > Object.values(value).length / 2}
+                            occupation={key}
                           />
                         </td>
                       );

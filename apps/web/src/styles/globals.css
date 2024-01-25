@@ -92,7 +92,6 @@ body,
   border-collapse: collapse;
   font-family: helvetica;
   caption-side: top;
-  text-transform: capitalize;
 }
 
 .activity-gap-table td,
