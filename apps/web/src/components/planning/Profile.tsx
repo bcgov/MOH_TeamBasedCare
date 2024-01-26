@@ -32,6 +32,7 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
   const { careLocations, isLoading } = useCareLocations();
   const [showModal, setShowModal] = useState(false);
   const { updateSessionId } = usePlanningContext();
+  const [lastDraftUpdatedFromNow, setLastDraftUpdatedFromNow] = useState('');
 
   const handleLastDraft = useCallback(() => {
     if (!lastDraft) return;
@@ -77,6 +78,23 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
     }
   }, [initialValues.careLocation, values.careLocation]);
 
+  useEffect(() => {
+    if (!lastDraft?.updatedAt) return;
+
+    const updatedAt = lastDraft.updatedAt;
+
+    const interval = () => {
+      setLastDraftUpdatedFromNow(formatDateFromNow(updatedAt) || '');
+    };
+
+    interval(); // run immediately
+    const intervalId = setInterval(interval, 10000); // re-evaluate every 10s
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [lastDraft?.updatedAt]);
+
   const profileOptions = useMemo(
     () => [
       {
@@ -84,9 +102,7 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
         value: ProfileOptions.FROM_SCRATCH,
       },
       {
-        label: `Continue working on your last draft (Last saved ${formatDateFromNow(
-          lastDraft?.updatedAt,
-        )})`,
+        label: `Continue working on your last draft (Last saved ${lastDraftUpdatedFromNow})`,
         hoverText: `Last saved - ${formatDateTime(lastDraft?.updatedAt)}`,
         value: ProfileOptions.DRAFT,
         hidden: !lastDraft,
@@ -97,7 +113,7 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
         disabled: true,
       },
     ],
-    [lastDraft],
+    [lastDraft, lastDraftUpdatedFromNow],
   );
 
   return (
