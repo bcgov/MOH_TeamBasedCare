@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Checkbox, Radio } from '@components';
+import { Radio } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
 import {
@@ -213,10 +213,6 @@ const ConfirmDraftRemove = ({
             Please keep in mind that selecting “Start from scratch” will result in the removal of
             your last saved draft.
           </p>
-        </div>
-
-        <div className='pt-8'>
-          <Checkbox label={`Don't show this again`} name='userPrefNotShowConfirmDraftRemoval' />
         </div>
       </div>
     </ModalWrapper>
