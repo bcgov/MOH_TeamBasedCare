@@ -9,6 +9,8 @@ import { Tag } from './generic/Tag';
 import { SearchBar } from './generic/SearchBar';
 import { pickTagStyle } from 'src/common/util';
 import { AppErrorMessage } from './AppErrorMessage';
+import { ActivityTagDefinitions, ActivityTagVariants } from 'src/common';
+import { Popover, PopoverPosition } from './generic/Popover';
 
 export const RightSideBarActivites: React.FC = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
@@ -92,10 +94,30 @@ export const RightSideBarActivites: React.FC = () => {
           />
         </div>
         <div className='flex flex-initial w-3/6 justify-end'>
-          <Tag text={item.activityType} tagStyle={pickTagStyle(item.activityType)}></Tag>
-          {item.clinicalType && (
-            <Tag text={item.clinicalType} tagStyle={pickTagStyle(item.clinicalType)}></Tag>
-          )}
+          <Popover
+            position={PopoverPosition.BOTTOM_LEFT}
+            title={
+              <>
+                <Tag text={item.activityType} tagStyle={pickTagStyle(item.activityType)}></Tag>
+                {item.clinicalType && (
+                  <Tag text={item.clinicalType} tagStyle={pickTagStyle(item.clinicalType)}></Tag>
+                )}
+              </>
+            }
+          >
+            {() => (
+              <>
+                {ActivityTagDefinitions?.[item.activityType as ActivityTagVariants]?.text && (
+                  <>
+                    <div className={`absolute w-4 h-4 rotate-60 bg-bcBlueAccent right-0`}></div>
+                    <div className='w-[100px] md:w-[200px] lg:w-[300px] w-auto p-3 text-sm text-white bg-bcBlueAccent shadow-xl rounded-lg'>
+                      {ActivityTagDefinitions?.[item.activityType as ActivityTagVariants]?.text}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </Popover>
         </div>
       </div>
     );
@@ -115,7 +137,7 @@ export const RightSideBarActivites: React.FC = () => {
             {values.careActivityBundle[values.careActivityID]?.length} care activities selected
           </p>
 
-          <div className='overflow-auto'>
+          <div className='flex-1 overflow-auto'>
             <div role='group' aria-labelledby='checkbox-group'>
               {!_.isEmpty(filteredData) ? (
                 <>
