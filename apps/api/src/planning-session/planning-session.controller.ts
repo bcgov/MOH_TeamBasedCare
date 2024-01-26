@@ -38,6 +38,10 @@ export class PlanningSessionController {
 
   @Post()
   async createPlanningSession(@Req() req: IRequest, @Body() saveProfileDto: SaveProfileDTO) {
+    if (saveProfileDto.userPrefNotShowConfirmDraftRemoval) {
+      // update user pref here
+    }
+
     const session = await this.planningSessionService.createPlanningSession(
       saveProfileDto,
       req.user,

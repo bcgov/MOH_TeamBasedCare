@@ -16,6 +16,7 @@ import { KeycloakConfigService } from './config/keycloak-config.service';
 import { APP_GUARD } from '@nestjs/core';
 import { AllowedActivityModule } from './allowed-activity/allowed-activity.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { FeedbackModule } from './feedback/feedback.module';
       imports: [ConfigModule],
     }),
     FeedbackModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [

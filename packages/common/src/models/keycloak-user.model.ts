@@ -18,4 +18,6 @@ export interface KeycloakUser {
   family_name?: string;
 
   email?: string;
+
+  organization?: string;
 }

@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
 import { KeycloakToken } from '@tbcm/common';
 import { KeycloakUser } from '@tbcm/common';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +34,7 @@ export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly userService: UserService,
   ) {
     this.keycloakAuthServerUri = this.configService.getValue('KEYCLOAK_AUTH_SERVER_URI');
     this.keycloakResponseType = this.configService.getValue('KEYCLOAK_RESPONSE_TYPE');
@@ -89,7 +91,7 @@ export class AuthService {
     return data;
   }
 
-  async getUserInfo(accessToken: string): Promise<KeycloakUser> {
+  async getUserInfo(accessToken: string): Promise<any> {
     const params = {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -97,12 +99,15 @@ export class AuthService {
     };
     const data = await firstValueFrom(
       this.httpService.get(this.keycloakUserInfoUri, params).pipe(
-        map((res: any) => {
+        map(async (res: any) => {
           // roles does not exist in the userinfo, extracting from the token
           const { resource_access } = jwt.decode(accessToken) as KeycloakUser;
 
+          // add user
+          const user = await this.userService.upsertUser(res.data);
+
           // return response + roles
-          return { resource_access, ...res.data } as KeycloakUser;
+          return { resource_access, ...user };
         }),
         catchError(e => {
           this.logger.error('auth.service.ts :: getUserInfo');
