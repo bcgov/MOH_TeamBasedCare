@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Radio } from '@components';
+import { Checkbox, Radio } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
 import {
@@ -13,7 +13,7 @@ import createValidator from 'class-validator-formik';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '../generic/Spinner';
 
 export interface ProfileProps {
@@ -24,6 +24,7 @@ export interface ProfileProps {
 interface ProfileFormProps {
   profileOption: string;
   careLocation: string;
+  userPrefShowConfirmDraftRemoval?: boolean;
 }
 
 const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
@@ -39,7 +40,7 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
 
     setValues({
       profileOption: ProfileOptions.DRAFT,
-      careLocation: lastDraft.careLocationId || '',
+      careLocation: lastDraft.careSetting.id,
     });
   }, [lastDraft]);
 
@@ -144,19 +145,102 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
   );
 };
 
+interface ConfirmDraftRemoveProps {
+  showModal: boolean;
+  setShowModal: Dispatch<SetStateAction<boolean>>;
+  handleSubmit: (values: SaveProfileDTO) => void;
+  lastDraft?: PlanningSessionRO;
+}
+
+const ConfirmDraftRemove = ({
+  showModal,
+  setShowModal,
+  handleSubmit,
+  lastDraft,
+}: ConfirmDraftRemoveProps) => {
+  const { values } = useFormikContext<ProfileFormProps>();
+
+  return (
+    <ModalWrapper
+      isOpen={showModal}
+      setIsOpen={setShowModal}
+      title='Profile in draft'
+      closeButton={{ title: 'Cancel' }}
+      actionButton={{
+        title: 'Continue the process',
+        onClick: () => {
+          handleSubmit(values);
+        },
+      }}
+    >
+      <div className='p-4 text-sm'>
+        <p>
+          You have an incomplete draft profile stored in the system. Here are the details of the
+          draft profile:
+        </p>
+
+        <div className='pt-4'>
+          <p className='font-bold'>Care setting:</p>
+          <p>{lastDraft?.careSetting.name}</p>
+        </div>
+        <div className='pt-2'>
+          <p className='font-bold'>Care activity bundles:</p>
+          <p>{lastDraft?.bundles.map(bundle => bundle.name).join(', ')}</p>
+        </div>
+        <div className='pt-2'>
+          <p className='font-bold'>Last saved on:</p>
+          <p>{formatDateTime(lastDraft?.updatedAt)}</p>
+        </div>
+
+        <div className='pt-4'>
+          <p>
+            Please keep in mind that selecting “Start from scratch” will result in the removal of
+            your last saved draft.
+          </p>
+        </div>
+
+        <div className='pt-8'>
+          <Checkbox label={`Don't show this again`} name='userPrefNotShowConfirmDraftRemoval' />
+        </div>
+      </div>
+    </ModalWrapper>
+  );
+};
+
 export const Profile: React.FC<ProfileProps> = () => {
   const profileValidationSchema = createValidator(SaveProfileDTO);
   const { handleSubmit, initialValues, lastDraft } = usePlanningProfile();
+
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <Formik
       initialValues={initialValues}
       validate={profileValidationSchema}
-      onSubmit={handleSubmit}
+      onSubmit={values => {
+        // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft
+        if (lastDraft && values.profileOption !== ProfileOptions.DRAFT) {
+          setShowModal(true);
+          return;
+        }
+
+        return handleSubmit(values);
+      }}
       validateOnBlur={true}
       validateOnMount={true}
       enableReinitialize={true}
     >
-      <ProfileForm lastDraft={lastDraft} />
+      <>
+        <ProfileForm lastDraft={lastDraft} />
+        {showModal && (
+          <ConfirmDraftRemove
+            showModal={showModal}
+            setShowModal={setShowModal}
+            handleSubmit={handleSubmit}
+            lastDraft={lastDraft}
+          />
+        )}
+      </>
     </Formik>
   );
 };

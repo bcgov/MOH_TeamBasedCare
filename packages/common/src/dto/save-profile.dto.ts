@@ -1,4 +1,4 @@
-import { IsEnum, IsUUID } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { ProfileOptions } from '../constants';
 
 export class SaveProfileDTO {
@@ -7,4 +7,8 @@ export class SaveProfileDTO {
 
   @IsUUID('4', { message: 'Please select a valid care setting' })
   careLocation!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  userPrefNotShowConfirmDraftRemoval?: boolean;
 }

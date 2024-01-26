@@ -1,4 +1,33 @@
 import { Exclude, Expose } from 'class-transformer';
+import _ from 'lodash';
+
+@Exclude()
+export class PlanningSessionCareSettingRO {
+  @Expose()
+  id!: string;
+
+  @Expose()
+  name!: string;
+
+  constructor(data: any) {
+    Object.assign(this, { id: '', name: '' }, data);
+    this.name = data.displayName;
+  }
+}
+
+@Exclude()
+export class PlanningSessionBundleRO {
+  @Expose()
+  id!: string;
+
+  @Expose()
+  name!: string;
+
+  constructor(data: any) {
+    Object.assign(this, data);
+    this.name = data.displayName;
+  }
+}
 
 @Exclude()
 export class PlanningSessionRO {
@@ -9,12 +38,33 @@ export class PlanningSessionRO {
   profileOption?: string;
 
   @Expose()
-  careLocationId?: string;
+  careSetting!: PlanningSessionCareSettingRO;
 
   @Expose()
   updatedAt!: Date;
 
+  @Expose()
+  bundles!: PlanningSessionBundleRO[];
+
   constructor(data: any) {
     Object.assign(this, data);
+
+    /** Bundles */
+    const bundles: PlanningSessionBundleRO[] = [];
+    if (data?.careActivity?.length > 0) {
+      data.careActivity.forEach((ca: any) => {
+        if (ca.bundle) {
+          bundles.push(new PlanningSessionBundleRO(ca.bundle));
+        }
+      });
+    }
+    this.bundles = _.sortBy(
+      _.uniqBy(bundles, bundle => bundle.id),
+      'name',
+    );
+
+    /** care setting */
+
+    this.careSetting = new PlanningSessionCareSettingRO(data.careLocation);
   }
 }
