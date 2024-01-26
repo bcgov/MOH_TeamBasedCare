@@ -55,11 +55,8 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
           <span className='pl-1 font-bold'>
             (
             {
-              (
-                filteredOccupations?.filter((o: any) =>
-                  (values?.occupation || []).includes(o.id),
-                ) || []
-              ).length
+              (filteredOccupations?.filter(o => (values?.occupation || []).includes(o.id)) || [])
+                .length
             }{' '}
             / {filteredOccupations?.length} Selected)
           </span>
