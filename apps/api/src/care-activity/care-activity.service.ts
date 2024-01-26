@@ -33,6 +33,8 @@ export class CareActivityService {
         'unit_id = :careLocationId',
         { careLocationId },
       )
+      .orderBy('bundle.displayName', 'ASC')
+      .addOrderBy('bundle_careActivities.displayName', 'ASC')
       .getMany();
 
     return bundles.map(bundle => new BundleRO(bundle));

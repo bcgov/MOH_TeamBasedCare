@@ -38,16 +38,29 @@ export class AllowedActivityService {
     // Sorting
     const sortBy = query.sortBy as OccupationalScopeOfPracticeSortKeys;
 
-    if (sortBy === OccupationalScopeOfPracticeSortKeys.BUNDLE_NAME) {
-      queryBuilder.orderBy(`aa_ca_b.displayName`, query.sortOrder as SortOrder);
+    // if sort by care setting, sort by care setting with bundles and care activities sorted by ASC order
+    if (sortBy === OccupationalScopeOfPracticeSortKeys.CARE_SETTING_NAME) {
+      queryBuilder.orderBy(`aa_ca_cl.displayName`, query.sortOrder as SortOrder);
+      queryBuilder.addOrderBy(`aa_ca_b.displayName`, SortOrder.ASC);
+      queryBuilder.addOrderBy(`aa_ca.displayName`, SortOrder.ASC);
     }
 
+    // if sort by bundle, sort by bundle with care activities sorted by ASC order
+    if (sortBy === OccupationalScopeOfPracticeSortKeys.BUNDLE_NAME) {
+      queryBuilder.orderBy(`aa_ca_b.displayName`, query.sortOrder as SortOrder);
+      queryBuilder.addOrderBy(`aa_ca.displayName`, SortOrder.ASC);
+    }
+
+    // if sort by care activities, sort by care activities
     if (sortBy === OccupationalScopeOfPracticeSortKeys.CARE_ACTIVITY_NAME) {
       queryBuilder.orderBy(`aa_ca.displayName`, query.sortOrder as SortOrder);
     }
 
-    if (sortBy === OccupationalScopeOfPracticeSortKeys.CARE_SETTING_NAME) {
-      queryBuilder.orderBy(`aa_ca_cl.displayName`, query.sortOrder as SortOrder);
+    // if default order, sort by care setting, bundles and care activities in the ASC order
+    if (!sortBy) {
+      queryBuilder.orderBy(`aa_ca_cl.displayName`, SortOrder.ASC);
+      queryBuilder.addOrderBy(`aa_ca_b.displayName`, SortOrder.ASC);
+      queryBuilder.addOrderBy(`aa_ca.displayName`, SortOrder.ASC);
     }
 
     // return the paginated response
