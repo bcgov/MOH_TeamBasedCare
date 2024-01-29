@@ -89,6 +89,14 @@ resource "aws_iam_role_policy" "lambda_s3" {
           "s3-object-lambda:*"
         ],
         "Resource" : "arn:aws:logs:${var.region}:${var.target_aws_account_id}:log-group:/aws/lambda/${local.namespace}-api:*"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:ListBucket",
+          "s3:GetObject",
+        ],
+        "Resource" : "arn:aws:s3:::${var.docs_bucket}/*"
       }
     ]
   })

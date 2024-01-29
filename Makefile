@@ -41,6 +41,7 @@ export AWS_REGION ?= ca-central-1
 NAMESPACE = $(PROJECT)-$(ENV_NAME)
 APP_SRC_BUCKET = $(NAMESPACE)-app
 API_SRC_BUCKET = $(NAMESPACE)-api
+DOCS_BUCKET = $(NAMESPACE)-docs
 
 # Terraform variables
 TERRAFORM_DIR = terraform
@@ -68,7 +69,7 @@ KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
 # Keycloak ref variables
-export KEYCLOAK_REDIRECT_URI ?= https://${DOMAIN}/
+export KEYCLOAK_REDIRECT_URI = https://${DOMAIN}/
 export KEYCLOAK_USER_INFO_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
 export KEYCLOAK_TOKEN_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
 export KEYCLOAK_LOGOUT_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout
@@ -80,6 +81,7 @@ api_artifact = "build/api.zip"
 app_sources = "build/app"
 app_sources_bucket = "$(APP_SRC_BUCKET)"
 api_sources_bucket = "$(API_SRC_BUCKET)"
+docs_bucket = "$(DOCS_BUCKET)"
 domain = "$(DOMAIN)"
 db_username = "$(POSTGRES_USERNAME)"
 build_id = "$(COMMIT_SHA)"
