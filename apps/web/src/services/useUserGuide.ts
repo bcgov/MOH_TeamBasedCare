@@ -29,7 +29,12 @@ export const useUserGuide = () => {
 
   /** fetch signed url */
   const fetchSignedUrl = useCallback(
-    (name: string, cb: (url: string) => void, errorToastMessage?: string, version?: string) => {
+    (
+      name: string,
+      cb: (data: { url: string }) => void,
+      errorToastMessage?: string,
+      version?: string,
+    ) => {
       const query = version ? new URLSearchParams({ version }).toString() : '';
 
       const config = {

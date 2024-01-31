@@ -18,7 +18,11 @@ export class UserGuideController {
   async getSignedUrl(
     @Param('name') name: string,
     @Query('version') version?: string,
-  ): Promise<string> {
-    return this.userGuideService.getSignedUrl(name, version);
+  ): Promise<{ url: string }> {
+    const url = await this.userGuideService.getSignedUrl(name, version);
+
+    return {
+      url,
+    };
   }
 }

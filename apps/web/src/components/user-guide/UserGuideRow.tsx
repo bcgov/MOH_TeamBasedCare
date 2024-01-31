@@ -15,7 +15,7 @@ export const UserGuideRow = ({ file }: UserGuideProps) => {
     (name: string) => {
       fetchSignedUrl(
         name,
-        window.open,
+        ({ url }) => window.open(url),
         'Something went wrong fetching file. Please try again later',
       );
     },

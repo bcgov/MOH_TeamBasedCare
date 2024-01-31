@@ -42,7 +42,13 @@ export class UserGuideService {
       throw new InternalServerErrorException('the feature is disabled');
     }
     try {
-      const params = { Bucket: BUCKET_NAME, Key: key, VersionId: version, Expires: 60 };
+      const params = {
+        Bucket: BUCKET_NAME,
+        Key: key,
+        VersionId: version,
+        Expires: 60,
+        ResponseContentDisposition: 'attachment',
+      };
       return await this.s3.getSignedUrlPromise('getObject', params);
     } catch (e) {
       this.logger.error(e, 'S3');
