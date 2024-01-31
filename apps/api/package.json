@@ -35,6 +35,7 @@
     "@tbcm/common": "1.0.1",
     "@types/jsonwebtoken": "8.5.8",
     "@vendia/serverless-express": "4.3.11",
+    "aws-sdk": "2.1546.0",
     "axios": "1.5.1",
     "class-transformer": "0.5.1",
     "csv-parser": "3.0.0",
