@@ -96,7 +96,7 @@ resource "aws_iam_role_policy" "lambda_s3" {
           "s3:ListBucket",
           "s3:GetObject",
         ],
-        "Resource" : "arn:aws:s3:::${var.docs_bucket}/*"
+        "Resource" : ["arn:aws:s3:::${var.docs_bucket}/*", "arn:aws:s3:::${var.docs_bucket}"]
       }
     ]
   })
