@@ -10,7 +10,7 @@ import {
   SortOrder,
 } from '@tbcm/common';
 
-const DEFAULT_PAGE_SIZE = 5;
+const DEFAULT_PAGE_SIZE = 25;
 const DEFAULT_PAGE_INDEX = 1;
 
 export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
