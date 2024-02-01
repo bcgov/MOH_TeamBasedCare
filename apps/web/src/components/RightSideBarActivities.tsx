@@ -81,6 +81,19 @@ export const RightSideBarActivites: React.FC = () => {
         <span className='pl-1 font-bold'>
           (
           {
+            /**
+             * @description Show counts (<selected_count> / <total_count> selected) based on filtered search result
+             *
+             * @UseCase 1: when NO search keyword is entered ::
+             * selected_count: all SELECTED care activities for the bundle
+             * total_count: all care activities in the bundle
+             *
+             * @UseCase 2: when search keyword is entered ::
+             * selected_count: all SELECTED care activities for the bundle FILTERED by search keyword
+             * total_count: all care activities in the bundle FILTERED by search keyword
+             *
+             * Note: Array defaults added to Empty
+             *  */
             (filteredData?.filter((d: any) => (values?.careActivities || []).includes(d.id)) || [])
               .length
           }{' '}
@@ -140,10 +153,6 @@ export const RightSideBarActivites: React.FC = () => {
       ) : (
         <>
           <SearchBar handleChange={handleSearch} />
-
-          <p className='text-sm text-gray-400'>
-            {values.careActivityBundle[values.careActivityID]?.length} care activities selected
-          </p>
 
           <div className='overflow-auto'>
             <div role='group' aria-labelledby='checkbox-group'>
