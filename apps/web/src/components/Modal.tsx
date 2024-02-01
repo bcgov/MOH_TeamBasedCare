@@ -104,10 +104,9 @@ export const ModalWrapper = ({
         {title}
       </Modal.Title>
 
-      <Modal.Description className='p-5 flex gap-5 flex-col text-sm'>
-        {description}
-        {children}
-      </Modal.Description>
+      {description && <Modal.Description className='p-4 text-sm'>{description}</Modal.Description>}
+
+      {children}
 
       {(actionButton || closeButton) && (
         <ModalFooter>

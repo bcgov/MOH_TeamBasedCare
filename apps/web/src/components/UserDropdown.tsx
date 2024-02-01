@@ -63,7 +63,9 @@ export const UserDropdown = () => {
       {showMenu && <AppMenu hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />}
 
       <ModalWrapper isOpen={showFeedbackModal} setIsOpen={setShowFeedbackModal} title={'Feedback'}>
-        <FeedbackForm setIsOpen={setShowFeedbackModal} />
+        <div className='p-4'>
+          <FeedbackForm setIsOpen={setShowFeedbackModal} />
+        </div>
       </ModalWrapper>
     </div>
   );

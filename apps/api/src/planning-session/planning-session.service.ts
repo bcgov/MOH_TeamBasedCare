@@ -46,6 +46,7 @@ export class PlanningSessionService {
       order: {
         createdAt: -1,
       },
+      relations: ['careLocation', 'careActivity', 'careActivity.bundle'],
     });
 
     return planningSession;
