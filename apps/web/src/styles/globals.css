@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 html,
@@ -14,11 +14,11 @@ body,
 }
 
 .legend-box {
-  @apply w-full border-2 bg-white rounded p-3;
+  @apply border-2 bg-white rounded p-3;
 }
 
 .planning-form-box {
-  @apply flex-1 flex flex-col min-h-0 overflow-auto w-full border-2 bg-white rounded p-3 mt-4;
+  @apply flex-1 flex flex-col min-h-0 overflow-auto w-full border-2 bg-white rounded p-4;
 }
 
 .planning-form-box.overflow-visible {
@@ -26,7 +26,7 @@ body,
 }
 
 .occupation-item-box {
-  @apply flex items-center h-16 px-4;
+  @apply flex items-center h-12 p-3;
 }
 
 .item-box-gray {
@@ -155,7 +155,6 @@ thead th {
   background: #fff;
 }
 .activity-gap-table {
-  float: left;
   overflow: auto;
 }
 .firstTDinsideRow {

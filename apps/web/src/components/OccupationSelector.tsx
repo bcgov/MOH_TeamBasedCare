@@ -20,7 +20,7 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
 
   return (
     <>
-      <div className='flex items-center p-4'>
+      <div className='flex items-center p-3'>
         <input
           type='checkbox'
           name='selectAll'
@@ -50,8 +50,16 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
             filteredOccupations.every(o => values.occupation.includes(o.id))
           }
         />
-        <label className='font-bold' htmlFor={'selectAll'}>
+        <label className='' htmlFor={'selectAll'}>
           Select all
+          <span className='pl-1 font-bold'>
+            (
+            {
+              (filteredOccupations?.filter(o => (values?.occupation || []).includes(o.id)) || [])
+                .length
+            }{' '}
+            / {filteredOccupations?.length} Selected)
+          </span>
         </label>
       </div>
       <hr />

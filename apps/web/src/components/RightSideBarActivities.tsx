@@ -76,8 +76,29 @@ export const RightSideBarActivites: React.FC = () => {
           filteredData.every((a: any) => values.careActivities.includes(a.id))
         }
       />
-      <label className='font-bold' htmlFor={'selectAll'}>
+      <label htmlFor={'selectAll'}>
         Select all
+        <span className='pl-1 font-bold'>
+          (
+          {
+            /**
+             * @description Show counts (<selected_count> / <total_count> selected) based on filtered search result
+             *
+             * @UseCase 1: when NO search keyword is entered ::
+             * selected_count: all SELECTED care activities for the bundle
+             * total_count: all care activities in the bundle
+             *
+             * @UseCase 2: when search keyword is entered ::
+             * selected_count: all SELECTED care activities for the bundle FILTERED by search keyword
+             * total_count: all care activities in the bundle FILTERED by search keyword
+             *
+             * Note: Array defaults added to Empty
+             *  */
+            (filteredData?.filter((d: any) => (values?.careActivities || []).includes(d.id)) || [])
+              .length
+          }{' '}
+          / {(filteredData || []).length} Selected)
+        </span>
       </label>
     </div>
   );
@@ -133,11 +154,7 @@ export const RightSideBarActivites: React.FC = () => {
         <>
           <SearchBar handleChange={handleSearch} />
 
-          <p className='text-sm text-gray-400'>
-            {values.careActivityBundle[values.careActivityID]?.length} care activities selected
-          </p>
-
-          <div className='flex-1 overflow-auto'>
+          <div className='overflow-auto'>
             <div role='group' aria-labelledby='checkbox-group'>
               {!_.isEmpty(filteredData) ? (
                 <>

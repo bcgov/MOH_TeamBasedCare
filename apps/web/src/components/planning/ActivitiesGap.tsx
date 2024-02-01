@@ -205,21 +205,31 @@ const ActivityGapTable: React.FC = () => {
   );
 };
 
-export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ title }) => {
+export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
   const description =
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
-        <PageTitle title={title} description={description} />
-        <ActivitiesGapLegend />
-        <OverviewCards />
-      </div>
+        <div className='flex flex-row space-x-8 items-start justify-between'>
+          <div className='flex flex-1'>
+            <PageTitle description={description} />
+          </div>
 
-      <div className='planning-form-box'>
-        <PageTitle title='Role Optimization Matrix' secondaryChild={<OccupationListDropdown />} />
-        <ActivityGapTable />
+          <div className='flex flex-row flex-1 lg:flex-none flex-wrap space-y-2 lg:space-y-0 space-x-1 items-center justify-end'>
+            <ActivitiesGapLegend />
+            <OccupationListDropdown />
+          </div>
+        </div>
+
+        <div className='mt-4'>
+          <OverviewCards />
+        </div>
+
+        <div className='mt-4'>
+          <ActivityGapTable />
+        </div>
       </div>
     </div>
   );

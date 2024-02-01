@@ -15,7 +15,7 @@ import { CustomBaseEntity } from '../../common/custom-base.entity';
   // Note: this is default order, and will get overridden if query supplies one
   orderBy: {
     displayName: 'ASC',
-    name: 'ASC'
+    name: 'ASC',
   },
 })
 export class Bundle extends CustomBaseEntity {

@@ -30,7 +30,7 @@ export const Popover: React.FC<PopoverProps> = ({ title, children, position = 'b
             leaveTo='opacity-0 translate-y-1'
           >
             <PopoverUI.Panel
-              className={`absolute left-3 top-7 ${
+              className={`absolute left-1/2 top-7 ${
                 position === 'bottom-left' && '-translate-x-full'
               } z-10 max-w-sm transform lg:max-w-3xl`}
             >
