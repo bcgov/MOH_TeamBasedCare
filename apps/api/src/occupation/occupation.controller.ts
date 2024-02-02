@@ -8,14 +8,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { PaginationRO } from '@tbcm/common';
+import { PaginationRO, Role } from '@tbcm/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
 import { Occupation } from './entity/occupation.entity';
 import { OccupationService } from './occupation.service';
 import { OccupationRO } from './ro/get-occupation.ro';
+import { Roles } from 'nest-keycloak-connect';
 
 @ApiTags('occupation')
 @Controller('occupations')
+@Roles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class OccupationController {
   constructor(private occupationService: OccupationService) {}

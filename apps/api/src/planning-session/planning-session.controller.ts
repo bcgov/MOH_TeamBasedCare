@@ -13,6 +13,7 @@ import {
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import {
   PlanningSessionRO,
+  Role,
   SaveCareActivityDTO,
   SaveOccupationDTO,
   SaveProfileDTO,
@@ -21,9 +22,11 @@ import { IRequest } from 'src/common/app-request';
 import { SessionGuard } from 'src/planning-session/guards/session.guard';
 import { SUCCESS_RESPONSE } from '../common/constants';
 import { PlanningSessionService } from './planning-session.service';
+import { Roles } from 'nest-keycloak-connect';
 
 @ApiTags('session')
 @Controller('sessions')
+@Roles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class PlanningSessionController {
   constructor(private planningSessionService: PlanningSessionService) {}
