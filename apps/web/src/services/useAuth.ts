@@ -66,17 +66,29 @@ export const useAuth = () => {
     (handler: () => void, errorToastMessage?: string) => {
       const config = { endpoint: API_ENDPOINT.AUTH_USER };
 
-      fetchData(
-        config,
-        (result: KeycloakUser) => {
-          // update user to storage
-          storeUserData(result);
+      const token = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
 
-          // call success handler
-          handler();
-        },
-        errorToastMessage,
-      );
+      const userHandler = (user: KeycloakUser) => {
+        // update user to storage
+        storeUserData(user);
+
+        // call success handler
+        handler();
+      };
+
+      // if user info can be decoded on FE
+      if (typeof window != 'undefined') {
+        try {
+          const user = JSON.parse(window.atob(token.split('.')[1])) as KeycloakUser;
+          userHandler(user);
+          return;
+        } catch (e) {
+          // error decoding the access token; fetch from api
+        }
+      }
+
+      // else fetch from the endpoint
+      fetchData(config, userHandler, errorToastMessage);
     },
     [fetchData, storeUserData],
   );
