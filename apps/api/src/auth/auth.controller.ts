@@ -11,9 +11,9 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Unprotected } from 'nest-keycloak-connect';
+import { Roles, Unprotected } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
-import { AppTokensDTO } from '@tbcm/common';
+import { AppTokensDTO, Role } from '@tbcm/common';
 import { EmptyResponse } from 'src/common/ro/empty-response.ro';
 
 @Controller('auth')
@@ -46,6 +46,7 @@ export class AuthController {
   }
 
   @Get('user')
+  @Roles({ roles: [Role.USER, Role.ADMIN] })
   @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
   async getUserInfo(@Req() req: any) {
     if (!req.headers.authorization.startsWith('Bearer')) return;

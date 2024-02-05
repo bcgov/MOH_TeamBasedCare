@@ -7,14 +7,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CareActivityRO, PaginationRO } from '@tbcm/common';
+import { CareActivityRO, PaginationRO, Role } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
 import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { IRequest } from 'src/common/app-request';
+import { Roles } from 'nest-keycloak-connect';
 
 @ApiTags('care-activity')
 @Controller('care-activity')
+@Roles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class CareActivityController {
   constructor(private careActivityService: CareActivityService) {}

@@ -11,6 +11,7 @@ export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
   @Post()
+  @Roles({ roles: [Role.USER, Role.ADMIN] })
   create(@Body() createFeedbackDto: CreateFeedbackDto, @Req() req: IRequest) {
     return this.feedbackService.create(createFeedbackDto, req.user);
   }
