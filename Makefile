@@ -69,7 +69,7 @@ KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
 # Keycloak ref variables
-export KEYCLOAK_REDIRECT_URI = https://${DOMAIN}/
+export KEYCLOAK_REDIRECT_URI ?= https://${DOMAIN}/
 export KEYCLOAK_USER_INFO_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
 export KEYCLOAK_TOKEN_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
 export KEYCLOAK_LOGOUT_URI ?= ${KEYCLOAK_AUTH_SERVER_URI}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout
