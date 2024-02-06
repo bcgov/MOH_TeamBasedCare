@@ -35,6 +35,9 @@ export class PlanningSessionController {
   async getDraftPlanningSession(@Req() req: IRequest) {
     const session = await this.planningSessionService.getLastDraftPlanningSession(req.user);
 
+    // if no available last draft return empty
+    if (!session) return {};
+
     // explicitly added any to the return type to counter Runtime.ImportModuleError for classes in @tbcm/common package
     return new PlanningSessionRO(session) as any;
   }
