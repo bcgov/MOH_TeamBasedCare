@@ -8,6 +8,7 @@ import { getInitials } from 'src/utils/string/initials';
 import { AppMenu, AppMenuGroup } from './generic/AppMenu';
 import { FeedbackForm } from './FeedbackForm';
 import { ModalWrapper } from './Modal';
+import { UserGuideList } from './user-guide/UserGuideList';
 
 export const UserDropdown = () => {
   const { logMeOut } = useAuth();
@@ -15,6 +16,7 @@ export const UserDropdown = () => {
 
   const [showMenu, setShowMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showUserGuideModal, setShowUserGuideModal] = useState(false);
 
   const authInitials = useMemo(() => {
     return getInitials(authUserDisplayName);
@@ -30,10 +32,15 @@ export const UserDropdown = () => {
     setShowFeedbackModal(true);
   };
 
+  const onUserGuideClick = () => {
+    setShowUserGuideModal(true);
+  };
+
   const dropdownMenuGroups: Array<AppMenuGroup> = [
     {
       items: [
         { title: 'Feedback', onClick: onFeedbackClick, color: 'blue' },
+        { title: 'User Guide', onClick: onUserGuideClick, color: 'blue' },
         { title: 'Logout', onClick: logout, color: 'red' },
       ],
     },
@@ -66,6 +73,15 @@ export const UserDropdown = () => {
         <div className='p-4'>
           <FeedbackForm setIsOpen={setShowFeedbackModal} />
         </div>
+      </ModalWrapper>
+
+      <ModalWrapper
+        isOpen={showUserGuideModal}
+        setIsOpen={setShowUserGuideModal}
+        title={'User Guide'}
+        closeButton={{ title: 'Close' }}
+      >
+        <UserGuideList />
       </ModalWrapper>
     </div>
   );

@@ -65,4 +65,6 @@ export const API_ENDPOINT = {
     appendQueryParams('/occupations/find', params),
   findCareActivities: (params: EndpointQueryParams<CareActivitiesFindSortKeys>) =>
     appendQueryParams('/care-activity/find', params),
+  USER_GUIDE_FILES: '/user-guide',
+  USER_GUIDE_SIGNED_URL: (name: string) => `/user-guide/${name}/signed-url`,
 };

@@ -14,6 +14,7 @@ export * from './PlanningContent';
 export * from './Header';
 export * from './PageTitle';
 export * from './Sidebar';
+export * from './Disclosure';
 export * from './LeftSideBarActivites';
 export * from './RightSideBarActivities';
 export * from './ActivitiesGapLegend';

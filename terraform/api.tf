@@ -83,6 +83,7 @@ resource "aws_lambda_function" "api" {
       POSTGRES_PASSWORD = data.aws_ssm_parameter.postgres_password.value
       POSTGRES_HOST     = aws_rds_cluster.pgsql.endpoint
       POSTGRES_DATABASE = aws_rds_cluster.pgsql.database_name
+      DOCS_BUCKET       = var.docs_bucket
       KEYCLOAK_AUTH_SERVER_URI  = var.keycloak_auth_server_uri
       KEYCLOAK_RESPONSE_TYPE    = var.keycloak_response_type
       KEYCLOAK_CLIENT_ID        = var.keycloak_client_id
@@ -102,6 +103,7 @@ resource "aws_lambda_function" "api" {
       # CHES_AUTH_URL            = data.aws_ssm_parameter.ches_auth_url.value
       # SLACK_ALERTS_WEBHOOK_URL = data.aws_ssm_parameter.slack_alerts_webhook_url.value
       # POSTGRES_HOST     = aws_rds_cluster.pgsql_backup.endpoint
+      
     }
   }
 }
