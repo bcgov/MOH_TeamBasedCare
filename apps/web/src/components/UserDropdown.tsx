@@ -81,7 +81,9 @@ export const UserDropdown = () => {
         title={'User Guide'}
         closeButton={{ title: 'Close' }}
       >
-        <UserGuideList />
+        <div className='p-4'>
+          <UserGuideList />
+        </div>
       </ModalWrapper>
     </div>
   );
