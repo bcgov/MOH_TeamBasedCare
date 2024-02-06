@@ -16,7 +16,7 @@ resource "aws_rds_cluster_instance" "pgsql" {
 resource "aws_rds_cluster" "pgsql" {
   cluster_identifier  = local.db_name
   engine              = "aurora-postgresql"
-  engine_version      = "15.4"
+  engine_version      = "15.5"
   allow_major_version_upgrade = true
   apply_immediately   = true
   availability_zones  = ["ca-central-1a", "ca-central-1b"]
