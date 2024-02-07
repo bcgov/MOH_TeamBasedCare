@@ -138,7 +138,6 @@ thead th {
 
 .activity-gap-table tbody {
   overflow: scroll;
-  height: 200px;
 }
 
 /* MAKE LEFT COLUMN FIXED */
