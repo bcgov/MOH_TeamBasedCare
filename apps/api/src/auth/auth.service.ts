@@ -1,4 +1,4 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as jwt from 'jsonwebtoken';
 import * as queryString from 'querystring';
@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { ConfigService } from 'src/config/config.service';
 import { KeycloakToken } from '@tbcm/common';
 import { KeycloakUser } from '@tbcm/common';
+import { AppLogger } from 'src/common/logger.service';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +29,7 @@ export class AuthService {
 
   private keycloakLogoutUri: string;
 
-  private readonly logger = new Logger();
+  private readonly logger = new AppLogger();
 
   constructor(
     private readonly httpService: HttpService,
