@@ -40,7 +40,7 @@ export const UserDropdown = () => {
     {
       items: [
         { title: 'Feedback', onClick: onFeedbackClick, color: 'blue' },
-        { title: 'User guide', onClick: onUserGuideClick, color: 'blue' },
+        { title: 'User manual', onClick: onUserGuideClick, color: 'blue' },
         { title: 'Logout', onClick: logout, color: 'red' },
       ],
     },
@@ -78,7 +78,7 @@ export const UserDropdown = () => {
       <ModalWrapper
         isOpen={showUserGuideModal}
         setIsOpen={setShowUserGuideModal}
-        title={'User guide'}
+        title={'User manual'}
         closeButton={{ title: 'Close' }}
       >
         <div className='p-4'>
