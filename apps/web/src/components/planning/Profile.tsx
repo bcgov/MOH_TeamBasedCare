@@ -27,9 +27,15 @@ interface ProfileFormProps {
   userPrefShowConfirmDraftRemoval?: boolean;
 }
 
-const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
+const ProfileForm = ({
+  lastDraft,
+  isLoading: isLoadingPlanningProfile,
+}: {
+  lastDraft?: PlanningSessionRO;
+  isLoading: boolean;
+}) => {
   const { values, initialValues, setValues } = useFormikContext<ProfileFormProps>();
-  const { careLocations, isLoading } = useCareLocations();
+  const { careLocations, isLoading: isLoadingCareLocations } = useCareLocations();
   const [showModal, setShowModal] = useState(false);
   const { updateSessionId } = usePlanningContext();
   const [lastDraftUpdatedFromNow, setLastDraftUpdatedFromNow] = useState('');
@@ -54,6 +60,12 @@ const ProfileForm = ({ lastDraft }: { lastDraft?: PlanningSessionRO }) => {
       careLocation: '',
     });
   }, []);
+
+  // handle Loading state
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    setIsLoading(isLoadingPlanningProfile || isLoadingCareLocations);
+  }, [isLoadingCareLocations, isLoadingPlanningProfile]);
 
   // handle profileOption change
   useEffect(() => {
@@ -221,7 +233,7 @@ const ConfirmDraftRemove = ({
 
 export const Profile: React.FC<ProfileProps> = () => {
   const profileValidationSchema = createValidator(SaveProfileDTO);
-  const { handleSubmit, initialValues, lastDraft } = usePlanningProfile();
+  const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
 
   const [showModal, setShowModal] = useState(false);
 
@@ -243,7 +255,7 @@ export const Profile: React.FC<ProfileProps> = () => {
       enableReinitialize={true}
     >
       <>
-        <ProfileForm lastDraft={lastDraft} />
+        <ProfileForm lastDraft={lastDraft} isLoading={isLoading} />
         {showModal && (
           <ConfirmDraftRemove
             showModal={showModal}

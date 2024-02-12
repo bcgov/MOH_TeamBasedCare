@@ -40,7 +40,7 @@ export const UserDropdown = () => {
     {
       items: [
         { title: 'Feedback', onClick: onFeedbackClick, color: 'blue' },
-        { title: 'Download User manual', onClick: onUserGuideClick, color: 'blue' },
+        { title: 'User manual', onClick: onUserGuideClick, color: 'blue' },
         { title: 'Logout', onClick: logout, color: 'red' },
       ],
     },

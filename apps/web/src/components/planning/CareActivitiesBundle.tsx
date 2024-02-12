@@ -33,7 +33,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
   const occupationValidationSchema = createValidator(SaveCareActivityDTO);
 
   const description =
-    'Based on the care setting selected, these are the associated care activity bundles. All the care activities are selected by default, please select or deselect based on your needs.';
+    'Based on the care setting selected, these are the associated care activity bundles. Please select or deselect based on your needs.';
 
   return (
     <>

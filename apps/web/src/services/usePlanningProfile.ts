@@ -11,14 +11,14 @@ export const usePlanningProfile = () => {
     updateSessionId,
   } = usePlanningContext();
 
-  const [initialValues, setInitialValues] = useState<SaveProfileDTO>({
+  const [initialValues] = useState<SaveProfileDTO>({
     profileOption: '',
     careLocation: '',
   });
 
   const [lastDraft, setLastDraft] = useState<PlanningSessionRO>();
 
-  const { sendApiRequest, fetchData } = useHttp();
+  const { sendApiRequest, fetchData, isLoading } = useHttp();
 
   // check if the previously saved draft session exists
   useEffect(() => {
@@ -71,5 +71,5 @@ export const usePlanningProfile = () => {
     );
   };
 
-  return { handleSubmit, initialValues, lastDraft };
+  return { handleSubmit, initialValues, lastDraft, isLoading };
 };
