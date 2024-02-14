@@ -1,0 +1,34 @@
+name: DEV - ZAP Scan
+on:
+  workflow_run:
+    workflows: ['DEV - Deploy Apps']
+    types:
+      - completed
+  push:
+    tags:
+      - security
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: ci-${github.ref}-sec
+    environment:
+      name: dev
+
+    steps:
+      - name: Wait for a minute
+        run: sleep 60
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup node v16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.9.0
+        with:
+          target: https://dev.tbcm.freshworks.club/
+          cmd_options: '-I'
+          rules_file_name: '.zap/rules.tsv'
