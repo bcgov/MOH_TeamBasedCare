@@ -17,7 +17,7 @@ jobs:
       name: dev
 
     steps:
-      - name: Wait for a minute
+      - name: Wait for a minute after deployment is completed
         run: sleep 60
       - name: checkout
         uses: actions/checkout@v3
