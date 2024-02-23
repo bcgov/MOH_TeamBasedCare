@@ -17,6 +17,7 @@ import { Unprotected } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
 import { AppTokensDTO, UserRO } from '@tbcm/common';
 import { EmptyResponse } from 'src/common/ro/empty-response.ro';
+import { IRequest } from 'src/common/app-request';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -50,12 +51,8 @@ export class AuthController {
   @Get('user')
   @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
   @UseInterceptors(ClassSerializerInterceptor)
-  async getUserInfo(@Req() req: any) {
-    if (!req.headers.authorization.startsWith('Bearer')) return;
-    const accessToken = req.headers.authorization.replace('Bearer ', '');
-    const userInfo = await this.authService.getUserInfo(accessToken);
-
-    return new UserRO(userInfo);
+  async getUser(@Req() req: IRequest) {
+    return new UserRO(req.user);
   }
 
   @Post('refresh')

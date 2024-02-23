@@ -13,11 +13,11 @@ import { FindOccupationsDto } from './dto/find-occupations.dto';
 import { Occupation } from './entity/occupation.entity';
 import { OccupationService } from './occupation.service';
 import { OccupationRO } from './ro/get-occupation.ro';
-import { Roles } from 'nest-keycloak-connect';
+import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @ApiTags('occupation')
 @Controller('occupations')
-@Roles({ roles: [Role.USER] })
+@AllowRoles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class OccupationController {
   constructor(private occupationService: OccupationService) {}

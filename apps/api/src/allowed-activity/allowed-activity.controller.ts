@@ -11,11 +11,11 @@ import { PaginationRO, Role } from '@tbcm/common';
 import { AllowedActivityService } from './allowed-activity.service';
 import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activities-by-occupation.dto';
 import { GetAllowedActivitiesByOccupationRO } from './ro/get-allowed-activities-by-occupation.ro';
-import { Roles } from 'nest-keycloak-connect';
+import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @ApiTags('allowedActivities')
 @Controller('allowedActivities')
-@Roles({ roles: [Role.USER] })
+@AllowRoles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class AllowedActivityController {
   constructor(private allowedActivityService: AllowedActivityService) {}

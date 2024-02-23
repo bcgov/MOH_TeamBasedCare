@@ -1,6 +1,5 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import * as jwt from 'jsonwebtoken';
 import * as queryString from 'querystring';
 import { catchError, map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
@@ -100,62 +99,19 @@ export class AuthService {
       },
     };
 
-    let keycloakUser: KeycloakUser;
+    const keycloakUser: KeycloakUser = await firstValueFrom(
+      this.httpService.get(this.keycloakUserInfoUri, params).pipe(
+        map(async (res: any) => res.data),
+        catchError(e => {
+          this.logger.error('auth.service.ts :: getUserInfo');
+          this.logger.error(JSON.stringify(params));
+          this.logger.error(e);
+          throw new HttpException(e.response.data, e.response.status);
+        }),
+      ),
+    );
 
-    try {
-      // decode jwt from the access token
-      keycloakUser = jwt.decode(accessToken) as KeycloakUser;
-    } catch (e) {
-      // if decoding fails, fetch from the server
-      keycloakUser = await firstValueFrom(
-        this.httpService.get(this.keycloakUserInfoUri, params).pipe(
-          map(async (res: any) => res.data),
-          catchError(e => {
-            this.logger.error('auth.service.ts :: getUserInfo');
-            this.logger.error(JSON.stringify(params));
-            this.logger.error(e);
-            throw new HttpException(e.response.data, e.response.status);
-          }),
-        ),
-      );
-    }
-
-    if (!keycloakUser) {
-      this.logger.error('auth.service.ts :: getUserInfo');
-      this.logger.error('Keycloak user not found');
-      throw new NotFoundException();
-    }
-
-    // if email does not exists, throw error
-    if (!keycloakUser.email) {
-      this.logger.error('auth.service.ts :: getUserInfo');
-      this.logger.error('Keycloak email not found');
-      throw new NotFoundException();
-    }
-
-    // find existing user
-    let user = await this.userService.findByEmail(keycloakUser.email);
-
-    // if user does not exist, create new user with empty roles
-    if (!user) {
-      this.logger.log(
-        `auth.service.ts :: getUserInfo :: Creating new user from auth :: ${keycloakUser.email}`,
-      );
-      user = await this.userService.createUserFromAuth(keycloakUser);
-    }
-
-    // Invited user signing in for the first time?
-    if (!user.keycloakId) {
-      this.logger.log(
-        `auth.service.ts :: getUserInfo :: Invited user fist time signing in :: ${keycloakUser.email}`,
-      );
-      user = await this.userService.updateUserFromAuth(user, keycloakUser);
-    }
-
-    // update lastAccessAt
-    await this.userService.updateLastAccessAt(user);
-
-    return user;
+    return keycloakUser;
   }
 
   async refreshAccessToken(refresh_token: string): Promise<KeycloakToken> {

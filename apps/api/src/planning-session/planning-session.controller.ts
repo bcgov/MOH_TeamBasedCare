@@ -22,11 +22,11 @@ import { IRequest } from 'src/common/app-request';
 import { SessionGuard } from 'src/planning-session/guards/session.guard';
 import { SUCCESS_RESPONSE } from '../common/constants';
 import { PlanningSessionService } from './planning-session.service';
-import { Roles } from 'nest-keycloak-connect';
+import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @ApiTags('session')
 @Controller('sessions')
-@Roles({ roles: [Role.USER] })
+@AllowRoles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class PlanningSessionController {
   constructor(private planningSessionService: PlanningSessionService) {}

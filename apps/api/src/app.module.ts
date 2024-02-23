@@ -1,5 +1,5 @@
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AuthGuard, KeycloakConnectModule, RoleGuard } from 'nest-keycloak-connect';
+import { KeycloakConnectModule } from 'nest-keycloak-connect';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -18,6 +18,7 @@ import { AllowedActivityModule } from './allowed-activity/allowed-activity.modul
 import { FeedbackModule } from './feedback/feedback.module';
 import { UserGuideModule } from './user-guide/user-guide.module';
 import { UserModule } from './user/user.module';
+import { AuthGuard } from './auth/auth.guard';
 
 @Module({
   imports: [
@@ -44,7 +45,6 @@ import { UserModule } from './user/user.module';
     AppService,
     SeedService,
     { provide: APP_GUARD, useClass: AuthGuard },
-    { provide: APP_GUARD, useClass: RoleGuard },
   ],
 })
 export class AppModule implements NestModule {
