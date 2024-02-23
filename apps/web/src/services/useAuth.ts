@@ -1,5 +1,5 @@
 import { useHttp } from '@services';
-import { KeycloakToken, KeycloakUser, Role } from '@tbcm/common';
+import { KeycloakToken, Role, UserRO } from '@tbcm/common';
 import { useCallback, useMemo } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
 import {
@@ -19,10 +19,10 @@ export const useAuth = () => {
     const refreshToken = AppStorage.getItem(StorageKeys.REFRESH_TOKEN);
     const refreshTokenExpiry = AppStorage.getItem(StorageKeys.REFRESH_TOKEN_EXPIRY);
 
-    const username = AppStorage.getItem(StorageKeys.USERNAME);
+    const email = AppStorage.getItem(StorageKeys.EMAIL);
 
     // both tokens exist, and not expired
-    if (refreshToken && refreshTokenExpiry && +refreshTokenExpiry > now && username) {
+    if (refreshToken && refreshTokenExpiry && +refreshTokenExpiry > now && email) {
       return true;
     }
 
@@ -30,10 +30,10 @@ export const useAuth = () => {
   }, []);
 
   // store user data to the storage
-  const storeUserData = useCallback((data: KeycloakUser) => {
-    AppStorage.setItem(StorageKeys.USERNAME, data.preferred_username);
-    AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.name);
-    AppStorage.setItem(StorageKeys.ROLES, data.resource_access?.TBCM?.roles || []);
+  const storeUserData = useCallback((data: UserRO) => {
+    AppStorage.setItem(StorageKeys.EMAIL, data.email);
+    AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.displayName);
+    AppStorage.setItem(StorageKeys.ROLES, data.roles || []);
   }, []);
 
   // fetch authentication token from authorization code
@@ -63,12 +63,10 @@ export const useAuth = () => {
 
   // fetch user information from authentication token
   const fetchUserFromCode = useCallback(
-    (handler: () => void, errorToastMessage?: string) => {
+    (handler: () => void, errorHandler: () => void, errorToastMessage?: string) => {
       const config = { endpoint: API_ENDPOINT.AUTH_USER };
 
-      const token = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
-
-      const userHandler = (user: KeycloakUser) => {
+      const userHandler = (user: UserRO) => {
         // update user to storage
         storeUserData(user);
 
@@ -76,19 +74,8 @@ export const useAuth = () => {
         handler();
       };
 
-      // if user info can be decoded on FE
-      if (typeof window != 'undefined') {
-        try {
-          const user = JSON.parse(window.atob(token.split('.')[1])) as KeycloakUser;
-          userHandler(user);
-          return;
-        } catch (e) {
-          // error decoding the access token; fetch from api
-        }
-      }
-
       // else fetch from the endpoint
-      fetchData(config, userHandler, errorToastMessage);
+      fetchData(config, userHandler, errorToastMessage, errorHandler);
     },
     [fetchData, storeUserData],
   );

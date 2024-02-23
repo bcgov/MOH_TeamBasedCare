@@ -4,7 +4,7 @@ export enum StorageKeys {
   REFRESH_TOKEN = 'refreshToken',
   REFRESH_TOKEN_EXPIRY = 'refreshTokenExpiry',
   TOKENS_LAST_REFRESHED_AT = 'tokensLastRefreshedAt',
-  USERNAME = 'username',
+  EMAIL = 'email',
   DISPLAY_NAME = 'displayName',
   ROLES = 'roles',
 }

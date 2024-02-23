@@ -17,6 +17,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AllowedActivityModule } from './allowed-activity/allowed-activity.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { UserGuideModule } from './user-guide/user-guide.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserGuideModule } from './user-guide/user-guide.module';
     }),
     FeedbackModule,
     UserGuideModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
