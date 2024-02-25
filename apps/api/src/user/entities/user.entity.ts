@@ -1,5 +1,5 @@
 import { CustomBaseEntity } from 'src/common/custom-base.entity';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { UserPreference } from './user-preference.entity';
 import { Role } from '@tbcm/common';
 
@@ -14,7 +14,7 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'enum', enum: Role, array: true, default: [] })
   roles?: Role[];
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
   keycloakId?: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -37,6 +37,12 @@ export class User extends CustomBaseEntity {
 
   @Column({ type: 'timestamp', nullable: true })
   revokedAt?: Date;
+
+  @ManyToOne(() => User)
+  invitedBy?: User;
+
+  @Column({ type: 'timestamp', nullable: true })
+  invitedAt?: Date;
 
   @OneToOne(() => UserPreference, userPreference => userPreference.user)
   @JoinColumn()

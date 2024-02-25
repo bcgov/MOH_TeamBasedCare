@@ -6,3 +6,7 @@ data "aws_ssm_parameter" "postgres_password" {
 data "aws_ssm_parameter" "keycloak_client_secret" {
   name = "/${var.project_code}/${var.target_env}/keycloak/client-secret"
 }
+
+data "aws_ssm_parameter" "init_user" {
+  name = "/${var.project_code}/${var.target_env}/app/init-user"
+}
