@@ -20,7 +20,7 @@ const AppLayout: React.FC = ({ children }) => {
   const updatedSidebarButtons = useMemo(
     () =>
       state.sidebarButtons.map(item => {
-        if (router.pathname.includes(item.path)) {
+        if (item.path && router.pathname.includes(item.path)) {
           item.active = true;
           activeSidebarButton.current = item;
         } else {
