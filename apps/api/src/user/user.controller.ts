@@ -3,6 +3,9 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
+  Param,
   Post,
   Query,
   Req,
@@ -10,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateUserInviteDTO, PaginationRO, Role, UserRO } from '@tbcm/common';
+import { CreateUserInviteDTO, EditUserDTO, PaginationRO, Role, UserRO } from '@tbcm/common';
 import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { FindUsersDto } from './dto/find-users.dto';
@@ -33,5 +36,11 @@ export class UserController {
   async findUsers(@Query() query: FindUsersDto): Promise<PaginationRO<UserRO[]>> {
     const [users, total] = await this.userService.findUsers(query);
     return new PaginationRO([users.map(user => new UserRO(user)), total]);
+  }
+
+  @Post('/:id/edit')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async editUser(@Body() data: EditUserDTO, @Param('id') id: string) {
+    await this.userService.editUser(id, data);
   }
 }

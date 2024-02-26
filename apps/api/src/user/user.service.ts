@@ -1,5 +1,17 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { Authorities, Authority, CreateUserInviteDTO, KeycloakUser, SortOrder } from '@tbcm/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  Authorities,
+  Authority,
+  CreateUserInviteDTO,
+  EditUserDTO,
+  KeycloakUser,
+  SortOrder,
+} from '@tbcm/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -175,5 +187,22 @@ export class UserService {
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();
+  }
+
+  async editUser(id: string, data: EditUserDTO) {
+    if (!id) {
+      throw new BadRequestException('No user ID found');
+    }
+
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.userRepo.save({
+      ...user,
+      ...data,
+    });
   }
 }

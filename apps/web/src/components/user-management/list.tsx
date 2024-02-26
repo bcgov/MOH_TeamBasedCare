@@ -3,8 +3,8 @@ import { isOdd } from 'src/common/util';
 import { Spinner } from '../generic/Spinner';
 import { PageOptions, Pagination } from '../Pagination';
 import { SortButton } from '../SortButton';
-import { Link } from '../Link';
 import { useCallback } from 'react';
+import { Button } from '../Button';
 
 interface TableHeaderProps {
   sortKey?: UserManagementSortKeys;
@@ -43,10 +43,11 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 };
 
 interface TableBodyProps {
-  users?: UserRO[];
+  users: UserRO[];
+  onEditUserClick: (user: UserRO) => void;
 }
 
-const TableBody: React.FC<TableBodyProps> = ({ users = [] }) => {
+const TableBody: React.FC<TableBodyProps> = ({ users = [], onEditUserClick }) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
 
   const getRolesLabel = useCallback((roles: Role[] = []) => {
@@ -63,12 +64,9 @@ const TableBody: React.FC<TableBodyProps> = ({ users = [] }) => {
           <td className={tdStyles}>{user.organization || '-'}</td>
           <td className={tdStyles}>{getRolesLabel(user.roles)}</td>
           <td className={`${tdStyles} flex gap-x-4`}>
-            <Link variant='link' href=''>
-              Revoke
-            </Link>
-            <Link variant='link' href=''>
+            <Button variant='link' onClick={() => onEditUserClick(user)}>
               Edit
-            </Link>
+            </Button>
           </td>
         </tr>
       ))}
@@ -111,6 +109,7 @@ interface UserManagementListProps {
   sortOrder?: SortOrder;
   onSortChange: ({ key }: { key: UserManagementSortKeys }) => void;
   isLoading?: boolean;
+  onEditUserClick: (user: UserRO) => void;
 }
 
 export const UserManagementList: React.FC<UserManagementListProps> = ({
@@ -123,6 +122,7 @@ export const UserManagementList: React.FC<UserManagementListProps> = ({
   sortOrder,
   onSortChange,
   isLoading,
+  onEditUserClick,
 }) => {
   if (isLoading) {
     return <Spinner show={isLoading} />;
@@ -132,7 +132,7 @@ export const UserManagementList: React.FC<UserManagementListProps> = ({
     <>
       <table className='w-full table-auto mt-2'>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <TableBody users={users} />
+        <TableBody users={users} onEditUserClick={onEditUserClick} />
         <TableFooter
           pageIndex={pageIndex}
           pageSize={pageSize}
