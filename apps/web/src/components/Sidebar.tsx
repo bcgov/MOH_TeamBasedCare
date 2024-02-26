@@ -42,6 +42,10 @@ export const Sidebar: React.FC = () => {
               return hasUserRole(button.roles); // if specified, filter the ones user has access to
             })
             .map(button => {
+              if (button.kind === SidebarButtonKind.LINE_BREAK) {
+                return <hr className={'my-4 border-gray-700'} key={button.id} />;
+              }
+
               if (button.kind === SidebarButtonKind.REGULAR) {
                 return (
                   <SidebarButton

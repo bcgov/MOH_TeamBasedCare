@@ -50,10 +50,8 @@ AxiosPublic.interceptors.response.use(
       }
     }
 
-    // reach here if refresh token expired or call failed again on retry with refresh token
-
-    // redirect to login on 401
-    if (error?.response?.status === 401 && typeof window !== 'undefined') {
+    // if retried and it still failed, log out and redirect to the landing page
+    if (originalRequest._retry && typeof window !== 'undefined') {
       clearStorageAndRedirectToLandingPage();
     }
 

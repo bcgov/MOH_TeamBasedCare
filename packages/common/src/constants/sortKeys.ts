@@ -12,3 +12,8 @@ export enum OccupationalScopeOfPracticeSortKeys {
 export enum CareActivitiesFindSortKeys {
   DISPLAY_NAME = 'displayName',
 }
+
+export enum UserManagementSortKeys {
+  EMAIL = 'email',
+  ORGANIZATION = 'organization',
+}

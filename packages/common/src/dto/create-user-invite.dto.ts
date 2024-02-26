@@ -1,11 +1,11 @@
-import { Role } from '@tbcm/common';
 import { IsArray, IsEmail, IsEnum } from 'class-validator';
+import { Role } from '../constants';
 
-export class CreateUserInviteDto {
+export class CreateUserInviteDTO {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsArray()
   @IsEnum(Role, { each: true })
-  roles: Role[];
+  roles!: Role[];
 }

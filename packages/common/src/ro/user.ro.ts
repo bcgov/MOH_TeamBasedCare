@@ -5,6 +5,9 @@ import { UserPreferenceRO } from './user-preference.ro';
 @Exclude()
 export class UserRO {
   @Expose()
+  id!: string;
+
+  @Expose()
   email!: string;
 
   @Expose()

@@ -1,10 +1,10 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { Authorities, Authority, KeycloakUser } from '@tbcm/common';
+import { Authorities, Authority, CreateUserInviteDTO, KeycloakUser, SortOrder } from '@tbcm/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateUserInviteDto } from './dto/create-user-invite.dto';
 import { AppLogger } from 'src/common/logger.service';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Injectable()
 export class UserService {
@@ -102,7 +102,7 @@ export class UserService {
     });
   }
 
-  async createUserFromInvite(createUserInvite: CreateUserInviteDto, tokenUser: User) {
+  async createUserFromInvite(createUserInvite: CreateUserInviteDTO, tokenUser: User) {
     // if email does not exists, throw error
     if (!createUserInvite.email) {
       throw new BadRequestException();
@@ -156,5 +156,24 @@ export class UserService {
     }
 
     return true;
+  }
+
+  async findUsers(query: FindUsersDto): Promise<[User[], number]> {
+    const queryBuilder = this.userRepo.createQueryBuilder('u');
+
+    // Search logic below
+    if (query.searchText) {
+      queryBuilder
+        .where('u.email ILIKE :name', { name: `%${query.searchText}%` })
+        .orWhere('u.organization ILIKE :name', { name: `%${query.searchText}%` });
+    }
+
+    if (query.sortBy) queryBuilder.orderBy(`u.${query.sortBy}`, query.sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+
+    // return the paginated response
+    return queryBuilder
+      .skip((query.page - 1) * query.pageSize)
+      .take(query.pageSize)
+      .getManyAndCount();
   }
 }

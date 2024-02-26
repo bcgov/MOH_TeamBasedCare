@@ -4,6 +4,7 @@ import {
   OccupationsFindSortKeys,
   Permissions,
   SortOrder,
+  UserManagementSortKeys,
 } from '@tbcm/common';
 
 export enum REQUEST_METHOD {
@@ -67,4 +68,7 @@ export const API_ENDPOINT = {
     appendQueryParams('/care-activity/find', params),
   USER_GUIDE_FILES: '/user-guide',
   USER_GUIDE_SIGNED_URL: (name: string) => `/user-guide/${name}/signed-url`,
+  findUsers: (params: EndpointQueryParams<UserManagementSortKeys>) =>
+    appendQueryParams('/user/find', params),
+  inviteUser: '/user/invite',
 };
