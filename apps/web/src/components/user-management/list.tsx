@@ -13,6 +13,8 @@ import { PageOptions, Pagination } from '../Pagination';
 import { SortButton } from '../SortButton';
 import { useCallback } from 'react';
 import { Button } from '../Button';
+import { Tag } from '../generic/Tag';
+import { TagVariants } from 'src/common';
 
 interface TableHeaderProps {
   sortKey?: UserManagementSortKeys;
@@ -66,10 +68,19 @@ const TableBody: React.FC<TableBodyProps> = ({
 }) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
 
-  const getRolesLabel = useCallback((roles: Role[] = []) => {
-    return roles
-      .map(role => RoleOptions.find(option => option.value === role)?.label || '')
-      .join(', ');
+  const getRoles = useCallback((roles: Role[] = []) => {
+    return roles.map(role => RoleOptions.find(option => option.value === role));
+  }, []);
+
+  const getRoleTagsVariants = useCallback((role?: Role) => {
+    switch (role) {
+      case Role.ADMIN:
+        return TagVariants.BLUE;
+      case Role.USER:
+        return TagVariants.GREEN;
+      default:
+        return TagVariants.GRAY;
+    }
   }, []);
 
   const getStatusOption = useCallback((status: UserStatus) => {
@@ -96,7 +107,15 @@ const TableBody: React.FC<TableBodyProps> = ({
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{user.email}</td>
           <td className={tdStyles}>{user.organization || '-'}</td>
-          <td className={tdStyles}>{getRolesLabel(user.roles)}</td>
+          <td className={`${tdStyles} flex flex-row`}>
+            {getRoles(user.roles).map(role => (
+              <Tag
+                key={role?.value}
+                tagStyle={getRoleTagsVariants(role?.value)}
+                text={role?.label || ''}
+              />
+            ))}
+          </td>
           <td
             className={`${tdStyles} font-bold ${
               getStatusColor(user.status) === 'red'
