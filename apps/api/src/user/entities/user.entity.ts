@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 import { UserPreference } from './user-preference.entity';
 import { Role } from '@tbcm/common';
 
-@Entity({ name: 'users' })
+@Entity({ name: 'users', orderBy: { createdAt: 'DESC' } })
 export class User extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

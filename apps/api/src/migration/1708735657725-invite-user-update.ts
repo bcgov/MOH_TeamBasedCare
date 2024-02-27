@@ -10,6 +10,10 @@ export class inviteUserUpdate1708735657725 implements MigrationInterface {
       await queryRunner.query(
         `INSERT INTO public.users (email, roles) values ('${this.initUser}', '{USER,ADMIN}')`,
       );
+      // eslint-disable-next-line no-console
+      console.log(
+        `Migration :: inviteUserUpdate1708735657725 :: up :: First application user - ${this.initUser} inserted`,
+      );
     }
 
     await queryRunner.query(`ALTER TABLE "users" ADD "invited_at" TIMESTAMP`);
@@ -31,6 +35,10 @@ export class inviteUserUpdate1708735657725 implements MigrationInterface {
     // remove first admin email
     if (this.initUser) {
       await queryRunner.query(`DELETE FROM public.users WHERE email = '${this.initUser}'`);
+      // eslint-disable-next-line no-console
+      console.log(
+        `Migration :: inviteUserUpdate1708735657725 :: down :: First application user - ${this.initUser} removed`,
+      );
     }
   }
 }
