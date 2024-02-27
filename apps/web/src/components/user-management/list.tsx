@@ -116,7 +116,7 @@ const TableBody: React.FC<TableBodyProps> = ({
             <Button variant='link' onClick={() => onEditUserClick(user)}>
               Edit
             </Button>
-            {user.status === UserStatus.ACTIVE && (
+            {user.status !== UserStatus.REVOKED && (
               <Button variant='link' onClick={() => onRevokeUserClick(user)}>
                 Revoke access
               </Button>
