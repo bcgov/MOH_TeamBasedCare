@@ -1,5 +1,5 @@
 import { useHttp } from '@services';
-import { KeycloakToken, Role, UserRO } from '@tbcm/common';
+import { KeycloakToken, Role, UserRO, UserStatus } from '@tbcm/common';
 import { useCallback, useMemo } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
 import {
@@ -34,6 +34,7 @@ export const useAuth = () => {
     AppStorage.setItem(StorageKeys.EMAIL, data.email);
     AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.displayName);
     AppStorage.setItem(StorageKeys.ROLES, data.roles || []);
+    AppStorage.setItem(StorageKeys.STATUS, data.status);
   }, []);
 
   // fetch authentication token from authorization code
@@ -115,6 +116,10 @@ export const useAuth = () => {
     return AppStorage.getItem(StorageKeys.ROLES) as Role[];
   }, []);
 
+  const userStatus = useMemo(() => {
+    return AppStorage.getItem(StorageKeys.STATUS) as UserStatus;
+  }, []);
+
   const hasUserRole = useCallback(
     (roles: Role[]) => {
       if (!Array.isArray(roles) || !Array.isArray(userRoles)) return false;
@@ -131,6 +136,7 @@ export const useAuth = () => {
     fetchAuthTokenFromCode,
     fetchUserFromCode,
     userRoles,
+    userStatus,
     hasUserRole,
   };
 };

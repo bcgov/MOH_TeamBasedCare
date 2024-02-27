@@ -1,4 +1,12 @@
-import { Role, RoleOptions, SortOrder, UserManagementSortKeys, UserRO } from '@tbcm/common';
+import {
+  Role,
+  RoleOptions,
+  SortOrder,
+  UserManagementSortKeys,
+  UserRO,
+  UserStatus,
+  UserStatusOptions,
+} from '@tbcm/common';
 import { isOdd } from 'src/common/util';
 import { Spinner } from '../generic/Spinner';
 import { PageOptions, Pagination } from '../Pagination';
@@ -20,6 +28,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
     { label: 'Email', name: UserManagementSortKeys.EMAIL },
     { label: 'Health authority', name: UserManagementSortKeys.ORGANIZATION },
     { label: 'Role' },
+    { label: 'Status' },
     { label: 'Action item' },
   ];
 
@@ -45,9 +54,16 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 interface TableBodyProps {
   users: UserRO[];
   onEditUserClick: (user: UserRO) => void;
+  onRevokeUserClick: (user: UserRO) => void;
+  onReProvisionUserClick: (user: UserRO) => void;
 }
 
-const TableBody: React.FC<TableBodyProps> = ({ users = [], onEditUserClick }) => {
+const TableBody: React.FC<TableBodyProps> = ({
+  users = [],
+  onEditUserClick,
+  onRevokeUserClick,
+  onReProvisionUserClick,
+}) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
 
   const getRolesLabel = useCallback((roles: Role[] = []) => {
@@ -56,6 +72,24 @@ const TableBody: React.FC<TableBodyProps> = ({ users = [], onEditUserClick }) =>
       .join(', ');
   }, []);
 
+  const getStatusOption = useCallback((status: UserStatus) => {
+    return UserStatusOptions.find(option => option.value === status);
+  }, []);
+
+  const getStatusLabel = useCallback(
+    (status: UserStatus) => {
+      return getStatusOption(status)?.label || '';
+    },
+    [getStatusOption],
+  );
+
+  const getStatusColor = useCallback(
+    (status: UserStatus) => {
+      return getStatusOption(status)?.color || '';
+    },
+    [getStatusOption],
+  );
+
   return (
     <tbody>
       {users?.map((user: UserRO, index: number) => (
@@ -63,10 +97,35 @@ const TableBody: React.FC<TableBodyProps> = ({ users = [], onEditUserClick }) =>
           <td className={tdStyles}>{user.email}</td>
           <td className={tdStyles}>{user.organization || '-'}</td>
           <td className={tdStyles}>{getRolesLabel(user.roles)}</td>
+          <td
+            className={`${tdStyles} font-bold ${
+              getStatusColor(user.status) === 'red'
+                ? 'text-bcRedError'
+                : getStatusColor(user.status) === 'yellow'
+                ? 'text-bcYellowWarning'
+                : getStatusColor(user.status) === 'green'
+                ? 'text-bcGreenHiredText'
+                : getStatusColor(user.status) === 'blue'
+                ? 'text-bcBlueAccent'
+                : ''
+            }`}
+          >
+            {getStatusLabel(user.status)}
+          </td>
           <td className={`${tdStyles} flex gap-x-4`}>
             <Button variant='link' onClick={() => onEditUserClick(user)}>
               Edit
             </Button>
+            {user.status === UserStatus.ACTIVE && (
+              <Button variant='link' onClick={() => onRevokeUserClick(user)}>
+                Revoke access
+              </Button>
+            )}
+            {user.status === UserStatus.REVOKED && (
+              <Button variant='link' onClick={() => onReProvisionUserClick(user)}>
+                Re-provision access
+              </Button>
+            )}
           </td>
         </tr>
       ))}
@@ -110,6 +169,8 @@ interface UserManagementListProps {
   onSortChange: ({ key }: { key: UserManagementSortKeys }) => void;
   isLoading?: boolean;
   onEditUserClick: (user: UserRO) => void;
+  onRevokeUserClick: (user: UserRO) => void;
+  onReProvisionUserClick: (user: UserRO) => void;
 }
 
 export const UserManagementList: React.FC<UserManagementListProps> = ({
@@ -123,6 +184,8 @@ export const UserManagementList: React.FC<UserManagementListProps> = ({
   onSortChange,
   isLoading,
   onEditUserClick,
+  onRevokeUserClick,
+  onReProvisionUserClick,
 }) => {
   if (isLoading) {
     return <Spinner show={isLoading} />;
@@ -132,7 +195,12 @@ export const UserManagementList: React.FC<UserManagementListProps> = ({
     <>
       <table className='w-full table-auto mt-2'>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <TableBody users={users} onEditUserClick={onEditUserClick} />
+        <TableBody
+          users={users}
+          onEditUserClick={onEditUserClick}
+          onRevokeUserClick={onRevokeUserClick}
+          onReProvisionUserClick={onReProvisionUserClick}
+        />
         <TableFooter
           pageIndex={pageIndex}
           pageSize={pageSize}

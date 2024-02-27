@@ -62,8 +62,8 @@ export class AuthGuard implements CanActivate {
     await this.userService.updateLastAccessAt(user);
 
     // if user access is revoked
-    // TODO: TO BE REVISITED [taken from IEN]
-    if (request.query?.id && user.revokedAt) return false;
+    // exception to allow auth/user api to go through so user can get into the app to view the appropriate messaging
+    if (user.revokedAt && !request.url.includes('/auth/user')) return false;
 
     // if both class and handler specify roles, handler's roles take affect than class's
     const roles =

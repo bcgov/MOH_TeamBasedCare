@@ -72,4 +72,6 @@ export const API_ENDPOINT = {
     appendQueryParams('/user/find', params),
   INVITE_USER: '/user/invite',
   EDIT_USER: (id: string) => `/user/${id}/edit`,
+  REVOKE_USER: (id: string) => `/user/${id}/revoke`,
+  RE_PROVISION_USER: (id: string) => `/user/${id}/re-provision`,
 };

@@ -43,4 +43,16 @@ export class UserController {
   async editUser(@Body() data: EditUserDTO, @Param('id') id: string) {
     await this.userService.editUser(id, data);
   }
+
+  @Post('/:id/revoke')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async revokeUser(@Param('id') id: string) {
+    await this.userService.revokeUser(id);
+  }
+
+  @Post('/:id/re-provision')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async reProvisionUser(@Param('id') id: string) {
+    await this.userService.reProvisionUser(id);
+  }
 }

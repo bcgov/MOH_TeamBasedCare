@@ -8,6 +8,8 @@ import { Card } from 'src/components/generic/Card';
 import { EditUser } from 'src/components/user-management/editUser';
 import { InviteUser } from 'src/components/user-management/inviteUser';
 import { UserManagementList } from 'src/components/user-management/list';
+import { useUserReProvision } from 'src/services/useUserReProvision';
+import { useUserRevoke } from 'src/services/useUserRevoke';
 import { useUsersFind } from 'src/services/useUsersFind';
 
 const UserManagement: NextPage = () => {
@@ -25,9 +27,13 @@ const UserManagement: NextPage = () => {
   } = useUsersFind();
 
   const [showModal, setShowModal] = useState(false);
-  const [currentModal, setCurrentModal] = useState<'invite' | 'edit'>();
+  const [currentModal, setCurrentModal] = useState<'invite' | 'edit' | 'revoke' | 're-provision'>();
   const [modalTitle, setModalTitle] = useState<string>();
   const [selectedUser, setSelectedUser] = useState<UserRO>();
+
+  const { handleSubmit: handleSubmitRevoke, isLoading: isLoadingRevoke } = useUserRevoke();
+  const { handleSubmit: handleSubmitReProvision, isLoading: isLoadingReProvision } =
+    useUserReProvision();
 
   useEffect(() => {
     if (currentModal === 'invite') {
@@ -46,6 +52,18 @@ const UserManagement: NextPage = () => {
 
   const onEditUserClick = (user: UserRO) => {
     setCurrentModal('edit');
+    setSelectedUser(user);
+    setShowModal(true);
+  };
+
+  const onRevokeUserClick = (user: UserRO) => {
+    setCurrentModal('revoke');
+    setSelectedUser(user);
+    setShowModal(true);
+  };
+
+  const onReProvisionUserClick = (user: UserRO) => {
+    setCurrentModal('re-provision');
     setSelectedUser(user);
     setShowModal(true);
   };
@@ -82,11 +100,13 @@ const UserManagement: NextPage = () => {
             onSortChange={onSortChange}
             isLoading={isLoading}
             onEditUserClick={onEditUserClick}
+            onRevokeUserClick={onRevokeUserClick}
+            onReProvisionUserClick={onReProvisionUserClick}
           />
         </Card>
       </div>
 
-      {showModal && (
+      {showModal && currentModal && ['invite', 'edit'].includes(currentModal) && (
         <ModalWrapper isOpen={showModal} setIsOpen={setShowModal} title={modalTitle}>
           <div className='p-4'>
             {currentModal === 'invite' && (
@@ -111,6 +131,60 @@ const UserManagement: NextPage = () => {
             )}
           </div>
         </ModalWrapper>
+      )}
+
+      {showModal && selectedUser && currentModal === 'revoke' && (
+        <ModalWrapper
+          isOpen={showModal}
+          setIsOpen={setShowModal}
+          title={'Revoke access'}
+          description={
+            <>
+              Are you sure you want to revoke access for{' '}
+              <span className='font-bold'>
+                <span className={'text-bcBlueLink underline'}>{selectedUser.email}</span> (
+                {selectedUser.displayName}) ?
+              </span>
+            </>
+          }
+          closeButton={{ title: 'Cancel' }}
+          actionButton={{
+            isLoading: isLoadingRevoke,
+            title: 'Confirm',
+            onClick: () =>
+              handleSubmitRevoke(selectedUser, () => {
+                onRefreshList();
+                setShowModal(false);
+              }),
+          }}
+        ></ModalWrapper>
+      )}
+
+      {showModal && selectedUser && currentModal === 're-provision' && (
+        <ModalWrapper
+          isOpen={showModal}
+          setIsOpen={setShowModal}
+          title={'Re-provision access'}
+          description={
+            <>
+              Are you sure you want to re-provision access for{' '}
+              <span className='font-bold'>
+                <span className={'text-bcBlueLink underline'}>{selectedUser.email}</span> (
+                {selectedUser.displayName}) ?
+              </span>
+            </>
+          }
+          closeButton={{ title: 'Cancel' }}
+          actionButton={{
+            isLoading: isLoadingReProvision,
+            title: 'Confirm',
+            onClick: () =>
+              handleSubmitReProvision(selectedUser, () => {
+                onRefreshList();
+                setShowModal(false);
+              }),
+          }}
+        ></ModalWrapper>
       )}
     </AppLayout>
   );

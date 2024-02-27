@@ -74,13 +74,14 @@ interface ModalButtonProps {
   title: string;
   type?: 'submit' | 'reset' | 'button';
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 interface ModalWrapperProps {
   isOpen: boolean;
   setIsOpen: (value: React.SetStateAction<boolean>) => void;
   title?: string;
-  description?: string;
+  description?: string | JSX.Element;
   closeButton?: ModalButtonProps;
   actionButton?: ModalButtonProps;
   children?: ReactNode;
@@ -112,6 +113,7 @@ export const ModalWrapper = ({
         <ModalFooter>
           {actionButton && (
             <Button
+              loading={actionButton?.isLoading}
               onClick={() => actionButton?.onClick?.()}
               variant='primary'
               type={actionButton.type || 'button'}
