@@ -1,6 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import * as jwt from 'jsonwebtoken';
 import * as queryString from 'querystring';
 import { catchError, map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
@@ -8,6 +7,7 @@ import { ConfigService } from 'src/config/config.service';
 import { KeycloakToken } from '@tbcm/common';
 import { KeycloakUser } from '@tbcm/common';
 import { AppLogger } from 'src/common/logger.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +34,7 @@ export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly userService: UserService,
   ) {
     this.keycloakAuthServerUri = this.configService.getValue('KEYCLOAK_AUTH_SERVER_URI');
     this.keycloakResponseType = this.configService.getValue('KEYCLOAK_RESPONSE_TYPE');
@@ -91,21 +92,16 @@ export class AuthService {
     return data;
   }
 
-  async getUserInfo(accessToken: string): Promise<KeycloakUser> {
+  async getUserInfo(accessToken: string) {
     const params = {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     };
-    const data = await firstValueFrom(
-      this.httpService.get(this.keycloakUserInfoUri, params).pipe(
-        map((res: any) => {
-          // roles does not exist in the userinfo, extracting from the token
-          const { resource_access } = jwt.decode(accessToken) as KeycloakUser;
 
-          // return response + roles
-          return { resource_access, ...res.data } as KeycloakUser;
-        }),
+    const keycloakUser: KeycloakUser = await firstValueFrom(
+      this.httpService.get(this.keycloakUserInfoUri, params).pipe(
+        map(async (res: any) => res.data),
         catchError(e => {
           this.logger.error('auth.service.ts :: getUserInfo');
           this.logger.error(JSON.stringify(params));
@@ -115,7 +111,7 @@ export class AuthService {
       ),
     );
 
-    return data;
+    return keycloakUser;
   }
 
   async refreshAccessToken(refresh_token: string): Promise<KeycloakToken> {

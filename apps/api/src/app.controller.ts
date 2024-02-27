@@ -11,9 +11,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiProperty, ApiResponse } from '@nestjs/swagger';
 import { Role } from '@tbcm/common';
-import { Roles } from 'nest-keycloak-connect';
 import { AppService } from './app.service';
 import { SUCCESS_RESPONSE } from './common/constants';
+import { AllowRoles } from './auth/allow-roles.decorator';
 
 class UpdateScriptDTO {
   @ApiProperty({ type: 'string', format: 'binary' })
@@ -46,7 +46,7 @@ export class AppController {
     summary: 'Runs script to update care activities',
   })
   @Patch('/update-care-activities')
-  @Roles({ roles: [Role.ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
@@ -59,7 +59,7 @@ export class AppController {
     summary: 'Runs script to update occupation list',
   })
   @Patch('/update-occupation')
-  @Roles({ roles: [Role.ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
@@ -76,7 +76,7 @@ export class AppController {
     summary: 'Removes all the data from the database including the master data',
   })
   @Post('prune-data')
-  @Roles({ roles: [Role.ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async pruneData() {
     await this.appService.pruneData();
     return SUCCESS_RESPONSE;

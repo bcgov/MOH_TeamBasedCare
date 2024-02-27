@@ -7,7 +7,6 @@ import {
   SaveCareActivityDTO,
   SaveOccupationDTO,
   PlanningStatus,
-  KeycloakUser,
 } from '@tbcm/common';
 import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
@@ -18,6 +17,7 @@ import { ActivitiesActionType } from '../common/constants';
 import { UnitService } from 'src/unit/unit.service';
 import { Unit } from 'src/unit/entity/unit.entity';
 import { BundleRO } from 'src/care-activity/ro/get-bundle.ro';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class PlanningSessionService {
@@ -37,11 +37,11 @@ export class PlanningSessionService {
   }
 
   // find latest Draft planning sessions
-  async getLastDraftPlanningSession(user: KeycloakUser): Promise<PlanningSession | undefined> {
+  async getLastDraftPlanningSession(user: User): Promise<PlanningSession | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: {
         status: PlanningStatus.DRAFT,
-        createdBy: user.sub,
+        createdBy: user.keycloakId,
       },
       order: {
         createdAt: -1,
@@ -55,14 +55,14 @@ export class PlanningSessionService {
   // create a new planning session
   async createPlanningSession(
     saveProfileDto: SaveProfileDTO,
-    user: KeycloakUser,
+    user: User,
   ): Promise<PlanningSession> {
     const session: Partial<PlanningSession> = {
       profileOption: saveProfileDto.profileOption,
       careLocation: (await this.unitService.getById(saveProfileDto.careLocation)) as Unit,
-      createdBy: user.sub,
-      createdByUsername: user.preferred_username,
-      createdByName: user.name,
+      createdBy: user.keycloakId,
+      createdByUsername: user.username,
+      createdByName: user.displayName,
       createdByEmail: user.email,
     };
 

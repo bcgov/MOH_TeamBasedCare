@@ -22,7 +22,12 @@ export const useHttp = () => {
   };
 
   const fetchData = useCallback(
-    async (requestConfig: RequestConfig, handleData, errorToastMessage?: string) => {
+    async (
+      requestConfig: RequestConfig,
+      handleData,
+      errorToastMessage?: string,
+      handleError?: () => void,
+    ) => {
       const configOptions: Partial<RequestConfig> = {
         method: REQUEST_METHOD.GET,
         params: requestConfig?.params,
@@ -34,6 +39,8 @@ export const useHttp = () => {
         const { data } = await AxiosPublic(requestConfig.endpoint, configOptions);
         handleData(data);
       } catch (err: any) {
+        handleError?.();
+
         errorHandler(err, errorToastMessage);
       }
       setIsLoading(false);

@@ -83,6 +83,7 @@ resource "aws_lambda_function" "api" {
       POSTGRES_PASSWORD = data.aws_ssm_parameter.postgres_password.value
       POSTGRES_HOST     = aws_rds_cluster.pgsql.endpoint
       POSTGRES_DATABASE = aws_rds_cluster.pgsql.database_name
+      INIT_USER         = data.aws_ssm_parameter.init_user.value
       DOCS_BUCKET       = var.docs_bucket
       KEYCLOAK_AUTH_SERVER_URI  = var.keycloak_auth_server_uri
       KEYCLOAK_RESPONSE_TYPE    = var.keycloak_response_type

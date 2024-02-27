@@ -5,8 +5,9 @@ import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { KeycloakUser, SortOrder } from '@tbcm/common';
+import { SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class CareActivityService {
@@ -57,7 +58,7 @@ export class CareActivityService {
 
   async findCareActivities(
     query: FindCareActivitiesDto,
-    user: KeycloakUser,
+    user: User,
   ): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo.createQueryBuilder('ca');
 
@@ -82,12 +83,12 @@ export class CareActivityService {
       .getManyAndCount();
   }
 
-  async createCareActivitySearchTerm(term: string, user: KeycloakUser) {
+  async createCareActivitySearchTerm(term: string, user: User) {
     const createSearchTerm: Partial<CareActivitySearchTerm> = {
       term,
-      createdBy: user.sub,
-      createdByUsername: user.preferred_username,
-      createdByName: user.name,
+      createdBy: user.keycloakId,
+      createdByUsername: user.username,
+      createdByName: user.displayName,
       createdByEmail: user.email,
     };
 

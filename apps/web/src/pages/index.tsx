@@ -42,15 +42,20 @@ const Landing: NextPage = () => {
         setMessage('Authenticated. Fetching user information..');
 
         // fetch user data
-        fetchUserFromCode(() => {
-          // success callback - redirect to app
-          redirectToApp();
-        });
+        fetchUserFromCode(
+          () => {
+            // success callback - redirect to app
+            redirectToApp();
+          },
+          () => {
+            setShowSpinner(false);
+          },
+          'Failed to retrieve user information...',
+        );
       },
       () => {
         // error callback - show message
         setShowSpinner(false);
-        setMessage('Failed to authenticate.. Please refresh page to retry...');
       },
       'Failed to authenticate the request...',
     );

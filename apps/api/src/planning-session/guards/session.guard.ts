@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, Inject } from '@nestjs/common';
 import { PlanningSessionService } from '../planning-session.service';
+import { User } from 'src/user/entities/user.entity';
 
 /**
  * @name SessionGuard
@@ -16,7 +17,7 @@ export class SessionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     // grab user id
-    const userId = request?.user?.sub;
+    const userId = (request?.user as User)?.keycloakId;
 
     // if user id does not exist, restrict access
     if (!userId) return false;

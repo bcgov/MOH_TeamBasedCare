@@ -9,12 +9,15 @@ import {
   HttpException,
   InternalServerErrorException,
   HttpCode,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Roles, Unprotected } from 'nest-keycloak-connect';
+import { Unprotected } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
-import { AppTokensDTO, Role } from '@tbcm/common';
+import { AppTokensDTO, UserRO } from '@tbcm/common';
 import { EmptyResponse } from 'src/common/ro/empty-response.ro';
+import { IRequest } from 'src/common/app-request';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -46,13 +49,10 @@ export class AuthController {
   }
 
   @Get('user')
-  @Roles({ roles: [Role.USER, Role.ADMIN] })
   @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
-  async getUserInfo(@Req() req: any) {
-    if (!req.headers.authorization.startsWith('Bearer')) return;
-    const accessToken = req.headers.authorization.replace('Bearer ', '');
-    const kcUserInfo = await this.authService.getUserInfo(accessToken);
-    return kcUserInfo;
+  @UseInterceptors(ClassSerializerInterceptor)
+  async getUser(@Req() req: IRequest) {
+    return new UserRO(req.user);
   }
 
   @Post('refresh')

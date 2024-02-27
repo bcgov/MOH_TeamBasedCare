@@ -12,11 +12,11 @@ import { CareActivityService } from './care-activity.service';
 import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { IRequest } from 'src/common/app-request';
-import { Roles } from 'nest-keycloak-connect';
+import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @ApiTags('care-activity')
 @Controller('care-activity')
-@Roles({ roles: [Role.USER] })
+@AllowRoles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class CareActivityController {
   constructor(private careActivityService: CareActivityService) {}
