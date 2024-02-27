@@ -140,10 +140,10 @@ const UserManagement: NextPage = () => {
           title={'Revoke access'}
           description={
             <>
-              Are you sure you want to revoke access for{' '}
-              <span className='font-bold'>
-                <span className={'text-bcBlueLink underline'}>{selectedUser.email}</span> (
-                {selectedUser.displayName}) ?
+              Are you sure you want to revoke access for
+              <span className='pl-1 font-bold'>
+                <span className={'text-bcBlueLink underline'}>{selectedUser.email}</span>
+                {selectedUser.displayName ? ` (${selectedUser.displayName})` : ''} ?
               </span>
             </>
           }
@@ -167,10 +167,10 @@ const UserManagement: NextPage = () => {
           title={'Re-provision access'}
           description={
             <>
-              Are you sure you want to re-provision access for{' '}
-              <span className='font-bold'>
-                <span className={'text-bcBlueLink underline'}>{selectedUser.email}</span> (
-                {selectedUser.displayName}) ?
+              Are you sure you want to re-provision access for
+              <span className='pl-1 font-bold'>
+                <span className={'text-bcBlueLink underline'}>{selectedUser.email}</span>
+                {selectedUser.displayName ? ` (${selectedUser.displayName})` : ''} ?
               </span>
             </>
           }
