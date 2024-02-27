@@ -7,11 +7,12 @@ import { useAppContext } from './AppContext';
 import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
 import { Sidebar } from './Sidebar';
+import { UserStatus } from '@tbcm/common';
 
 const AppLayout: React.FC = ({ children }) => {
   const router = useRouter();
   const { state, updateSidebarButtons } = useAppContext();
-  const { isAuthenticated, userRoles, hasUserRole } = useAuth();
+  const { isAuthenticated, userRoles, userStatus, hasUserRole } = useAuth();
 
   // active sidebar button
   const activeSidebarButton = useRef<SidebarButtonProps | null>(null);
@@ -64,7 +65,11 @@ const AppLayout: React.FC = ({ children }) => {
    * If a user does not have ANY role to view the application
    */
   if (userRoles?.length === 0) {
-    accessError = `You don't currently have permission to access the application.`;
+    accessError = `You don't currently have permissions to access the application.`;
+  }
+
+  if (userStatus === UserStatus.REVOKED) {
+    accessError = `Your access was revoked. You no longer have permissions to access the application.`;
   }
 
   return (

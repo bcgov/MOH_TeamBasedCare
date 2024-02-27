@@ -36,7 +36,7 @@ export class User extends CustomBaseEntity {
   lastAccessAt?: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  revokedAt?: Date;
+  revokedAt?: Date | null;
 
   @ManyToOne(() => User)
   invitedBy?: User;

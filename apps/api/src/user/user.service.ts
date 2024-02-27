@@ -205,4 +205,24 @@ export class UserService {
       ...data,
     });
   }
+
+  async revokeUser(id: string) {
+    if (!id) throw new BadRequestException('No user ID found');
+
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    user.revokedAt = new Date();
+    return this.userRepo.save(user);
+  }
+
+  async reProvisionUser(id: string) {
+    if (!id) throw new BadRequestException('No user ID found');
+
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException('User not found');
+
+    user.revokedAt = null;
+    return this.userRepo.save(user);
+  }
 }

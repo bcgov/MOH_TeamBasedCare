@@ -7,6 +7,7 @@ export enum StorageKeys {
   EMAIL = 'email',
   DISPLAY_NAME = 'displayName',
   ROLES = 'roles',
+  STATUS = 'status',
 }
 
 const APP_STORAGE_KEY = 'tbcm';

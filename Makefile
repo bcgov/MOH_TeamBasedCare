@@ -237,9 +237,17 @@ pre-build:
 
 sed-common-module:
 	@echo 'Replacing all missed entity relative paths to @tbcm/common inside node_modules :: fixes Module.Import errors'
+	
+	# entity.js
 	@if [[ $(shell uname) == "Darwin"* ]]; \
 	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.entity.js; \
 	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.entity.js; \
+	fi
+
+	# controller.js
+	@if [[ $(shell uname) == "Darwin"* ]]; \
+	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/*.controller.js; \
+	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/*.controller.js; \
 	fi
 	
 build-api:
