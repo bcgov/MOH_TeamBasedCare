@@ -29,7 +29,7 @@ const DropdownIndicator = <T extends OptionValueType>(
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const Input = (props: any) => {
+export const ReactSelectInput = (props: any) => {
   return <components.Input {...props} />;
 };
 
@@ -61,14 +61,14 @@ export const BasicSelect = <T extends OptionValueType>(props: BasicSelectProps<T
         isOptionDisabled={o => o.value === value}
         options={options}
         styles={getNoBorderSelectStyle<SelectOption<T>>(textAlign, underline, optionStyle)}
-        components={{ DropdownIndicator, Input }}
+        components={{ DropdownIndicator, Input: ReactSelectInput }}
         menuPlacement='top'
       />
     </div>
   );
 };
 
-const getNoBorderSelectStyle = <T extends StyleOption>(
+export const getNoBorderSelectStyle = <T extends StyleOption>(
   textAlign: Property.TextAlign,
   underline: boolean,
   optionStyle?: CSSProperties,

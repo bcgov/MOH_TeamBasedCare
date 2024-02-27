@@ -7,6 +7,7 @@ import {
   faExclamationCircle,
   faUsers,
   faBook,
+  faUsersCog,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
 import { Role } from '@tbcm/common';
@@ -18,6 +19,7 @@ export enum AllowedPath {
   OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
   CARE_TERMINOLOGIES = '/care-terminologies',
   CARE_TERMINOLOGIES_ID = '/care-terminologies/:id',
+  USER_MANAGEMENT = '/user-management',
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [
@@ -49,6 +51,21 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     path: AllowedPath.CARE_TERMINOLOGIES,
     hidden: true,
     roles: [Role.USER],
+  },
+  {
+    id: '004',
+    kind: SidebarButtonKind.LINE_BREAK,
+    roles: [Role.ADMIN],
+  },
+  {
+    id: '005',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'User management',
+    active: false,
+    faIcon: faUsersCog,
+    path: AllowedPath.USER_MANAGEMENT,
+    hidden: false,
+    roles: [Role.ADMIN],
   },
 ];
 

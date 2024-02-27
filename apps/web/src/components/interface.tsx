@@ -6,6 +6,7 @@ import { AllowedPath } from 'src/common';
 export enum SidebarButtonKind {
   REGULAR = 'regular',
   COLLAPSIBLE = 'collapsible',
+  LINE_BREAK = 'line_break',
 }
 
 export interface SidebarButtonProps {
@@ -13,8 +14,8 @@ export interface SidebarButtonProps {
   kind?: SidebarButtonKind;
   open?: boolean;
   active?: boolean;
-  path: AllowedPath;
-  text: string;
+  path?: AllowedPath;
+  text?: string;
   faIcon?: IconDefinition;
   setButtons?: Dispatch<SetStateAction<SidebarButtonProps[]>>;
   options?: SidebarButtonProps[];
