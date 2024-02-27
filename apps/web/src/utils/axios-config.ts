@@ -40,18 +40,23 @@ AxiosPublic.interceptors.response.use(
       // tag a retry
       originalRequest._retry = true;
 
-      // refresh auth tokens
-      const { isRefreshTokenExpired, accessToken } = await refreshAuthTokens();
+      try {
+        // refresh auth tokens
+        const { isRefreshTokenExpired, accessToken } = await refreshAuthTokens();
 
-      // if refresh token not already expired, retry call
-      if (!isRefreshTokenExpired) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-        return AxiosPublic(originalRequest);
+        // if refresh token not already expired, retry call
+        if (!isRefreshTokenExpired) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          return AxiosPublic(originalRequest);
+        }
+      } catch (e) {
+        // if refreshing auth token fails
+        originalRequest._isException = true;
       }
     }
 
     // if retried and it still failed, log out and redirect to the landing page
-    if (originalRequest._retry && typeof window !== 'undefined') {
+    if ((originalRequest._retry || originalRequest._isException) && typeof window !== 'undefined') {
       clearStorageAndRedirectToLandingPage();
     }
 

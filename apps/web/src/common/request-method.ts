@@ -70,5 +70,6 @@ export const API_ENDPOINT = {
   USER_GUIDE_SIGNED_URL: (name: string) => `/user-guide/${name}/signed-url`,
   findUsers: (params: EndpointQueryParams<UserManagementSortKeys>) =>
     appendQueryParams('/user/find', params),
-  inviteUser: '/user/invite',
+  INVITE_USER: '/user/invite',
+  EDIT_USER: (id: string) => `/user/${id}/edit`,
 };

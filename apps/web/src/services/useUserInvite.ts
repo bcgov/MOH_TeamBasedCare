@@ -14,7 +14,7 @@ export const useUserInvite = () => {
 
   const handleSubmit = (values: CreateUserInviteDTO, cb?: () => void) => {
     const config = {
-      endpoint: API_ENDPOINT.inviteUser,
+      endpoint: API_ENDPOINT.INVITE_USER,
       method: REQUEST_METHOD.POST,
       data: values,
     };

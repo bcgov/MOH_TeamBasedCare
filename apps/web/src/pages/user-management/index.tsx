@@ -1,9 +1,11 @@
 import { Button, PageTitle } from '@components';
+import { UserRO } from '@tbcm/common';
 import { NextPage } from 'next';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppLayout from 'src/components/AppLayout';
 import { ModalWrapper } from 'src/components/Modal';
 import { Card } from 'src/components/generic/Card';
+import { EditUser } from 'src/components/user-management/editUser';
 import { InviteUser } from 'src/components/user-management/inviteUser';
 import { UserManagementList } from 'src/components/user-management/list';
 import { useUsersFind } from 'src/services/useUsersFind';
@@ -23,8 +25,28 @@ const UserManagement: NextPage = () => {
   } = useUsersFind();
 
   const [showModal, setShowModal] = useState(false);
+  const [currentModal, setCurrentModal] = useState<'invite' | 'edit'>();
+  const [modalTitle, setModalTitle] = useState<string>();
+  const [selectedUser, setSelectedUser] = useState<UserRO>();
+
+  useEffect(() => {
+    if (currentModal === 'invite') {
+      setModalTitle('Invite User');
+    }
+
+    if (currentModal === 'edit') {
+      setModalTitle('Edit User');
+    }
+  }, [currentModal]);
 
   const onAddNewClick = () => {
+    setCurrentModal('invite');
+    setShowModal(true);
+  };
+
+  const onEditUserClick = (user: UserRO) => {
+    setCurrentModal('edit');
+    setSelectedUser(user);
     setShowModal(true);
   };
 
@@ -59,20 +81,34 @@ const UserManagement: NextPage = () => {
             sortOrder={sortOrder}
             onSortChange={onSortChange}
             isLoading={isLoading}
+            onEditUserClick={onEditUserClick}
           />
         </Card>
       </div>
 
       {showModal && (
-        <ModalWrapper isOpen={showModal} setIsOpen={setShowModal} title='Add user'>
+        <ModalWrapper isOpen={showModal} setIsOpen={setShowModal} title={modalTitle}>
           <div className='p-4'>
-            <InviteUser
-              setShowModal={setShowModal}
-              successCb={() => {
-                onRefreshList(); // re-fetch users
-                setShowModal(false); // hide modal
-              }}
-            />
+            {currentModal === 'invite' && (
+              <InviteUser
+                setShowModal={setShowModal}
+                successCb={() => {
+                  onRefreshList(); // re-fetch users
+                  setShowModal(false); // hide modal
+                }}
+              />
+            )}
+
+            {currentModal === 'edit' && selectedUser && (
+              <EditUser
+                user={selectedUser}
+                setShowModal={setShowModal}
+                successCb={() => {
+                  onRefreshList(); // re-fetch users
+                  setShowModal(false); // hide modal
+                }}
+              />
+            )}
           </div>
         </ModalWrapper>
       )}
