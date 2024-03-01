@@ -12,6 +12,7 @@ import {
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Occupation } from '../../occupation/entity/occupation.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class PlanningSession extends CustomBaseEntity {
@@ -35,18 +36,8 @@ export class PlanningSession extends CustomBaseEntity {
   @JoinTable()
   occupation?: Occupation[];
 
-  @Column({ type: 'varchar', length: 255 })
-  createdBy: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  createdByUsername: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  createdByName: string;
-
-  /** TODO: update nullable to false during next data cleanup */
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  createdByEmail?: string;
+  @ManyToOne(() => User)
+  createdBy: User;
 
   @Column({ default: PlanningStatus.DRAFT })
   status: string;

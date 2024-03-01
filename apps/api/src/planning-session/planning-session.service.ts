@@ -41,7 +41,7 @@ export class PlanningSessionService {
     const planningSession = await this.planningSessionRepo.findOne({
       where: {
         status: PlanningStatus.DRAFT,
-        createdBy: user.keycloakId,
+        createdBy: user,
       },
       order: {
         createdAt: -1,
@@ -60,10 +60,7 @@ export class PlanningSessionService {
     const session: Partial<PlanningSession> = {
       profileOption: saveProfileDto.profileOption,
       careLocation: (await this.unitService.getById(saveProfileDto.careLocation)) as Unit,
-      createdBy: user.keycloakId,
-      createdByUsername: user.username,
-      createdByName: user.displayName,
-      createdByEmail: user.email,
+      createdBy: user,
     };
 
     const planningSession = this.planningSessionRepo.create(session);

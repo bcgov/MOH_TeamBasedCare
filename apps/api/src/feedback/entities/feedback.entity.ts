@@ -1,5 +1,6 @@
 import { CustomBaseEntity } from 'src/common/custom-base.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Feedback extends CustomBaseEntity {
@@ -9,16 +10,6 @@ export class Feedback extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 4096 })
   text: string;
 
-  /** TODO: update nullable to false during next data cleanup */
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  createdBy?: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  createdByEmail: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  createdByName: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  createdByUsername: string;
+  @ManyToOne(() => User)
+  createdBy: User;
 }

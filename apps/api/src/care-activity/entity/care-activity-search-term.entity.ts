@@ -1,5 +1,6 @@
 import { CustomBaseEntity } from 'src/common/custom-base.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class CareActivitySearchTerm extends CustomBaseEntity {
@@ -9,15 +10,6 @@ export class CareActivitySearchTerm extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   term: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  createdBy: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  createdByUsername: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  createdByName: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  createdByEmail: string;
+  @ManyToOne(() => User)
+  createdBy: User;
 }
