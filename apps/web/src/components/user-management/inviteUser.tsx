@@ -23,7 +23,16 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({ setShowModal, is
       <p>Please enter the information about the user you are inviting to use the system</p>
 
       <div className='pt-4'>
-        <Field type='text' label='Email' name='email' autoComplete='off' />
+        <Field
+          type='text'
+          label={
+            <span>
+              Email<sup className='text-bcRedError'>*</sup>
+            </span>
+          }
+          name='email'
+          autoComplete='off'
+        />
       </div>
 
       <div className='pt-2'>
