@@ -8,6 +8,7 @@ export enum StorageKeys {
   DISPLAY_NAME = 'displayName',
   ROLES = 'roles',
   STATUS = 'status',
+  ID = 'id',
 }
 
 const APP_STORAGE_KEY = 'tbcm';

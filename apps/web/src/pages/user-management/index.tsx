@@ -1,7 +1,9 @@
 import { Button, PageTitle } from '@components';
+import { useAuth } from '@services';
 import { UserRO } from '@tbcm/common';
 import { NextPage } from 'next';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import AppLayout from 'src/components/AppLayout';
 import { ModalWrapper } from 'src/components/Modal';
 import { Card } from 'src/components/generic/Card';
@@ -34,6 +36,7 @@ const UserManagement: NextPage = () => {
   const { handleSubmit: handleSubmitRevoke, isLoading: isLoadingRevoke } = useUserRevoke();
   const { handleSubmit: handleSubmitReProvision, isLoading: isLoadingReProvision } =
     useUserReProvision();
+  const { isLoggedInUser } = useAuth();
 
   useEffect(() => {
     if (currentModal === 'invite') {
@@ -51,18 +54,33 @@ const UserManagement: NextPage = () => {
   };
 
   const onEditUserClick = (user: UserRO) => {
+    if (isLoggedInUser(user)) {
+      toast.error('Failed to edit self user.');
+      return;
+    }
+
     setCurrentModal('edit');
     setSelectedUser(user);
     setShowModal(true);
   };
 
   const onRevokeUserClick = (user: UserRO) => {
+    if (isLoggedInUser(user)) {
+      toast.error('Failed to revoke self user access.');
+      return;
+    }
+
     setCurrentModal('revoke');
     setSelectedUser(user);
     setShowModal(true);
   };
 
   const onReProvisionUserClick = (user: UserRO) => {
+    if (isLoggedInUser(user)) {
+      toast.error('Failed to re-provision self user access.');
+      return;
+    }
+
     setCurrentModal('re-provision');
     setSelectedUser(user);
     setShowModal(true);

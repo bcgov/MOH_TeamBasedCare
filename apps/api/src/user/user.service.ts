@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -210,9 +211,13 @@ export class UserService {
       .getManyAndCount();
   }
 
-  async editUser(id: string, data: EditUserDTO) {
+  async editUser(id: string, data: EditUserDTO, loggedInUser: User) {
     if (!id) {
       throw new BadRequestException('No user ID found');
+    }
+
+    if (id === loggedInUser.id) {
+      throw new ForbiddenException('Cannot edit own user');
     }
 
     const user = await this.findOne(id);
@@ -227,8 +232,10 @@ export class UserService {
     });
   }
 
-  async revokeUser(id: string) {
+  async revokeUser(id: string, loggedInUser: User) {
     if (!id) throw new BadRequestException('No user ID found');
+
+    if (id === loggedInUser.id) throw new ForbiddenException('Cannot revoke own user access');
 
     const user = await this.findOne(id);
     if (!user) throw new NotFoundException('User not found');
@@ -237,8 +244,10 @@ export class UserService {
     return this.userRepo.save(user);
   }
 
-  async reProvisionUser(id: string) {
+  async reProvisionUser(id: string, loggedInUser: User) {
     if (!id) throw new BadRequestException('No user ID found');
+
+    if (id === loggedInUser.id) throw new ForbiddenException('Cannot re-provision own user access');
 
     const user = await this.findOne(id);
     if (!user) throw new NotFoundException('User not found');
