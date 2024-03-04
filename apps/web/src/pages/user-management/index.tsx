@@ -40,7 +40,7 @@ const UserManagement: NextPage = () => {
 
   useEffect(() => {
     if (currentModal === 'invite') {
-      setModalTitle('Invite User');
+      setModalTitle('Add User');
     }
 
     if (currentModal === 'edit') {
@@ -100,7 +100,7 @@ const UserManagement: NextPage = () => {
               />
             </div>
             <Button variant='primary' type='button' classes={`px-8`} onClick={onAddNewClick}>
-              Add new
+              Add user
             </Button>
           </div>
         </Card>
