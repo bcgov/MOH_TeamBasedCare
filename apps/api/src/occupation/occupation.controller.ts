@@ -1,15 +1,20 @@
 import {
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
+  Patch,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PaginationRO, Role } from '@tbcm/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
+import { EditOccupationDTO } from './dto/edit-occupation.dto';
 import { Occupation } from './entity/occupation.entity';
 import { OccupationService } from './occupation.service';
 import { OccupationRO } from './ro/get-occupation.ro';
@@ -39,6 +44,18 @@ export class OccupationController {
     if (!occupation) {
       throw new NotFoundException();
     }
+
+    return new OccupationRO(occupation);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.ADMIN] })
+  async updateOccupationById(
+    @Body() data: EditOccupationDTO,
+    @Param() id: string,
+  ): Promise<OccupationRO> {
+    const occupation = await this.occupationService.updateOccupation(id, data);
 
     return new OccupationRO(occupation);
   }

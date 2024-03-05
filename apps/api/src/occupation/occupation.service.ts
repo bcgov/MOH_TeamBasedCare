@@ -1,8 +1,9 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
+import { EditOccupationDTO } from './dto/edit-occupation.dto';
 import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
 import { reverseSortOrder } from 'src/common/utils';
 
@@ -61,6 +62,19 @@ export class OccupationService {
   findAllOccupation(occupationIds: string[]): Promise<Occupation[]> {
     return this.occupationrepository.find({
       where: { id: In(occupationIds) },
+    });
+  }
+
+  async updateOccupation(id: string, data: EditOccupationDTO): Promise<Occupation> {
+    if (!id) throw new NotFoundException();
+
+    const occupation = await this.findOccupationById(id);
+
+    if (!occupation) throw new NotFoundException();
+
+    return this.occupationrepository.save({
+      ...occupation,
+      ...data,
     });
   }
 }
