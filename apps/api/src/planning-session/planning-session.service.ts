@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { PlanningSession } from './entity/planning-session.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
@@ -30,8 +30,8 @@ export class PlanningSessionService {
   ) {}
 
   // find planning session from id
-  async findOne(sessionId: string): Promise<PlanningSession | undefined> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId);
+  async findOne(sessionId: string, options?: FindOneOptions): Promise<PlanningSession | undefined> {
+    const planningSession = await this.planningSessionRepo.findOne(sessionId, options);
 
     return planningSession;
   }
