@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
@@ -8,6 +8,8 @@ import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
 import { User } from 'src/user/entities/user.entity';
+import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
+import { UnitService } from 'src/unit/unit.service';
 
 @Injectable()
 export class CareActivityService {
@@ -18,6 +20,8 @@ export class CareActivityService {
     private readonly careActivityRepo: Repository<CareActivity>,
     @InjectRepository(CareActivitySearchTerm)
     private readonly careActivitySearchTermRepo: Repository<CareActivitySearchTerm>,
+    @Inject(UnitService)
+    private readonly unitService: UnitService,
   ) {}
 
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
@@ -109,5 +113,38 @@ export class CareActivityService {
     `);
 
     return result.map(r => r.word);
+  }
+
+  async updateCareActivity(id: string, data: EditCareActivityDTO): Promise<CareActivity> {
+    // validate id exist
+    if (!id) throw new NotFoundException();
+
+    // fetch care activity
+    const careActivity = await this.careActivityRepo.findOne(id);
+
+    // validate care activity exist
+    if (!careActivity) throw new NotFoundException();
+
+    // deconstruct
+    const { bundle: bundleId, careLocations: careLocationIds, ...careActivityLiterals } = data;
+
+    // if bundle is updated, fetch and update entity
+    if (bundleId) {
+      const bundle = await this.bundleRepo.findOne(bundleId);
+      if (bundle) {
+        careActivity.bundle = bundle;
+      }
+    }
+
+    // if care settings / units / care locations are updated, fetch and update entities
+    if (Array.isArray(careLocationIds)) {
+      careActivity.careLocations = await this.unitService.getManyByIds(careLocationIds);
+    }
+
+    // perform update
+    return this.careActivityRepo.save({
+      ...careActivity,
+      ...careActivityLiterals,
+    });
   }
 }
