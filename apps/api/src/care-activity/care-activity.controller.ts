@@ -1,7 +1,12 @@
 import {
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
   Query,
   Req,
   UseInterceptors,
@@ -13,6 +18,7 @@ import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
+import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 
 @ApiTags('care-activity')
 @Controller('care-activity')
@@ -50,5 +56,17 @@ export class CareActivityController {
     const commonSearchTerms = await this.careActivityService.getCommonSearchTerms();
 
     return commonSearchTerms;
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.ADMIN] })
+  async updateCareActivityById(
+    @Body() data: EditCareActivityDTO,
+    @Param() id: string,
+  ): Promise<CareActivityRO> {
+    const careActivity = await this.careActivityService.updateCareActivity(id, data);
+
+    return new CareActivityRO(careActivity);
   }
 }
