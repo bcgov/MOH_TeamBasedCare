@@ -1,8 +1,12 @@
 import {
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
+  Patch,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
@@ -12,6 +16,7 @@ import { AllowedActivityService } from './allowed-activity.service';
 import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activities-by-occupation.dto';
 import { GetAllowedActivitiesByOccupationRO } from './ro/get-allowed-activities-by-occupation.ro';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
+import { EditAllowedActivityDTO } from './dto/edit-allowd-activity.dto';
 
 @ApiTags('allowedActivities')
 @Controller('allowedActivities')
@@ -35,5 +40,12 @@ export class AllowedActivityController {
       ),
       total,
     ]);
+  }
+
+  @Patch('/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.ADMIN] })
+  async updateAllowedActivityById(@Body() data: EditAllowedActivityDTO, @Param() id: string) {
+    await this.allowedActivityService.updateAllowedActivity(id, data);
   }
 }

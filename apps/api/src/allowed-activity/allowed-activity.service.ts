@@ -1,9 +1,10 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AllowedActivity } from './entity/allowed-activity.entity';
 import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activities-by-occupation.dto';
 import { OccupationalScopeOfPracticeSortKeys, SortOrder } from '@tbcm/common';
+import { EditAllowedActivityDTO } from './dto/edit-allowd-activity.dto';
 
 @Injectable()
 export class AllowedActivityService {
@@ -68,5 +69,18 @@ export class AllowedActivityService {
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();
+  }
+
+  async updateAllowedActivity(id: string, data: EditAllowedActivityDTO): Promise<AllowedActivity> {
+    if (!id) throw new NotFoundException();
+
+    const allowedActivity = await this.allowedActivityRepository.findOne(id);
+
+    if (!allowedActivity) throw new NotFoundException();
+
+    return this.allowedActivityRepository.save({
+      ...allowedActivity,
+      ...data,
+    });
   }
 }
