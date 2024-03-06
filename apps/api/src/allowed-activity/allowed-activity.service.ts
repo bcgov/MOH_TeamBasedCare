@@ -90,4 +90,14 @@ export class AllowedActivityService {
     // perform update
     await this.allowedActivityRepository.save(allowedActivity);
   }
+
+  async removeAllowedActivity(id: string) {
+    if (!id) throw new NotFoundException();
+
+    const allowedActivity = await this.allowedActivityRepository.findOne(id);
+
+    if (!allowedActivity) throw new NotFoundException();
+
+    return this.allowedActivityRepository.delete(id);
+  }
 }
