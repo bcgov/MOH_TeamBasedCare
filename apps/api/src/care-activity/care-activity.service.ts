@@ -86,10 +86,7 @@ export class CareActivityService {
   async createCareActivitySearchTerm(term: string, user: User) {
     const createSearchTerm: Partial<CareActivitySearchTerm> = {
       term,
-      createdBy: user.keycloakId,
-      createdByUsername: user.username,
-      createdByName: user.displayName,
-      createdByEmail: user.email,
+      createdBy: user,
     };
 
     const searchTerm = this.careActivitySearchTermRepo.create(createSearchTerm);

@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { PlanningSession } from './entity/planning-session.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
@@ -30,8 +30,8 @@ export class PlanningSessionService {
   ) {}
 
   // find planning session from id
-  async findOne(sessionId: string): Promise<PlanningSession | undefined> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId);
+  async findOne(sessionId: string, options?: FindOneOptions): Promise<PlanningSession | undefined> {
+    const planningSession = await this.planningSessionRepo.findOne(sessionId, options);
 
     return planningSession;
   }
@@ -41,7 +41,7 @@ export class PlanningSessionService {
     const planningSession = await this.planningSessionRepo.findOne({
       where: {
         status: PlanningStatus.DRAFT,
-        createdBy: user.keycloakId,
+        createdBy: user,
       },
       order: {
         createdAt: -1,
@@ -60,10 +60,7 @@ export class PlanningSessionService {
     const session: Partial<PlanningSession> = {
       profileOption: saveProfileDto.profileOption,
       careLocation: (await this.unitService.getById(saveProfileDto.careLocation)) as Unit,
-      createdBy: user.keycloakId,
-      createdByUsername: user.username,
-      createdByName: user.displayName,
-      createdByEmail: user.email,
+      createdBy: user,
     };
 
     const planningSession = this.planningSessionRepo.create(session);

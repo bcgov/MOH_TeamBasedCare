@@ -17,7 +17,7 @@ export class SessionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     // grab user id
-    const userId = (request?.user as User)?.keycloakId;
+    const userId = (request?.user as User)?.id;
 
     // if user id does not exist, restrict access
     if (!userId) return false;
@@ -29,12 +29,14 @@ export class SessionGuard implements CanActivate {
     if (!sessionId) return false;
 
     // fetch session from id
-    const session = await this.planningSessionService.findOne(sessionId);
+    const session = await this.planningSessionService.findOne(sessionId, {
+      relations: ['createdBy'],
+    });
 
     // if session not found, restrict access
     if (!session) return false;
 
     // if session is created by the user accessing it, grant access; else restrict
-    return session.createdBy === userId;
+    return session.createdBy?.id === userId;
   }
 }

@@ -58,6 +58,12 @@ export class UserService {
       user = await this.updateUserFromAuth(user, keycloakUser);
     }
 
+    // Existing users migrated from planning sessions, feedback, care-activity search term entities at the time of migration - 1709228812566-migrate-existing-data.ts
+    // would be missing the following information; When the user logs in next time, we intend to capture the missing information.
+    if (!user.firstName || !user.familyName || !user.organization) {
+      user = await this.updateMissingInfo(user, keycloakUser);
+    }
+
     // validate auth
     if (user?.keycloakId !== keycloakUser.sub) {
       // In an ideal situation, this should never happen;
@@ -142,6 +148,21 @@ export class UserService {
     user.displayName = keycloakUser.name;
     user.organization = keycloakUser.organization;
     user.username = keycloakUser.preferred_username;
+
+    return this.userRepo.save(user);
+  }
+
+  // update missing fields when uses with partial data is available
+  async updateMissingInfo(user: User, keycloakUser: KeycloakUser) {
+    // if email or user does not exists, throw error
+    if (!keycloakUser.email || !user) {
+      throw new BadRequestException();
+    }
+
+    // update user
+    user.firstName = keycloakUser.given_name;
+    user.familyName = keycloakUser.family_name;
+    user.organization = keycloakUser.organization;
 
     return this.userRepo.save(user);
   }

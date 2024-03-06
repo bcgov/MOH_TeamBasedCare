@@ -15,10 +15,7 @@ export class FeedbackService {
   async create({ text }: CreateFeedbackDto, user: User): Promise<void> {
     await this.feedbackRepository.save({
       text,
-      createdBy: user.keycloakId,
-      createdByName: user.displayName,
-      createdByUsername: user.username,
-      createdByEmail: user.email,
+      createdBy: user,
     });
   }
 
