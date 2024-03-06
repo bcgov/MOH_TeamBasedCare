@@ -35,6 +35,7 @@ export const useAuth = () => {
     AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.displayName);
     AppStorage.setItem(StorageKeys.ROLES, data.roles || []);
     AppStorage.setItem(StorageKeys.STATUS, data.status);
+    AppStorage.setItem(StorageKeys.ID, data.id);
   }, []);
 
   // fetch authentication token from authorization code
@@ -120,6 +121,10 @@ export const useAuth = () => {
     return AppStorage.getItem(StorageKeys.STATUS) as UserStatus;
   }, []);
 
+  const userId = useMemo(() => {
+    return AppStorage.getItem(StorageKeys.ID) as string;
+  }, []);
+
   const hasUserRole = useCallback(
     (roles: Role[]) => {
       if (!Array.isArray(roles) || !Array.isArray(userRoles)) return false;
@@ -127,6 +132,13 @@ export const useAuth = () => {
       return userRoles.some(role => roles.includes(role));
     },
     [userRoles],
+  );
+
+  const isLoggedInUser = useCallback(
+    (user: UserRO) => {
+      return user.id === userId;
+    },
+    [userId],
   );
 
   return {
@@ -137,6 +149,8 @@ export const useAuth = () => {
     fetchUserFromCode,
     userRoles,
     userStatus,
+    userId,
     hasUserRole,
+    isLoggedInUser,
   };
 };

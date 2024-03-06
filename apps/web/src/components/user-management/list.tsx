@@ -15,6 +15,7 @@ import { useCallback } from 'react';
 import { Button } from '../Button';
 import { Tag } from '../generic/Tag';
 import { TagVariants } from 'src/common';
+import { useAuth } from '@services';
 
 interface TableHeaderProps {
   sortKey?: UserManagementSortKeys;
@@ -67,6 +68,8 @@ const TableBody: React.FC<TableBodyProps> = ({
   onReProvisionUserClick,
 }) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
+
+  const { isLoggedInUser } = useAuth();
 
   const getRoles = useCallback((roles: Role[] = []) => {
     return roles.map(role => RoleOptions.find(option => option.value === role));
@@ -132,15 +135,17 @@ const TableBody: React.FC<TableBodyProps> = ({
             {getStatusLabel(user.status)}
           </td>
           <td className={`${tdStyles} flex gap-x-4`}>
-            <Button variant='link' onClick={() => onEditUserClick(user)}>
-              Edit
-            </Button>
-            {user.status !== UserStatus.REVOKED && (
+            {!isLoggedInUser(user) && (
+              <Button variant='link' onClick={() => onEditUserClick(user)}>
+                Edit
+              </Button>
+            )}
+            {user.status !== UserStatus.REVOKED && !isLoggedInUser(user) && (
               <Button variant='link' onClick={() => onRevokeUserClick(user)}>
                 Revoke access
               </Button>
             )}
-            {user.status === UserStatus.REVOKED && (
+            {user.status === UserStatus.REVOKED && !isLoggedInUser(user) && (
               <Button variant='link' onClick={() => onReProvisionUserClick(user)}>
                 Re-provision access
               </Button>

@@ -40,19 +40,19 @@ export class UserController {
 
   @Post('/:id/edit')
   @HttpCode(HttpStatus.ACCEPTED)
-  async editUser(@Body() data: EditUserDTO, @Param('id') id: string) {
-    await this.userService.editUser(id, data);
+  async editUser(@Body() data: EditUserDTO, @Param('id') id: string, @Req() req: IRequest) {
+    await this.userService.editUser(id, data, req.user);
   }
 
   @Post('/:id/revoke')
   @HttpCode(HttpStatus.ACCEPTED)
-  async revokeUser(@Param('id') id: string) {
-    await this.userService.revokeUser(id);
+  async revokeUser(@Param('id') id: string, @Req() req: IRequest) {
+    await this.userService.revokeUser(id, req.user);
   }
 
   @Post('/:id/re-provision')
   @HttpCode(HttpStatus.ACCEPTED)
-  async reProvisionUser(@Param('id') id: string) {
-    await this.userService.reProvisionUser(id);
+  async reProvisionUser(@Param('id') id: string, @Req() req: IRequest) {
+    await this.userService.reProvisionUser(id, req.user);
   }
 }
