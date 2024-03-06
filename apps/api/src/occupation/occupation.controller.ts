@@ -51,12 +51,7 @@ export class OccupationController {
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.ADMIN] })
-  async updateOccupationById(
-    @Body() data: EditOccupationDTO,
-    @Param() id: string,
-  ): Promise<OccupationRO> {
-    const occupation = await this.occupationService.updateOccupation(id, data);
-
-    return new OccupationRO(occupation);
+  async updateOccupationById(@Body() data: EditOccupationDTO, @Param() id: string) {
+    await this.occupationService.updateOccupation(id, data);
   }
 }
