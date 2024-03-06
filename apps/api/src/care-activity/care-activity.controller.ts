@@ -61,12 +61,7 @@ export class CareActivityController {
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.ADMIN] })
-  async updateCareActivityById(
-    @Body() data: EditCareActivityDTO,
-    @Param() id: string,
-  ): Promise<CareActivityRO> {
-    const careActivity = await this.careActivityService.updateCareActivity(id, data);
-
-    return new CareActivityRO(careActivity);
+  async updateCareActivityById(@Body() data: EditCareActivityDTO, @Param() id: string) {
+    await this.careActivityService.updateCareActivity(id, data);
   }
 }
