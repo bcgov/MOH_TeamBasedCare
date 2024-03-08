@@ -106,13 +106,18 @@ export class AllowedActivityService {
     await this.allowedActivityRepository.delete(id);
   }
 
-  async removeAllowedActivity(id: string) {
+  async remove(id: string) {
     if (!id) throw new NotFoundException();
 
     const allowedActivity = await this.allowedActivityRepository.findOne(id);
 
-    if (!allowedActivity) throw new NotFoundException();
+    if (!allowedActivity) {
+      throw new NotFoundException({
+        message: 'Cannot remove allowed activity: id not found',
+        data: { id },
+      });
+    }
 
-    return this.allowedActivityRepository.delete(id);
+    await this.allowedActivityRepository.delete(id);
   }
 }
