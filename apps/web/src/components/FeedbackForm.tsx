@@ -3,7 +3,6 @@ import createValidator from 'class-validator-formik';
 import { Formik, Form as FormikForm, FormikHelpers } from 'formik';
 import { Button, Textarea } from '@components';
 import { useFeedback } from 'src/services/useFeedback';
-import { Spinner } from './generic/Spinner';
 import { toast } from 'react-toastify';
 
 interface FeedbackFormProps {
@@ -36,10 +35,6 @@ export const FeedbackForm = ({ setIsOpen }: FeedbackFormProps) => {
 
   const feedbackSchema = createValidator(CreateFeedbackDto);
 
-  if (isLoading) {
-    return <Spinner show />;
-  }
-
   return (
     <Formik
       initialValues={initialValues}
@@ -56,7 +51,7 @@ export const FeedbackForm = ({ setIsOpen }: FeedbackFormProps) => {
           <Textarea maxLength={750} name='text' label='' placeholder='Please enter feedback' />
 
           <div className='mt-5 flex flex-row-reverse gap-3'>
-            <Button variant='primary' type='submit' disabled={isSubmitting}>
+            <Button variant='primary' type='submit' disabled={isSubmitting} loading={isLoading}>
               Submit
             </Button>
             <Button variant='secondary' type='button' onClick={() => setIsOpen(false)}>
