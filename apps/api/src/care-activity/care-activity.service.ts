@@ -125,7 +125,7 @@ export class CareActivityService {
     // validate care activity exist
     if (!careActivity) {
       throw new NotFoundException({
-        message: 'Cannot update Care Activity: id not found',
+        message: 'Cannot update care activity: id not found',
         data: { id },
       });
     }
@@ -138,7 +138,7 @@ export class CareActivityService {
       const bundle = await this.bundleRepo.findOne(bundleId);
       if (!bundle) {
         throw new NotFoundException({
-          message: 'Cannot update Care Activity: Bundle not found',
+          message: 'Cannot update care activity: Bundle not found',
           data: { id: bundleId },
         });
       }
@@ -161,7 +161,7 @@ export class CareActivityService {
         }, []);
 
         throw new NotFoundException({
-          message: 'Cannot update Care Activity: Care Location(s) not found',
+          message: 'Cannot update care activity: Care location(s) not found',
           data: {
             id: missingCareLocationIds,
           },
