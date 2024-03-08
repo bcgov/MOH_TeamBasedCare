@@ -293,18 +293,15 @@ export class PlanningSessionService {
     // total occupations selected x total care activities selected
     const total = (occupations.length || 0) * (careActivities.length || 0);
 
-    overview.inScope = `${
-      Math.round(((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100) || 0
-    }%`;
-    overview.limits = `${
-      Math.round(((permissionsGroupedCount[Permissions.LIMITS] || 0) / total) * 100) || 0
-    }%`;
+    const inScopePercentage =
+      Math.round(((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100) || 0;
+    const limitsPercentage =
+      Math.round(((permissionsGroupedCount[Permissions.LIMITS] || 0) / total) * 100) || 0;
+    const outOfScopePercentage = 100 - (inScopePercentage + limitsPercentage);
 
-    const allowedActivitiesTotal =
-      (permissionsGroupedCount[Permissions.LIMITS] || 0) +
-      (permissionsGroupedCount[Permissions.PERFORM] || 0);
-    const outOfScope = total - allowedActivitiesTotal;
-    overview.outOfScope = `${Math.round((outOfScope / total) * 100) || 0}%`;
+    overview.inScope = `${inScopePercentage}%`;
+    overview.limits = `${limitsPercentage}%`;
+    overview.outOfScope = `${outOfScopePercentage}%`;
 
     return {
       headers,
