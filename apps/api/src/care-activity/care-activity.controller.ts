@@ -61,7 +61,7 @@ export class CareActivityController {
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.ADMIN] })
-  async updateCareActivityById(@Body() data: EditCareActivityDTO, @Param() id: string) {
+  async updateCareActivityById(@Body() data: EditCareActivityDTO, @Param('id') id: string) {
     await this.careActivityService.updateCareActivity(id, data);
   }
 }
