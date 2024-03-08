@@ -36,7 +36,7 @@ export class ErrorExceptionFilter implements ExceptionFilter {
         (exception as any)?.response?.message ||
         CommonError.INTERNAL_ERROR.errorMessage,
 
-      errorDetails: {},
+      errorDetails: (exception as any).response?.data || {},
     };
   }
 
@@ -56,6 +56,13 @@ export class ErrorExceptionFilter implements ExceptionFilter {
       typeof (exception?.message as any)?.message === 'object'
         ? exception?.message
         : exception;
+
+    if ((flattenedException as any)?.response?.data) {
+      flattenedException.message =
+        flattenedException.message +
+        ' :: data ::' +
+        JSON.stringify((flattenedException as any)?.response?.data);
+    }
 
     const privateKeys: string[] = ['password', 'payload'];
     const body = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;

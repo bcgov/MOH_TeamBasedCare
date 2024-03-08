@@ -53,7 +53,7 @@ export class AllowedActivityController {
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.ADMIN] })
-  async deleteAllowedActivityById(@Param() id: string) {
-    await this.allowedActivityService.removeAllowedActivity(id);
+  async deleteAllowedActivityById(@Param('id') id: string) {
+    await this.allowedActivityService.remove(id);
   }
 }
