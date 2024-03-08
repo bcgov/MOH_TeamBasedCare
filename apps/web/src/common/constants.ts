@@ -143,3 +143,8 @@ export const ActivityTagDefinitions: Partial<{ [key in ActivityTagVariants]: { t
     text: `Tasks are lower risk care activities which are not a ‘restricted activity’ or an ‘aspect of practice.’`,
   },
 };
+
+export const RoleTagVariant = {
+  [Role.ADMIN]: TagVariants.BLUE,
+  [Role.USER]: TagVariants.GREEN,
+};

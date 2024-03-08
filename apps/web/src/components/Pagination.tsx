@@ -1,7 +1,7 @@
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
-import { BasicSelect } from './BasicSelect';
+import { BasicSelect } from './Select';
 
 export interface PageOptions {
   pageSize: number;
@@ -52,6 +52,7 @@ export const Pagination = (props: PaginationProps) => {
           options={pageSizeOptions}
           onChange={changePageSize}
           value={pageSize}
+          menuPlacement='top'
         />
       </div>
       <div className='text-sm pl-3 p-3 border-r border-l'>
@@ -66,6 +67,7 @@ export const Pagination = (props: PaginationProps) => {
             options={pageListOptions}
             onChange={goToPage}
             value={pageIndex}
+            menuPlacement='top'
           />
         </div>
         <div className='text-sm p-3'>of {numOfPages} pages</div>
