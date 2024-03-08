@@ -35,7 +35,7 @@ export const HeadlessList = <T extends OptionValueType>({
   const displayText = useCallback(
     (value: T) => {
       const option = getOption(value);
-      return option?.label || option?.value || '';
+      return (option?.label || option?.value || '').toString();
     },
     [getOption],
   );
@@ -56,7 +56,7 @@ export const HeadlessList = <T extends OptionValueType>({
                   {option && (
                     <Tag
                       tagStyle={option.tagVariant || TagVariants.GRAY}
-                      text={displayText(option.value).toString()}
+                      text={displayText(option.value)}
                       key={i}
                     />
                   )}
