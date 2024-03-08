@@ -65,16 +65,18 @@ export class OccupationService {
     });
   }
 
-  async updateOccupation(id: string, data: EditOccupationDTO): Promise<Occupation> {
+  async updateOccupation(id: string, data: EditOccupationDTO) {
     if (!id) throw new NotFoundException();
 
     const occupation = await this.findOccupationById(id);
 
     if (!occupation) throw new NotFoundException();
 
-    return this.occupationrepository.save({
-      ...occupation,
-      ...data,
-    });
+    // update entity object for literals
+    // Using Object.assign to update the entity object, which will trigger the entity's @BeforeUpdate hook on save
+    Object.assign(occupation, { ...data });
+
+    // perform update
+    await this.occupationrepository.save(occupation);
   }
 }
