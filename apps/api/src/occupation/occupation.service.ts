@@ -70,7 +70,12 @@ export class OccupationService {
 
     const occupation = await this.findOccupationById(id);
 
-    if (!occupation) throw new NotFoundException();
+    if (!occupation) {
+      throw new NotFoundException({
+        message: 'Cannot update occupation: id not found',
+        data: { id },
+      });
+    }
 
     // update entity object for literals
     // Using Object.assign to update the entity object, which will trigger the entity's @BeforeUpdate hook on save

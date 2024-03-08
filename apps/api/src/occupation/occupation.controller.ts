@@ -38,7 +38,7 @@ export class OccupationController {
   }
 
   @Get(':id')
-  async getOccupationsById(@Param() id: string): Promise<OccupationRO> {
+  async getOccupationsById(@Param('id') id: string): Promise<OccupationRO> {
     const occupation = await this.occupationService.findOccupationById(id);
 
     if (!occupation) {
@@ -51,7 +51,7 @@ export class OccupationController {
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.ADMIN] })
-  async updateOccupationById(@Body() data: EditOccupationDTO, @Param() id: string) {
+  async updateOccupationById(@Body() data: EditOccupationDTO, @Param('id') id: string) {
     await this.occupationService.updateOccupation(id, data);
   }
 }
