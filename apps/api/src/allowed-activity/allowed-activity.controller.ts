@@ -45,7 +45,7 @@ export class AllowedActivityController {
   @Patch('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.ADMIN] })
-  async updateAllowedActivityById(@Body() data: EditAllowedActivityDTO, @Param() id: string) {
+  async updateAllowedActivityById(@Body() data: EditAllowedActivityDTO, @Param('id') id: string) {
     await this.allowedActivityService.updateAllowedActivity(id, data);
   }
 }

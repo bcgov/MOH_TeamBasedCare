@@ -71,16 +71,23 @@ export class AllowedActivityService {
       .getManyAndCount();
   }
 
-  async updateAllowedActivity(id: string, data: EditAllowedActivityDTO): Promise<AllowedActivity> {
+  async updateAllowedActivity(id: string, data: EditAllowedActivityDTO) {
     if (!id) throw new NotFoundException();
 
     const allowedActivity = await this.allowedActivityRepository.findOne(id);
 
-    if (!allowedActivity) throw new NotFoundException();
+    if (!allowedActivity) {
+      throw new NotFoundException({
+        message: 'Cannot update allowed activity: id not found',
+        data: { id },
+      });
+    }
 
-    return this.allowedActivityRepository.save({
-      ...allowedActivity,
-      ...data,
-    });
+    // update entity object for literals
+    // Using Object.assign to update the entity object, which if present, will trigger the entity's @BeforeUpdate hook on save
+    Object.assign(allowedActivity, { ...data });
+
+    // perform update
+    await this.allowedActivityRepository.save(allowedActivity);
   }
 }
