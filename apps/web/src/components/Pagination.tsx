@@ -1,7 +1,7 @@
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
-import { BasicSelect } from './BasicSelect';
+import { BasicSelect } from './Select';
 
 export interface PageOptions {
   pageSize: number;
