@@ -17,6 +17,7 @@ export interface HeadlessListProps<T extends OptionValueType> {
   onChange: (value: T | T[]) => void;
   className?: string;
   isMulti?: boolean;
+  menuPlacement?: 'bottom' | 'top';
 }
 
 export const HeadlessList = <T extends OptionValueType>({
@@ -26,6 +27,7 @@ export const HeadlessList = <T extends OptionValueType>({
   onChange,
   className = '',
   isMulti = false,
+  menuPlacement = 'bottom',
 }: HeadlessListProps<T>) => {
   const getOption = useCallback(
     (value: T) => options.find(option => option.value === value),
@@ -101,7 +103,11 @@ export const HeadlessList = <T extends OptionValueType>({
             leaveFrom='opacity-100'
             leaveTo='opacity-0'
           >
-            <Listbox.Options className='absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm'>
+            <Listbox.Options
+              className={`${
+                menuPlacement === 'top' ? 'top-0 -translate-y-full' : ''
+              } absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm`}
+            >
               {options.map((option, index) => (
                 <Listbox.Option
                   key={index}
