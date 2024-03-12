@@ -23,6 +23,12 @@ export class UnitService {
     return careLocation;
   }
 
+  async getManyByIds(ids: string[]): Promise<Unit[]> {
+    return this.unitsRepository.find({
+      where: { id: In(ids) },
+    });
+  }
+
   async getAllUnits(): Promise<Unit[]> {
     return this.unitsRepository.find();
   }

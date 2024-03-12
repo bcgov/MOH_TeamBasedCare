@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
@@ -8,6 +8,8 @@ import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
 import { User } from 'src/user/entities/user.entity';
+import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
+import { UnitService } from 'src/unit/unit.service';
 
 @Injectable()
 export class CareActivityService {
@@ -18,6 +20,8 @@ export class CareActivityService {
     private readonly careActivityRepo: Repository<CareActivity>,
     @InjectRepository(CareActivitySearchTerm)
     private readonly careActivitySearchTermRepo: Repository<CareActivitySearchTerm>,
+    @Inject(UnitService)
+    private readonly unitService: UnitService,
   ) {}
 
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
@@ -109,5 +113,70 @@ export class CareActivityService {
     `);
 
     return result.map(r => r.word);
+  }
+
+  async updateCareActivity(id: string, data: EditCareActivityDTO) {
+    // validate id exist
+    if (!id) throw new NotFoundException();
+
+    // fetch care activity
+    const careActivity = await this.careActivityRepo.findOne(id);
+
+    // validate care activity exist
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot update care activity: id not found',
+        data: { id },
+      });
+    }
+
+    // deconstruct
+    const { bundle: bundleId, careLocations: careLocationIds, ...careActivityLiterals } = data;
+
+    // if bundle is updated, fetch and update entity
+    if (bundleId) {
+      const bundle = await this.bundleRepo.findOne(bundleId);
+      if (!bundle) {
+        throw new NotFoundException({
+          message: 'Cannot update care activity: Bundle not found',
+          data: { id: bundleId },
+        });
+      }
+
+      careActivity.bundle = bundle;
+    }
+
+    // if care settings / units / care locations are updated, fetch and update entities
+    if (Array.isArray(careLocationIds)) {
+      const careLocations = await this.unitService.getManyByIds(careLocationIds);
+
+      // if some care location Ids are invalid, throw error
+      if (careLocationIds.length !== careLocations.length) {
+        const missingCareLocationIds = careLocationIds.reduce<string[]>((acc, id) => {
+          if (!careLocations.map(c => c.id).includes(id)) {
+            acc.push(id);
+          }
+
+          return acc;
+        }, []);
+
+        throw new NotFoundException({
+          message: 'Cannot update care activity: Care location(s) not found',
+          data: {
+            id: missingCareLocationIds,
+          },
+        });
+      }
+
+      // else update
+      careActivity.careLocations = careLocations;
+    }
+
+    // update entity object for literals
+    // Using Object.assign to update the entity object, which will trigger the entity's @BeforeUpdate hook on save
+    Object.assign(careActivity, { ...careActivityLiterals });
+
+    // perform update
+    await this.careActivityRepo.save(careActivity);
   }
 }
