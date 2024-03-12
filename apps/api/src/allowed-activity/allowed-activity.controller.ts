@@ -2,6 +2,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -47,5 +48,12 @@ export class AllowedActivityController {
   @AllowRoles({ roles: [Role.ADMIN] })
   async updateAllowedActivityById(@Body() data: EditAllowedActivityDTO, @Param('id') id: string) {
     await this.allowedActivityService.updateAllowedActivity(id, data);
+  }
+
+  @Delete('/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.ADMIN] })
+  async deleteAllowedActivityById(@Param('id') id: string) {
+    await this.allowedActivityService.remove(id);
   }
 }
