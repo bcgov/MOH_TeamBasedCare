@@ -115,7 +115,7 @@ export class CareActivityService {
     return result.map(r => r.word);
   }
 
-  async updateCareActivity(id: string, data: EditCareActivityDTO): Promise<CareActivity> {
+  async updateCareActivity(id: string, data: EditCareActivityDTO) {
     // validate id exist
     if (!id) throw new NotFoundException();
 
@@ -123,7 +123,12 @@ export class CareActivityService {
     const careActivity = await this.careActivityRepo.findOne(id);
 
     // validate care activity exist
-    if (!careActivity) throw new NotFoundException();
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot update care activity: id not found',
+        data: { id },
+      });
+    }
 
     // deconstruct
     const { bundle: bundleId, careLocations: careLocationIds, ...careActivityLiterals } = data;
@@ -131,20 +136,47 @@ export class CareActivityService {
     // if bundle is updated, fetch and update entity
     if (bundleId) {
       const bundle = await this.bundleRepo.findOne(bundleId);
-      if (bundle) {
-        careActivity.bundle = bundle;
+      if (!bundle) {
+        throw new NotFoundException({
+          message: 'Cannot update care activity: Bundle not found',
+          data: { id: bundleId },
+        });
       }
+
+      careActivity.bundle = bundle;
     }
 
     // if care settings / units / care locations are updated, fetch and update entities
     if (Array.isArray(careLocationIds)) {
-      careActivity.careLocations = await this.unitService.getManyByIds(careLocationIds);
+      const careLocations = await this.unitService.getManyByIds(careLocationIds);
+
+      // if some care location Ids are invalid, throw error
+      if (careLocationIds.length !== careLocations.length) {
+        const missingCareLocationIds = careLocationIds.reduce<string[]>((acc, id) => {
+          if (!careLocations.map(c => c.id).includes(id)) {
+            acc.push(id);
+          }
+
+          return acc;
+        }, []);
+
+        throw new NotFoundException({
+          message: 'Cannot update care activity: Care location(s) not found',
+          data: {
+            id: missingCareLocationIds,
+          },
+        });
+      }
+
+      // else update
+      careActivity.careLocations = careLocations;
     }
 
+    // update entity object for literals
+    // Using Object.assign to update the entity object, which will trigger the entity's @BeforeUpdate hook on save
+    Object.assign(careActivity, { ...careActivityLiterals });
+
     // perform update
-    return this.careActivityRepo.save({
-      ...careActivity,
-      ...careActivityLiterals,
-    });
+    await this.careActivityRepo.save(careActivity);
   }
 }

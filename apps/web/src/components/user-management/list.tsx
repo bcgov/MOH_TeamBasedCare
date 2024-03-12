@@ -14,7 +14,7 @@ import { SortButton } from '../SortButton';
 import { useCallback } from 'react';
 import { Button } from '../Button';
 import { Tag } from '../generic/Tag';
-import { TagVariants } from 'src/common';
+import { RoleTagVariant, TagVariants } from 'src/common';
 import { useAuth } from '@services';
 
 interface TableHeaderProps {
@@ -75,17 +75,6 @@ const TableBody: React.FC<TableBodyProps> = ({
     return roles.map(role => RoleOptions.find(option => option.value === role));
   }, []);
 
-  const getRoleTagsVariants = useCallback((role?: Role) => {
-    switch (role) {
-      case Role.ADMIN:
-        return TagVariants.BLUE;
-      case Role.USER:
-        return TagVariants.GREEN;
-      default:
-        return TagVariants.GRAY;
-    }
-  }, []);
-
   const getStatusOption = useCallback((status: UserStatus) => {
     return UserStatusOptions.find(option => option.value === status);
   }, []);
@@ -114,7 +103,7 @@ const TableBody: React.FC<TableBodyProps> = ({
             {getRoles(user.roles).map(role => (
               <Tag
                 key={role?.value}
-                tagStyle={getRoleTagsVariants(role?.value)}
+                tagStyle={role?.value ? RoleTagVariant[role.value] : TagVariants.GRAY}
                 text={role?.label || ''}
               />
             ))}
