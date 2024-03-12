@@ -1,9 +1,10 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AllowedActivity } from './entity/allowed-activity.entity';
 import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activities-by-occupation.dto';
 import { OccupationalScopeOfPracticeSortKeys, SortOrder } from '@tbcm/common';
+import { EditAllowedActivityDTO } from './dto/edit-allowd-activity.dto';
 
 @Injectable()
 export class AllowedActivityService {
@@ -68,5 +69,25 @@ export class AllowedActivityService {
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();
+  }
+
+  async updateAllowedActivity(id: string, data: EditAllowedActivityDTO) {
+    if (!id) throw new NotFoundException();
+
+    const allowedActivity = await this.allowedActivityRepository.findOne(id);
+
+    if (!allowedActivity) {
+      throw new NotFoundException({
+        message: 'Cannot update allowed activity: id not found',
+        data: { id },
+      });
+    }
+
+    // update entity object for literals
+    // Using Object.assign to update the entity object, which if present, will trigger the entity's @BeforeUpdate hook on save
+    Object.assign(allowedActivity, { ...data });
+
+    // perform update
+    await this.allowedActivityRepository.save(allowedActivity);
   }
 }

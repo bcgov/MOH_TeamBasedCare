@@ -23,7 +23,7 @@ interface ValidationErrorMessage {
 export const validationPipeConfig: ValidationPipeOptions = {
   transform: true,
   whitelist: true,
-  forbidNonWhitelisted: true,
+  forbidNonWhitelisted: false,
   enableDebugMessages: false,
   disableErrorMessages: true,
   exceptionFactory: errors => {
