@@ -249,7 +249,13 @@ sed-common-module:
 	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/*.controller.js; \
 	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/*.controller.js; \
 	fi
-	
+
+	# dto.js
+	@if [[ $(shell uname) == "Darwin"* ]]; \
+	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.dto.js; \
+	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.dto.js; \
+	fi
+
 build-api:
 	@echo "++\n***** Building API for AWS\n++"
 	@rm -rf ./apps/api/dist || true
