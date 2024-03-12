@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
@@ -18,6 +19,7 @@ import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activitie
 import { GetAllowedActivitiesByOccupationRO } from './ro/get-allowed-activities-by-occupation.ro';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { EditAllowedActivityDTO } from './dto/edit-allowd-activity.dto';
+import { CreateAllowedActivityDTO } from './dto/create-allowd-activity.dto';
 
 @ApiTags('allowedActivities')
 @Controller('allowedActivities')
@@ -55,5 +57,12 @@ export class AllowedActivityController {
   @AllowRoles({ roles: [Role.ADMIN] })
   async deleteAllowedActivityById(@Param('id') id: string) {
     await this.allowedActivityService.remove(id);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @AllowRoles({ roles: [Role.ADMIN] })
+  async createAllowedActivity(@Body() data: CreateAllowedActivityDTO) {
+    await this.allowedActivityService.create(data);
   }
 }

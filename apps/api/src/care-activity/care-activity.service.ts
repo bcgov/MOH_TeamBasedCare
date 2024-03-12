@@ -24,6 +24,10 @@ export class CareActivityService {
     private readonly unitService: UnitService,
   ) {}
 
+  findOneById(id: string): Promise<CareActivity | undefined> {
+    return this.careActivityRepo.findOne(id);
+  }
+
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
     if (!careLocationId) {
       throw new NotFoundException({ message: 'No Care Location id provided.' });
@@ -120,7 +124,7 @@ export class CareActivityService {
     if (!id) throw new NotFoundException();
 
     // fetch care activity
-    const careActivity = await this.careActivityRepo.findOne(id);
+    const careActivity = await this.findOneById(id);
 
     // validate care activity exist
     if (!careActivity) {

@@ -1,16 +1,23 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AllowedActivity } from './entity/allowed-activity.entity';
 import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activities-by-occupation.dto';
 import { OccupationalScopeOfPracticeSortKeys, SortOrder } from '@tbcm/common';
 import { EditAllowedActivityDTO } from './dto/edit-allowd-activity.dto';
+import { CreateAllowedActivityDTO } from './dto/create-allowd-activity.dto';
+import { CareActivityService } from 'src/care-activity/care-activity.service';
+import { OccupationService } from 'src/occupation/occupation.service';
 
 @Injectable()
 export class AllowedActivityService {
   constructor(
     @InjectRepository(AllowedActivity)
-    private allowedActivityRepository: Repository<AllowedActivity>,
+    private readonly allowedActivityRepository: Repository<AllowedActivity>,
+    @Inject(CareActivityService)
+    private readonly careActivityService: CareActivityService,
+    @Inject(OccupationService)
+    private readonly occupationService: OccupationService,
   ) {}
 
   async findAllowedActivitiesByOccupation(
@@ -104,5 +111,60 @@ export class AllowedActivityService {
     }
 
     await this.allowedActivityRepository.delete(id);
+  }
+
+  async remove(id: string) {
+    if (!id) throw new NotFoundException();
+
+    const allowedActivity = await this.allowedActivityRepository.findOne(id);
+
+    if (!allowedActivity) {
+      throw new NotFoundException({
+        message: 'Cannot remove allowed activity: id not found',
+        data: { id },
+      });
+    }
+
+    await this.allowedActivityRepository.delete(id);
+  }
+
+  async create(data: CreateAllowedActivityDTO) {
+    const {
+      careActivity: careActivityId,
+      occupation: occupationId,
+      ...allowedActivityLiterals
+    } = data;
+
+    const allowedActivity = this.allowedActivityRepository.create({ ...allowedActivityLiterals });
+
+    // find care activity by id
+    const careActivity = await this.careActivityService.findOneById(careActivityId);
+
+    // throw error if not found
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot create allowed activity: care activity id not found',
+        data: { id: careActivityId },
+      });
+    }
+
+    // else add to the entity
+    allowedActivity.careActivity = careActivity;
+
+    // find occupation by id
+    const occupation = await this.occupationService.findOccupationById(occupationId);
+    // throw error if not found
+    if (!occupation) {
+      throw new NotFoundException({
+        message: 'Cannot create allowed activity: occupation id not found',
+        data: { id: occupationId },
+      });
+    }
+
+    // else add to the entity
+    allowedActivity.occupation = occupation;
+
+    // perform save
+    await this.allowedActivityRepository.save(allowedActivity);
   }
 }
