@@ -235,7 +235,7 @@ pre-build:
 	@echo "++\n*****"
 
 sed-common-module:
-	@echo 'Replacing all missed dist/*.js relative paths to @tbcm/common inside node_modules :: fixes Module.Import errors'
+	@echo 'Replacing all missed dist .js relative paths to @tbcm/common inside node_modules :: fixes Module.Import errors'
 	@if [[ $(shell uname) == "Darwin"* ]]; \
 	then find apps/api/dist -type f -name "*.js" -not -path '*/\.*' -exec sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' {} +; \
 	else find apps/api/dist -type f -name "*.js" -not -path '*/\.*' -exec sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' {} +; \
