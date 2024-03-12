@@ -1,8 +1,9 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
+import { EditOccupationDTO } from './dto/edit-occupation.dto';
 import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
 import { reverseSortOrder } from 'src/common/utils';
 
@@ -62,5 +63,25 @@ export class OccupationService {
     return this.occupationrepository.find({
       where: { id: In(occupationIds) },
     });
+  }
+
+  async updateOccupation(id: string, data: EditOccupationDTO) {
+    if (!id) throw new NotFoundException();
+
+    const occupation = await this.findOccupationById(id);
+
+    if (!occupation) {
+      throw new NotFoundException({
+        message: 'Cannot update occupation: id not found',
+        data: { id },
+      });
+    }
+
+    // update entity object for literals
+    // Using Object.assign to update the entity object, which will trigger the entity's @BeforeUpdate hook on save
+    Object.assign(occupation, { ...data });
+
+    // perform update
+    await this.occupationrepository.save(occupation);
   }
 }
