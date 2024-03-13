@@ -234,22 +234,13 @@ pre-build:
 	@mkdir -p ./terraform/build
 	@echo "++\n*****"
 
-
 sed-common-module:
-	@echo 'Replacing all missed entity relative paths to @tbcm/common inside node_modules :: fixes Module.Import errors'
-	
-	# entity.js
+	@echo 'Replacing all missed dist .js relative paths to @tbcm/common inside node_modules :: fixes Module.Import errors'
 	@if [[ $(shell uname) == "Darwin"* ]]; \
-	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.entity.js; \
-	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/**/*.entity.js; \
+	then find apps/api/dist -type f -name "*.js" -not -path '*/\.*' -exec sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' {} +; \
+	else find apps/api/dist -type f -name "*.js" -not -path '*/\.*' -exec sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' {} +; \
 	fi
 
-	# controller.js
-	@if [[ $(shell uname) == "Darwin"* ]]; \
-	then sed -i '' -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/*.controller.js; \
-	else sed -i -E 's/( require\("[^,]+\/packages\/common\/dist[^,]+"\).)/ require("@tbcm\/common")./g' ./apps/api/dist/**/*.controller.js; \
-	fi
-	
 build-api:
 	@echo "++\n***** Building API for AWS\n++"
 	@rm -rf ./apps/api/dist || true
