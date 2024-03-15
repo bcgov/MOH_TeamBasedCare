@@ -2,6 +2,7 @@ import { useHttp } from '@services';
 import { API_ENDPOINT } from 'src/common';
 import { Button } from './Button';
 import { FileDownload } from 'src/utils/file-download.util';
+import { formatDateTime } from '@tbcm/common';
 const ExcelJS = require('exceljs');
 
 interface ExportButtonProps {
@@ -34,10 +35,20 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
 };
 
 const convertActivityGapTableToXLSX = (data: any) => {
+  const createdAt = formatDateTime(new Date());
+
+  const informationalRows = [
+    [`Care plan created on ${createdAt}`],
+    [
+      'Please note that the data (Care Activities and Occupations) contained in this spreadsheet is accurate at the time it was generated. Data is subject to change periodically to align with current practice.',
+    ],
+    [],
+  ];
+
   const columns = data.headers.map(({ title }: { title: string }) => {
     if (title === 'Activities Bundle')
       return { header: 'Activities Bundle', key: 'name', width: 50 };
-    return { header: title, key: title, width: 10 };
+    return { header: title, key: title, width: 13 };
   });
 
   const emptyRow = {
@@ -56,7 +67,11 @@ const convertActivityGapTableToXLSX = (data: any) => {
         });
       });
 
-      return [{ ...emptyRow, name: remainder.name }, ...careActivities, emptyRow];
+      return [
+        { ...emptyRow, name: remainder.name, isBundleHeader: true },
+        ...careActivities,
+        emptyRow,
+      ];
     })
     .flat();
 
@@ -69,6 +84,12 @@ const convertActivityGapTableToXLSX = (data: any) => {
       type: 'pattern',
       pattern: 'solid',
       fgColor: { argb: 'D3D3D3' },
+    },
+    font: { bold: true },
+    alignment: {
+      wrapText: true,
+      vertical: 'middle',
+      horizontal: 'center',
     },
   };
 
@@ -124,7 +145,7 @@ const convertActivityGapTableToXLSX = (data: any) => {
    * Gap Matrix worksheet
    */
   const gapMatrixWorksheet = workbook.addWorksheet('Gap_Matrix', {
-    views: [{ state: 'frozen', xSplit: 1, ySplit: 1 }],
+    views: [{ state: 'frozen', xSplit: 1, ySplit: 4 }],
   });
 
   // header row style
@@ -134,11 +155,18 @@ const convertActivityGapTableToXLSX = (data: any) => {
   gapMatrixWorksheet.columns = columns;
 
   // Add array rows
-  gapMatrixWorksheet.addRows(resultData);
+  resultData.forEach((rowData: any) => {
+    const row = gapMatrixWorksheet.addRow(rowData);
+    if (rowData.isBundleHeader) {
+      row.eachCell((cell: any) => {
+        cell.style = { font: { bold: true } };
+      });
+    }
+  });
 
   // add conditional formatting rules
   gapMatrixWorksheet.addConditionalFormatting({
-    ref: 'B3:XFD10000',
+    ref: 'B5:XFD10000',
     rules: conditionalFormattingRules,
   });
 
@@ -153,21 +181,23 @@ const convertActivityGapTableToXLSX = (data: any) => {
       header: 'Legend',
       key: 'legend',
       width: 10,
-      style: {
-        ...headerStyle,
-        font: { bold: true },
-      },
+      style: headerStyle,
     },
     {
       header: '',
       key: 'value',
       width: 25,
-      style: {
-        ...headerStyle,
-        font: { bold: true },
-      },
+      style: headerStyle,
     },
   ];
+
+  // Splice and add Informational headers at top
+  gapMatrixWorksheet.spliceRows(1, 0, ...informationalRows);
+  gapMatrixWorksheet.getCell('A1').style = headerStyle;
+  gapMatrixWorksheet.getCell('A2').style = { ...headerStyle, font: { bold: false } };
+  gapMatrixWorksheet.getRow(2).height = 25;
+  gapMatrixWorksheet.mergeCells(1, 1, 1, Math.max(columns.length, 13));
+  gapMatrixWorksheet.mergeCells(2, 1, 2, Math.max(columns.length, 13));
 
   // add legend rows
   legendWorksheet.addRow(); // empty row
