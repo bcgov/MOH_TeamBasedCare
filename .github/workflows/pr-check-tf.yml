@@ -38,10 +38,10 @@ jobs:
         run: echo "ENV_NAME = ${{env.ENV_NAME}} or ${{env.NAME}}" >> $GITHUB_OUTPUT
       - name: checkout
         uses: actions/checkout@v3
-      - name: setup node v16
+      - name: setup node v18
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - uses: actions/cache@v3
         name: Cache yarn
