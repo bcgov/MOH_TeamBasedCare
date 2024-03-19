@@ -2,10 +2,8 @@ import Link from 'next/link';
 
 const FooterLink: React.FC<{ href: string }> = ({ href, children }) => {
   return (
-    <Link href={href}>
-      <a rel='noopener noreferrer' target='_blank' className='mb-1 md:mb-0'>
-        {children}
-      </a>
+    <Link href={href} rel='noopener noreferrer' target='_blank' className='mb-1 md:mb-0'>
+      {children}
     </Link>
   );
 };

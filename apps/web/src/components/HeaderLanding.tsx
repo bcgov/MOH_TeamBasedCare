@@ -18,9 +18,7 @@ export const HeaderLanding: React.FC = () => {
         <div className='flex flex-grow w-full justify-between items-center'>
           <div className='layout-grid gap-0 h-full flex flex-row items-center'>
             <Link href='/'>
-              <a>
-                <img src={logo.src} alt='government of british columbia' width={160} height={45} />
-              </a>
+              <img src={logo.src} alt='government of british columbia' width={160} height={45} />
             </Link>
             <div className='ml-7 pl-7 border-l-2 border-bcYellowPrimary'>
               <h1
