@@ -2344,7 +2344,7 @@ __metadata:
     "@types/jest": 26.0.14
     "@types/node": 16.11.7
     class-transformer: 0.5.1
-    class-validator: 0.13.2
+    class-validator: 0.14.1
     dayjs: 1.11.0
     eslint: 8.0.1
     jest: 26.6.0
@@ -2377,7 +2377,6 @@ __metadata:
     autoprefixer: 10.4.0
     axios: 0.24.0
     babel-jest: 29.7.0
-    class-validator-formik: 1.0.1
     classnames: 2.3.1
     cookie: 0.4.2
     cy-verify-downloads: 0.1.8
@@ -3046,10 +3045,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/validator@npm:13.0.0":
-  version: 13.0.0
-  resolution: "@types/validator@npm:13.0.0"
-  checksum: 7001e96e663daa28f45120339ea4478cdf74cadfe74aba8b8de4c56bdaab559ab65de2eb334ce9026bba153231b96d9e6506b5d5dff8fea4e6c1a6babec523b3
+"@types/validator@npm:^13.11.8":
+  version: 13.11.9
+  resolution: "@types/validator@npm:13.11.9"
+  checksum: c8d53c9e45479328ed72136d13ac80f13e8bb72ab0a6ae2e82802a55b6d84e045473267d8bf66546961f96ed0bbd0f310f317592dccc9fd11a2a81025c3571ce
   languageName: node
   linkType: hard
 
@@ -5363,27 +5362,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-transformer-validator@npm:^0.9.0":
-  version: 0.9.1
-  resolution: "class-transformer-validator@npm:0.9.1"
-  peerDependencies:
-    class-transformer: ">=0.2.3"
-    class-validator: ">=0.12.0"
-  checksum: e1f90a6513c90c72ad444c24d63aa4141a16e7bd4e4b3290cb9e7a7bbb8c577367defd5dda8781f17fbf8e0b467b2882d5d5824930c5863f1803968d9a21e942
-  languageName: node
-  linkType: hard
-
 "class-transformer@npm:0.5.1":
   version: 0.5.1
   resolution: "class-transformer@npm:0.5.1"
   checksum: f191c8b4cc4239990f5efdd790cabdd852c243ed66248e39f6616a349c910c6eed2d9fd1fbf7ee6ea89f69b4f1d0b493b27347fe0cd0ae26b47c3745a805b6d3
-  languageName: node
-  linkType: hard
-
-"class-transformer@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "class-transformer@npm:0.2.3"
-  checksum: 7a18fda30b037ebcc3ae805f17cc94b64c8be06bb0907399d143c9cff8e857545420e65fb752f42b90696a894547f6c7202c753086ecb309d73e7e293a94e83c
   languageName: node
   linkType: hard
 
@@ -5399,36 +5381,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-validator-formik@npm:1.0.1":
-  version: 1.0.1
-  resolution: "class-validator-formik@npm:1.0.1"
+"class-validator@npm:0.14.1":
+  version: 0.14.1
+  resolution: "class-validator@npm:0.14.1"
   dependencies:
-    class-transformer: ^0.2.3
-    class-transformer-validator: ^0.9.0
-    class-validator: ^0.12.2
-  checksum: d19643f5f25577b21c405a345e3722cc56fed8e5874045dd108af252c080ae163afbaebb8800d1115f7ee2f653d8c1b9c46d3f79ec2c87d71a366a120bd1e519
-  languageName: node
-  linkType: hard
-
-"class-validator@npm:0.13.2":
-  version: 0.13.2
-  resolution: "class-validator@npm:0.13.2"
-  dependencies:
-    libphonenumber-js: ^1.9.43
-    validator: ^13.7.0
-  checksum: 0deb4c29faa18345f6989fd7eaaaa07b05caae5298603fcd6485531c6daad503e5d2b24cc1342e4fc88ae5ba0acffdc24d0fc333110ef3f21a667cd8a79e1258
-  languageName: node
-  linkType: hard
-
-"class-validator@npm:^0.12.2":
-  version: 0.12.2
-  resolution: "class-validator@npm:0.12.2"
-  dependencies:
-    "@types/validator": 13.0.0
-    google-libphonenumber: ^3.2.8
-    tslib: ">=1.9.0"
-    validator: 13.0.0
-  checksum: 37a806f62794d0c473045b8a77bc48892e87a959d57588b52774385058a862e77952c3af4c02d61db5fd863ff08d19935b1bdd38851028e1460bb94eb97ffec7
+    "@types/validator": ^13.11.8
+    libphonenumber-js: ^1.10.53
+    validator: ^13.9.0
+  checksum: bea808145c81ba3b185e1174d92f97a2d6ffef0558261217042552e9027222eadb9a9731a4418a07eaaa72ac334347df7a1079ff48eaadaa3ee6848a6a88995c
   languageName: node
   linkType: hard
 
@@ -8877,13 +8837,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-libphonenumber@npm:^3.2.8":
-  version: 3.2.30
-  resolution: "google-libphonenumber@npm:3.2.30"
-  checksum: 42e67c46b74bf50ad904be8eb2b9d861a3c6b0e31a862772f19571b4b9cb2daa288f2f8c70dacc2835bb1218359fb2e474f6116e842f9284158ac5a9af1cb9b3
-  languageName: node
-  linkType: hard
-
 "gopd@npm:^1.0.1":
   version: 1.0.1
   resolution: "gopd@npm:1.0.1"
@@ -11943,10 +11896,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libphonenumber-js@npm:^1.9.43":
-  version: 1.10.13
-  resolution: "libphonenumber-js@npm:1.10.13"
-  checksum: a1740bbed8faa1adb4ae01dda6a7c16b4fd2917efdd9bafac53fa06d9e4b53dc67543d282f7fd0043649edddc0f03359448a17adb837e534358c7ba92c7dc268
+"libphonenumber-js@npm:^1.10.53":
+  version: 1.10.58
+  resolution: "libphonenumber-js@npm:1.10.58"
+  checksum: c6e6c5cc7b917eff604b528cbb417285f4c5d2ab730266a0a5339876714ae4b841556b7dd2faa00c0ced989dfb9f77eb562e2f401c98a988c2533ec09898ca74
   languageName: node
   linkType: hard
 
@@ -17144,13 +17097,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:>=1.9.0, tslib@npm:^2.0.3, tslib@npm:^2.1.0":
-  version: 2.4.0
-  resolution: "tslib@npm:2.4.0"
-  checksum: 8c4aa6a3c5a754bf76aefc38026134180c053b7bd2f81338cb5e5ebf96fefa0f417bff221592bf801077f5bf990562f6264fecbc42cd3309b33872cb6fc3b113
-  languageName: node
-  linkType: hard
-
 "tslib@npm:^1.8.1, tslib@npm:^1.9.0":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
@@ -17162,6 +17108,13 @@ __metadata:
   version: 2.6.2
   resolution: "tslib@npm:2.6.2"
   checksum: 329ea56123005922f39642318e3d1f0f8265d1e7fcb92c633e0809521da75eeaca28d2cf96d7248229deb40e5c19adf408259f4b9640afd20d13aecc1430f3ad
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.0.3, tslib@npm:^2.1.0":
+  version: 2.4.0
+  resolution: "tslib@npm:2.4.0"
+  checksum: 8c4aa6a3c5a754bf76aefc38026134180c053b7bd2f81338cb5e5ebf96fefa0f417bff221592bf801077f5bf990562f6264fecbc42cd3309b33872cb6fc3b113
   languageName: node
   linkType: hard
 
@@ -17817,17 +17770,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"validator@npm:13.0.0":
-  version: 13.0.0
-  resolution: "validator@npm:13.0.0"
-  checksum: 7b5df6d0aec660ad12089fbcdd07cf506181ca2cd711d6e2bec7502c5cac1b31e8eb03875d23bcbc1b81a93648d5aacd52e2dc7b62cf02e71d3768533630f4c5
-  languageName: node
-  linkType: hard
-
-"validator@npm:^13.7.0":
-  version: 13.7.0
-  resolution: "validator@npm:13.7.0"
-  checksum: 2b83283de1222ca549a7ef57f46e8d49c6669213348db78b7045bce36a3b5843ff1e9f709ebf74574e06223461ee1f264f8cc9a26a0060a79a27de079d8286ef
+"validator@npm:^13.9.0":
+  version: 13.11.0
+  resolution: "validator@npm:13.11.0"
+  checksum: d1e0c27022681420756da25bc03eb08d5f0c66fb008f8ff02ebc95812b77c6be6e03d3bd05cf80ca702e23eeb73dadd66b4b3683173ea2a0bc7cc72820bee131
   languageName: node
   linkType: hard
 

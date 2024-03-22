@@ -1,9 +1,9 @@
 import { CreateFeedbackDto } from '@tbcm/common';
-import createValidator from 'class-validator-formik';
 import { Formik, Form as FormikForm, FormikHelpers } from 'formik';
 import { Button, Textarea } from '@components';
 import { useFeedback } from 'src/services/useFeedback';
 import { toast } from 'react-toastify';
+import { dtoValidator } from '../utils/dto-validator';
 
 interface FeedbackFormProps {
   setIsOpen: (value: React.SetStateAction<boolean>) => void;
@@ -33,13 +33,11 @@ export const FeedbackForm = ({ setIsOpen }: FeedbackFormProps) => {
     });
   };
 
-  const feedbackSchema = createValidator(CreateFeedbackDto);
-
   return (
     <Formik
       initialValues={initialValues}
       onSubmit={handleSubmit}
-      validate={feedbackSchema}
+      validate={values => dtoValidator(CreateFeedbackDto, values)}
       validateOnBlur={false}
     >
       {({ isSubmitting }) => (

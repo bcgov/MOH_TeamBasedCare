@@ -6,7 +6,7 @@ import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import { AppMenu, HIDE_MENU_DELAY } from './generic/AppMenu';
 import { OccupationSelector } from './OccupationSelector';
 import { Form, Formik } from 'formik';
-import createValidator from 'class-validator-formik';
+import { dtoValidator } from 'src/utils/dto-validator';
 import { SaveOccupationDTO } from '@tbcm/common';
 import { Error } from './Error';
 
@@ -15,7 +15,6 @@ export const OccupationListDropdown = () => {
   const { handleSubmit, initialValues } = usePlanningOccupations({
     proceedToNextOnSubmit: false,
   });
-  const occupationValidationSchema = createValidator(SaveOccupationDTO);
   const { updateRefetchActivityGap } = usePlanningContext();
 
   const [showMenu, setShowMenu] = useState(false);
@@ -72,7 +71,7 @@ export const OccupationListDropdown = () => {
         <AppMenu size='lg'>
           <Formik
             initialValues={initialValues}
-            validate={occupationValidationSchema}
+            validate={values => dtoValidator(SaveOccupationDTO, values)}
             onSubmit={onSubmit}
             validateOnBlur={true}
             enableReinitialize={true}

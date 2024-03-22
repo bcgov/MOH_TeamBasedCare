@@ -9,7 +9,7 @@ import {
   formatDateFromNow,
   formatDateTime,
 } from '@tbcm/common';
-import createValidator from 'class-validator-formik';
+import { dtoValidator } from '../../utils/dto-validator';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
@@ -232,7 +232,6 @@ const ConfirmDraftRemove = ({
 };
 
 export const Profile: React.FC<ProfileProps> = () => {
-  const profileValidationSchema = createValidator(SaveProfileDTO);
   const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
 
   const [showModal, setShowModal] = useState(false);
@@ -240,7 +239,7 @@ export const Profile: React.FC<ProfileProps> = () => {
   return (
     <Formik
       initialValues={initialValues}
-      validate={profileValidationSchema}
+      validate={values => dtoValidator(SaveProfileDTO, values)}
       onSubmit={values => {
         // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft
         if (lastDraft && values.profileOption !== ProfileOptions.DRAFT) {

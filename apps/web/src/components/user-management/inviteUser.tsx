@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import { Formik, Form as FormikForm, useFormikContext } from 'formik';
-import createValidator from 'class-validator-formik';
+import { dtoValidator } from '../../utils/dto-validator';
 import { CreateUserInviteDTO, RoleOptions } from '@tbcm/common';
 import { useUserInvite } from 'src/services/useUserInvite';
 import { Field } from '../Field';
@@ -66,13 +66,12 @@ interface InviteUserProps {
 }
 
 export const InviteUser: React.FC<InviteUserProps> = ({ setShowModal, successCb }) => {
-  const validationSchema = createValidator(CreateUserInviteDTO);
   const { handleSubmit, initialValues, isLoading } = useUserInvite();
 
   return (
     <Formik
       initialValues={initialValues}
-      validate={validationSchema}
+      validate={values => dtoValidator(CreateUserInviteDTO, values)}
       onSubmit={values => handleSubmit(values, successCb)}
       validateOnBlur={false}
       validateOnMount={false}
