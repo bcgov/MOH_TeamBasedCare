@@ -34,4 +34,4 @@ jobs:
         run: yarn workspace @tbcm/web lint
 
       - name: Build web package
-        run: yarn workspace @tbcm/web export
+        run: yarn workspace @tbcm/web build

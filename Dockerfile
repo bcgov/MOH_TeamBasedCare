@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
 # RUN yarn set version berry
 # Copying repo resources

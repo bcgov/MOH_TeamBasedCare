@@ -49,7 +49,7 @@
     "keycloak-connect": "22.0.3",
     "lodash": "4.17.21",
     "nanoid": "3.3.3",
-    "nest-keycloak-connect": "1.9.2",
+    "nest-keycloak-connect": "1.10.0",
     "nest-winston": "1.6.2",
     "pg": "8.7.1",
     "reflect-metadata": "0.1.13",
