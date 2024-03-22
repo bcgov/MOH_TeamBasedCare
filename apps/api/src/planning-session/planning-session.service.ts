@@ -194,7 +194,7 @@ export class PlanningSessionService {
 
   async getPlanningActivityGap(sessionId: string): Promise<any> {
     const planningSession = await this.planningSessionRepo.findOne(sessionId, {
-      relations: ['careActivity', 'careActivity.bundle', 'occupation'],
+      relations: ['careActivity', 'careActivity.bundle', 'occupation', 'careLocation'],
     });
     if (!planningSession || !planningSession.occupation || !planningSession.careActivity) {
       return;
@@ -307,6 +307,7 @@ export class PlanningSessionService {
       headers,
       data: _.sortBy(result, 'name'),
       overview,
+      careSetting: planningSession.careLocation?.displayName,
     };
   }
 }
