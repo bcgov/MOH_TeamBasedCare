@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import { Formik, Form as FormikForm, useFormikContext } from 'formik';
-import createValidator from 'class-validator-formik';
+import { dtoValidator } from '../../utils/dto-validator';
 import { EditUserDTO, RoleOptions, UserRO } from '@tbcm/common';
 import { Field } from '../Field';
 import { Button } from '../Button';
@@ -61,13 +61,12 @@ interface EditUserProps {
 }
 
 export const EditUser: React.FC<EditUserProps> = ({ user, setShowModal, successCb }) => {
-  const validationSchema = createValidator(EditUserDTO);
   const { handleSubmit, initialValues, isLoading } = useUserEdit(user);
 
   return (
     <Formik
       initialValues={initialValues}
-      validate={validationSchema}
+      validate={values => dtoValidator(EditUserDTO, values)}
       onSubmit={values => handleSubmit(values, successCb)}
       validateOnBlur={false}
       validateOnMount={false}

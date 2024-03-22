@@ -4,7 +4,7 @@ import { OccupationSelector } from '../OccupationSelector';
 import { Form, Formik } from 'formik';
 import { usePlanningContent, usePlanningOccupations } from '@services';
 import { SaveOccupationDTO } from '@tbcm/common';
-import createValidator from 'class-validator-formik';
+import { dtoValidator } from '../../utils/dto-validator';
 import { Error } from '../Error';
 import { PageTitle } from '../PageTitle';
 import { useState } from 'react';
@@ -25,7 +25,6 @@ const OccupationForm = ({ searchValue = '' }) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const Occupation: React.FC<OccupationProps> = () => {
-  const occupationValidationSchema = createValidator(SaveOccupationDTO);
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
 
   // proceed to next step after submission
@@ -51,7 +50,7 @@ export const Occupation: React.FC<OccupationProps> = () => {
 
           <Formik
             initialValues={initialValues}
-            validate={occupationValidationSchema}
+            validate={values => dtoValidator(SaveOccupationDTO, values)}
             onSubmit={handleSubmit}
             validateOnBlur={true}
             enableReinitialize={true}

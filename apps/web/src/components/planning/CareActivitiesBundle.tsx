@@ -5,7 +5,7 @@ import { Formik, Form } from 'formik';
 import { usePlanningContent } from '../../services';
 import { Error } from '../Error';
 import { SaveCareActivityDTO } from '@tbcm/common';
-import createValidator from 'class-validator-formik';
+import { dtoValidator } from '../../utils/dto-validator';
 import { usePlanningCareActivities } from '../../services';
 
 export interface CareActivitiesBundleProps {
@@ -30,8 +30,6 @@ const CareActivitiesBundleWrapper: React.FC<CareActivitiesBundleProps> = ({ titl
 export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ title }) => {
   const { handleSubmit, initialValues } = usePlanningCareActivities();
 
-  const occupationValidationSchema = createValidator(SaveCareActivityDTO);
-
   const description =
     'Based on the care setting selected, these are the associated care activity bundles. Please select or deselect based on your needs.';
 
@@ -43,7 +41,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
         <Formik
           initialValues={initialValues}
           onSubmit={handleSubmit}
-          validate={occupationValidationSchema}
+          validate={values => dtoValidator(SaveCareActivityDTO, values)}
           validateOnBlur={true}
           enableReinitialize={true}
         >
