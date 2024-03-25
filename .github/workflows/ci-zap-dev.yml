@@ -1,12 +1,6 @@
 name: DEV - ZAP Scan
 on:
-  workflow_run:
-    workflows: ['DEV - Deploy Apps']
-    types:
-      - completed
-  push:
-    tags:
-      - security
+  workflow_dispatch:
 
 jobs:
   scan:
