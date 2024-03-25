@@ -46,7 +46,7 @@ resource "aws_lambda_function" "api" {
   description      = "API for ${local.namespace}"
   function_name    = local.api_name
   role             = aws_iam_role.lambda.arn
-  runtime          = "nodejs18.x"
+  runtime          = "nodejs20.x"
   handler          = "api/lambda.handler" # TODO update 
   memory_size      = var.function_memory_mb
   timeout          = 900
@@ -57,7 +57,7 @@ resource "aws_lambda_function" "api" {
 
   vpc_config {
     security_group_ids = [data.aws_security_group.app.id]
-    subnet_ids         = data.aws_subnet_ids.app.ids
+    subnet_ids         = data.aws_subnets.app.ids
   }
 
   lifecycle {

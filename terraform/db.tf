@@ -1,7 +1,7 @@
 
 resource "aws_db_subnet_group" "pgsql" {
   name       = "pgsql"
-  subnet_ids = data.aws_subnet_ids.data.ids
+  subnet_ids = data.aws_subnets.data.ids
 }
 
 resource "aws_rds_cluster_instance" "pgsql" {
