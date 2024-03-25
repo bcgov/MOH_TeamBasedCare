@@ -1,12 +1,9 @@
 name: PROD - ZAP Scan
 on:
-  workflow_run:
-    workflows: ['PROD - Deploy Apps']
-    types:
-      - completed
-  push:
-    tags:
-      - security
+  workflow_dispatch:
+  schedule:
+    # Runs every month on 1st at 01:00
+    - cron: '0 1 1 * *'
 
 jobs:
   scan:
