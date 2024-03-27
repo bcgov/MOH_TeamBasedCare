@@ -74,7 +74,7 @@ resource "aws_instance" "bastion_instance" {
   vpc_security_group_ids      = [data.aws_security_group.app.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_instance_profile.name
   associate_public_ip_address = "false"
-  subnet_id                   = tolist(data.aws_subnet_ids.app.ids)[0]
+  subnet_id                   = tolist(data.aws_subnets.app.ids)[0]
   user_data                   = file("scripts/user-data.sh")
 
   root_block_device {

@@ -35,24 +35,36 @@ data "aws_vpc" "main" {
 	}
 }
 
-data "aws_subnet_ids" "web" {
-	vpc_id = data.aws_vpc.main.id
+data "aws_subnets" "web" {
+	filter {
+	  name = "vpc-id"
+	  values = [data.aws_vpc.main.id]
+	}
+
 	filter {
 		name = "tag:Name"
 		values = local.web_subnet_names
 	}
 }
 
-data "aws_subnet_ids" "app" {
-	vpc_id = data.aws_vpc.main.id
+data "aws_subnets" "app" {
+  filter {
+    name = "vpc-id"
+    values = [data.aws_vpc.main.id]
+  }
+  
 	filter {
 		name = "tag:Name"
 		values = local.app_subnet_names
 	}
 }
 
-data "aws_subnet_ids" "data" {
-	vpc_id = data.aws_vpc.main.id
+data "aws_subnets" "data" {
+	filter {
+	  name = "vpc-id"
+	  values = [data.aws_vpc.main.id]
+	}
+
 	filter {
 		name = "tag:Name"
 		values = local.data_subnet_names
@@ -60,17 +72,17 @@ data "aws_subnet_ids" "data" {
 }
 
 data "aws_subnet" "web" {
-	for_each = data.aws_subnet_ids.web.ids
+	for_each = toset(data.aws_subnets.web.ids)
 	id = each.value
 }
 
 data "aws_subnet" "app" {
-	for_each = data.aws_subnet_ids.app.ids
+	for_each = toset(data.aws_subnets.app.ids)
 	id = each.value
 }
 
 data "aws_subnet" "data" {
-	for_each = data.aws_subnet_ids.data.ids
+	for_each = toset(data.aws_subnets.data.ids)
 	id = each.value
 }
 
