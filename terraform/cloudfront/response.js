@@ -16,6 +16,54 @@ function handler(event) {
   headers['x-download-options'] = { value: 'noopen' };
   headers['server'] = { value: '*' };
   headers['cache-control'] = { value: 'no-store' };
+  headers['permissions-policy'] = {
+    // reference from https://github.com/bcgov/platform-services-registry/blob/bd134f7f7ce460a23d9212bd612ca336a8ba2f8c/next.config.js
+    // extended from See https://developer.mozilla.org/en-US/docs/Web/HTTP/Permissions_Policy
+    // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
+    value: [
+      'accelerometer=()',
+      'ambient-light-sensor=()',
+      'autoplay=()',
+      'battery=()',
+      'bluetooth=()',
+      'browsing-topics=()',
+      'camera=()',
+      'cross-origin-isolated=()',
+      'display-capture=()',
+      'document-domain=()',
+      'encrypted-media=()',
+      'execution-while-not-rendered=()',
+      'execution-while-out-of-viewport=()',
+      'fullscreen=(self)',
+      'gamepad=()',
+      'geolocation=()',
+      'gyroscope=()',
+      'hid=()',
+      'identity-credentials-get=()',
+      'idle-detection=()',
+      'keyboard-map=()',
+      'local-fonts=()',
+      'magnetometer=()',
+      'microphone=()',
+      'midi=()',
+      'navigation-override=()',
+      'otp-credentials=()',
+      'payment=()',
+      'picture-in-picture=()',
+      'publickey-credentials-create=()',
+      'publickey-credentials-get=()',
+      'screen-wake-lock=()',
+      'serial=()',
+      'speaker-selection=()',
+      'storage-access=()', // restricted for third-party context (iframe)
+      'sync-xhr=()',
+      'usb=()',
+      'web-share=()',
+      'window-management=()',
+      'xr-spatial-tracking=()',
+    ].join(','),
+  };
+
   // Return the response to viewers
   return response;
 }
