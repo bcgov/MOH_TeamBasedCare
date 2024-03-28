@@ -1,0 +1,39 @@
+name: API PR Checks
+on:
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'packages/common/**'
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: setup node v20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - uses: actions/cache@v3
+        name: Cache yarn
+        with:
+          path: ./.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn workspace @tbcm/api install
+
+      - name: Run formatting check
+        run: yarn format:check
+
+      - name: Build dependencies
+        run: yarn build-common
+
+      - name: Lint API Package
+        run: yarn workspace @tbcm/api lint
+      
+      - name: Build API package
+        run: make build-api
