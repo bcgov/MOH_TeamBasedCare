@@ -36,6 +36,8 @@ export class AllowedActivityController {
     const [allowedActivities, total] =
       await this.allowedActivityService.findAllowedActivitiesByOccupation(occupationId, query);
 
+    ('testing!');
+
     return new PaginationRO([
       allowedActivities.map(
         allowedActivity => new GetAllowedActivitiesByOccupationRO(allowedActivity),
