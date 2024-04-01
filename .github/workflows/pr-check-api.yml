@@ -34,6 +34,6 @@ jobs:
 
       - name: Lint API Package
         run: yarn workspace @tbcm/api lint
-      
+
       - name: Build API package
         run: make build-api
