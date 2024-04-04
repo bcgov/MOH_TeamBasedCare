@@ -19,7 +19,7 @@ AxiosPublic.interceptors.request.use(
     const token = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
     if (token) {
       if (!config.headers) {
-        config.headers = {};
+        Object.assign(config, { headers: {} });
       }
 
       config.headers['Authorization'] = `Bearer ${token}`;
