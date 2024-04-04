@@ -362,7 +362,7 @@ tag-sec:
 # Typeorm Migrations
 
 migration-generate:
-	@docker exec $(LOCAL_API_CONTAINER_NAME) yarn workspace @tbcm/api typeorm migration:generate -n $(name)
+	@docker exec $(LOCAL_API_CONTAINER_NAME) yarn workspace @tbcm/api typeorm migration:generate -n $(name) -d src/migration
 
 migration-revert:
 	@docker exec $(LOCAL_API_CONTAINER_NAME) yarn workspace @tbcm/api typeorm migration:revert

@@ -30,14 +30,14 @@ export class PlanningSessionService {
   ) {}
 
   // find planning session from id
-  async findOne(sessionId: string, options?: FindOneOptions): Promise<PlanningSession | undefined> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, options);
+  async findOne(options: FindOneOptions<PlanningSession>) {
+    const planningSession = await this.planningSessionRepo.findOne(options);
 
     return planningSession;
   }
 
   // find latest Draft planning sessions
-  async getLastDraftPlanningSession(user: User): Promise<PlanningSession | undefined> {
+  async getLastDraftPlanningSession(user: User) {
     const planningSession = await this.planningSessionRepo.findOne({
       where: {
         status: PlanningStatus.DRAFT,
@@ -72,7 +72,8 @@ export class PlanningSessionService {
 
   async saveProfileSelection(sessionId: string, saveProfileDto: SaveProfileDTO): Promise<void> {
     // get existing profile
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: { id: sessionId },
       relations: ['careLocation', 'careActivity'],
     });
 
@@ -106,7 +107,8 @@ export class PlanningSessionService {
   }
 
   async getProfileSelection(sessionId: string): Promise<IProfileSelection> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: { id: sessionId },
       relations: ['careLocation'],
     });
     return {
@@ -116,7 +118,8 @@ export class PlanningSessionService {
   }
 
   async getBundlesForSelectedCareLocation(sessionId: string): Promise<BundleRO[]> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: { id: sessionId },
       relations: ['careLocation'],
     });
 
@@ -137,7 +140,7 @@ export class PlanningSessionService {
       Object.values(careActivityDto.careActivityBundle).flatMap(each => each),
     );
 
-    const planningSession = await this.planningSessionRepo.findOne(sessionId);
+    const planningSession = await this.planningSessionRepo.findOneBy({ id: sessionId });
     await this.planningSessionRepo.save({
       ...planningSession,
       careActivity,
@@ -145,8 +148,9 @@ export class PlanningSessionService {
     });
   }
 
-  async getCareActivity(sessionId: string): Promise<{ [key: string]: any[] } | undefined> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+  async getCareActivity(sessionId: string): Promise<{ [key: string]: string[] } | undefined> {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: { id: sessionId },
       relations: ['careActivity', 'careActivity.bundle'],
     });
 
@@ -158,7 +162,7 @@ export class PlanningSessionService {
         };
       });
       const groupedActivities = _.groupBy(careActivities, 'bundle_id');
-      const careActivityBundle: { [key: string]: any[] } = {};
+      const careActivityBundle: { [key: string]: string[] } = {};
 
       Object.entries(groupedActivities).forEach(([key, value]) => {
         careActivityBundle[key] = value.map(e => e.id);
@@ -172,7 +176,7 @@ export class PlanningSessionService {
 
   async saveOccupation(sessionId: string, occupationDto: SaveOccupationDTO): Promise<void> {
     const occupation = await this.occupationService.findAllOccupation(occupationDto.occupation);
-    const planningSession = await this.planningSessionRepo.findOne(sessionId);
+    const planningSession = await this.planningSessionRepo.findOneBy({ id: sessionId });
     await this.planningSessionRepo.save({
       ...planningSession,
       occupation,
@@ -181,7 +185,8 @@ export class PlanningSessionService {
   }
 
   async getOccupation(sessionId: string): Promise<string[] | undefined> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: { id: sessionId },
       relations: ['occupation'],
     });
 
@@ -192,8 +197,9 @@ export class PlanningSessionService {
     return;
   }
 
-  async getPlanningActivityGap(sessionId: string): Promise<any> {
-    const planningSession = await this.planningSessionRepo.findOne(sessionId, {
+  async getPlanningActivityGap(sessionId: string) {
+    const planningSession = await this.planningSessionRepo.findOne({
+      where: { id: sessionId },
       relations: ['careActivity', 'careActivity.bundle', 'occupation', 'careLocation'],
     });
     if (!planningSession || !planningSession.occupation || !planningSession.careActivity) {
@@ -228,7 +234,7 @@ export class PlanningSessionService {
       .where('ps.id = :sessionId', { sessionId })
       .getRawMany();
 
-    const groupedMappingActions: { [key: string]: any } = {};
+    const groupedMappingActions: { [bundleId: string]: { [careActivityId: string]: string } } = {};
 
     Object.entries(_.groupBy(query, 'care_activity_id')).forEach(([id, value]) => {
       groupedMappingActions[id] = Object.assign(
@@ -239,9 +245,10 @@ export class PlanningSessionService {
       );
     });
 
-    const result: any[] = [];
+    const result: Array<{ [key: string]: string | number | Array<{ [key: string]: string }> }> = [];
+
     Object.entries(groupedBundles).forEach(([name, value]) => {
-      const data: { [key: string]: any | any[] } = {
+      const data: { [key: string]: string | number | Array<{ [key: string]: string }> } = {
         name,
       };
 
@@ -252,9 +259,9 @@ export class PlanningSessionService {
       });
 
       let numberOfGaps = 0;
-      const careActivitiesForBundle: any[] = [];
+      const careActivitiesForBundle: Array<{ [key: string]: string }> = [];
       _.sortBy(value, 'name').forEach(eachCA => {
-        const eachActivity: { [key: string]: any } = {
+        const eachActivity: { [key: string]: string } = {
           name: eachCA.name,
         };
         if (!groupedMappingActions[eachCA.id]) {

@@ -24,8 +24,8 @@ export class CareActivityService {
     private readonly unitService: UnitService,
   ) {}
 
-  findOneById(id: string): Promise<CareActivity | undefined> {
-    return this.careActivityRepo.findOne(id);
+  findOneById(id: string) {
+    return this.careActivityRepo.findOneBy({ id });
   }
 
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
@@ -139,7 +139,7 @@ export class CareActivityService {
 
     // if bundle is updated, fetch and update entity
     if (bundleId) {
-      const bundle = await this.bundleRepo.findOne(bundleId);
+      const bundle = await this.bundleRepo.findOneBy({ id: bundleId });
       if (!bundle) {
         throw new NotFoundException({
           message: 'Cannot update care activity: Bundle not found',

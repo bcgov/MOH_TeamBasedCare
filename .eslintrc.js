@@ -20,6 +20,7 @@ module.exports = {
     ],
     'no-console': 'error',
     '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
   },
   ignorePatterns: ['.eslintrc.js', '**/*spec.ts', 'dist', 'node_modules'],
 };

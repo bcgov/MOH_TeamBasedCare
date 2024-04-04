@@ -81,7 +81,7 @@ export class AllowedActivityService {
   async updateAllowedActivity(id: string, data: EditAllowedActivityDTO) {
     if (!id) throw new NotFoundException();
 
-    const allowedActivity = await this.allowedActivityRepository.findOne(id);
+    const allowedActivity = await this.allowedActivityRepository.findOneBy({ id });
 
     if (!allowedActivity) {
       throw new NotFoundException({
@@ -101,7 +101,7 @@ export class AllowedActivityService {
   async remove(id: string) {
     if (!id) throw new NotFoundException();
 
-    const allowedActivity = await this.allowedActivityRepository.findOne(id);
+    const allowedActivity = await this.allowedActivityRepository.findOneBy({ id });
 
     if (!allowedActivity) {
       throw new NotFoundException({

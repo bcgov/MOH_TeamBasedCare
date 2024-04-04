@@ -29,7 +29,8 @@ export class SessionGuard implements CanActivate {
     if (!sessionId) return false;
 
     // fetch session from id
-    const session = await this.planningSessionService.findOne(sessionId, {
+    const session = await this.planningSessionService.findOne({
+      where: { id: sessionId },
       relations: ['createdBy'],
     });
 

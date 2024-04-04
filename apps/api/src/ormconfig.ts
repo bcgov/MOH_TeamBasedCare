@@ -12,10 +12,6 @@ const config: PostgresConnectionOptions = {
   username: process.env.POSTGRES_USERNAME || 'freshworks',
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE || 'tbcm',
-  cli: {
-    migrationsDir: 'src/migration',
-    entitiesDir: 'src/**/*.entity.ts',
-  },
   entities: ['dist/**/*.entity.js'],
   migrations: ['dist/migration/*.js'],
   subscribers: ['dist/**/*.subscribers.js'],

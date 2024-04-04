@@ -1,24 +1,24 @@
 import { UserGuide } from '@tbcm/common';
-import { ApiModelProperty } from '@nestjs/swagger/dist/decorators/api-model-property.decorator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UserGuideRO implements UserGuide {
-  @ApiModelProperty({
+  @ApiProperty({
     description: 'file name',
     example: 'user-guide.pdf',
   })
   name!: string;
 
-  @ApiModelProperty({
+  @ApiProperty({
     description: 'last modified date and time',
   })
   lastModified!: Date;
 
-  @ApiModelProperty({
+  @ApiProperty({
     description: 'file size in bytes',
   })
   size!: number;
 
-  @ApiModelProperty({
+  @ApiProperty({
     description: 'file version',
   })
   version!: string;

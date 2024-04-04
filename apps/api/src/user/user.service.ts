@@ -29,13 +29,13 @@ export class UserService {
   ) {}
 
   async findOne(id: string) {
-    return this.userRepo.findOne(id);
+    return this.userRepo.findOneBy({ id });
   }
 
   async findByEmail(email: string) {
     if (!email) return;
 
-    return this.userRepo.findOne({ email });
+    return this.userRepo.findOneBy({ email });
   }
 
   async resolveUser(keycloakUser: KeycloakUser) {
