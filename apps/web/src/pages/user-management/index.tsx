@@ -10,6 +10,7 @@ import { Card } from 'src/components/generic/Card';
 import { EditUser } from 'src/components/user-management/editUser';
 import { InviteUser } from 'src/components/user-management/inviteUser';
 import { UserManagementList } from 'src/components/user-management/list';
+import { UserManagementSearch } from 'src/components/user-management/search';
 import { useUserReProvision } from 'src/services/useUserReProvision';
 import { useUserRevoke } from 'src/services/useUserRevoke';
 import { useUsersFind } from 'src/services/useUsersFind';
@@ -24,6 +25,7 @@ const UserManagement: NextPage = () => {
     sortKey,
     sortOrder,
     onSortChange,
+    onSearchTextChange,
     isLoading,
     onRefreshList,
   } = useUsersFind();
@@ -106,7 +108,10 @@ const UserManagement: NextPage = () => {
         </Card>
 
         <Card bgWhite className='mt-4'>
-          <PageTitle title='Users' />
+          <PageTitle
+            title='Users'
+            secondary={<UserManagementSearch onSearchTextChange={onSearchTextChange} />}
+          />
           <UserManagementList
             users={users}
             pageIndex={pageIndex}

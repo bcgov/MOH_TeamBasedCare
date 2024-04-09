@@ -198,8 +198,9 @@ export class UserService {
     // Search logic below
     if (query.searchText) {
       queryBuilder
-        .where('u.email ILIKE :name', { name: `%${query.searchText}%` })
-        .orWhere('u.organization ILIKE :name', { name: `%${query.searchText}%` });
+        .where('u.email ILIKE :email', { email: `%${query.searchText}%` })
+        .orWhere('u.organization ILIKE :org', { org: `%${query.searchText}%` })
+        .orWhere('u.displayName ILIKE :name', { name: `%${query.searchText}%` });
     }
 
     if (query.sortBy) queryBuilder.orderBy(`u.${query.sortBy}`, query.sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
