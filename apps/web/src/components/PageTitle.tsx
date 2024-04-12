@@ -1,9 +1,10 @@
 export interface PageTitleProps {
   title?: string;
   description?: string;
+  secondary?: JSX.Element;
 }
 
-export const PageTitle: React.FC<PageTitleProps> = ({ title, description }) => {
+export const PageTitle: React.FC<PageTitleProps> = ({ title, description, secondary }) => {
   return (
     <div className='flex flex-col space-y-2'>
       {title && (
@@ -11,6 +12,7 @@ export const PageTitle: React.FC<PageTitleProps> = ({ title, description }) => {
           {title && (
             <h1 className='text-xl font-bold text-bcBluePrimary flex-col items-start'>{title}</h1>
           )}
+          {secondary}
         </div>
       )}
       {description && <p className='text-sm text-gray-400'>{description}</p>}
