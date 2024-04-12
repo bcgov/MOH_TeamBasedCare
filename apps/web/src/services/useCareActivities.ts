@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
 import { useHttp } from './useHttp';
 import { usePlanningContext } from './usePlanningContext';
+import { BundleRO } from '@tbcm/common';
 
 interface CareActivityInterface {
-  result: any[];
+  result: BundleRO[];
 }
 
 export const useCareActivities = () => {
@@ -19,7 +20,7 @@ export const useCareActivities = () => {
       endpoint: API_ENDPOINT.getPlanningCareActivityBundlesForSessionCareLocation(sessionId),
     };
 
-    fetchData(config, (data: any) => {
+    fetchData(config, (data: BundleRO[]) => {
       setCareActivities({ result: data });
     });
   }, []);

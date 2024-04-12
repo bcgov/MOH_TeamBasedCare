@@ -28,7 +28,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
         _.each(careActivities.result, item => {
           values.careActivityBundle[item.id] = values.careActivityBundle[item.id] ?? [];
         });
-        values.careActivityID = _.head(careActivities.result).id;
+        values.careActivityID = _.head(careActivities.result)?.id;
       }
     }
   }, [careActivities]);

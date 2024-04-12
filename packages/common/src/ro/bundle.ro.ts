@@ -1,8 +1,8 @@
 import { Exclude, Expose } from 'class-transformer';
-import { CareActivityType, ClinicalType } from '../constants';
+import { CareActivityRO } from './careActivity.ro';
 
 @Exclude()
-export class CareActivityRO {
+export class BundleRO {
   @Expose()
   id!: string;
 
@@ -10,15 +10,13 @@ export class CareActivityRO {
   name: string;
 
   @Expose()
-  activityType!: CareActivityType;
-
-  @Expose()
-  clinicalType!: ClinicalType;
+  careActivities: CareActivityRO[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
-    // data: as CareActivity; can't expose entities to common package
     Object.assign(this, data);
     this.name = data.displayName;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.careActivities = data.careActivities.map((each: any) => new CareActivityRO(each));
   }
 }

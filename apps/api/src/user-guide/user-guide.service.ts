@@ -27,7 +27,7 @@ export class UserGuideService {
       const result = await this.s3.listObjects().promise();
 
       return (
-        result.Contents?.map((o: any) => {
+        result.Contents?.map(o => {
           return { name: o.Key, lastModified: o.LastModified, size: o.Size } as UserGuide;
         }) ?? []
       );

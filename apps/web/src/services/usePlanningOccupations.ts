@@ -8,6 +8,10 @@ interface usePlanningOccupationsProps {
   triggerActivityGapFetchOnSubmit?: boolean;
 }
 
+export interface PlanningOccupation {
+  occupation: string[];
+}
+
 export const usePlanningOccupations = ({
   proceedToNextOnSubmit = false,
 }: usePlanningOccupationsProps) => {
@@ -16,13 +20,13 @@ export const usePlanningOccupations = ({
     updateProceedToNext,
   } = usePlanningContext();
 
-  const [initialValues, setInitialValues] = useState<any>({
+  const [initialValues, setInitialValues] = useState<PlanningOccupation>({
     occupation: [],
   });
 
   const { sendApiRequest, fetchData } = useHttp();
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: PlanningOccupation) => {
     sendApiRequest(
       {
         method: REQUEST_METHOD.PATCH,
@@ -39,7 +43,7 @@ export const usePlanningOccupations = ({
   };
 
   const updateOccupationsForSessionId = useCallback(() => {
-    fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: any) => {
+    fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: string[]) => {
       if (data && data?.length > 0) {
         setInitialValues({ occupation: data });
       }

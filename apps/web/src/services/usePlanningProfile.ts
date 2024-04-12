@@ -50,7 +50,7 @@ export const usePlanningProfile = () => {
         data,
       };
 
-      sendApiRequest(config, (data: any) => {
+      sendApiRequest(config, (data: PlanningSessionRO) => {
         updateSessionId(data.id);
         updateProceedToNext();
       });

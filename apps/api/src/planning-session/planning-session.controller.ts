@@ -38,8 +38,7 @@ export class PlanningSessionController {
     // if no available last draft return empty
     if (!session) return {};
 
-    // explicitly added any to the return type to counter Runtime.ImportModuleError for classes in @tbcm/common package
-    return new PlanningSessionRO(session) as any;
+    return new PlanningSessionRO(session);
   }
 
   @Post()
@@ -49,8 +48,7 @@ export class PlanningSessionController {
       req.user,
     );
 
-    // explicitly added any to the return type to counter Runtime.ImportModuleError for classes in @tbcm/common package
-    return new PlanningSessionRO(session) as any;
+    return new PlanningSessionRO(session);
   }
 
   @UseGuards(SessionGuard)

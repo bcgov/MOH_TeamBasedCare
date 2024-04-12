@@ -1871,6 +1871,7 @@ __metadata:
     "@types/express": 4.17.13
     "@types/js-yaml": 4.0.5
     "@types/jsonwebtoken": 8.5.8
+    "@types/multer": 1.4.11
     "@types/node": 16.0.0
     "@types/supertest": 2.0.11
     "@types/zen-observable": 0.8.3
@@ -2382,6 +2383,15 @@ __metadata:
   version: 3.0.5
   resolution: "@types/minimatch@npm:3.0.5"
   checksum: c41d136f67231c3131cf1d4ca0b06687f4a322918a3a5adddc87ce90ed9dbd175a3610adee36b106ae68c0b92c637c35e02b58c8a56c424f71d30993ea220b92
+  languageName: node
+  linkType: hard
+
+"@types/multer@npm:1.4.11":
+  version: 1.4.11
+  resolution: "@types/multer@npm:1.4.11"
+  dependencies:
+    "@types/express": "*"
+  checksum: 3d80b2acdfbc9f3e9027d4467e948925810b67e5622a3017f42f58a3598d34b25376890801e55d0c03973ccc34573abf5218af334e8292ec455832f4ade3e5f5
   languageName: node
   linkType: hard
 

@@ -5,6 +5,7 @@ export class PaginationRO<T> {
 
   count: number;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: [any[], number]) {
     this.total = data && data[1];
     this.count = data[0] ? data[0].length : 0;

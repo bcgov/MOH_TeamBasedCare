@@ -7,6 +7,12 @@ import {
   SaveCareActivityDTO,
   SaveOccupationDTO,
   PlanningStatus,
+  ActivityGap,
+  ActivityGapOverview,
+  ActivityGapData,
+  ActivityGapHeader,
+  ActivityGapCareActivity,
+  BundleRO,
 } from '@tbcm/common';
 import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
@@ -16,7 +22,6 @@ import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.en
 import { ActivitiesActionType } from '../common/constants';
 import { UnitService } from 'src/unit/unit.service';
 import { Unit } from 'src/unit/entity/unit.entity';
-import { BundleRO } from 'src/care-activity/ro/get-bundle.ro';
 import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
@@ -41,7 +46,9 @@ export class PlanningSessionService {
     const planningSession = await this.planningSessionRepo.findOne({
       where: {
         status: PlanningStatus.DRAFT,
-        createdBy: user,
+        createdBy: {
+          id: user.id,
+        },
       },
       order: {
         createdAt: -1,
@@ -197,7 +204,7 @@ export class PlanningSessionService {
     return;
   }
 
-  async getPlanningActivityGap(sessionId: string) {
+  async getPlanningActivityGap(sessionId: string): Promise<ActivityGap | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
       relations: ['careActivity', 'careActivity.bundle', 'occupation', 'careLocation'],
@@ -219,7 +226,7 @@ export class PlanningSessionService {
     // adding manual sorting after values are fetched as nested sorts are only part of typeorm 0.3.0 onwards
     // https://github.com/typeorm/typeorm/issues/2620
     // adding infinity as default display order, giving last position to the occupations whose display order is undefined
-    const headers = [{ title: 'Activities Bundle', description: '' }].concat(
+    const headers: ActivityGapHeader[] = [{ title: 'Activities Bundle', description: '' }].concat(
       occupations
         .sort((a, b) => (a.displayOrder || Infinity) - (b.displayOrder || Infinity))
         .map(e => ({ title: e.displayName, description: e.description || '' })),
@@ -245,10 +252,10 @@ export class PlanningSessionService {
       );
     });
 
-    const result: Array<{ [key: string]: string | number | Array<{ [key: string]: string }> }> = [];
+    const result: Array<ActivityGapData> = [];
 
     Object.entries(groupedBundles).forEach(([name, value]) => {
-      const data: { [key: string]: string | number | Array<{ [key: string]: string }> } = {
+      const data: ActivityGapData = {
         name,
       };
 
@@ -259,9 +266,9 @@ export class PlanningSessionService {
       });
 
       let numberOfGaps = 0;
-      const careActivitiesForBundle: Array<{ [key: string]: string }> = [];
+      const careActivitiesForBundle: Array<ActivityGapCareActivity> = [];
       _.sortBy(value, 'name').forEach(eachCA => {
-        const eachActivity: { [key: string]: string } = {
+        const eachActivity: ActivityGapCareActivity = {
           name: eachCA.name,
         };
         if (!groupedMappingActions[eachCA.id]) {
@@ -289,11 +296,7 @@ export class PlanningSessionService {
     /**
      * overview calculations
      **/
-    const overview: {
-      inScope?: string;
-      limits?: string;
-      outOfScope?: string;
-    } = {};
+    const overview: ActivityGapOverview = {};
 
     const permissionsGroupedCount = _.countBy(query, 'permission');
 

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Button } from './Button';
-import { usePlanningContext, usePlanningOccupations } from '@services';
+import { PlanningOccupation, usePlanningContext, usePlanningOccupations } from '@services';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import { AppMenu, HIDE_MENU_DELAY } from './generic/AppMenu';
 import { OccupationSelector } from './OccupationSelector';
-import { Form, Formik } from 'formik';
+import { Form, Formik, FormikHelpers } from 'formik';
 import { dtoValidator } from 'src/utils/dto-validator';
 import { SaveOccupationDTO } from '@tbcm/common';
 import { Error } from './Error';
@@ -23,7 +23,10 @@ export const OccupationListDropdown = () => {
     setTimeout(() => setShowMenu(false), HIDE_MENU_DELAY);
   };
 
-  const onSubmit = async (values: any, actions: any) => {
+  const onSubmit = async (
+    values: PlanningOccupation,
+    actions: FormikHelpers<PlanningOccupation>,
+  ) => {
     // validate and submit the occupation list
     // This after submission, also triggers refresh of the page by re-evaluating the activity gap data; supplied as param of usePlanningOccupations
     await handleSubmit(values);
@@ -39,7 +42,13 @@ export const OccupationListDropdown = () => {
     hideMenu();
   };
 
-  const OccupationForm = ({ values, isSubmitting }: { values: any; isSubmitting: boolean }) => {
+  const OccupationForm = ({
+    values,
+    isSubmitting,
+  }: {
+    values: PlanningOccupation;
+    isSubmitting: boolean;
+  }) => {
     return (
       <Form className='flex-1 flex flex-col'>
         <div className='max-h-56 overflow-auto'>

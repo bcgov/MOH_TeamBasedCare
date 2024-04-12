@@ -12,6 +12,7 @@ export enum StorageKeys {
 }
 
 const APP_STORAGE_KEY = 'tbcm';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AppStorageType = Record<string, any>;
 
 export class AppStorage {
@@ -43,6 +44,7 @@ export class AppStorage {
     this.updateStorage({});
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static setItem(key: string, value: any) {
     if (!key || value === null || value === undefined) return;
 

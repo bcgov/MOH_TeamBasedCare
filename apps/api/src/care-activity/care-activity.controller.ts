@@ -12,9 +12,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CareActivityRO, PaginationRO, Role } from '@tbcm/common';
+import { BundleRO, CareActivityRO, PaginationRO, Role } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
-import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';

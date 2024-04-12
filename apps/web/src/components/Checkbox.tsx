@@ -4,7 +4,6 @@ interface CheckboxProps {
   name: string;
   label: string;
   value?: string;
-  handleChange?: any;
   styles?: string;
 }
 

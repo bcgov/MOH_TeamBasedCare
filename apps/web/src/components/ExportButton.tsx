@@ -2,12 +2,18 @@ import { useHttp } from '@services';
 import { API_ENDPOINT } from 'src/common';
 import { Button } from './Button';
 import { FileDownload } from 'src/utils/file-download.util';
-import { formatDateTime } from '@tbcm/common';
+import {
+  ActivityGap,
+  ActivityGapCareActivity,
+  ActivityGapData,
+  ActivityGapHeader,
+  formatDateTime,
+} from '@tbcm/common';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
 const ExcelJS = require('exceljs');
 
 interface ExportButtonProps {
-  sessionId: any;
+  sessionId: string;
 }
 
 export const ExportButton = ({ sessionId }: ExportButtonProps) => {
@@ -18,7 +24,7 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
       endpoint: API_ENDPOINT.getPlanningActivityGap(sessionId),
     };
 
-    fetchData(config, async (data: any) => {
+    fetchData(config, async (data: ActivityGap) => {
       const xlsx = convertActivityGapTableToXLSX(data);
 
       FileDownload.download(
@@ -35,32 +41,35 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
   );
 };
 
-const convertActivityGapTableToXLSX = (data: any) => {
+const convertActivityGapTableToXLSX = (data: ActivityGap) => {
   const columns = data.headers.map(({ title }: { title: string }) => {
     if (title === 'Activities Bundle')
       return { header: 'Activities Bundle', key: 'name', width: 50 };
     return { header: title, key: title, width: 13 };
   });
 
-  const emptyRow = {
-    ...data.headers.reduce((acc: any, curr: any) => ((acc[curr] = ''), acc), {}),
+  const emptyRow: ActivityGapCareActivity = {
+    ...data.headers.reduce(
+      (acc: { [key: string]: string }, curr: ActivityGapHeader) => ((acc[curr.title] = ''), acc),
+      {},
+    ),
     name: '',
   };
 
   const resultData = data.data
-    .map((element: any) => {
+    .map((element: ActivityGapData) => {
       const { careActivities, ...remainder } = element;
 
       // add N to empty values [not in Permissions]
-      careActivities?.forEach((activity: any) => {
+      (careActivities as ActivityGapCareActivity[])?.forEach(activity => {
         Object.keys(activity).map((key: string) => {
           if (activity[key] === '') activity[key] = 'N';
         });
       });
 
       return [
-        { ...emptyRow, name: remainder.name, isBundleHeader: true },
-        ...careActivities,
+        { ...emptyRow, name: remainder.name as string, isBundleHeader: true },
+        ...(careActivities as ActivityGapCareActivity[]),
         emptyRow,
       ];
     })
@@ -146,9 +155,10 @@ const convertActivityGapTableToXLSX = (data: any) => {
   gapMatrixWorksheet.columns = columns;
 
   // Add array rows
-  resultData.forEach((rowData: any) => {
+  resultData.forEach(rowData => {
     const row = gapMatrixWorksheet.addRow(rowData);
     if (rowData.isBundleHeader) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       row.eachCell((cell: any) => {
         cell.style = { font: { bold: true } };
       });
