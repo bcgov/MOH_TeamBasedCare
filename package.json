@@ -3,7 +3,7 @@
   "private": true,
   "description": "Team based care mapping app packages",
   "engines": {
-    "node": ">=16.15.1"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "format:staged": "yarn pretty-quick --staged",
@@ -13,7 +13,7 @@
     "build-common": "echo 'Building all common packages packages' && wsrun --stages --exclude @tbcm/api --exclude @tbcm/web --exclude-missing build",
     "build": "echo 'Building packages' && wsrun --stages --exclude-missing build",
     "check": "run-p 'lint' 'format:check'",
-    "prepare": "husky install",
+    "prepare": "npx --yes husky install",
     "watch:common": "wsrun --stages --exclude-missing watch",
     "watch:api": "yarn workspace @tbcm/api start:debug:local",
     "watch:web": "yarn workspace @tbcm/web dev",
@@ -34,25 +34,25 @@
     "apps/*"
   ],
   "devDependencies": {
-    "@tsconfig/node14": "1.0.1",
-    "@typescript-eslint/eslint-plugin": "5.0.0",
-    "@typescript-eslint/parser": "5.0.0",
-    "eslint-config-prettier": "8.3.0",
+    "@tsconfig/node20": "1.0.1",
+    "@types/papaparse": "5.3.2",
+    "@typescript-eslint/eslint-plugin": "7.5.0",
+    "@typescript-eslint/parser": "7.5.0",
+    "eslint-config-prettier": "9.1.0",
     "husky": "7.0.4",
-    "nodemon": "2.0.15",
+    "nodemon": "3.1.0",
     "npm-run-all": "4.1.5",
     "prettier": "2.4.1",
     "pretty-quick": "3.1.2",
-    "start-server-and-test": "1.14.0",
+    "start-server-and-test": "2.0.3",
     "tailwind-accent-color": "1.0.2",
-    "ts-loader": "9.2.3",
-    "ts-node": "10.0.0",
-    "tsconfig-paths": "3.10.1",
-    "typescript": "4.3.5",
+    "ts-loader": "9.5.1",
+    "ts-node": "10.9.2",
+    "tsconfig-paths": "4.2.0",
+    "typescript": "5.4.3",
     "wsrun": "5.2.4"
   },
   "dependencies": {
-    "@types/papaparse": "5.3.2",
     "dayjs": "1.11.0",
     "papaparse": "5.3.1",
     "react-dropzone": "12.0.4",

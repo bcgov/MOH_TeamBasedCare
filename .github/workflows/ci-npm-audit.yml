@@ -1,0 +1,24 @@
+name: NPM Audit
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every month on 1st at 02:00
+    - cron: '0 2 1 * *'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: ci-${github.ref}-prod
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependency lock file
+        run: npm i --package-lock-only
+      - uses: oke-py/npm-audit-action@v2
+        with:
+          audit_level: moderate
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_assignees: oke-py
+          issue_labels: vulnerability,security
+          dedupe_issues: true

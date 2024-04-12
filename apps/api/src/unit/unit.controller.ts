@@ -1,7 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
-import { Unit } from './entity/unit.entity';
 import { UnitService } from './unit.service';
-import { Role } from '@tbcm/common';
+import { Role, UnitRO } from '@tbcm/common';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @Controller('carelocations')
@@ -9,7 +8,9 @@ import { AllowRoles } from 'src/auth/allow-roles.decorator';
 export class UnitController {
   constructor(private unitService: UnitService) {}
   @Get()
-  getAllUnits(): Promise<Unit[]> {
-    return this.unitService.getAllUnits();
+  async getAllUnits(): Promise<UnitRO[]> {
+    const units = await this.unitService.getAllUnits();
+
+    return units.map(unit => new UnitRO(unit));
   }
 }

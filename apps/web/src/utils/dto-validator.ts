@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { validateSync } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 

@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
 import { OptionType } from '../components/generic/RenderSelect';
 import { useHttp } from './useHttp';
-
-interface UnitProps {
-  id: string;
-  displayName: string;
-}
+import { UnitRO } from '@tbcm/common';
 
 export const useCareLocations = () => {
   const { fetchData, isLoading } = useHttp();
@@ -15,9 +11,9 @@ export const useCareLocations = () => {
   useEffect(() => {
     const config = { endpoint: API_ENDPOINT.CARE_LOCATIONS };
 
-    fetchData(config, (data: any) => {
+    fetchData(config, (data: UnitRO[]) => {
       setCareLocations(
-        data.map((unit: UnitProps) => {
+        data.map(unit => {
           return { value: unit.id, label: unit.displayName };
         }),
       );

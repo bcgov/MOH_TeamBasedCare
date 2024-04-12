@@ -9,6 +9,7 @@ import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
 import { OccupationListDropdown } from '../OccupationListDropdown';
+import { ActivityGapCareActivity } from '@tbcm/common';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -60,6 +61,7 @@ const TableHeader: React.FC = () => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SwitchTooltip: React.FC<any> = props => {
   const { item, positionBottomLeft, occupation } = props;
   const position = positionBottomLeft ? PopoverPosition.BOTTOM_LEFT : PopoverPosition.BOTTOM_RIGHT;
@@ -128,7 +130,7 @@ const TableBody: React.FC = () => {
   return (
     <tbody>
       {initialValues.data &&
-        initialValues.data.map((row: any, index: number) => (
+        initialValues.data.map((row, index: number) => (
           <React.Fragment key={`row${index}`}>
             <tr className='bg-white border-b table-row-fixed'>
               <td className={`${tdActivityBundle} flex w-full items-center justify-between`}>
@@ -136,7 +138,8 @@ const TableBody: React.FC = () => {
                   <h2 className='text-l text-left'>
                     {row.name}
                     <p className='text-left text-xs mt-1'>
-                      {row.careActivities.length} care & restricted activities
+                      {(row.careActivities as ActivityGapCareActivity[]).length} care & restricted
+                      activities
                     </p>
                   </h2>
                 </div>
@@ -157,7 +160,7 @@ const TableBody: React.FC = () => {
                   title != 'Activities Bundle' && (
                     <td key={`rowTd${index}`} className={`table-row-td-bg ${tdStyles}`}>
                       <SwitchTooltip
-                        item={row[title]}
+                        item={row[title] as string}
                         positionBottomLeft={index > initialValues.headers.length / 2}
                         occupation={title}
                       />
@@ -168,10 +171,10 @@ const TableBody: React.FC = () => {
             </tr>
             {selectedRow == index &&
               openRow &&
-              row.careActivities.map((value: any, index: number) => {
+              (row.careActivities as ActivityGapCareActivity[]).map((value, index: number) => {
                 return (
                   <tr key={`toggledRow${index}`} className='bg-white border-b table-row-fixed'>
-                    {Object.keys(value).map((key: any, index) => {
+                    {Object.keys(value).map((key, index) => {
                       return (
                         <td
                           key={`toggledRowTd${index}`}

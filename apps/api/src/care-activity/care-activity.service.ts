@@ -3,9 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
-import { BundleRO } from './ro/get-bundle.ro';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { SortOrder } from '@tbcm/common';
+import { BundleRO, SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
 import { User } from 'src/user/entities/user.entity';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
@@ -24,8 +23,8 @@ export class CareActivityService {
     private readonly unitService: UnitService,
   ) {}
 
-  findOneById(id: string): Promise<CareActivity | undefined> {
-    return this.careActivityRepo.findOne(id);
+  findOneById(id: string) {
+    return this.careActivityRepo.findOneBy({ id });
   }
 
   async getCareActivitiesByBundlesForCareLocation(careLocationId: string): Promise<BundleRO[]> {
@@ -139,7 +138,7 @@ export class CareActivityService {
 
     // if bundle is updated, fetch and update entity
     if (bundleId) {
-      const bundle = await this.bundleRepo.findOne(bundleId);
+      const bundle = await this.bundleRepo.findOneBy({ id: bundleId });
       if (!bundle) {
         throw new NotFoundException({
           message: 'Cannot update care activity: Bundle not found',

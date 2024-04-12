@@ -14,7 +14,7 @@ export class UnitService {
   async getById(id: string): Promise<Unit> {
     if (!id) throw new NotFoundException({ message: 'Care Location Not found: Invalid Id' });
 
-    const careLocation = await this.unitsRepository.findOne(id);
+    const careLocation = await this.unitsRepository.findOneBy({ id });
 
     if (!careLocation) {
       throw new NotFoundException({ message: 'Care Location Not found' });

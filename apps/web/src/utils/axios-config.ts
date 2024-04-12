@@ -10,6 +10,7 @@ export const AxiosPublic = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handleResponseSuccess = (response: any) => {
   return response;
 };
@@ -19,7 +20,7 @@ AxiosPublic.interceptors.request.use(
     const token = AppStorage.getItem(StorageKeys.ACCESS_TOKEN);
     if (token) {
       if (!config.headers) {
-        config.headers = {};
+        Object.assign(config, { headers: {} });
       }
 
       config.headers['Authorization'] = `Bearer ${token}`;

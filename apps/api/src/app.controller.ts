@@ -17,7 +17,7 @@ import { AllowRoles } from './auth/allow-roles.decorator';
 
 class UpdateScriptDTO {
   @ApiProperty({ type: 'string', format: 'binary' })
-  file: any;
+  file: Express.Multer.File;
 }
 
 @Controller()
@@ -50,7 +50,7 @@ export class AppController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
-  async updateCareActivities(@UploadedFile() file: any) {
+  async updateCareActivities(@UploadedFile() file: Express.Multer.File) {
     await this.appService.updateCareActivities(file.buffer);
     return SUCCESS_RESPONSE;
   }
@@ -63,7 +63,7 @@ export class AppController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiBody({ type: UpdateScriptDTO })
   @ApiConsumes('multipart/form-data')
-  async updateOccupations(@UploadedFile() file: any) {
+  async updateOccupations(@UploadedFile() file: Express.Multer.File) {
     await this.appService.updateOccupations(file.buffer);
     return SUCCESS_RESPONSE;
   }

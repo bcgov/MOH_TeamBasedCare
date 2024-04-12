@@ -31,6 +31,7 @@ const enum PlanningActions {
   REFETCH_ACTIVITY_GAP = 'REFETCH_ACTIVITY_GAP',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function reducer(state: any, action: any): PlanningContextStateProps {
   switch (action.type) {
     case PlanningActions.NEXT_TRIGGERED:
@@ -73,7 +74,7 @@ function reducer(state: any, action: any): PlanningContextStateProps {
 
 export const PlanningContext = createContext<PlanningContextType | null>(null);
 
-export const PlanningProvider = ({ children }: any) => {
+export const PlanningProvider = ({ children }: { children: JSX.Element }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const updateNextTriggered = () => dispatch({ type: PlanningActions.NEXT_TRIGGERED });

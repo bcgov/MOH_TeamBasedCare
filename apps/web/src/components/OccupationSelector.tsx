@@ -3,10 +3,11 @@ import { OccupationItem } from './OccupationItem';
 import { isOdd } from 'src/common/util';
 import { useFormikContext } from 'formik';
 import { Spinner } from './generic/Spinner';
+import { PlanningOccupation } from '@services';
 
 export const OccupationSelector = ({ searchValue = '', showDescriptionModal = false }) => {
   const { occupations, isLoading } = useOccupations();
-  const { values, setFieldValue } = useFormikContext<any>();
+  const { values, setFieldValue } = useFormikContext<PlanningOccupation>();
 
   const filteredOccupations = occupations.filter(o => {
     if (!searchValue) return true;
@@ -26,7 +27,7 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
           name='selectAll'
           id='selectAll'
           className='mr-3 h-5 w-5 min-w-5 accent-bcBlueLink'
-          onChange={(e: any) => {
+          onChange={e => {
             if (e.target.checked) {
               const selectedOccupationIdsSet = new Set(values.occupation);
 

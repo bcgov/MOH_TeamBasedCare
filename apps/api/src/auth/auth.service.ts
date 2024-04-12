@@ -7,7 +7,6 @@ import { ConfigService } from 'src/config/config.service';
 import { KeycloakToken } from '@tbcm/common';
 import { KeycloakUser } from '@tbcm/common';
 import { AppLogger } from 'src/common/logger.service';
-import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
@@ -34,7 +33,6 @@ export class AuthService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    private readonly userService: UserService,
   ) {
     this.keycloakAuthServerUri = this.configService.getValue('KEYCLOAK_AUTH_SERVER_URI');
     this.keycloakResponseType = this.configService.getValue('KEYCLOAK_RESPONSE_TYPE');
@@ -47,7 +45,7 @@ export class AuthService {
     this.keycloakLogoutUri = this.configService.getValue('KEYCLOAK_LOGOUT_URI');
   }
 
-  getUrlLogin(): any {
+  getUrlLogin() {
     return {
       url:
         `${this.keycloakAuthServerUri}` +
@@ -73,7 +71,7 @@ export class AuthService {
         .post(this.keycloakTokenUri, queryString.stringify(params), this.getContentType())
         .pipe(
           map(
-            (res: any) =>
+            res =>
               new KeycloakToken(
                 res.data.access_token,
                 res.data.refresh_token,
@@ -101,7 +99,7 @@ export class AuthService {
 
     const keycloakUser: KeycloakUser = await firstValueFrom(
       this.httpService.get(this.keycloakUserInfoUri, params).pipe(
-        map(async (res: any) => res.data),
+        map(async res => res.data),
         catchError(e => {
           this.logger.error('auth.service.ts :: getUserInfo');
           this.logger.error(JSON.stringify(params));
@@ -128,7 +126,7 @@ export class AuthService {
         .post(this.keycloakTokenUri, queryString.stringify(params), this.getContentType())
         .pipe(
           map(
-            (res: any) =>
+            res =>
               new KeycloakToken(
                 res.data.access_token,
                 res.data.refresh_token,
@@ -161,7 +159,7 @@ export class AuthService {
       this.httpService
         .post(this.keycloakLogoutUri, queryString.stringify(params), this.getContentType())
         .pipe(
-          map((res: any) => res.data),
+          map(res => res.data),
           catchError(e => {
             this.logger.error('auth.service.ts :: logout');
             this.logger.error(JSON.stringify(params));

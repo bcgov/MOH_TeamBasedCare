@@ -41,15 +41,11 @@ export class AuthController {
   async getAccessToken(@Body('code') code: string) {
     if (!code) return;
 
-    // TODO: fix later
-    // explicitly added any to the return type to counter Runtime.ImportModuleError; PR #61,#62,#63
-    // https://user-images.githubusercontent.com/87394256/272416729-ec2d029c-3b5d-492e-aba6-d3f793b5dd70.png
-    const keycloakToken: any = await this.authService.getAccessToken(code);
-    return keycloakToken;
+    return this.authService.getAccessToken(code);
   }
 
   @Get('user')
-  @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
+  @ApiResponse({ status: HttpStatus.OK })
   @UseInterceptors(ClassSerializerInterceptor)
   async getUser(@Req() req: IRequest) {
     return new UserRO(req.user);
@@ -60,14 +56,10 @@ export class AuthController {
     description: 'Refresh access token with keycloak sso server ',
   })
   @Unprotected()
-  @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
+  @ApiResponse({ status: HttpStatus.OK })
   async refreshAccessToken(@Body() token: AppTokensDTO) {
     try {
-      // TODO: fix later
-      // explicitly added any to the return type to counter Runtime.ImportModuleError; PR #61,#62,#63
-      // https://user-images.githubusercontent.com/87394256/272416729-ec2d029c-3b5d-492e-aba6-d3f793b5dd70.png
-      const refreshToken: any = await this.authService.refreshAccessToken(token.refresh_token);
-      return refreshToken;
+      return this.authService.refreshAccessToken(token.refresh_token);
     } catch (e) {
       if (e instanceof HttpException) {
         throw new HttpException(' Token failed', e.getStatus());

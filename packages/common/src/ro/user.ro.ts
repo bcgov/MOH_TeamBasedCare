@@ -28,6 +28,7 @@ export class UserRO {
   @Expose()
   status!: UserStatus;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: Record<string, any>) {
     this.userPreference = new UserPreferenceRO(data.userPreference);
 
