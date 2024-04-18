@@ -168,22 +168,6 @@ export class UserService {
     return this.userRepo.save(user);
   }
 
-  async updateLastAccessAt(user: User) {
-    // if user does not exists, throw error
-    if (!user) {
-      throw new BadRequestException();
-    }
-
-    // throw forbidden if user email is not the logged in user email
-    // TODO
-
-    // update last access at
-    user.lastAccessAt = new Date();
-
-    // return updated user
-    return this.userRepo.save(user);
-  }
-
   async isRevoked(user: User) {
     if (!user.revokedAt) {
       return false;

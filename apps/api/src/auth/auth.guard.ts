@@ -5,6 +5,7 @@ import { UserService } from 'src/user/user.service';
 import { KeycloakUser, Role, hasAccess } from '@tbcm/common';
 import { AuthService } from './auth.service';
 import { META_SKIP_AUTH, META_UNPROTECTED } from 'nest-keycloak-connect';
+import { RequestContextService } from 'src/common/request-context.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -13,6 +14,7 @@ export class AuthGuard implements CanActivate {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
+    private readonly requestUserService: RequestContextService,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // check if the endpoint is set unprotected and auth be skipped
@@ -58,8 +60,8 @@ export class AuthGuard implements CanActivate {
     // add user to the request
     request.user = user;
 
-    // update lastAccessAt
-    await this.userService.updateLastAccessAt(user);
+    // update request context service
+    this.requestUserService.setUser(user);
 
     // if user access is revoked
     // exception to allow auth/user api to go through so user can get into the app to view the appropriate messaging
