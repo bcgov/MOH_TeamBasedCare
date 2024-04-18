@@ -36,7 +36,7 @@ export class PlanningSession extends CustomBaseEntity {
   @JoinTable()
   occupation?: Occupation[];
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   createdBy: User;
 
   @Column({ default: PlanningStatus.DRAFT })
