@@ -367,7 +367,14 @@ export class SeedService {
 
     // find allowed activity, if exists
     let entity = await this.allowedActRepo.findOne({
-      where: { careActivity: partialEntity.careActivity, occupation: partialEntity.occupation },
+      where: {
+        careActivity: {
+          id: partialEntity.careActivity.id,
+        },
+        occupation: {
+          id: partialEntity.occupation.id,
+        },
+      },
     });
 
     // if found, and partial activity does not contain the id

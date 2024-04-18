@@ -9,7 +9,7 @@ import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from 'src/occupation/entity/occupation.entity';
 
-import config from '../ormconfig';
+import { config } from '../ormconfig';
 import { Unit } from '../unit/entity/unit.entity';
 import { SeedService } from './scripts/seed-service';
 import { UnitModule } from 'src/unit/unit.module';
