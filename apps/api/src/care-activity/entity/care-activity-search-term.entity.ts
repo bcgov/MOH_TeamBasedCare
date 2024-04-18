@@ -10,6 +10,6 @@ export class CareActivitySearchTerm extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   term: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   createdBy: User;
 }
