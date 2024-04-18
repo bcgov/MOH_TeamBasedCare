@@ -7,6 +7,7 @@ import { OccupationModule } from '../occupation/occupation.module';
 import { PlanningSession } from './entity/planning-session.entity';
 import { PlanningSessionController } from './planning-session.controller';
 import { PlanningSessionService } from './planning-session.service';
+import { PlanningSessionSubscriber } from './entity/planning-session.subscriber';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { PlanningSessionService } from './planning-session.service';
   ],
   exports: [],
   controllers: [PlanningSessionController],
-  providers: [PlanningSessionService],
+  providers: [PlanningSessionService, PlanningSessionSubscriber],
 })
 export class PlanningSessionModule {}
