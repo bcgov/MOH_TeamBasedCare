@@ -7,7 +7,6 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { cleanText } from '../../common/utils';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
@@ -25,9 +24,6 @@ import { CareActivityType, ClinicalType } from '@tbcm/common';
   },
 })
 export class CareActivity extends CustomBaseEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   name: string;
 

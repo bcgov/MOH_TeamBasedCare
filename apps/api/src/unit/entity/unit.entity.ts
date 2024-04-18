@@ -1,12 +1,9 @@
 import { cleanText } from 'src/common/utils';
-import { BeforeInsert, BeforeUpdate, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, Index } from 'typeorm';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 
 @Entity()
 export class Unit extends CustomBaseEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   @Index()
   name: string;
