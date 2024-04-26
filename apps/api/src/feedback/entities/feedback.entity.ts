@@ -10,6 +10,6 @@ export class Feedback extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 4096 })
   text: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   createdBy: User;
 }

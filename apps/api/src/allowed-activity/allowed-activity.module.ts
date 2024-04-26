@@ -5,11 +5,12 @@ import { AllowedActivityController } from './allowed-activity.controller';
 import { AllowedActivityService } from './allowed-activity.service';
 import { CareActivityModule } from 'src/care-activity/care-activity.module';
 import { OccupationModule } from 'src/occupation/occupation.module';
+import { AllowedActivitySubscriber } from './subscribers/allowed-activity.subscriber';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AllowedActivity]), CareActivityModule, OccupationModule],
   exports: [AllowedActivityService],
   controllers: [AllowedActivityController],
-  providers: [AllowedActivityService],
+  providers: [AllowedActivityService, AllowedActivitySubscriber],
 })
 export class AllowedActivityModule {}
