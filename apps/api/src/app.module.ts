@@ -1,4 +1,4 @@
-import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Global, Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { KeycloakConnectModule } from 'nest-keycloak-connect';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,7 +19,9 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { UserGuideModule } from './user-guide/user-guide.module';
 import { UserModule } from './user/user.module';
 import { AuthGuard } from './auth/auth.guard';
+import { RequestContextService } from './common/request-context.service';
 
+@Global()
 @Module({
   imports: [
     DatabaseModule,
@@ -45,7 +47,9 @@ import { AuthGuard } from './auth/auth.guard';
     AppService,
     SeedService,
     { provide: APP_GUARD, useClass: AuthGuard },
+    RequestContextService,
   ],
+  exports: [RequestContextService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
