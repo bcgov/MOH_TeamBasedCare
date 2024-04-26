@@ -1,13 +1,10 @@
 import { CustomBaseEntity } from 'src/common/custom-base.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { UserPreference } from './user-preference.entity';
 import { Role } from '@tbcm/common';
 
 @Entity({ name: 'users', orderBy: { createdAt: 'DESC' } })
 export class User extends CustomBaseEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   email: string;
 
