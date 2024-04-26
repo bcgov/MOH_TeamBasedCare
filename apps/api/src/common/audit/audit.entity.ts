@@ -17,9 +17,9 @@ export class AuditEntity {
   @CreateDateColumn()
   modifiedAt: Date;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User)
   modifiedBy: User;
 
-  @Column({ type: 'jsonb', nullable: false })
+  @Column({ type: 'jsonb' })
   payload: unknown;
 }
