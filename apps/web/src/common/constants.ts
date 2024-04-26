@@ -147,4 +147,5 @@ export const ActivityTagDefinitions: Partial<{ [key in ActivityTagVariants]: { t
 export const RoleTagVariant = {
   [Role.ADMIN]: TagVariants.BLUE,
   [Role.USER]: TagVariants.GREEN,
+  [Role.CONTENT_ADMIN]: TagVariants.PURPLE,
 };
