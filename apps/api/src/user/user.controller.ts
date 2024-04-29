@@ -26,9 +26,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('/invite')
-  async invite(@Body() data: CreateUserInviteDTO, @Req() req: IRequest): Promise<UserRO> {
-    const tokenUser = req.user;
-    const user = await this.userService.createUserFromInvite(data, tokenUser);
+  async invite(@Body() data: CreateUserInviteDTO): Promise<UserRO> {
+    const user = await this.userService.createUserFromInvite(data);
     return new UserRO(user);
   }
 

@@ -42,11 +42,8 @@ export class PlanningSessionController {
   }
 
   @Post()
-  async createPlanningSession(@Req() req: IRequest, @Body() saveProfileDto: SaveProfileDTO) {
-    const session = await this.planningSessionService.createPlanningSession(
-      saveProfileDto,
-      req.user,
-    );
+  async createPlanningSession(@Body() saveProfileDto: SaveProfileDTO) {
+    const session = await this.planningSessionService.createPlanningSession(saveProfileDto);
 
     return new PlanningSessionRO(session);
   }

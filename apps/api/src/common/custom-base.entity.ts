@@ -1,12 +1,11 @@
-import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { ManyToOne } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { BaseEntity } from './base.entity';
 
-export class CustomBaseEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class CustomBaseEntity extends BaseEntity {
+  @ManyToOne(() => User)
+  createdBy: User;
 
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @ManyToOne(() => User)
+  updatedBy: User;
 }

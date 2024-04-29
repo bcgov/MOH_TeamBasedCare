@@ -121,7 +121,7 @@ export class UserService {
     });
   }
 
-  async createUserFromInvite(createUserInvite: CreateUserInviteDTO, tokenUser: User) {
+  async createUserFromInvite(createUserInvite: CreateUserInviteDTO) {
     // if email does not exists, throw error
     if (!createUserInvite.email) {
       throw new BadRequestException();
@@ -131,8 +131,6 @@ export class UserService {
     return this.userRepo.save({
       email: createUserInvite.email,
       roles: createUserInvite.roles,
-      invitedBy: tokenUser,
-      invitedAt: new Date(),
     });
   }
 
