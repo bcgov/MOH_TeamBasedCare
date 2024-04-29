@@ -4,7 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { BundleRO, SortOrder } from '@tbcm/common';
+import { BundleRO, CareActivitiesCMSFindSortKeys, SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
@@ -92,7 +92,8 @@ export class CareActivityService {
   async findCareActivitiesCMS(query: FindCareActivitiesCMSDto): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .innerJoinAndSelect('ca.bundle', 'ca_b');
+      .innerJoinAndSelect('ca.bundle', 'ca_b')
+      .innerJoinAndSelect('ca.updatedBy', 'ca_up');
 
     // Search logic below
     if (query.searchText) {
@@ -106,9 +107,12 @@ export class CareActivityService {
     if (query.sortBy) {
       let orderBy = `ca.${query.sortBy}`;
 
-      if (query.sortBy.startsWith('bundle.')) {
-        const bundleKey = query.sortBy.split('bundle.')[1];
-        orderBy = `ca_b.${bundleKey}`;
+      if (query.sortBy === CareActivitiesCMSFindSortKeys.BUNDLE_NAME) {
+        orderBy = 'ca_b.displayName';
+      }
+
+      if (query.sortBy === CareActivitiesCMSFindSortKeys.UPDATED_BY) {
+        orderBy = 'ca_up.displayName';
       }
 
       queryBuilder.orderBy(orderBy, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
