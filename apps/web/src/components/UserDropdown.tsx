@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
 import { useAuth } from '@services';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
@@ -14,6 +14,7 @@ export const UserDropdown = () => {
   const { logMeOut } = useAuth();
   const authUserDisplayName = AppStorage.getItem(StorageKeys.DISPLAY_NAME);
 
+  const ref = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showUserGuideModal, setShowUserGuideModal] = useState(false);
@@ -21,6 +22,22 @@ export const UserDropdown = () => {
   const authInitials = useMemo(() => {
     return getInitials(authUserDisplayName);
   }, [authUserDisplayName]);
+
+  // Handles clicking outside of menu and closing
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Makes sure the current ref is an HTML element
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setShowMenu(!showMenu);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside, !showMenu);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, !showMenu);
+    };
+  }, [ref, showMenu]);
 
   if (!authUserDisplayName) return null;
 
@@ -67,7 +84,9 @@ export const UserDropdown = () => {
           />
         </Button>
       </div>
-      {showMenu && <AppMenu hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />}
+      {showMenu && (
+        <AppMenu ref={ref} hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />
+      )}
 
       <ModalWrapper isOpen={showFeedbackModal} setIsOpen={setShowFeedbackModal} title={'Feedback'}>
         <div className='p-4'>

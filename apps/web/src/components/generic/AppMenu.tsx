@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -21,16 +22,14 @@ interface AppMenuProps {
 
 export const HIDE_MENU_DELAY = 100;
 
-export const AppMenu: React.FC<AppMenuProps> = ({
-  setShowMenu,
-  hideOnClick,
-  groups = [],
-  children,
-  size,
-}) => {
+export const AppMenu = forwardRef<HTMLDivElement, AppMenuProps>(function AppMenu(
+  { setShowMenu, hideOnClick, groups = [], children, size },
+  ref,
+) {
   return (
     <>
       <div
+        ref={ref}
         className={`absolute right-0 z-10 mt-2 ${
           size === 'lg' ? 'w-96' : 'w-64'
         } origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
@@ -81,4 +80,4 @@ export const AppMenu: React.FC<AppMenuProps> = ({
       </div>
     </>
   );
-};
+});
