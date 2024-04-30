@@ -17,6 +17,8 @@ export const useHttp = () => {
       toast.error(toastMessage);
     } else if (err?.response?.status === 400) {
       toast.error('Kindly verify the input');
+    } else if (err?.response?.status === 422) {
+      toast.error(err.response.data.errorMessage);
     } else {
       toast.error(err?.response?.data?.message ?? 'Error fetching data');
     }

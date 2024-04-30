@@ -10,6 +10,7 @@ import {
   Query,
   Req,
   UseInterceptors,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -17,7 +18,7 @@ import { CreateUserInviteDTO, EditUserDTO, PaginationRO, Role, UserRO } from '@t
 import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { FindUsersDto } from './dto/find-users.dto';
-
+import { QueryFailedError } from 'typeorm';
 @ApiTags('user')
 @Controller('user')
 @AllowRoles({ roles: [Role.ADMIN] })
@@ -27,9 +28,20 @@ export class UserController {
 
   @Post('/invite')
   async invite(@Body() data: CreateUserInviteDTO, @Req() req: IRequest): Promise<UserRO> {
-    const tokenUser = req.user;
-    const user = await this.userService.createUserFromInvite(data, tokenUser);
-    return new UserRO(user);
+    try {
+      const tokenUser = req.user;
+      const user = await this.userService.createUserFromInvite(data, tokenUser);
+      return new UserRO(user);
+    } catch (err) {
+      if (
+        err instanceof QueryFailedError &&
+        err.message.includes('duplicate key value violates unique constraint')
+      ) {
+        throw new UnprocessableEntityException('User already exists');
+      } else {
+        throw err;
+      }
+    }
   }
 
   @Get('/find')
