@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, ReactNode } from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -18,6 +18,7 @@ interface AppMenuProps {
   hideOnClick?: boolean;
   groups?: Array<AppMenuGroup>;
   size?: 'lg';
+  children?: ReactNode;
 }
 
 export const HIDE_MENU_DELAY = 100;
