@@ -2,6 +2,7 @@ import { PageTitle } from '@components';
 import { NextPage } from 'next';
 import AppLayout from 'src/components/AppLayout';
 import { CareActivitiesCMSList } from 'src/components/content-management/care-activities/list';
+import { CareActivitiesCMSSearch } from 'src/components/content-management/care-activities/search';
 import { Card } from 'src/components/generic/Card';
 import { useCareActivitiesFindCMS } from 'src/services/useCareActivitiesFindCMS';
 
@@ -15,6 +16,7 @@ const ContentManagement: NextPage = () => {
     sortKey,
     sortOrder,
     onSortChange,
+    onSearchTextChange,
     isLoading,
   } = useCareActivitiesFindCMS();
 
@@ -30,6 +32,14 @@ const ContentManagement: NextPage = () => {
                   'Update and remove care activities within the system. You can select to bulk update / manually update the content'
                 }
               />
+            </div>
+          </div>
+
+          <div className='mt-4'>
+            <div className='flex'>
+              <div className='flex-1'>
+                <CareActivitiesCMSSearch onSearchTextChange={onSearchTextChange} />
+              </div>
             </div>
           </div>
 
