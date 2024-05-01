@@ -1,6 +1,8 @@
 import { PageTitle } from '@components';
+import { useCareLocations } from '@services';
 import { NextPage } from 'next';
 import AppLayout from 'src/components/AppLayout';
+import { CareSettingsFilter } from 'src/components/content-management/care-activities/care-settings-filter';
 import { CareActivitiesCMSList } from 'src/components/content-management/care-activities/list';
 import { CareActivitiesCMSSearch } from 'src/components/content-management/care-activities/search';
 import { Card } from 'src/components/generic/Card';
@@ -17,8 +19,12 @@ const ContentManagement: NextPage = () => {
     sortOrder,
     onSortChange,
     onSearchTextChange,
+    careSetting,
+    onCareSettingChange,
     isLoading,
   } = useCareActivitiesFindCMS();
+
+  const { careLocations: careSettings, isLoading: isLoadingCareLocations } = useCareLocations();
 
   return (
     <AppLayout>
@@ -36,9 +42,18 @@ const ContentManagement: NextPage = () => {
           </div>
 
           <div className='mt-4'>
-            <div className='flex'>
+            <div className='flex gap-3 items-center justify-center'>
               <div className='flex-1'>
                 <CareActivitiesCMSSearch onSearchTextChange={onSearchTextChange} />
+              </div>
+
+              <div>
+                <CareSettingsFilter
+                  isLoading={isLoadingCareLocations}
+                  options={careSettings}
+                  careSetting={careSetting}
+                  onCareSettingChange={onCareSettingChange}
+                />
               </div>
             </div>
           </div>

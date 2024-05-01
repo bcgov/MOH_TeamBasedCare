@@ -16,6 +16,7 @@ export interface HeadlessListProps<T extends OptionValueType> {
   value: T | T[];
   onChange: (value: T | T[]) => void;
   className?: string;
+  buttonClassName?: string;
   isMulti?: boolean;
   menuPlacement?: 'bottom' | 'top';
 }
@@ -26,6 +27,7 @@ export const HeadlessList = <T extends OptionValueType>({
   value,
   onChange,
   className = '',
+  buttonClassName = '',
   isMulti = false,
   menuPlacement = 'bottom',
 }: HeadlessListProps<T>) => {
@@ -84,7 +86,7 @@ export const HeadlessList = <T extends OptionValueType>({
         <div className='relative'>
           <Listbox.Button
             id={id}
-            className='relative min-h-[2.25rem] w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm'
+            className={`relative border min-h-[2.5rem] w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm ${buttonClassName}`}
           >
             <span className='block truncate'>
               {isMulti ? displayMulti(selected as T[]) : displayText(selected as T)}
@@ -111,9 +113,9 @@ export const HeadlessList = <T extends OptionValueType>({
               {options.map((option, index) => (
                 <Listbox.Option
                   key={index}
-                  className={({ active }) =>
+                  className={({ selected }) =>
                     `relative cursor-default select-none py-2 ${isMulti ? 'pl-8' : 'pl-3'} pr-4 ${
-                      active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
+                      selected ? 'bg-gray-100 text-amber-900' : 'text-gray-900'
                     }`
                   }
                   value={option.value}

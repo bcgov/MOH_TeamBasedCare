@@ -61,7 +61,7 @@ export const Pagination = (props: PaginationProps) => {
         </span>
       </div>
       <div className='flex flex-row flex-grow justify-end'>
-        <div className='px-3 pt-1 border-l border-r h-100 text-sm'>
+        <div className='px-3 py-1 border-l border-r h-100 text-sm'>
           <BasicSelect<number>
             id={`${id}-index`}
             options={pageListOptions}

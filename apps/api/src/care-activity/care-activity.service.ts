@@ -93,12 +93,21 @@ export class CareActivityService {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
       .innerJoinAndSelect('ca.bundle', 'ca_b')
-      .innerJoinAndSelect('ca.updatedBy', 'ca_up');
+      .innerJoinAndSelect('ca.updatedBy', 'ca_up')
+      .innerJoinAndSelect('ca.careLocations', 'ca_cl');
 
     // Search logic below
     if (query.searchText) {
       // add where clause to the query
       queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+    }
+
+    // filter by care setting
+    // default empty string = no filtering
+    if (query.careSetting) {
+      queryBuilder.andWhere('ca_cl.id = :careSetting', {
+        careSetting: query.careSetting,
+      });
     }
 
     // Sort logic below
