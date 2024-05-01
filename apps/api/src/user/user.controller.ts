@@ -10,7 +10,7 @@ import {
   Query,
   Req,
   UseInterceptors,
-  UnprocessableEntityException,
+  ConflictException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -19,6 +19,7 @@ import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { FindUsersDto } from './dto/find-users.dto';
 import { QueryFailedError } from 'typeorm';
+
 @ApiTags('user')
 @Controller('user')
 @AllowRoles({ roles: [Role.ADMIN] })
@@ -37,7 +38,7 @@ export class UserController {
         err instanceof QueryFailedError &&
         err.message.includes('duplicate key value violates unique constraint')
       ) {
-        throw new UnprocessableEntityException('User already exists');
+        throw new ConflictException('User already exists');
       } else {
         throw err;
       }
