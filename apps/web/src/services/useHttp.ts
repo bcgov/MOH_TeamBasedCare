@@ -15,10 +15,17 @@ export const useHttp = () => {
   const errorHandler = (err: any, toastMessage?: string) => {
     if (toastMessage) {
       toast.error(toastMessage);
-    } else if (err?.response?.status === 400) {
-      toast.error('Kindly verify the input');
     } else {
-      toast.error(err?.response?.data?.message ?? 'Error fetching data');
+      switch (err?.response?.status) {
+        case 400:
+          toast.error('Kindly verify the input');
+          break;
+        case 409:
+          toast.error(err.response.data.errorMessage);
+          break;
+        default:
+          toast.error(err?.response?.data?.message ?? 'Error fetching data');
+      }
     }
   };
 
