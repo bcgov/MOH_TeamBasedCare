@@ -8,6 +8,7 @@ import {
   faUsers,
   faBook,
   faUsersCog,
+  faSuitcase,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
 import { Role } from '@tbcm/common';
@@ -20,6 +21,7 @@ export enum AllowedPath {
   CARE_TERMINOLOGIES = '/care-terminologies',
   CARE_TERMINOLOGIES_ID = '/care-terminologies/:id',
   USER_MANAGEMENT = '/user-management',
+  CONTENT_MANAGEMENT = '/content-management',
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [
@@ -66,6 +68,16 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     path: AllowedPath.USER_MANAGEMENT,
     hidden: false,
     roles: [Role.ADMIN],
+  },
+  {
+    id: '006',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Content management',
+    active: false,
+    faIcon: faSuitcase,
+    path: AllowedPath.CONTENT_MANAGEMENT,
+    hidden: false,
+    roles: [Role.CONTENT_ADMIN],
   },
 ];
 
