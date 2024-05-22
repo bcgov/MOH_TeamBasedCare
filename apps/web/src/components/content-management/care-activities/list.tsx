@@ -23,6 +23,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
   const headers = [
     { label: 'Care activities', name: CareActivitiesCMSFindSortKeys.DISPLAY_NAME },
     { label: 'Bundle', name: CareActivitiesCMSFindSortKeys.BUNDLE_NAME },
+    { label: 'Last updated by', name: CareActivitiesCMSFindSortKeys.UPDATED_BY },
     { label: 'Last updated on', name: CareActivitiesCMSFindSortKeys.UPDATED_AT },
     { label: '' },
   ];
@@ -58,7 +59,8 @@ const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
       {careActivities?.map((careActivity, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{careActivity.name}</td>
-          <td className={tdStyles}>{careActivity.bundle?.name || ''}</td>
+          <td className={tdStyles}>{careActivity.bundleName || '-'}</td>
+          <td className={tdStyles}>{careActivity.updatedBy || '-'}</td>
           <td className={tdStyles}>{formatDate(careActivity.updatedAt) || '-'}</td>
           <td className={`${tdStyles} flex justify-end gap-4`}>
             <Button variant='link' disabled>
