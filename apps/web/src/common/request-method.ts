@@ -1,4 +1,5 @@
 import {
+  CareActivitiesCMSFindSortKeys,
   CareActivitiesFindSortKeys,
   OccupationalScopeOfPracticeSortKeys,
   OccupationsFindSortKeys,
@@ -66,6 +67,8 @@ export const API_ENDPOINT = {
     appendQueryParams('/occupations/find', params),
   findCareActivities: (params: EndpointQueryParams<CareActivitiesFindSortKeys>) =>
     appendQueryParams('/care-activity/find', params),
+  findCareActivitiesCMS: (params: EndpointQueryParams<CareActivitiesCMSFindSortKeys>) =>
+    appendQueryParams('/care-activity/cms/find', params),
   USER_GUIDE_FILES: '/user-guide',
   USER_GUIDE_SIGNED_URL: (name: string) => `/user-guide/${name}/signed-url`,
   findUsers: (params: EndpointQueryParams<UserManagementSortKeys>) =>

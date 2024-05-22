@@ -9,6 +9,7 @@ import { CareActivitySearchTerm } from './entity/care-activity-search-term.entit
 import { User } from 'src/user/entities/user.entity';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
+import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
 
 @Injectable()
 export class CareActivityService {
@@ -67,7 +68,9 @@ export class CareActivityService {
     query: FindCareActivitiesDto,
     user: User,
   ): Promise<[CareActivity[], number]> {
-    const queryBuilder = this.careActivityRepo.createQueryBuilder('ca');
+    const queryBuilder = this.careActivityRepo
+      .createQueryBuilder('ca')
+      .innerJoinAndSelect('ca.bundle', 'ca_b');
 
     // Search logic below
     if (query.searchText) {
@@ -82,6 +85,38 @@ export class CareActivityService {
     const sortOrder = query.sortOrder;
 
     if (query.sortBy) queryBuilder.orderBy(`ca.${query.sortBy}`, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+
+    // return the paginated response
+    return queryBuilder
+      .skip((query.page - 1) * query.pageSize)
+      .take(query.pageSize)
+      .getManyAndCount();
+  }
+
+  async findCareActivitiesCMS(query: FindCareActivitiesCMSDto): Promise<[CareActivity[], number]> {
+    const queryBuilder = this.careActivityRepo
+      .createQueryBuilder('ca')
+      .innerJoinAndSelect('ca.bundle', 'ca_b');
+
+    // Search logic below
+    if (query.searchText) {
+      // add where clause to the query
+      queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+    }
+
+    // Sort logic below
+    const sortOrder = query.sortOrder;
+
+    if (query.sortBy) {
+      let orderBy = `ca.${query.sortBy}`;
+
+      if (query.sortBy.startsWith('bundle.')) {
+        const bundleKey = query.sortBy.split('bundle.')[1];
+        orderBy = `ca_b.${bundleKey}`;
+      }
+
+      queryBuilder.orderBy(orderBy, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+    }
 
     // return the paginated response
     return queryBuilder

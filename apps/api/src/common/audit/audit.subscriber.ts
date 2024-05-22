@@ -22,15 +22,15 @@ export class AuditSubscriber<T> implements EntitySubscriberInterface<T> {
     );
   }
 
-  async afterInsert(event: InsertEvent<T>) {
-    await this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.CREATE);
+  afterInsert(event: InsertEvent<T>) {
+    this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.CREATE);
   }
 
-  async afterUpdate(event: UpdateEvent<T>) {
-    await this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.UPDATE);
+  afterUpdate(event: UpdateEvent<T>) {
+    this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.UPDATE);
   }
 
-  async afterRemove(event: RemoveEvent<T>) {
-    await this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.DELETE);
+  afterRemove(event: RemoveEvent<T>) {
+    this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.DELETE);
   }
 }

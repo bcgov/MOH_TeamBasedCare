@@ -26,7 +26,6 @@ export const useUserInvite = () => {
         toast.info(`User invitation successful.`);
       },
       () => void 0,
-      'User invitation failed',
     );
   };
 

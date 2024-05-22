@@ -13,6 +13,12 @@ export enum CareActivitiesFindSortKeys {
   DISPLAY_NAME = 'displayName',
 }
 
+export enum CareActivitiesCMSFindSortKeys {
+  DISPLAY_NAME = 'displayName',
+  BUNDLE_NAME = 'bundle.displayName',
+  UPDATED_AT = 'updatedAt',
+}
+
 export enum UserManagementSortKeys {
   EMAIL = 'email',
   ORGANIZATION = 'organization',

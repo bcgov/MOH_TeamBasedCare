@@ -10,13 +10,13 @@ export class BundleRO {
   name: string;
 
   @Expose()
-  careActivities: CareActivityRO[];
+  careActivities?: CareActivityRO[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     Object.assign(this, data);
     this.name = data.displayName;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.careActivities = data.careActivities.map((each: any) => new CareActivityRO(each));
+    this.careActivities = data.careActivities?.map((each: any) => new CareActivityRO(each));
   }
 }
