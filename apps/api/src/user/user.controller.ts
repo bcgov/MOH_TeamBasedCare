@@ -10,6 +10,7 @@ import {
   Query,
   Req,
   UseInterceptors,
+  ConflictException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -17,6 +18,7 @@ import { CreateUserInviteDTO, EditUserDTO, PaginationRO, Role, UserRO } from '@t
 import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { FindUsersDto } from './dto/find-users.dto';
+import { QueryFailedError } from 'typeorm';
 
 @ApiTags('user')
 @Controller('user')
@@ -27,8 +29,19 @@ export class UserController {
 
   @Post('/invite')
   async invite(@Body() data: CreateUserInviteDTO): Promise<UserRO> {
-    const user = await this.userService.createUserFromInvite(data);
-    return new UserRO(user);
+    try {
+      const user = await this.userService.createUserFromInvite(data);
+      return new UserRO(user);
+    } catch (err) {
+      if (
+        err instanceof QueryFailedError &&
+        err.message.includes('duplicate key value violates unique constraint')
+      ) {
+        throw new ConflictException('User already exists');
+      } else {
+        throw err;
+      }
+    }
   }
 
   @Get('/find')
