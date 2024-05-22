@@ -74,7 +74,7 @@ export const useCareActivitiesFindCMS = () => {
     resetPageIndex();
   };
 
-  useEffect(() => {
+  const onRefreshList = useCallback(() => {
     const config = {
       endpoint: API_ENDPOINT.findCareActivitiesCMS({
         pageIndex,
@@ -92,6 +92,10 @@ export const useCareActivitiesFindCMS = () => {
     });
   }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText, careSetting]);
 
+  useEffect(() => {
+    onRefreshList();
+  }, [onRefreshList]);
+
   return {
     careActivities,
     pageIndex,
@@ -106,5 +110,6 @@ export const useCareActivitiesFindCMS = () => {
     careSetting,
     onCareSettingChange,
     isLoading,
+    onRefreshList,
   };
 };

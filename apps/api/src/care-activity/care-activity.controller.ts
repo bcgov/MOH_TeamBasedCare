@@ -2,6 +2,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -69,5 +70,12 @@ export class CareActivityController {
   @AllowRoles({ roles: [Role.ADMIN] })
   async updateCareActivityById(@Body() data: EditCareActivityDTO, @Param('id') id: string) {
     await this.careActivityService.updateCareActivity(id, data);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  async removeCareActivity(@Param('id') id: string) {
+    await this.careActivityService.removeCareActivity(id);
   }
 }

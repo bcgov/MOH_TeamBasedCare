@@ -48,6 +48,7 @@ export const API_ENDPOINT = {
   AUTH_REFRESH: '/auth/refresh',
 
   CARE_LOCATIONS: '/carelocations',
+  CARE_ACTIVITY: `/care-activity`,
   CARE_ACTIVITIES: '/care-activity/bundle',
   CARE_ACTIVITY_COMMON_SEARCH_TERMS: 'care-activity/common-search-terms',
   SESSIONS: '/sessions',

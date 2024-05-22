@@ -75,6 +75,7 @@ interface ModalButtonProps {
   type?: 'submit' | 'reset' | 'button';
   onClick?: () => void;
   isLoading?: boolean;
+  isError?: boolean;
 }
 
 interface ModalWrapperProps {
@@ -100,7 +101,7 @@ export const ModalWrapper = ({
     <Modal open={isOpen}>
       <Modal.Title
         as='h1'
-        className='text-lg font-medium leading-6 text-bcBluePrimary border-b p-4'
+        className='text-lg font-semibold leading-6 text-bcBluePrimary border-b p-4'
       >
         {title}
       </Modal.Title>
@@ -115,7 +116,7 @@ export const ModalWrapper = ({
             <Button
               loading={actionButton?.isLoading}
               onClick={() => actionButton?.onClick?.()}
-              variant='primary'
+              variant={actionButton.isError ? 'error' : 'primary'}
               type={actionButton.type || 'button'}
             >
               {actionButton.title}
@@ -125,7 +126,7 @@ export const ModalWrapper = ({
           {closeButton && (
             <Button
               onClick={() => (closeButton?.onClick ? closeButton?.onClick?.() : setIsOpen(false))}
-              variant={`${actionButton ? 'secondary' : 'primary'}`}
+              variant={`${closeButton.isError ? 'error' : actionButton ? 'secondary' : 'primary'}`}
               type={closeButton?.type || 'button'}
             >
               {closeButton?.title || 'Ok'}

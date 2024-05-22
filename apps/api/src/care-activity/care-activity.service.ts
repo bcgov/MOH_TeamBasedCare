@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
@@ -224,5 +224,29 @@ export class CareActivityService {
 
     // perform update
     await this.careActivityRepo.save(careActivity);
+  }
+
+  async removeCareActivity(id: string) {
+    // validate id exist
+    if (!id) {
+      throw new BadRequestException({
+        message: 'Cannot delete care activity: id missing',
+        data: { id },
+      });
+    }
+
+    // fetch care activity
+    const careActivity = await this.findOneById(id);
+
+    // validate care activity exist
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot delete care activity: id not found',
+        data: { id },
+      });
+    }
+
+    // remove activity
+    await this.careActivityRepo.remove(careActivity);
   }
 }
