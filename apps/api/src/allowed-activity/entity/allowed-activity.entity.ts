@@ -16,6 +16,8 @@ export class AllowedActivity extends CustomBaseEntity {
   @ManyToOne(() => CareActivity, careActivity => careActivity.occupations, {
     nullable: false,
     cascade: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   careActivity: CareActivity;
 }
