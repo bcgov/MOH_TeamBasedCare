@@ -60,14 +60,10 @@ export class PlanningSessionService {
   }
 
   // create a new planning session
-  async createPlanningSession(
-    saveProfileDto: SaveProfileDTO,
-    user: User,
-  ): Promise<PlanningSession> {
+  async createPlanningSession(saveProfileDto: SaveProfileDTO): Promise<PlanningSession> {
     const session: Partial<PlanningSession> = {
       profileOption: saveProfileDto.profileOption,
       careLocation: (await this.unitService.getById(saveProfileDto.careLocation)) as Unit,
-      createdBy: user,
     };
 
     const planningSession = this.planningSessionRepo.create(session);

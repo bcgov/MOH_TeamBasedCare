@@ -6,7 +6,6 @@ import { CareActivity } from './entity/care-activity.entity';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { BundleRO, SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
-import { User } from 'src/user/entities/user.entity';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
@@ -64,10 +63,7 @@ export class CareActivityService {
     });
   }
 
-  async findCareActivities(
-    query: FindCareActivitiesDto,
-    user: User,
-  ): Promise<[CareActivity[], number]> {
+  async findCareActivities(query: FindCareActivitiesDto): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
       .innerJoinAndSelect('ca.bundle', 'ca_b');
@@ -75,7 +71,7 @@ export class CareActivityService {
     // Search logic below
     if (query.searchText) {
       // Non blocking call to save search terms for commonly used terms
-      this.createCareActivitySearchTerm(query.searchText, user);
+      this.createCareActivitySearchTerm(query.searchText);
 
       // add where clause to the query
       queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
@@ -125,10 +121,9 @@ export class CareActivityService {
       .getManyAndCount();
   }
 
-  async createCareActivitySearchTerm(term: string, user: User) {
+  async createCareActivitySearchTerm(term: string) {
     const createSearchTerm: Partial<CareActivitySearchTerm> = {
       term,
-      createdBy: user,
     };
 
     const searchTerm = this.careActivitySearchTermRepo.create(createSearchTerm);

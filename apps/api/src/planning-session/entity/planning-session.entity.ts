@@ -4,7 +4,6 @@ import { Column, Entity, JoinTable, ManyToMany, ManyToOne, RelationId } from 'ty
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Occupation } from '../../occupation/entity/occupation.entity';
-import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class PlanningSession extends CustomBaseEntity {
@@ -24,9 +23,6 @@ export class PlanningSession extends CustomBaseEntity {
   @ManyToMany(() => Occupation)
   @JoinTable()
   occupation?: Occupation[];
-
-  @ManyToOne(() => User, { nullable: false })
-  createdBy: User;
 
   @Column({ default: PlanningStatus.DRAFT })
   status: string;

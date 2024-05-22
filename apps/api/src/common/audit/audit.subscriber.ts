@@ -33,4 +33,16 @@ export class AuditSubscriber<T> implements EntitySubscriberInterface<T> {
   afterRemove(event: RemoveEvent<T>) {
     this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.DELETE);
   }
+
+  beforeInsert(event: InsertEvent<T>) {
+    const user = this._requestContextService.getUser();
+    (event.entity as ObjectLiteral).createdBy = user;
+    (event.entity as ObjectLiteral).updatedBy = user;
+  }
+
+  beforeUpdate(event: UpdateEvent<T>) {
+    if (!event.entity) return;
+
+    event.entity.updatedBy = this._requestContextService.getUser();
+  }
 }
