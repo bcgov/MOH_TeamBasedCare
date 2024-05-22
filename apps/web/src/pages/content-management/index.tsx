@@ -100,17 +100,23 @@ const ContentManagement: NextPage = () => {
           title={'Delete care activity'}
           description={
             <>
-              Are you sure you want to delete care activity
-              <span className='pl-1 font-bold'>
-                <span className={'text-bcRedError underline'}>{selectedCareActivity.name}</span>
-                {selectedCareActivity.bundleName ? ` (${selectedCareActivity.bundleName})` : ''} ?
-              </span>
+              <div>
+                <span>{`You're about to delete `}</span>
+                <span className='font-bold'>{selectedCareActivity.name}</span>
+                <span>{` from the system.`}</span>
+              </div>
+
+              <div className='pt-2'>
+                {`Please note that once deleted, the information can't be recovered. 
+                Other plans or documentation containing this care activity might be affected as well.`}
+              </div>
             </>
           }
           closeButton={{ title: 'Cancel' }}
           actionButton={{
             isLoading: isLoadingDelete,
             title: 'Confirm',
+            isError: true,
             onClick: () =>
               handleSubmitDelete(selectedCareActivity, () => {
                 onRefreshList();
