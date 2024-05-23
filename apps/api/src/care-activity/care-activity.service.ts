@@ -66,7 +66,7 @@ export class CareActivityService {
   async findCareActivities(query: FindCareActivitiesDto): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .innerJoinAndSelect('ca.bundle', 'ca_b');
+      .leftJoinAndSelect('ca.bundle', 'ca_b');
 
     // Search logic below
     if (query.searchText) {
@@ -92,9 +92,9 @@ export class CareActivityService {
   async findCareActivitiesCMS(query: FindCareActivitiesCMSDto): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .innerJoinAndSelect('ca.bundle', 'ca_b')
-      .innerJoinAndSelect('ca.updatedBy', 'ca_up')
-      .innerJoinAndSelect('ca.careLocations', 'ca_cl');
+      .leftJoinAndSelect('ca.bundle', 'ca_b')
+      .leftJoinAndSelect('ca.updatedBy', 'ca_up')
+      .leftJoinAndSelect('ca.careLocations', 'ca_cl');
 
     // Search logic below
     if (query.searchText) {
