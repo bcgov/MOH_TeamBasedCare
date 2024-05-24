@@ -66,18 +66,20 @@ const TableBody: React.FC<TableBodyProps> = ({
           <td className={tdStyles}>{careActivity.bundleName || '-'}</td>
           <td className={tdStyles}>{careActivity.updatedBy || '-'}</td>
           <td className={tdStyles}>{formatDate(careActivity.updatedAt) || '-'}</td>
-          <td className={`${tdStyles} flex justify-end gap-4`}>
-            <Button variant='link' disabled>
-              Edit
-            </Button>
+          <td className={`${tdStyles}`}>
+            <div className='flex justify-end gap-4'>
+              <Button variant='link' disabled>
+                Edit
+              </Button>
 
-            <Button
-              variant='link'
-              classes='text-bcRedError'
-              onClick={() => onDeleteCareActivityClick(careActivity)}
-            >
-              Delete
-            </Button>
+              <Button
+                variant='link'
+                classes='text-bcRedError'
+                onClick={() => onDeleteCareActivityClick(careActivity)}
+              >
+                Delete
+              </Button>
+            </div>
           </td>
         </tr>
       ))}

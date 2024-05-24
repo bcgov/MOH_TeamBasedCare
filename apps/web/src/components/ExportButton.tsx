@@ -1,7 +1,6 @@
 import { useHttp } from '@services';
 import { API_ENDPOINT } from 'src/common';
 import { Button } from './Button';
-import { FileDownload } from 'src/utils/file-download.util';
 import {
   ActivityGap,
   ActivityGapCareActivity,
@@ -10,7 +9,13 @@ import {
   formatDateTime,
 } from '@tbcm/common';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
-const ExcelJS = require('exceljs');
+import {
+  addLegendWorksheet,
+  conditionalFormattingRules,
+  createNewWorkbook,
+  headerStyle,
+  triggerExcelDownload,
+} from 'src/utils/excel-utils';
 
 interface ExportButtonProps {
   sessionId: string;
@@ -27,11 +32,7 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
     fetchData(config, async (data: ActivityGap) => {
       const xlsx = convertActivityGapTableToXLSX(data);
 
-      FileDownload.download(
-        await xlsx.writeBuffer(),
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'activity_gap_summary.xlsx',
-      );
+      triggerExcelDownload(xlsx, 'activity_gap_summary');
     });
   };
   return (
@@ -76,70 +77,7 @@ const convertActivityGapTableToXLSX = (data: ActivityGap) => {
     .flat();
 
   /** create new workbook */
-  const workbook = new ExcelJS.Workbook();
-
-  // header style
-  const headerStyle = {
-    fill: {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'D3D3D3' },
-    },
-    font: { bold: true },
-    alignment: {
-      wrapText: true,
-      vertical: 'middle',
-      horizontal: 'center',
-    },
-  };
-
-  // text and fills configuration
-  const textAndFills = [
-    {
-      text: 'N',
-      fill: { bgColor: 'FFC7CE', fgColor: '9C0006' },
-    },
-    {
-      text: 'Outside scope of practice',
-      fill: { bgColor: 'FFC7CE', fgColor: '9C0006' },
-    },
-    {
-      text: 'Y',
-      fill: { bgColor: 'C6EFCE', fgColor: '9C0006' },
-    },
-    {
-      text: 'Within scope of practice',
-      fill: { bgColor: 'C6EFCE', fgColor: '9C0006' },
-    },
-    {
-      text: 'LC',
-      fill: { bgColor: 'FFEB9C', fgColor: '9C6500' },
-    },
-    {
-      text: 'With limits and conditions',
-      fill: { bgColor: 'FFEB9C', fgColor: '9C6500' },
-    },
-  ];
-
-  // conditional formatting rules
-  const conditionalFormattingRules = textAndFills.map(({ text, fill }) => ({
-    priority: 1,
-    type: 'cellIs',
-    operator: 'equal',
-    formulae: [`"${text}"`],
-    style: {
-      fill: {
-        type: 'pattern',
-        pattern: 'solid',
-        bgColor: { argb: fill.bgColor },
-        fgColor: { argb: fill.fgColor },
-      },
-      alignment: {
-        vertical: 'middle',
-        horizontal: 'center',
-      },
-    },
-  }));
+  const workbook = createNewWorkbook();
 
   /**
    * Gap Matrix worksheet
@@ -214,38 +152,7 @@ const convertActivityGapTableToXLSX = (data: ActivityGap) => {
   /**
    * Legends Sheet
    */
-  const legendWorksheet = workbook.addWorksheet('Legend');
-
-  // add legend columns
-  legendWorksheet.columns = [
-    {
-      header: 'Legend',
-      key: 'legend',
-      width: 10,
-      style: headerStyle,
-    },
-    {
-      header: '',
-      key: 'value',
-      width: 25,
-      style: headerStyle,
-    },
-  ];
-
-  // add legend rows
-  legendWorksheet.addRow(); // empty row
-  legendWorksheet.addRow({ legend: 'Y', value: 'Within scope of practice' });
-  legendWorksheet.addRow({ legend: 'LC', value: 'With limits and conditions' });
-  legendWorksheet.addRow({ legend: 'N', value: 'Outside scope of practice' });
-
-  // style the sheet
-  legendWorksheet.mergeCells('A1:B1');
-
-  // add conditional formatting
-  legendWorksheet.addConditionalFormatting({
-    ref: 'A:B',
-    rules: conditionalFormattingRules,
-  });
+  addLegendWorksheet(workbook);
 
   // return the entire workbook as xlsx
   return workbook.xlsx;

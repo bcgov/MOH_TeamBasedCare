@@ -1,9 +1,10 @@
-import { PageTitle } from '@components';
+import { Button, PageTitle } from '@components';
 import { useCareLocations } from '@services';
 import { CareActivityCMSRO } from '@tbcm/common';
 import { NextPage } from 'next';
 import { useState } from 'react';
 import AppLayout from 'src/components/AppLayout';
+import { BulkUploadModalCMS } from 'src/components/content-management/care-activities/bulk-upload-modal';
 import { CareSettingsFilter } from 'src/components/content-management/care-activities/care-settings-filter';
 import { CareActivitiesCMSList } from 'src/components/content-management/care-activities/list';
 import { CareActivitiesCMSSearch } from 'src/components/content-management/care-activities/search';
@@ -32,7 +33,7 @@ const ContentManagement: NextPage = () => {
   const { careLocations: careSettings, isLoading: isLoadingCareLocations } = useCareLocations();
 
   const [showModal, setShowModal] = useState(false);
-  const [currentModal, setCurrentModal] = useState<'delete'>();
+  const [currentModal, setCurrentModal] = useState<'delete' | 'bulk-upload'>();
   const [selectedCareActivity, setSelectedCareActivity] = useState<CareActivityCMSRO>();
 
   const { handleSubmit: handleSubmitDelete, isLoading: isLoadingDelete } =
@@ -41,6 +42,11 @@ const ContentManagement: NextPage = () => {
   const onDeleteCareActivityClick = (careActivity: CareActivityCMSRO) => {
     setCurrentModal('delete');
     setSelectedCareActivity(careActivity);
+    setShowModal(true);
+  };
+
+  const onBulkUploadClick = () => {
+    setCurrentModal('bulk-upload');
     setShowModal(true);
   };
 
@@ -72,6 +78,17 @@ const ContentManagement: NextPage = () => {
                   careSetting={careSetting}
                   onCareSettingChange={onCareSettingChange}
                 />
+              </div>
+
+              <div>
+                <Button
+                  loading={false}
+                  onClick={() => onBulkUploadClick()}
+                  variant='primary'
+                  type={'button'}
+                >
+                  Bulk upload
+                </Button>
               </div>
             </div>
           </div>
@@ -124,6 +141,10 @@ const ContentManagement: NextPage = () => {
               }),
           }}
         ></ModalWrapper>
+      )}
+
+      {showModal && currentModal === 'bulk-upload' && (
+        <BulkUploadModalCMS showModal={showModal} setShowModal={setShowModal} />
       )}
     </AppLayout>
   );
