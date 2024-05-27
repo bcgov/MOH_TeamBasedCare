@@ -15,7 +15,8 @@ export enum CareActivitiesFindSortKeys {
 
 export enum CareActivitiesCMSFindSortKeys {
   DISPLAY_NAME = 'displayName',
-  BUNDLE_NAME = 'bundle.displayName',
+  BUNDLE_NAME = 'bundleName',
+  UPDATED_BY = 'updatedBy',
   UPDATED_AT = 'updatedAt',
 }
 

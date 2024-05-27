@@ -2,20 +2,19 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Query,
-  Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { BundleRO, CareActivityCMSRO, CareActivityRO, PaginationRO, Role } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { IRequest } from 'src/common/app-request';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
@@ -39,12 +38,8 @@ export class CareActivityController {
   @Get('find')
   async findCareActivities(
     @Query() query: FindCareActivitiesDto,
-    @Req() req: IRequest,
   ): Promise<PaginationRO<CareActivityRO[]>> {
-    const [careActivities, total] = await this.careActivityService.findCareActivities(
-      query,
-      req.user,
-    );
+    const [careActivities, total] = await this.careActivityService.findCareActivities(query);
     return new PaginationRO([
       careActivities.map(careActivity => new CareActivityRO(careActivity)),
       total,
@@ -75,5 +70,12 @@ export class CareActivityController {
   @AllowRoles({ roles: [Role.ADMIN] })
   async updateCareActivityById(@Body() data: EditCareActivityDTO, @Param('id') id: string) {
     await this.careActivityService.updateCareActivity(id, data);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  async removeCareActivity(@Param('id') id: string) {
+    await this.careActivityService.removeCareActivity(id);
   }
 }

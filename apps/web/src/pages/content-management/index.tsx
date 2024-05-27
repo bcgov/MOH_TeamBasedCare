@@ -1,9 +1,16 @@
 import { PageTitle } from '@components';
+import { useCareLocations } from '@services';
+import { CareActivityCMSRO } from '@tbcm/common';
 import { NextPage } from 'next';
+import { useState } from 'react';
 import AppLayout from 'src/components/AppLayout';
+import { CareSettingsFilter } from 'src/components/content-management/care-activities/care-settings-filter';
 import { CareActivitiesCMSList } from 'src/components/content-management/care-activities/list';
+import { CareActivitiesCMSSearch } from 'src/components/content-management/care-activities/search';
 import { Card } from 'src/components/generic/Card';
+import { ModalWrapper } from 'src/components/Modal';
 import { useCareActivitiesFindCMS } from 'src/services/useCareActivitiesFindCMS';
+import { useCMSCareActivityDelete } from 'src/services/useCMSCareActivityDelete';
 
 const ContentManagement: NextPage = () => {
   const {
@@ -15,8 +22,27 @@ const ContentManagement: NextPage = () => {
     sortKey,
     sortOrder,
     onSortChange,
+    onSearchTextChange,
+    careSetting,
+    onCareSettingChange,
     isLoading,
+    onRefreshList,
   } = useCareActivitiesFindCMS();
+
+  const { careLocations: careSettings, isLoading: isLoadingCareLocations } = useCareLocations();
+
+  const [showModal, setShowModal] = useState(false);
+  const [currentModal, setCurrentModal] = useState<'delete'>();
+  const [selectedCareActivity, setSelectedCareActivity] = useState<CareActivityCMSRO>();
+
+  const { handleSubmit: handleSubmitDelete, isLoading: isLoadingDelete } =
+    useCMSCareActivityDelete();
+
+  const onDeleteCareActivityClick = (careActivity: CareActivityCMSRO) => {
+    setCurrentModal('delete');
+    setSelectedCareActivity(careActivity);
+    setShowModal(true);
+  };
 
   return (
     <AppLayout>
@@ -34,6 +60,23 @@ const ContentManagement: NextPage = () => {
           </div>
 
           <div className='mt-4'>
+            <div className='flex gap-3 items-center justify-center'>
+              <div className='flex-1'>
+                <CareActivitiesCMSSearch onSearchTextChange={onSearchTextChange} />
+              </div>
+
+              <div>
+                <CareSettingsFilter
+                  isLoading={isLoadingCareLocations}
+                  options={careSettings}
+                  careSetting={careSetting}
+                  onCareSettingChange={onCareSettingChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className='mt-4'>
             <CareActivitiesCMSList
               careActivities={careActivities}
               pageIndex={pageIndex}
@@ -44,10 +87,44 @@ const ContentManagement: NextPage = () => {
               sortOrder={sortOrder}
               onSortChange={onSortChange}
               isLoading={isLoading}
+              onDeleteCareActivityClick={onDeleteCareActivityClick}
             />
           </div>
         </Card>
       </div>
+
+      {showModal && selectedCareActivity && currentModal === 'delete' && (
+        <ModalWrapper
+          isOpen={showModal}
+          setIsOpen={setShowModal}
+          title={'Delete care activity'}
+          description={
+            <>
+              <div>
+                <span>{`You're about to delete `}</span>
+                <span className='font-bold'>{selectedCareActivity.name}</span>
+                <span>{` from the system.`}</span>
+              </div>
+
+              <div className='pt-2'>
+                {`Please note that once deleted, the information can't be recovered. 
+                Other plans or documentation containing this care activity might be affected as well.`}
+              </div>
+            </>
+          }
+          closeButton={{ title: 'Cancel' }}
+          actionButton={{
+            isLoading: isLoadingDelete,
+            title: 'Confirm',
+            isError: true,
+            onClick: () =>
+              handleSubmitDelete(selectedCareActivity, () => {
+                onRefreshList();
+                setShowModal(false);
+              }),
+          }}
+        ></ModalWrapper>
+      )}
     </AppLayout>
   );
 };

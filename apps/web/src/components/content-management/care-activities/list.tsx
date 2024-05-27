@@ -23,6 +23,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
   const headers = [
     { label: 'Care activities', name: CareActivitiesCMSFindSortKeys.DISPLAY_NAME },
     { label: 'Bundle', name: CareActivitiesCMSFindSortKeys.BUNDLE_NAME },
+    { label: 'Last updated by', name: CareActivitiesCMSFindSortKeys.UPDATED_BY },
     { label: 'Last updated on', name: CareActivitiesCMSFindSortKeys.UPDATED_AT },
     { label: '' },
   ];
@@ -48,9 +49,13 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 
 interface TableBodyProps {
   careActivities?: CareActivityCMSRO[];
+  onDeleteCareActivityClick: (careActivity: CareActivityCMSRO) => void;
 }
 
-const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
+const TableBody: React.FC<TableBodyProps> = ({
+  careActivities = [],
+  onDeleteCareActivityClick,
+}) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
 
   return (
@@ -58,14 +63,19 @@ const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
       {careActivities?.map((careActivity, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{careActivity.name}</td>
-          <td className={tdStyles}>{careActivity.bundle?.name || ''}</td>
+          <td className={tdStyles}>{careActivity.bundleName || '-'}</td>
+          <td className={tdStyles}>{careActivity.updatedBy || '-'}</td>
           <td className={tdStyles}>{formatDate(careActivity.updatedAt) || '-'}</td>
           <td className={`${tdStyles} flex justify-end gap-4`}>
             <Button variant='link' disabled>
               Edit
             </Button>
 
-            <Button variant='link' classes='text-bcRedError' disabled>
+            <Button
+              variant='link'
+              classes='text-bcRedError'
+              onClick={() => onDeleteCareActivityClick(careActivity)}
+            >
               Delete
             </Button>
           </td>
@@ -109,6 +119,7 @@ interface CareActivitiesCMSListProps {
   sortOrder?: SortOrder;
   onSortChange: ({ key }: { key: CareActivitiesCMSFindSortKeys }) => void;
   isLoading?: boolean;
+  onDeleteCareActivityClick: (careActivity: CareActivityCMSRO) => void;
 }
 
 export const CareActivitiesCMSList: React.FC<CareActivitiesCMSListProps> = ({
@@ -121,6 +132,7 @@ export const CareActivitiesCMSList: React.FC<CareActivitiesCMSListProps> = ({
   sortOrder,
   onSortChange,
   isLoading,
+  onDeleteCareActivityClick,
 }) => {
   if (isLoading) {
     return <Spinner show={isLoading} />;
@@ -130,7 +142,10 @@ export const CareActivitiesCMSList: React.FC<CareActivitiesCMSListProps> = ({
     <div className='max-h-full w-full flex-1 flex flex-col overflow-auto gap-3 bg-white'>
       <table className='table-auto'>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
-        <TableBody careActivities={careActivities} />
+        <TableBody
+          careActivities={careActivities}
+          onDeleteCareActivityClick={onDeleteCareActivityClick}
+        />
         <TableFooter
           pageIndex={pageIndex}
           pageSize={pageSize}

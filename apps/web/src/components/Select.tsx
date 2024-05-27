@@ -11,17 +11,19 @@ export interface SelectProps<T extends OptionValueType> {
 }
 
 export interface BasicSelectProps<T extends OptionValueType> extends SelectProps<T> {
+  buttonClassName?: string;
   value: T;
   onChange: (value: T) => void;
 }
 
 export interface MultiSelectProps<T extends OptionValueType> extends SelectProps<T> {
+  buttonClassName?: string;
   value: T[];
   onChange: (value: T[]) => void;
 }
 
 export const BasicSelect = <T extends OptionValueType>(props: BasicSelectProps<T>) => {
-  const { id, value, label, options, onChange, menuPlacement } = props;
+  const { id, value, label, options, onChange, menuPlacement, buttonClassName } = props;
 
   return (
     <>
@@ -32,13 +34,14 @@ export const BasicSelect = <T extends OptionValueType>(props: BasicSelectProps<T
         value={value}
         onChange={value => onChange(value as T)}
         menuPlacement={menuPlacement}
+        buttonClassName={buttonClassName}
       />
     </>
   );
 };
 
 export const MultiSelect = <T extends OptionValueType>(props: MultiSelectProps<T>) => {
-  const { id, value, label, options, onChange, menuPlacement } = props;
+  const { id, value, label, options, onChange, menuPlacement, buttonClassName } = props;
 
   return (
     <div>
@@ -50,6 +53,7 @@ export const MultiSelect = <T extends OptionValueType>(props: MultiSelectProps<T
         value={value}
         onChange={value => onChange(value as T[])}
         menuPlacement={menuPlacement}
+        buttonClassName={buttonClassName}
       />
     </div>
   );

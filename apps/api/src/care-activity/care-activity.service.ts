@@ -1,12 +1,11 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { BundleRO, SortOrder } from '@tbcm/common';
+import { BundleRO, CareActivitiesCMSFindSortKeys, SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
-import { User } from 'src/user/entities/user.entity';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
@@ -64,18 +63,15 @@ export class CareActivityService {
     });
   }
 
-  async findCareActivities(
-    query: FindCareActivitiesDto,
-    user: User,
-  ): Promise<[CareActivity[], number]> {
+  async findCareActivities(query: FindCareActivitiesDto): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .innerJoinAndSelect('ca.bundle', 'ca_b');
+      .leftJoinAndSelect('ca.bundle', 'ca_b');
 
     // Search logic below
     if (query.searchText) {
       // Non blocking call to save search terms for commonly used terms
-      this.createCareActivitySearchTerm(query.searchText, user);
+      this.createCareActivitySearchTerm(query.searchText);
 
       // add where clause to the query
       queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
@@ -96,12 +92,22 @@ export class CareActivityService {
   async findCareActivitiesCMS(query: FindCareActivitiesCMSDto): Promise<[CareActivity[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .innerJoinAndSelect('ca.bundle', 'ca_b');
+      .leftJoinAndSelect('ca.bundle', 'ca_b')
+      .leftJoinAndSelect('ca.updatedBy', 'ca_up')
+      .leftJoinAndSelect('ca.careLocations', 'ca_cl');
 
     // Search logic below
     if (query.searchText) {
       // add where clause to the query
       queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+    }
+
+    // filter by care setting
+    // default empty string = no filtering
+    if (query.careSetting) {
+      queryBuilder.andWhere('ca_cl.id = :careSetting', {
+        careSetting: query.careSetting,
+      });
     }
 
     // Sort logic below
@@ -110,9 +116,12 @@ export class CareActivityService {
     if (query.sortBy) {
       let orderBy = `ca.${query.sortBy}`;
 
-      if (query.sortBy.startsWith('bundle.')) {
-        const bundleKey = query.sortBy.split('bundle.')[1];
-        orderBy = `ca_b.${bundleKey}`;
+      if (query.sortBy === CareActivitiesCMSFindSortKeys.BUNDLE_NAME) {
+        orderBy = 'ca_b.displayName';
+      }
+
+      if (query.sortBy === CareActivitiesCMSFindSortKeys.UPDATED_BY) {
+        orderBy = 'ca_up.displayName';
       }
 
       queryBuilder.orderBy(orderBy, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
@@ -125,10 +134,9 @@ export class CareActivityService {
       .getManyAndCount();
   }
 
-  async createCareActivitySearchTerm(term: string, user: User) {
+  async createCareActivitySearchTerm(term: string) {
     const createSearchTerm: Partial<CareActivitySearchTerm> = {
       term,
-      createdBy: user,
     };
 
     const searchTerm = this.careActivitySearchTermRepo.create(createSearchTerm);
@@ -216,5 +224,29 @@ export class CareActivityService {
 
     // perform update
     await this.careActivityRepo.save(careActivity);
+  }
+
+  async removeCareActivity(id: string) {
+    // validate id exist
+    if (!id) {
+      throw new BadRequestException({
+        message: 'Cannot delete care activity: id missing',
+        data: { id },
+      });
+    }
+
+    // fetch care activity
+    const careActivity = await this.findOneById(id);
+
+    // validate care activity exist
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot delete care activity: id not found',
+        data: { id },
+      });
+    }
+
+    // remove activity
+    await this.careActivityRepo.remove(careActivity);
   }
 }

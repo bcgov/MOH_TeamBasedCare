@@ -1,10 +1,18 @@
-import { CustomBaseEntity } from 'src/common/custom-base.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { UserPreference } from './user-preference.entity';
 import { Role } from '@tbcm/common';
+import { BaseEntity } from 'src/common/base.entity';
+import { UserPreference } from './user-preference.entity';
 
 @Entity({ name: 'users', orderBy: { createdAt: 'DESC' } })
-export class User extends CustomBaseEntity {
+export class User extends BaseEntity {
+  // Importing createdBy, updatedBy to prevent circular injection error
+  // TypeError: Class extends value undefined is not a constructor or null
+  @ManyToOne(() => User)
+  createdBy: User;
+
+  @ManyToOne(() => User)
+  updatedBy: User;
+
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   email: string;
 
@@ -32,13 +40,7 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'timestamp', nullable: true })
   revokedAt?: Date | null;
 
-  @ManyToOne(() => User)
-  invitedBy?: User;
-
-  @Column({ type: 'timestamp', nullable: true })
-  invitedAt?: Date;
-
-  @OneToOne(() => UserPreference, userPreference => userPreference.user)
+  @OneToOne(() => UserPreference)
   @JoinColumn()
   userPreference?: UserPreference;
 }

@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateFeedbackDto } from '@tbcm/common';
 import { Repository } from 'typeorm';
 import { Feedback } from './entities/feedback.entity';
-import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class FeedbackService {
@@ -12,10 +11,9 @@ export class FeedbackService {
     private feedbackRepository: Repository<Feedback>,
   ) {}
 
-  async create({ text }: CreateFeedbackDto, user: User): Promise<void> {
+  async create({ text }: CreateFeedbackDto): Promise<void> {
     await this.feedbackRepository.save({
       text,
-      createdBy: user,
     });
   }
 

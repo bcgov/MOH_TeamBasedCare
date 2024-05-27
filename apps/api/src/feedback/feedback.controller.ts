@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto, Role } from '@tbcm/common';
-import { IRequest } from 'src/common/app-request';
 import { ApiTags } from '@nestjs/swagger';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
@@ -12,8 +11,8 @@ export class FeedbackController {
 
   @Post()
   @AllowRoles({ roles: [Role.USER, Role.ADMIN] })
-  create(@Body() createFeedbackDto: CreateFeedbackDto, @Req() req: IRequest) {
-    return this.feedbackService.create(createFeedbackDto, req.user);
+  create(@Body() createFeedbackDto: CreateFeedbackDto) {
+    return this.feedbackService.create(createFeedbackDto);
   }
 
   @Get()
