@@ -8,13 +8,16 @@ import { PlanningSession } from './entity/planning-session.entity';
 import { PlanningSessionController } from './planning-session.controller';
 import { PlanningSessionService } from './planning-session.service';
 import { PlanningSessionSubscriber } from './subscribers/planning-session.subscriber';
+import { User } from 'src/user/entities/user.entity';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PlanningSession, AllowedActivity]),
+    TypeOrmModule.forFeature([PlanningSession, AllowedActivity, User]),
     CareActivityModule,
     OccupationModule,
     UnitModule,
+    UserModule,
   ],
   exports: [],
   controllers: [PlanningSessionController],
