@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Radio } from '@components';
+import { Radio, Checkbox } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
 import {
   PlanningSessionRO,
+  UserPreferenceRO,
   ProfileOptions,
   SaveProfileDTO,
   formatDateFromNow,
@@ -15,6 +16,7 @@ import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '../generic/Spinner';
+import { AppStorage, StorageKeys } from 'src/utils/storage';
 
 export interface ProfileProps {
   step: number;
@@ -226,6 +228,9 @@ const ConfirmDraftRemove = ({
             your last saved draft.
           </p>
         </div>
+        <div className='pt-8'>
+          <Checkbox label={`Don't show this again`} name='userPrefNotShowConfirmDraftRemoval' />
+        </div>
       </div>
     </ModalWrapper>
   );
@@ -234,6 +239,7 @@ const ConfirmDraftRemove = ({
 export const Profile: React.FC<ProfileProps> = () => {
   const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
 
+  const authUserPreference: UserPreferenceRO = AppStorage.getItem(StorageKeys.USER_PREFERENCE);
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -242,7 +248,11 @@ export const Profile: React.FC<ProfileProps> = () => {
       validate={values => dtoValidator(SaveProfileDTO, values)}
       onSubmit={values => {
         // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft
-        if (lastDraft && values.profileOption !== ProfileOptions.DRAFT) {
+        if (
+          lastDraft &&
+          values.profileOption !== ProfileOptions.DRAFT &&
+          !authUserPreference.notShowConfirmDraftRemoval
+        ) {
           setShowModal(true);
           return;
         }
