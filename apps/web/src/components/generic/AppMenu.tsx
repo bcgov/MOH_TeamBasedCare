@@ -1,4 +1,4 @@
-import { forwardRef, ReactNode } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -14,19 +14,51 @@ export interface AppMenuGroup {
 }
 
 interface AppMenuProps {
-  setShowMenu?: (show: boolean) => void;
+  handleMenuHide?: () => void;
   hideOnClick?: boolean;
   groups?: Array<AppMenuGroup>;
   size?: 'lg';
-  children?: ReactNode;
 }
 
 export const HIDE_MENU_DELAY = 100;
 
-export const AppMenu = forwardRef<HTMLDivElement, AppMenuProps>(function AppMenu(
-  { setShowMenu, hideOnClick, groups = [], children, size },
-  ref,
-) {
+export const AppMenu: React.FC<AppMenuProps> = ({
+  handleMenuHide,
+  hideOnClick,
+  groups = [],
+  children,
+  size,
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Required for making the menu close on button click in the parent
+  const extendedHandleMenuHide = useCallback(
+    (event: MouseEvent, propagateEvent: boolean = false) => {
+      if (propagateEvent) {
+        event.stopPropagation();
+      }
+      if (handleMenuHide) {
+        handleMenuHide();
+      }
+    },
+    [handleMenuHide],
+  );
+
+  // Handles clicking outside of App Menu and closing
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        extendedHandleMenuHide(event, true);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside, true);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true);
+    };
+  }, [extendedHandleMenuHide]);
+
   return (
     <>
       <div
@@ -50,7 +82,7 @@ export const AppMenu = forwardRef<HTMLDivElement, AppMenuProps>(function AppMenu
                     onClick={() => {
                       item?.onClick?.();
                       if (hideOnClick) {
-                        setTimeout(() => setShowMenu?.(false), HIDE_MENU_DELAY);
+                        setTimeout(() => handleMenuHide?.(), HIDE_MENU_DELAY);
                       }
                     }}
                   >
@@ -81,4 +113,4 @@ export const AppMenu = forwardRef<HTMLDivElement, AppMenuProps>(function AppMenu
       </div>
     </>
   );
-});
+};
