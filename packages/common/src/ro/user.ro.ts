@@ -30,10 +30,10 @@ export class UserRO {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: Record<string, any>) {
-    this.userPreference = new UserPreferenceRO(data.userPreference);
-
     // data: as User; can't expose entities to common package
     Object.assign(this, data);
+
+    this.userPreference = new UserPreferenceRO(data.userPreference);
 
     // assign user status
     if (data.revokedAt) {
