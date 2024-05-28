@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from './Button';
 import { useAuth } from '@services';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
@@ -14,7 +14,6 @@ export const UserDropdown = () => {
   const { logMeOut } = useAuth();
   const authUserDisplayName = AppStorage.getItem(StorageKeys.DISPLAY_NAME);
 
-  const ref = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showUserGuideModal, setShowUserGuideModal] = useState(false);
@@ -22,22 +21,6 @@ export const UserDropdown = () => {
   const authInitials = useMemo(() => {
     return getInitials(authUserDisplayName);
   }, [authUserDisplayName]);
-
-  // Handles clicking outside of menu and closing
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Makes sure the current ref is an HTML element
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setShowMenu(!showMenu);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside, !showMenu);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside, !showMenu);
-    };
-  }, [ref, showMenu]);
 
   if (!authUserDisplayName) return null;
 
@@ -51,6 +34,14 @@ export const UserDropdown = () => {
 
   const onUserGuideClick = () => {
     setShowUserGuideModal(true);
+  };
+
+  const handleMenuToggle = () => {
+    setShowMenu(prev => !prev);
+  };
+
+  const handleCloseMenu = () => {
+    setShowMenu(false);
   };
 
   const dropdownMenuGroups: Array<AppMenuGroup> = [
@@ -70,7 +61,7 @@ export const UserDropdown = () => {
           classes='inline-flex items-center justify-center border-none'
           variant='default'
           type='button'
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={() => handleMenuToggle()}
         >
           <div className='inline-flex items-center justify-center h-9 w-9 overflow-hidden rounded-full bg-bcBluePrimary text-white mr-4'>
             {authInitials}
@@ -85,7 +76,7 @@ export const UserDropdown = () => {
         </Button>
       </div>
       {showMenu && (
-        <AppMenu ref={ref} hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />
+        <AppMenu hideOnClick={true} handleMenuHide={handleCloseMenu} groups={dropdownMenuGroups} />
       )}
 
       <ModalWrapper isOpen={showFeedbackModal} setIsOpen={setShowFeedbackModal} title={'Feedback'}>
