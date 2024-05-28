@@ -8,6 +8,7 @@ export enum StorageKeys {
   DISPLAY_NAME = 'displayName',
   ROLES = 'roles',
   STATUS = 'status',
+  USER_PREFERENCE = 'userPreference',
   ID = 'id',
 }
 
