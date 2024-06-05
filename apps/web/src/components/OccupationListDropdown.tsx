@@ -3,7 +3,7 @@ import { Button } from './Button';
 import { PlanningOccupation, usePlanningContext, usePlanningOccupations } from '@services';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
-import { AppMenu, HIDE_MENU_DELAY } from './generic/AppMenu';
+import { AppMenu } from './generic/AppMenu';
 import { OccupationSelector } from './OccupationSelector';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { dtoValidator } from 'src/utils/dto-validator';
@@ -19,8 +19,12 @@ export const OccupationListDropdown = () => {
 
   const [showMenu, setShowMenu] = useState(false);
 
-  const hideMenu = () => {
-    setTimeout(() => setShowMenu(false), HIDE_MENU_DELAY);
+  const handleMenuToggle = () => {
+    setShowMenu(prev => !prev);
+  };
+
+  const handleCloseMenu = () => {
+    setShowMenu(false);
   };
 
   const onSubmit = async (
@@ -39,7 +43,7 @@ export const OccupationListDropdown = () => {
     updateRefetchActivityGap(true);
 
     // hide the dropdown menu
-    hideMenu();
+    handleCloseMenu();
   };
 
   const OccupationForm = ({
@@ -70,14 +74,14 @@ export const OccupationListDropdown = () => {
           variant='secondary'
           type='button'
           classes={`ml-2`}
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={() => handleMenuToggle()}
         >
           Occupation List
           <FontAwesomeIcon title='Close' icon={faEdit} className='h-4 ml-2 mr-1' />
         </Button>
       </div>
       {showMenu && (
-        <AppMenu size='lg'>
+        <AppMenu size='lg' handleMenuHide={handleCloseMenu}>
           <Formik
             initialValues={initialValues}
             validate={values => dtoValidator(SaveOccupationDTO, values)}

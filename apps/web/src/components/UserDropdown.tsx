@@ -36,6 +36,14 @@ export const UserDropdown = () => {
     setShowUserGuideModal(true);
   };
 
+  const handleMenuToggle = () => {
+    setShowMenu(prev => !prev);
+  };
+
+  const handleCloseMenu = () => {
+    setShowMenu(false);
+  };
+
   const dropdownMenuGroups: Array<AppMenuGroup> = [
     {
       items: [
@@ -53,7 +61,7 @@ export const UserDropdown = () => {
           classes='inline-flex items-center justify-center border-none'
           variant='default'
           type='button'
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={() => handleMenuToggle()}
         >
           <div className='inline-flex items-center justify-center h-9 w-9 overflow-hidden rounded-full bg-bcBluePrimary text-white mr-4'>
             {authInitials}
@@ -67,7 +75,9 @@ export const UserDropdown = () => {
           />
         </Button>
       </div>
-      {showMenu && <AppMenu hideOnClick setShowMenu={setShowMenu} groups={dropdownMenuGroups} />}
+      {showMenu && (
+        <AppMenu hideOnClick={true} handleMenuHide={handleCloseMenu} groups={dropdownMenuGroups} />
+      )}
 
       <ModalWrapper isOpen={showFeedbackModal} setIsOpen={setShowFeedbackModal} title={'Feedback'}>
         <div className='p-4'>
