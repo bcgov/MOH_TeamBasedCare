@@ -216,7 +216,10 @@ export class UserService {
   }
 
   async upsertUserPreference(userId: string, preferenceData: Partial<UserPreference>) {
-    const user = await this.findOne(userId);
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['userPreference'],
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -226,12 +229,14 @@ export class UserService {
       const userPreference = await this.userPreferenceRepo.save(
         this.userPreferenceRepo.create(preferenceData),
       );
-
       user.userPreference = userPreference;
+
       await this.userRepo.save(user);
+
+      return user.userPreference;
     }
 
-    return user.userPreference;
+    return this.userPreferenceRepo.save({ ...user.userPreference, ...preferenceData });
   }
 
   async revokeUser(id: string, loggedInUser: User) {
