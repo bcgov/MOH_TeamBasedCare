@@ -37,12 +37,6 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
       views: [{ state: 'frozen', ySplit: 1 }],
     });
 
-    // header row style
-    gapMatrixWorksheet.getRow(1).style = headerStyle;
-
-    // id [readonly] column style
-    gapMatrixWorksheet.getColumn(1).style = headerStyle;
-
     const columns: HeaderColumns[] = [
       { header: 'ID (Read only)', key: 'id', width: 6 },
       { header: 'Care setting', key: 'care_setting', width: 13 },
@@ -100,6 +94,12 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           cell.style = headerStyle;
         }
 
+        // if rowNumber = 1 (header row) then keep the row locked and hidden
+        if (rowNumber === 1) {
+          locked = true;
+          cell.style = headerStyle;
+        }
+
         cell.protection = { locked };
       }
     }
@@ -141,32 +141,31 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
       isOpen={showModal}
       setIsOpen={setShowModal}
       title='Bulk upload'
-      description={
-        <>
-          <div>
-            Download and utilize the content configuration template for updates. Once you finish
-            updating, upload the file to sync content to the database.
-          </div>
-
-          <div className='mt-4'>
-            <Button
-              loading={isDownloading}
-              showChildrenOnLoading
-              variant='link'
-              disabled={isDownloading}
-              classes='w-full bg-bcLightGray text-bcBlueLink'
-              onClick={() => onDownloadTemplateClick()}
-            >
-              <div className='flex flex-row p-4'>
-                <FontAwesomeIcon icon={faDownload} className='h-4 text-bcBluePrimary mr-4' />
-                Download template .xlsx
-              </div>
-            </Button>
-          </div>
-        </>
-      }
       closeButton={{ title: 'Back' }}
       actionButton={{ title: 'Upload', isDisabled: true }}
-    />
+    >
+      <div className='p-4'>
+        <div>
+          Download and utilize the content configuration template for updates. Once you finish
+          updating, upload the file to sync content to the database.
+        </div>
+
+        <div className='mt-4'>
+          <Button
+            loading={isDownloading}
+            showChildrenOnLoading
+            variant='link'
+            disabled={isDownloading}
+            classes='w-full bg-bcLightGray text-bcBlueLink'
+            onClick={() => onDownloadTemplateClick()}
+          >
+            <div className='flex flex-row p-4 items-center'>
+              <FontAwesomeIcon icon={faDownload} className='h-4 text-bcBluePrimary mr-4' />
+              Download template .xlsx
+            </div>
+          </Button>
+        </div>
+      </div>
+    </ModalWrapper>
   );
 };
