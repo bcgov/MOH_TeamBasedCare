@@ -26,7 +26,9 @@ import { AllowRoles } from 'src/auth/allow-roles.decorator';
 @UseInterceptors(ClassSerializerInterceptor)
 export class OccupationController {
   constructor(private occupationService: OccupationService) {}
+
   @Get()
+  @AllowRoles({ roles: [Role.USER, Role.CONTENT_ADMIN] })
   getAllOccupations(): Promise<Occupation[]> {
     return this.occupationService.getAllOccupations();
   }

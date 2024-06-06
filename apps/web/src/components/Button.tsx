@@ -5,6 +5,7 @@ export interface ButtonProps {
   onClick?: () => void;
   variant: keyof typeof buttonColor;
   loading?: boolean;
+  showChildrenOnLoading?: boolean;
   type?: 'submit' | 'reset' | 'button';
   disabled?: boolean;
   classes?: string;
@@ -25,7 +26,17 @@ export const buttonBase = `w-auto inline-flex justify-center items-center rounde
   focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:text-sm`;
 
 export const Button: React.FC<ButtonProps> = props => {
-  const { variant, type, children, disabled, classes, loading, onClick, onBlur } = props;
+  const {
+    variant,
+    type,
+    children,
+    disabled,
+    classes,
+    loading,
+    showChildrenOnLoading = false,
+    onClick,
+    onBlur,
+  } = props;
   return (
     <button
       onClick={onClick}
@@ -34,12 +45,16 @@ export const Button: React.FC<ButtonProps> = props => {
         ${buttonColor[variant]}
         ${variant !== 'link' ? buttonBase : ''}
         ${classes}
+        disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed
       `}
       disabled={disabled}
       onBlur={onBlur}
     >
       {loading ? (
-        <FontAwesomeIcon icon={faSpinner} className='h-5 w-5 animate-spin anim' />
+        <div className='flex flex-row gap-4 items-center'>
+          {showChildrenOnLoading && children}
+          <FontAwesomeIcon icon={faSpinner} className='h-5 w-5 animate-spin anim' />
+        </div>
       ) : (
         children
       )}

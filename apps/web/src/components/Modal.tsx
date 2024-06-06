@@ -76,6 +76,7 @@ interface ModalButtonProps {
   onClick?: () => void;
   isLoading?: boolean;
   isError?: boolean;
+  isDisabled?: boolean;
 }
 
 interface ModalWrapperProps {
@@ -118,6 +119,7 @@ export const ModalWrapper = ({
               onClick={() => actionButton?.onClick?.()}
               variant={actionButton.isError ? 'error' : 'primary'}
               type={actionButton.type || 'button'}
+              disabled={actionButton.isDisabled}
             >
               {actionButton.title}
             </Button>
@@ -128,6 +130,7 @@ export const ModalWrapper = ({
               onClick={() => (closeButton?.onClick ? closeButton?.onClick?.() : setIsOpen(false))}
               variant={`${closeButton.isError ? 'error' : actionButton ? 'secondary' : 'primary'}`}
               type={closeButton?.type || 'button'}
+              disabled={closeButton.isDisabled}
             >
               {closeButton?.title || 'Ok'}
             </Button>
