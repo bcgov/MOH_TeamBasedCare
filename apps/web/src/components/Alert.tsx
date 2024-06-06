@@ -1,8 +1,13 @@
-import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheckCircle,
+  faExclamationCircle,
+  faInfoCircle,
+  faTimesCircle,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 interface AlertProps {
-  type: 'warning' | 'info';
+  type: 'warning' | 'info' | 'error' | 'success';
   className?: string;
 }
 
@@ -10,16 +15,23 @@ export const Alert: React.FC<AlertProps> = ({ type, className = '', children }) 
   return (
     <div
       role='alert'
-      className={`p-4 w-max flex items-center rounded ${className} 
-      ${type === 'info' && 'bg-bcLightBlueBackground'}
-      ${type === 'warning' && 'bg-bcYellowCream'} `}
+      className={`p-4 w-full flex items-center rounded ${className} 
+      ${type === 'error' && 'bg-red-100 text-bcRedError'}
+      ${type === 'info' && 'bg-blue-100 text-blue-700'}
+      ${type === 'success' && 'bg-bcBannerSuccessBg text-bcBannerSuccessText'}
+      ${type === 'warning' && 'bg-bcYellowCream text-bcDarkYellow'} `}
     >
-      <div
-        className={`flex flex-row gap-4
-        ${type === 'info' && 'text-bcBluePrimary'}
-        ${type === 'warning' && 'text-bcDarkYellow'} `}
-      >
-        <FontAwesomeIcon className='h-6' icon={faExclamationTriangle}></FontAwesomeIcon>
+      <div className={`flex flex-row gap-4 items-center`}>
+        {type === 'error' && (
+          <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faTimesCircle} />
+        )}
+        {type === 'info' && <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faInfoCircle} />}
+        {type === 'success' && (
+          <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faCheckCircle} />
+        )}
+        {type === 'warning' && (
+          <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faExclamationCircle} />
+        )}
         {children}
       </div>
     </div>

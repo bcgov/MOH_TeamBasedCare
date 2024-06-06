@@ -1,10 +1,11 @@
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useHttp } from '@services';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { API_ENDPOINT } from 'src/common';
 import { OccupationItemProps } from 'src/common/interfaces';
 import { Button } from 'src/components/Button';
+import { FileUpload } from 'src/components/FileUpload';
 import { ModalWrapper } from 'src/components/Modal';
 import {
   addLegendWorksheet,
@@ -29,7 +30,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
   const { fetchData } = useHttp();
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const createUploadTemplate = async (occupations: OccupationItemProps[]) => {
+  const createUploadTemplate = useCallback(async (occupations: OccupationItemProps[]) => {
     const workbook = createNewWorkbook();
 
     // add upload worksheet
@@ -113,9 +114,9 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
 
     // return the entire workbook as xlsx
     return workbook.xlsx;
-  };
+  }, []);
 
-  const onDownloadTemplateClick = async () => {
+  const onDownloadTemplateClick = useCallback(async () => {
     setIsDownloading(true);
 
     const config = { endpoint: API_ENDPOINT.OCCUPATIONS };
@@ -134,7 +135,17 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
         setIsDownloading(false);
       },
     );
-  };
+  }, [createUploadTemplate, fetchData]);
+
+  const handleErrorBeforeSelection = useCallback((selectedFile: File) => {
+    if (selectedFile.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+      throw new Error(
+        'The file format is incorrect and cannot be uploaded to the system, please make changes to the file before re-uploading it to the dropzone above.',
+      );
+    }
+  }, []);
+
+  const handleFileUpload = useCallback(() => {}, []);
 
   return (
     <ModalWrapper
@@ -159,11 +170,20 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
             classes='w-full bg-bcLightGray text-bcBlueLink'
             onClick={() => onDownloadTemplateClick()}
           >
-            <div className='flex flex-row p-4 items-center'>
+            <div className='flex flex-row p-4'>
               <FontAwesomeIcon icon={faDownload} className='h-4 text-bcBluePrimary mr-4' />
               Download template .xlsx
             </div>
           </Button>
+        </div>
+
+        <div className='mt-4'>
+          <FileUpload
+            id='bulk-upload-modal'
+            accept='.xlsx'
+            handleErrorBeforeSelection={handleErrorBeforeSelection}
+            handleFile={handleFileUpload}
+          />
         </div>
       </div>
     </ModalWrapper>
