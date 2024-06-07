@@ -72,6 +72,7 @@ export const useAuth = () => {
       const userHandler = (user: UserRO) => {
         // update user to storage
         storeUserData(user);
+
         // call success handler
         handler();
       };

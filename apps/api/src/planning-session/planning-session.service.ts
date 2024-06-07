@@ -97,6 +97,7 @@ export class PlanningSessionService {
     if (!planningSession) {
       throw new NotFoundException('Planning session not found');
     }
+
     // handle care Location update,
     if (saveProfileDto.careLocation) {
       // if updated care location not same as existing? clear care activities for the session
