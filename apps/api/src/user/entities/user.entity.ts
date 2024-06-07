@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, RelationId } from 'typeorm';
 import { Role } from '@tbcm/common';
 import { BaseEntity } from 'src/common/base.entity';
 import { UserPreference } from './user-preference.entity';
@@ -43,4 +43,7 @@ export class User extends BaseEntity {
   @OneToOne(() => UserPreference)
   @JoinColumn()
   userPreference?: UserPreference;
+
+  @RelationId((user: User) => user.userPreference)
+  userPreferenceId?: string;
 }

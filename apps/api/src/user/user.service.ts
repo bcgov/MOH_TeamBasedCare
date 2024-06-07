@@ -14,6 +14,7 @@ import {
   SortOrder,
 } from '@tbcm/common';
 import { User } from './entities/user.entity';
+import { UserPreference } from './entities/user-preference.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppLogger } from 'src/common/logger.service';
@@ -26,16 +27,12 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(UserPreference)
+    private userPreferenceRepo: Repository<UserPreference>,
   ) {}
 
   async findOne(id: string) {
     return this.userRepo.findOneBy({ id });
-  }
-
-  async findByEmail(email: string) {
-    if (!email) return;
-
-    return this.userRepo.findOneBy({ email });
   }
 
   async resolveUser(keycloakUser: KeycloakUser) {
@@ -47,7 +44,10 @@ export class UserService {
     }
 
     // find existing user
-    let user = await this.findByEmail(keycloakUser.email);
+    let user = await this.userRepo.findOne({
+      where: { email: keycloakUser.email },
+      relations: ['userPreference'],
+    });
 
     // if user does not exist, create new user with empty roles
     if (!user) {
@@ -215,6 +215,27 @@ export class UserService {
     });
   }
 
+  async upsertUserPreference(userId: string, preferenceData: Partial<UserPreference>) {
+    const user = await this.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.userPreferenceId) {
+      const userPreference = await this.userPreferenceRepo.save(
+        this.userPreferenceRepo.create(preferenceData),
+      );
+      user.userPreference = userPreference;
+
+      await this.userRepo.save(user);
+
+      return user.userPreference;
+    }
+
+    return this.userPreferenceRepo.save({ id: user.userPreferenceId, ...preferenceData });
+  }
+
   async revokeUser(id: string, loggedInUser: User) {
     if (!id) throw new BadRequestException('No user ID found');
 
@@ -233,6 +254,7 @@ export class UserService {
     if (id === loggedInUser.id) throw new ForbiddenException('Cannot re-provision own user access');
 
     const user = await this.findOne(id);
+
     if (!user) throw new NotFoundException('User not found');
 
     user.revokedAt = null;

@@ -36,6 +36,7 @@ export const useAuth = () => {
     AppStorage.setItem(StorageKeys.ROLES, data.roles || []);
     AppStorage.setItem(StorageKeys.STATUS, data.status);
     AppStorage.setItem(StorageKeys.ID, data.id);
+    AppStorage.setItem(StorageKeys.USER_PREFERENCE, data.userPreference);
   }, []);
 
   // fetch authentication token from authorization code

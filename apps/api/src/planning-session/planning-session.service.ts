@@ -21,17 +21,21 @@ import _ from 'lodash';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { ActivitiesActionType } from '../common/constants';
 import { UnitService } from 'src/unit/unit.service';
+import { UserService } from 'src/user/user.service';
 import { Unit } from 'src/unit/entity/unit.entity';
 import { User } from 'src/user/entities/user.entity';
+import { AppLogger } from 'src/common/logger.service';
 
 @Injectable()
 export class PlanningSessionService {
+  private readonly logger = new AppLogger();
   constructor(
     @InjectRepository(PlanningSession)
     private planningSessionRepo: Repository<PlanningSession>,
     private careActivityService: CareActivityService,
     private occupationService: OccupationService,
     private unitService: UnitService,
+    private userService: UserService,
   ) {}
 
   // find planning session from id
@@ -69,6 +73,15 @@ export class PlanningSessionService {
     const planningSession = this.planningSessionRepo.create(session);
 
     await this.planningSessionRepo.save(planningSession);
+
+    const user = planningSession.createdBy;
+
+    //Save preference for user to not show confirmation popup
+    if (saveProfileDto.userPrefNotShowConfirmDraftRemoval) {
+      await this.userService.upsertUserPreference(user.id, {
+        notShowConfirmDraftRemoval: saveProfileDto.userPrefNotShowConfirmDraftRemoval,
+      });
+    }
 
     return planningSession;
   }

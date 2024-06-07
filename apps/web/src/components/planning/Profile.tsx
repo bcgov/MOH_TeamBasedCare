@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Radio } from '@components';
+import { Radio, Checkbox } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
 import {
   PlanningSessionRO,
   ProfileOptions,
   SaveProfileDTO,
+  UserPreferenceRO,
   formatDateFromNow,
   formatDateTime,
 } from '@tbcm/common';
@@ -15,6 +16,7 @@ import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '../generic/Spinner';
+import { AppStorage, StorageKeys } from 'src/utils/storage';
 
 export interface ProfileProps {
   step: number;
@@ -24,7 +26,7 @@ export interface ProfileProps {
 interface ProfileFormProps {
   profileOption: string;
   careLocation: string;
-  userPrefShowConfirmDraftRemoval?: boolean;
+  userPrefNotShowConfirmDraftRemoval?: boolean;
 }
 
 const ProfileForm = ({
@@ -186,18 +188,34 @@ const ConfirmDraftRemove = ({
   handleSubmit,
   lastDraft,
 }: ConfirmDraftRemoveProps) => {
-  const { values } = useFormikContext<ProfileFormProps>();
+  const { values, resetForm } = useFormikContext<ProfileFormProps>();
 
   return (
     <ModalWrapper
       isOpen={showModal}
       setIsOpen={setShowModal}
       title='Profile in draft'
-      closeButton={{ title: 'Cancel' }}
+      closeButton={{
+        title: 'Cancel',
+        onClick: () => {
+          /* Only want to reset the "do not show draft" checkbox,
+        leave anything selected outside of the modal untouched*/
+          resetForm({ values: { ...values, userPrefNotShowConfirmDraftRemoval: false } });
+          setShowModal(false);
+        },
+      }}
       actionButton={{
         title: 'Continue the process',
         onClick: () => {
           handleSubmit(values);
+          // Only want this to occur one time, which is when the user selects the draft checkbox
+          if (values.userPrefNotShowConfirmDraftRemoval) {
+            const updatedVersion: UserPreferenceRO = {
+              notShowConfirmDraftRemoval: true,
+            };
+            // This is required for the storage to update with the newly selected preference
+            AppStorage.setItem(StorageKeys.USER_PREFERENCE, updatedVersion);
+          }
         },
       }}
     >
@@ -226,6 +244,9 @@ const ConfirmDraftRemove = ({
             your last saved draft.
           </p>
         </div>
+        <div className='pt-8'>
+          <Checkbox label={`Don't show this again`} name='userPrefNotShowConfirmDraftRemoval' />
+        </div>
       </div>
     </ModalWrapper>
   );
@@ -235,14 +256,21 @@ export const Profile: React.FC<ProfileProps> = () => {
   const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
 
   const [showModal, setShowModal] = useState(false);
+  // Used to check if the user selected not to see the draft modal
+  const authUserPreference = AppStorage.getItem(StorageKeys.USER_PREFERENCE);
 
   return (
     <Formik
       initialValues={initialValues}
       validate={values => dtoValidator(SaveProfileDTO, values)}
       onSubmit={values => {
-        // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft
-        if (lastDraft && values.profileOption !== ProfileOptions.DRAFT) {
+        // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft.
+        // Do not show the modal if the user set their preference as such
+        if (
+          lastDraft &&
+          values.profileOption !== ProfileOptions.DRAFT &&
+          !authUserPreference.notShowConfirmDraftRemoval
+        ) {
           setShowModal(true);
           return;
         }
