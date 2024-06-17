@@ -4,7 +4,7 @@ import { Role, UnitRO } from '@tbcm/common';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @Controller('carelocations')
-@AllowRoles({ roles: [Role.USER] })
+@AllowRoles({ roles: [Role.USER, Role.CONTENT_ADMIN] })
 export class UnitController {
   constructor(private unitService: UnitService) {}
   @Get()
