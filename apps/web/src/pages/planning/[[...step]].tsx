@@ -12,7 +12,7 @@ const Planning = () => {
 
   return (
     <AppLayout>
-      {/* Defaults to profile step to account for planning route without number slug*/}
+      {/* Defaults to profile step to account for planning route without step*/}
       <PlanningWrapper initialStep={step ? +step : 1} />
     </AppLayout>
   );
