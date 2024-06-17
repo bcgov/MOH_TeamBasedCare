@@ -3,7 +3,7 @@ import { Role } from 'src/constants';
 export const hasAccess = (
   userRoles: Role[] = [],
   allowedRoles: Role[] = [],
-  and = true,
+  and = false,
 ): boolean => {
   const condition = (allowedRole: Role) => {
     return userRoles.some(userRole => userRole === allowedRole);

@@ -68,11 +68,15 @@ export class AuthGuard implements CanActivate {
     if (user.revokedAt && !request.url.includes('/auth/user')) return false;
 
     // if both class and handler specify roles, handler's roles take affect than class's
-    const roles =
-      this.reflector.getAllAndOverride<Role[]>('roles', [
-        context.getHandler(),
-        context.getClass(),
-      ]) || [];
+    const roles = this.reflector.getAllAndOverride<Role[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // Permissive if @AllowRoles not provided at controller level
+    if (!roles) {
+      return true;
+    }
 
     // validate if user has access to endpoint
     return hasAccess(user.roles, roles);
