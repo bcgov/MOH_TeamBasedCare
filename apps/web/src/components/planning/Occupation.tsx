@@ -1,13 +1,15 @@
 import { SearchBar } from '../generic/SearchBar';
 import { Paginator } from '../generic/Paginator';
+import { Spinner } from '../generic/Spinner';
 import { OccupationSelector } from '../OccupationSelector';
 import { Form, Formik } from 'formik';
-import { usePlanningContent, usePlanningOccupations } from '@services';
+import { usePlanningContent, usePlanningContext, usePlanningOccupations } from '@services';
+import { usePlanningProfile } from 'src/services/usePlanningProfile';
 import { SaveOccupationDTO } from '@tbcm/common';
 import { dtoValidator } from '../../utils/dto-validator';
 import { Error } from '../Error';
 import { PageTitle } from '../PageTitle';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export interface OccupationProps {
   step: number;
@@ -25,10 +27,18 @@ const OccupationForm = ({ searchValue = '' }) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const Occupation: React.FC<OccupationProps> = () => {
+  const { updateSessionId } = usePlanningContext();
+  const { lastDraft, isLoading } = usePlanningProfile();
+
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
 
   // proceed to next step after submission
   const { handleSubmit, initialValues } = usePlanningOccupations({ proceedToNextOnSubmit: true });
+
+  useEffect(() => {
+    if (!lastDraft?.id) return;
+    updateSessionId(lastDraft.id);
+  }, [lastDraft?.id]);
 
   // Get search value
   const handleSearch = (e: { target: { value: string } }) => {
@@ -48,22 +58,26 @@ export const Occupation: React.FC<OccupationProps> = () => {
             ></SearchBar>
           </div>
 
-          <Formik
-            initialValues={initialValues}
-            validate={values => dtoValidator(SaveOccupationDTO, values)}
-            onSubmit={handleSubmit}
-            validateOnBlur={true}
-            enableReinitialize={true}
-          >
-            {() => (
-              <div className='flex-1 flex flex-col min-h-0'>
-                <Paginator></Paginator>
-                <Error name='occupation'></Error>
-                <OccupationForm searchValue={searchValue}></OccupationForm>
-                <Paginator></Paginator>
-              </div>
-            )}
-          </Formik>
+          {isLoading ? (
+            <Spinner show={isLoading} />
+          ) : (
+            <Formik
+              initialValues={initialValues}
+              validate={values => dtoValidator(SaveOccupationDTO, values)}
+              onSubmit={handleSubmit}
+              validateOnBlur={true}
+              enableReinitialize={true}
+            >
+              {() => (
+                <div className='flex-1 flex flex-col min-h-0'>
+                  <Paginator></Paginator>
+                  <Error name='occupation'></Error>
+                  <OccupationForm searchValue={searchValue}></OccupationForm>
+                  <Paginator></Paginator>
+                </div>
+              )}
+            </Formik>
+          )}
         </div>
       </div>
     </div>

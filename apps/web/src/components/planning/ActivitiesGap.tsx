@@ -1,10 +1,11 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
-import { usePlanningActivitiesGap } from '../../services';
+import { usePlanningActivitiesGap, usePlanningContext } from '../../services';
+import { usePlanningProfile } from 'src/services/usePlanningProfile';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
@@ -209,6 +210,14 @@ const ActivityGapTable: React.FC = () => {
 };
 
 export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
+  const { updateSessionId } = usePlanningContext();
+  const { lastDraft } = usePlanningProfile();
+
+  useEffect(() => {
+    if (!lastDraft?.id) return;
+    updateSessionId(lastDraft.id);
+  }, [lastDraft?.id]);
+
   const description =
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 

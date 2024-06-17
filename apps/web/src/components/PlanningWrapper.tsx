@@ -4,28 +4,41 @@ import { PlanningSteps } from '../common/constants';
 import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
+import { useAppContext } from './AppContext';
 
-const WrapperContent = () => {
+type WrapperProps = {
+  initialStep: number;
+};
+
+const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
   const {
     state: { canProceedToNext, sessionId },
     updateNextTriggered,
   } = usePlanningContext();
+  const { updateActivePath } = useAppContext();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const isFirstStep = currentStep === 1;
+
+  useEffect(() => {
+    setCurrentStep(initialStep);
+  }, [initialStep]);
 
   const handleNextStep = () => {
     updateNextTriggered();
   };
+
   const handlePreviousStep = () => {
     if (isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
+    updateActivePath(`/planning/${Number(currentStep) - 1}`);
   };
 
   useEffect(() => {
     if (canProceedToNext) {
       if (currentStep >= PlanningSteps.length) return;
       setCurrentStep(Number(currentStep) + 1);
+      updateActivePath(`/planning/${Number(currentStep) + 1}`);
     }
   }, [canProceedToNext]);
 
@@ -70,10 +83,10 @@ const WrapperContent = () => {
   );
 };
 
-export const PlanningWrapper = () => {
+export const PlanningWrapper: React.FC<WrapperProps> = ({ initialStep }) => {
   return (
     <PlanningProvider>
-      <WrapperContent />
+      <WrapperContent initialStep={initialStep} />
     </PlanningProvider>
   );
 };

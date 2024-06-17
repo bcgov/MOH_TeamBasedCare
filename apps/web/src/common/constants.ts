@@ -16,6 +16,9 @@ import { Role } from '@tbcm/common';
 export enum AllowedPath {
   LANDING = '/',
   PLANNING = '/planning',
+  PLANNING_BUNDLE = PLANNING + '/bundle',
+  PLANNING_OCCUPATION_ROLES = PLANNING + '/occupation-roles',
+  PLANNING_GAPS = PLANNING + '/gaps',
   OCCUPATIONAL_SCOPE = '/occupational-scope',
   OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
   CARE_TERMINOLOGIES = '/care-terminologies',
@@ -81,6 +84,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
   },
 ];
 
+// The order of these items are reflected in the planning process
 export const PlanningSteps = [
   'Profile',
   'Care Activity Bundles',
