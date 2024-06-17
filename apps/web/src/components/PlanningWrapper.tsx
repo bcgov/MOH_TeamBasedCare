@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
 import { PlanningSteps } from '../common/constants';
+import { planningPath } from '../common/constants';
 import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
@@ -31,14 +32,14 @@ const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
   const handlePreviousStep = () => {
     if (isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
-    updateActivePath(`/planning/${Number(currentStep) - 1}`);
+    updateActivePath(planningPath[Number(currentStep) - 1]);
   };
 
   useEffect(() => {
     if (canProceedToNext) {
       if (currentStep >= PlanningSteps.length) return;
       setCurrentStep(Number(currentStep) + 1);
-      updateActivePath(`/planning/${Number(currentStep) + 1}`);
+      updateActivePath(planningPath[Number(currentStep) + 1]);
     }
   }, [canProceedToNext]);
 

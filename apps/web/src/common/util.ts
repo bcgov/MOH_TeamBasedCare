@@ -4,6 +4,11 @@ export const isOdd = (n: number): boolean => {
   return n % 2 !== 0;
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const isObjectEmpty = (obj: any): boolean => {
+  return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
+};
+
 export const pickTagStyle = (tag: ActivityTagVariants): TagVariants => {
   switch (tag) {
     case ActivityTagVariants.ASPECT:
