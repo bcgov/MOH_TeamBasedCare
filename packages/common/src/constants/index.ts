@@ -8,3 +8,4 @@ export * from './careActivityType';
 export * from './clinicalType';
 export * from './authorities';
 export * from './userStatus';
+export * from './bulk-upload-columns';

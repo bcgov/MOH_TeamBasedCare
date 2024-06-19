@@ -7,3 +7,4 @@ export * from './userGuide';
 export * from './user.ro';
 export * from './user-preference.ro';
 export * from './unit.ro';
+export * from './careActivityBulk.ro';
