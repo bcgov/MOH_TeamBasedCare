@@ -95,9 +95,9 @@ export class CareActivityBulkService {
     }
 
     // return if missing fields
-    // if (errors.length > 0) {
-    //   return { errors, careActivitiesCount: data.length };
-    // }
+    if (errors.length > 0) {
+      return { errors, careActivitiesCount: data.length };
+    }
 
     // ** ensure care activity names are not duplicated in the supplied data
     const careActivitiesDataCount: Record<string, number> = {};
