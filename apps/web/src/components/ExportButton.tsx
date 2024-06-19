@@ -19,9 +19,10 @@ import {
 
 interface ExportButtonProps {
   sessionId: string;
+  disabled: boolean;
 }
 
-export const ExportButton = ({ sessionId }: ExportButtonProps) => {
+export const ExportButton = ({ sessionId, disabled }: ExportButtonProps) => {
   const { fetchData } = useHttp();
 
   const exportToXlsx = () => {
@@ -36,7 +37,13 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
     });
   };
   return (
-    <Button variant='primary' type='button' classes={`ml-2`} onClick={exportToXlsx}>
+    <Button
+      disabled={disabled}
+      variant='primary'
+      type='button'
+      classes={`ml-2`}
+      onClick={exportToXlsx}
+    >
       Export
     </Button>
   );

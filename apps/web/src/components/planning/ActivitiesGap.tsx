@@ -1,11 +1,10 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
-import { usePlanningActivitiesGap, usePlanningContext } from '../../services';
-import { usePlanningProfile } from 'src/services/usePlanningProfile';
+import { usePlanningActivitiesGap } from '../../services';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
@@ -15,6 +14,7 @@ import { ActivityGapCareActivity } from '@tbcm/common';
 export interface ActivitiesGapProps {
   step: number;
   title: string;
+  handleDisableExport: (disable: boolean) => void;
 }
 
 const TableHeader: React.FC = () => {
@@ -209,19 +209,17 @@ const ActivityGapTable: React.FC = () => {
   );
 };
 
-export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
-  const { updateSessionId } = usePlanningContext();
-  const { lastDraft } = usePlanningProfile();
+export const ActivitiesGap: React.FC<ActivitiesGapProps> = ({ handleDisableExport }) => {
+  const { isValidSession } = usePlanningActivitiesGap();
 
-  useEffect(() => {
-    if (!lastDraft?.id) return;
-    updateSessionId(lastDraft.id);
-  }, [lastDraft?.id]);
+  /* When manually visiting url's/refreshing this will ensure both bundles and occupations
+     have been selected before allowing export*/
+  handleDisableExport(!isValidSession);
 
   const description =
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 
-  return (
+  return isValidSession ? (
     <div>
       <div className='planning-form-box overflow-visible'>
         <div className='flex flex-row space-x-8 items-start justify-between'>
@@ -243,6 +241,10 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
           <ActivityGapTable />
         </div>
       </div>
+    </div>
+  ) : (
+    <div className='planning-form-box overflow-visible'>
+      <h1>You need to select both bundles and occupations before navigating to this screen</h1>
     </div>
   );
 };

@@ -15,6 +15,7 @@ export const usePlanningActivitiesGap = () => {
     data: [],
   });
   const { fetchData, isLoading } = useHttp();
+  const [isValidSession, setIsValidSession] = useState<boolean>();
 
   useEffect(() => {
     if (sessionId || refetchActivityGap) {
@@ -32,5 +33,11 @@ export const usePlanningActivitiesGap = () => {
     }
   }, [sessionId, refetchActivityGap, fetchData]);
 
-  return { initialValues, isLoading };
+  useEffect(() => {
+    const { data, headers } = initialValues;
+    if (!data || !headers) return;
+    setIsValidSession(data.length !== 0 && headers.length > 1);
+  }, [initialValues]);
+
+  return { initialValues, isLoading, isValidSession };
 };

@@ -6,18 +6,20 @@ import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
 import { useAppContext } from './AppContext';
+import { usePlanningRefresh } from 'src/services/usePlanningRefresh';
 
 type WrapperProps = {
   initialStep: number;
 };
 
 const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
+  usePlanningRefresh();
   const {
     state: { canProceedToNext, sessionId },
     updateNextTriggered,
   } = usePlanningContext();
   const { updateActivePath } = useAppContext();
-
+  const [disableExport, setDisableExport] = useState(false);
   const [currentStep, setCurrentStep] = useState(initialStep);
   const isFirstStep = currentStep === 1;
 
@@ -27,6 +29,10 @@ const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
 
   const handleNextStep = () => {
     updateNextTriggered();
+  };
+
+  const handleDisableExport = (disable: boolean) => {
+    setDisableExport(disable);
   };
 
   const handlePreviousStep = () => {
@@ -62,7 +68,7 @@ const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
           </Button>
 
           {currentStep >= PlanningSteps.length ? (
-            <ExportButton sessionId={sessionId}></ExportButton>
+            <ExportButton disabled={disableExport} sessionId={sessionId}></ExportButton>
           ) : (
             <Button
               variant='primary'
@@ -78,7 +84,11 @@ const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
       </div>
       {/* Works here */}
       <div className='flex-1 flex flex-col min-h-0 overflow-y-auto mt-4'>
-        <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
+        <PlanningContent
+          handleDisableExport={handleDisableExport}
+          step={currentStep}
+          formTitle={PlanningSteps[currentStep - 1]}
+        />
       </div>
     </div>
   );
