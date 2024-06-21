@@ -39,14 +39,17 @@ export class UnitService {
     });
   }
 
-  async saveCareLocations(locations: string[]) {
+  async saveCareLocations(names: string[]) {
     return this.unitsRepository.upsert(
-      locations.map(name =>
+      names.map(name =>
         this.unitsRepository.create({
           name,
         }),
       ),
-      ['name'],
+      {
+        skipUpdateIfNoValuesChanged: true,
+        conflictPaths: ['name'],
+      },
     );
   }
 }

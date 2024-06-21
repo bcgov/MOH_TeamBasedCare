@@ -152,4 +152,14 @@ export class AllowedActivityService {
     // perform save
     await this.allowedActivityRepository.save(allowedActivity);
   }
+
+  async upsertAllowedActivities(partials: Partial<AllowedActivity>[]) {
+    return this.allowedActivityRepository.upsert(
+      partials.map(partial => this.allowedActivityRepository.create(partial)),
+      {
+        skipUpdateIfNoValuesChanged: true,
+        conflictPaths: ['careActivity', 'occupation'],
+      },
+    );
+  }
 }

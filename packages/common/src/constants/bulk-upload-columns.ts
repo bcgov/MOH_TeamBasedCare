@@ -1,3 +1,5 @@
+import { Permissions } from './permissions';
+
 export enum BULK_UPLOAD_COLUMNS {
   ID = 'ID (Read only)',
   CARE_ACTIVITY = 'Care activity',
@@ -6,4 +8,4 @@ export enum BULK_UPLOAD_COLUMNS {
   ASPECT_OF_PRACTICE = 'Aspect of practice',
 }
 
-export const BULK_UPLOAD_ALLOWED_PERMISSIONS = ['Y', 'LC', 'N'];
+export const BULK_UPLOAD_ALLOWED_PERMISSIONS = [Permissions.PERFORM, Permissions.LIMITS, 'N'];

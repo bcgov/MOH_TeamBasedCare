@@ -9,6 +9,7 @@ import { CareActivitySearchTerm } from './entity/care-activity-search-term.entit
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
+import { cleanText } from 'src/common/utils';
 
 @Injectable()
 export class CareActivityService {
@@ -248,5 +249,21 @@ export class CareActivityService {
 
     // remove activity
     await this.careActivityRepo.remove(careActivity);
+  }
+
+  async upsertCareActivities(partials: Partial<CareActivity>[]) {
+    return this.careActivityRepo.upsert(
+      partials.map(partial => this.careActivityRepo.create(partial)),
+      {
+        skipUpdateIfNoValuesChanged: true,
+        conflictPaths: ['name'],
+      },
+    );
+  }
+
+  async getManyByNames(names: string[]) {
+    return this.careActivityRepo.find({
+      where: { name: In(names.map(name => cleanText(name))) },
+    });
   }
 }
