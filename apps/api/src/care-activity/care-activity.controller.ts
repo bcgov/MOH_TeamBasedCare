@@ -100,4 +100,12 @@ export class CareActivityController {
   validateCareActivitiesCMS(@Body() careActivitiesBulkDto: CareActivityBulkDTO) {
     return this.careActivityBulkService.validateCareActivitiesBulk(careActivitiesBulkDto);
   }
+
+  // confirm and upload
+  @Post('cms/bulk/upload')
+  @HttpCode(HttpStatus.OK)
+  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  uploadCareActivitiesCMS(@Body() careActivitiesBulkDto: CareActivityBulkDTO) {
+    return this.careActivityBulkService.uploadCareActivitiesBulk(careActivitiesBulkDto);
+  }
 }

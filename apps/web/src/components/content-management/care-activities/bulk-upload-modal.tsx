@@ -4,6 +4,7 @@ import { useHttp } from '@services';
 import {
   BULK_UPLOAD_ALLOWED_PERMISSIONS,
   BULK_UPLOAD_COLUMNS,
+  CareActivityBulkData,
   CareActivityBulkRO,
   CareActivityType,
 } from '@tbcm/common';
@@ -24,6 +25,7 @@ import {
   headerStyle,
   triggerExcelDownload,
 } from 'src/utils/excel-utils';
+import { BulkUploadConfirmationModalCMS, ConfirmData } from './bulk-upload-confirmation-modal';
 
 interface BulkUploadModalCMSProps {
   showModal: boolean;
@@ -38,7 +40,9 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
   setShowModal,
 }) => {
   const { fetchData, sendApiRequest, isLoading } = useHttp();
-  const [canConfirm, setCancConfirm] = useState(false);
+  const [canConfirm, setCanConfirm] = useState(false);
+  const [confirmData, setConfirmData] = useState<ConfirmData>();
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [validationMessage, setValidationMessage] = useState<JSX.Element>(<></>);
   const [validationMessageType, setValidationMessageType] = useState<'warning' | 'success'>();
 
@@ -180,6 +184,9 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
   const resetValidationMessage = () => {
     setValidationMessageType(undefined);
     setValidationMessage(<></>);
+    setCanConfirm(false);
+    setConfirmData(undefined);
+    setShowConfirmModal(false);
   };
 
   const handleErrorBeforeSelection = useCallback((selectedFile: File) => {
@@ -201,11 +208,10 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
 
     const workbook = createNewWorkbook();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const careActivitiesHeaders: any = [];
+    const careActivitiesHeaders: string[] = [];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const careActivitiesData: any = [];
+    const careActivitiesData: CareActivityBulkData[] = [];
 
     try {
       await workbook.xlsx.load(buffer);
@@ -331,12 +337,26 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           </>,
         );
 
-        setCancConfirm(true);
+        setCanConfirm(true);
+        setConfirmData({
+          headers: careActivitiesHeaders,
+          data: careActivitiesData,
+          fileName: file.name,
+          careActivitiesCount,
+        });
       },
       () => {},
       'Failed to validate the uploaded template',
     );
   }, []);
+
+  const onConfirmClick = () => {
+    if (!canConfirm || !confirmData) {
+      return;
+    }
+
+    setShowConfirmModal(true);
+  };
 
   return (
     <ModalWrapper
@@ -344,7 +364,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
       setIsOpen={setShowModal}
       title='Bulk upload'
       closeButton={{ title: 'Back' }}
-      actionButton={{ title: 'Confirm', isDisabled: !canConfirm }}
+      actionButton={{ title: 'Confirm', isDisabled: !canConfirm, onClick: onConfirmClick }}
     >
       <div className='p-4'>
         <div>
@@ -382,6 +402,13 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
             {validationMessage}
           </Alert>
         )}
+
+        <BulkUploadConfirmationModalCMS
+          showModal={showConfirmModal}
+          setShowModal={setShowConfirmModal}
+          setUploadModal={setShowModal}
+          confirmData={confirmData}
+        />
       </div>
     </ModalWrapper>
   );

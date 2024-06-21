@@ -1,10 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
+import { ClassSerializerInterceptor, Controller, Get, UseInterceptors } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { Role, UnitRO } from '@tbcm/common';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @Controller('carelocations')
 @AllowRoles({ roles: [Role.USER, Role.CONTENT_ADMIN] })
+@UseInterceptors(ClassSerializerInterceptor)
 export class UnitController {
   constructor(private unitService: UnitService) {}
   @Get()

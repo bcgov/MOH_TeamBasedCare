@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import {
   BULK_UPLOAD_ALLOWED_PERMISSIONS,
   BULK_UPLOAD_COLUMNS,
@@ -7,22 +12,52 @@ import {
   CareActivityBulkRO,
   CareActivityBulkROError,
   CareActivityType,
+  Permissions,
 } from '@tbcm/common';
 import { OccupationService } from 'src/occupation/occupation.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CareActivity } from './entity/care-activity.entity';
 import { In, Repository } from 'typeorm';
 import { cleanText } from 'src/common/utils';
+import { UnitService } from 'src/unit/unit.service';
+import { BundleService } from './bundle.service';
+import { CareActivityService } from './care-activity.service';
+import { Occupation } from 'src/occupation/entity/occupation.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
+import { AllowedActivityService } from 'src/allowed-activity/allowed-activity.service';
+import { AppLogger } from 'src/common/logger.service';
 
 @Injectable()
 export class CareActivityBulkService {
+  private readonly logger = new AppLogger();
+
   constructor(
     @InjectRepository(CareActivity)
     private readonly careActivityRepo: Repository<CareActivity>,
 
     @Inject(OccupationService)
     private readonly occupationService: OccupationService,
+
+    @Inject(UnitService)
+    private readonly unitService: UnitService,
+
+    @Inject(BundleService)
+    private readonly bundleService: BundleService,
+
+    @Inject(CareActivityService)
+    private readonly careActivityService: CareActivityService,
+
+    @Inject(AllowedActivityService)
+    private readonly allowedActivityService: AllowedActivityService,
   ) {}
+
+  trimDisplayName(displayName: string): string {
+    return displayName.toString().trim().replace(/"/g, '');
+  }
+
+  getNameFromDisplayName(displayName: string): string {
+    return cleanText(this.trimDisplayName(displayName));
+  }
 
   async validateCareActivitiesBulk(
     careActivitiesBulkDto: CareActivityBulkDTO,
@@ -102,7 +137,7 @@ export class CareActivityBulkService {
     // ** ensure care activity names are not duplicated in the supplied data
     const careActivitiesDataCount: Record<string, number> = {};
     data.forEach(c => {
-      const caName = c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
+      const caName = this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]);
       careActivitiesDataCount[caName] = (careActivitiesDataCount[caName] || 0) + 1;
     });
 
@@ -111,11 +146,19 @@ export class CareActivityBulkService {
     );
 
     duplicateCareActivitiesData.forEach(caName => {
+      let caDisplayName = '';
       const rowNumbers = data
-        .filter(c => c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY] === caName)
-        .map(c => c.rowNumber);
+        .filter(
+          c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]) === caName,
+        )
+        .map(c => {
+          if (!caDisplayName) {
+            caDisplayName = c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
+          }
+          return c.rowNumber;
+        });
       errors.push({
-        message: `Duplicate care activity - ${caName}`,
+        message: `Duplicate care activity - ${caDisplayName}`,
         rowNumber: rowNumbers,
       });
     });
@@ -213,14 +256,16 @@ export class CareActivityBulkService {
     // ** ensure care activity names are not duplicated in the database
     const duplicateCareActivitiesDb = await this.careActivityRepo.find({
       where: {
-        name: In(data.map(c => cleanText(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY].toString()))),
+        name: In(
+          data.map(c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY])),
+        ),
       },
     });
 
     // return as errors for duplicate care activities
     duplicateCareActivitiesDb.forEach(ca => {
       const rowNumber = data.find(
-        c => cleanText(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY].toString()) === ca.name,
+        c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]) === ca.name,
       )!.rowNumber;
 
       errors.push({
@@ -228,5 +273,214 @@ export class CareActivityBulkService {
         rowNumber: [rowNumber],
       });
     });
+  }
+
+  /**
+   *
+   * Upload Care Activities Bulk
+   *
+   */
+  async uploadCareActivitiesBulk(careActivitiesBulkDto: CareActivityBulkDTO, isEditing = false) {
+    const { errors: validationErrors } = await this.validateCareActivitiesBulk(
+      careActivitiesBulkDto,
+      isEditing,
+    );
+
+    if (validationErrors.length > 0) {
+      throw new BadRequestException(
+        'There are some validation errors while confirming, please try again by reuploading the template',
+      );
+    }
+
+    // extract data
+    const { data } = careActivitiesBulkDto;
+
+    // care settings and care bundles list definitions
+    const careSettingDisplayNames = new Set<string>();
+    const careBundleDisplayNames = new Set<string>();
+    const careActivityDisplayNames = new Set<string>();
+
+    // loop all care activities, and create a list of care settings and care bundles
+    data.forEach(({ rowData }) => {
+      const careSetting = rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING];
+      const careBundle = rowData[BULK_UPLOAD_COLUMNS.CARE_BUNDLE];
+      const careActivity = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
+
+      careSettingDisplayNames.add(this.trimDisplayName(careSetting));
+      careBundleDisplayNames.add(this.trimDisplayName(careBundle));
+      careActivityDisplayNames.add(this.trimDisplayName(careActivity));
+    });
+
+    // upsert care settings (aka care locations) (aka Units)
+    await this.unitService.saveCareLocations(Array.from(careSettingDisplayNames));
+
+    // upsert care bundles
+    await this.bundleService.upsertBundles(Array.from(careBundleDisplayNames));
+
+    // Process care activities
+    const partialCareActivities = await this.processCareActivities(
+      data,
+      careSettingDisplayNames,
+      careBundleDisplayNames,
+    );
+
+    // upsert care activities
+    await this.careActivityService.upsertCareActivities(partialCareActivities);
+
+    // process allowed activity
+    const allowedActivities = await this.processAllowedActivities(data, careActivityDisplayNames);
+
+    // upsert allowed activities
+    await this.allowedActivityService.upsertAllowedActivities(allowedActivities);
+  }
+
+  /**
+   *
+   * Process Care Activities
+   *
+   */
+  async processCareActivities(
+    data: CareActivityBulkData[],
+    careSettingDisplayNames: Set<string>,
+    careBundleDisplayNames: Set<string>,
+  ) {
+    // fetch care setting entities from database for relational mapping purposes with care activities
+    const careSettingEntities = await this.unitService.getUnitsByNames(
+      Array.from(careSettingDisplayNames),
+    );
+
+    // fetch bundle entities from database for relational mapping purposes with care activities
+    const bundleEntities = await this.bundleService.getManyByNames(
+      Array.from(careBundleDisplayNames),
+    );
+
+    // care activity object to be upserted
+    const partialCareActivities: Partial<CareActivity>[] = [];
+
+    // loop all care activities, and create care activity processable entity
+    data.forEach(({ rowData }) => {
+      const careActivity = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
+      const activityType = rowData[BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE] as CareActivityType;
+      const careSetting = rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING];
+      const careBundle = rowData[BULK_UPLOAD_COLUMNS.CARE_BUNDLE];
+
+      const careSettingEntity = careSettingEntities.find(
+        entity => entity.name === this.getNameFromDisplayName(careSetting),
+      );
+      const bundleEntity = bundleEntities.find(
+        entity => entity.name === this.getNameFromDisplayName(careBundle),
+      );
+
+      if (!careSettingEntity || !bundleEntity) {
+        // ideally code should never reach this error. At this point, both careSetting and bundle from the sheet should have been upserted
+        // New ones should have been inserted in previous step. If still not, verify the names and cleanText names
+        this.logger.error(
+          `Something went wrong processing care activity - Care setting / bundle not found in db - careActivity: ${careActivity}, careBundle: ${careBundle}, careSetting: ${careSetting}`,
+        );
+        throw new UnprocessableEntityException(
+          `Something went wrong processing care activity - ${careActivity}`,
+        );
+      }
+
+      partialCareActivities.push({
+        name: careActivity,
+        activityType,
+        bundle: bundleEntity,
+        careLocations: [careSettingEntity],
+      });
+    });
+
+    return partialCareActivities;
+  }
+
+  /**
+   *
+   * Process Allowed Activities
+   *
+   */
+  async processAllowedActivities(
+    data: CareActivityBulkData[],
+    careActivityDisplayNames: Set<string>,
+  ) {
+    // fetch occupations
+    const occupations = await this.occupationService.getAllOccupations();
+
+    // care activity - allowed activity mapping
+    const careActivityAllowedActivityMapping: Record<
+      string,
+      { [occupation: string]: Permissions }
+    > = {};
+
+    // loop all care activities, and map values
+    data.forEach(({ rowData }) => {
+      const careActivity = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
+      const careActivityDisplayName = this.trimDisplayName(careActivity);
+
+      // if mapping does not exist, create
+      if (!careActivityAllowedActivityMapping[careActivityDisplayName]) {
+        careActivityAllowedActivityMapping[careActivityDisplayName] = {};
+      }
+
+      // loop all occupations, and map values
+      occupations.forEach(occupation => {
+        const permission = rowData[occupation.displayName];
+        const occupationDisplayName = occupation.displayName;
+
+        // ignore not allowed activity ['N']
+        if (!(Object.values(Permissions) as string[]).includes(permission)) {
+          // TODO when enabling edit: when 'N', remove allowed activities in db, if available
+          // For now, when adding a record, no action is required
+          return;
+        }
+
+        careActivityAllowedActivityMapping[careActivityDisplayName][occupationDisplayName] =
+          permission as Permissions;
+      });
+    });
+
+    // fetch care activities from database for relational mapping purposes with allowed activities
+    const careActivityEntities = await this.careActivityService.getManyByNames(
+      Array.from(careActivityDisplayNames),
+    );
+
+    // care activity map as helper - so we don't have to perform find operation every time
+    const careActivityMap: Record<string, CareActivity> = {};
+
+    // fill in care activity map helper
+    careActivityEntities.forEach(careActivity => {
+      const careActivityDisplayName = careActivity.displayName;
+      if (!careActivityMap[careActivityDisplayName]) {
+        careActivityMap[careActivityDisplayName] = careActivity;
+      }
+    });
+
+    // occupation map as helper - so we don't have to perform find operation every time
+    const occupationMap: Record<string, Occupation> = {};
+
+    // fill in occupation map helper
+    occupations.forEach(occupation => {
+      const occupationDisplayName = occupation.displayName;
+      if (!occupationMap[occupationDisplayName]) {
+        occupationMap[occupationDisplayName] = occupation;
+      }
+    });
+
+    // allowed activity object to be upserted
+    const allowedActivities: Partial<AllowedActivity>[] = [];
+
+    // process mapping
+    Object.keys(careActivityAllowedActivityMapping).forEach(careActivityDisplayName => {
+      const mapping = careActivityAllowedActivityMapping[careActivityDisplayName];
+
+      Object.keys(mapping).forEach(occupationDisplayName => {
+        const permission = mapping[occupationDisplayName];
+        const occupation = occupationMap[occupationDisplayName];
+        const careActivity = careActivityMap[careActivityDisplayName];
+
+        allowedActivities.push({ permission, occupation, careActivity });
+      });
+    });
+
+    return allowedActivities;
   }
 }
