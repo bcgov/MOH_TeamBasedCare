@@ -80,4 +80,6 @@ export const API_ENDPOINT = {
   EDIT_USER: (id: string) => `/user/${id}/edit`,
   REVOKE_USER: (id: string) => `/user/${id}/revoke`,
   RE_PROVISION_USER: (id: string) => `/user/${id}/re-provision`,
+  CARE_ACTIVITY_CMS_BULK_VALIDATE: '/care-activity/cms/bulk/validate',
+  CARE_ACTIVITY_CMS_BULK_UPLOAD: '/care-activity/cms/bulk/upload',
 };

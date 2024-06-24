@@ -2,6 +2,7 @@ import { faCloudUploadAlt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useCallback, useState } from 'react';
 import { Alert } from './Alert';
+import { Spinner } from './generic/Spinner';
 
 interface FileUploadProps {
   id: string;
@@ -9,7 +10,9 @@ interface FileUploadProps {
   maxFileSize?: number; // in bytes
   maxFileSizeText?: string;
   handleErrorBeforeSelection?: (selectedFile: File) => void;
-  handleFile: (selectedFile: File) => void;
+  handleFile: (selectedFile: File) => Promise<void>;
+  handleFileErrorRemove?: () => void;
+  loading?: boolean;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -19,23 +22,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   maxFileSizeText = '25 MB',
   handleErrorBeforeSelection,
   handleFile,
+  handleFileErrorRemove,
+  loading = false,
 }) => {
   const [file, setFile] = React.useState<File | null>();
   const ref = React.useRef<HTMLInputElement | null>(null);
 
   const [dragOver, setDragOver] = useState(false);
-  const [fileDropError, setFileDropError] = useState('');
+  const [fileError, setFileError] = useState('');
 
   const onDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setDragOver(true);
-    setFileDropError('');
+    setFileError('');
   }, []);
 
   const onDragLeave = useCallback(() => setDragOver(false), []);
 
-  const onFileRemove = useCallback((e?: React.MouseEvent<SVGSVGElement>) => {
-    e?.preventDefault();
+  const onFileErrorRemove = useCallback(() => {
+    setFileError('');
+    handleFileErrorRemove?.();
+  }, []);
+
+  const onFileRemove = useCallback(() => {
     setFile(null);
     if (ref.current) {
       ref.current.value = '';
@@ -56,9 +65,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   );
 
   const handleFileUpload = useCallback(
-    (selectedFile: File | undefined) => {
+    async (selectedFile: File | undefined) => {
       if (!selectedFile) {
-        setFileDropError('Failed to select file');
+        // noop: No action if the file is not selected
         return;
       }
 
@@ -67,15 +76,22 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         handleErrorBeforeSelection?.(selectedFile);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        setFileDropError(err.message);
+        setFileError(err.message);
         onFileRemove();
+        handleFileErrorRemove?.();
         return;
       }
 
-      setFileDropError('');
+      setFileError('');
       setFile(selectedFile);
 
-      handleFile?.(selectedFile);
+      try {
+        await handleFile?.(selectedFile);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        setFileError(err.message);
+        return;
+      }
     },
     [handleErrorBeforeSelection, handleFile, handleMaxFileSize, onFileRemove],
   );
@@ -102,13 +118,16 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className='container'>
       <form className='relative'>
+        <div className='absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+          <Spinner show={loading} />
+        </div>
         <label
           htmlFor={`file-${id}`}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
-          className={`p-4 border-dashed border-4 border-bcBluePrimary flex flex-col gap-2 items-center justify-center ${
-            dragOver ? 'opacity-50' : ''
+          className={`p-4 border-dashed border-4 border-bcBluePrimary flex flex-col gap-2 items-center justify-center cursor-pointer ${
+            dragOver || loading ? 'opacity-20 disabled' : ''
           }`}
         >
           <FontAwesomeIcon icon={faCloudUploadAlt} className='h-8 text-bcBluePrimary' />
@@ -118,7 +137,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <FontAwesomeIcon
                 icon={faTimes}
                 className='px-4 h-4 text-bcRedError cursor-pointer'
-                onClick={onFileRemove}
+                onClick={e => {
+                  e.preventDefault();
+                  onFileRemove();
+                  onFileErrorRemove();
+                }}
               />
             </div>
           )}
@@ -133,9 +156,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           accept={accept}
           onChange={onFileSelectChange}
         />
-        {fileDropError && (
+        {fileError && (
           <Alert type='error' className='mt-4'>
-            {fileDropError}
+            {fileError}
           </Alert>
         )}
       </form>

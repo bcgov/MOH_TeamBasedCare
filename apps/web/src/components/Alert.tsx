@@ -21,7 +21,7 @@ export const Alert: React.FC<AlertProps> = ({ type, className = '', children }) 
       ${type === 'success' && 'bg-bcBannerSuccessBg text-bcBannerSuccessText'}
       ${type === 'warning' && 'bg-bcYellowCream text-bcDarkYellow'} `}
     >
-      <div className={`flex flex-row gap-4 items-center`}>
+      <div className={`flex flex-row gap-4 overflow-y-auto max-h-[16rem]`}>
         {type === 'error' && (
           <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faTimesCircle} />
         )}
