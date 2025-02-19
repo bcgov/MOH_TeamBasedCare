@@ -55,14 +55,14 @@ KEYCLOAK_AUTH_SERVER_URI = https://common-logon.hlth.gov.bc.ca/auth
 endif
 
 ifeq ($(ENV_NAME), dev)
-DOMAIN=dev.tbcm.freshworks.club
+DOMAIN=dev.moc.gov.bc.ca
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_DEV)
 DB_HOST = $(DB_HOST_DEV)
 KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
 ifeq ($(ENV_NAME), test)
-DOMAIN=test.tbcm.freshworks.club
+DOMAIN=test.moc.gov.bc.ca
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
 DB_HOST = $(DB_HOST_PROD_TEST)
 KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
