@@ -12,7 +12,10 @@ dist
 node_modules
 .DS_Store
 .env
+.envrc
 .idea
+.history
+.vscode
 
 .eslintcache
 .pgdata
