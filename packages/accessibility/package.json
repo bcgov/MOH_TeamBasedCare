@@ -1,7 +1,7 @@
 {
   "name": "@tbcm/accessibility",
   "version": "0.0.1",
-  "packageManager": "yarn@1.22.22",
+  "packageManager": "yarn@3.2.3",
   "scripts": {
     "debug": "DEBUG=true pa11y-ci --config ./src/pa11y-ci.js",
     "start": "echo 'Run accessibility tests...' && pa11y-ci --config ./src/pa11y-ci.js --json > out/accessibility_results.json",

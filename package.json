@@ -64,5 +64,5 @@
       "eslint --cache --fix"
     ]
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@3.2.3"
 }
