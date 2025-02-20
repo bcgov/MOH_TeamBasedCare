@@ -16,6 +16,8 @@ import { Role } from '@tbcm/common';
 export enum AllowedPath {
   LANDING = '/',
   PLANNING = '/planning',
+  PLANNING_STEP = '/planning/:step',
+  PlANNING_TEST = '/planning/bundles',
   OCCUPATIONAL_SCOPE = '/occupational-scope',
   OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
   CARE_TERMINOLOGIES = '/care-terminologies',
@@ -87,6 +89,26 @@ export const PlanningSteps = [
   'Occupations/Roles',
   'Gaps, Optimizations and Suggestions',
 ];
+
+type PathMapDict = {
+  [key: string]: number;
+};
+export const pathMap: PathMapDict = {
+  profile: 1,
+  bundles: 2,
+  occupations: 3,
+  gaps: 4,
+};
+
+type PlanningPath = {
+  [key: number]: string;
+};
+export const planningPath: PlanningPath = {
+  1: '/planning/profile',
+  2: '/planning/bundles',
+  3: '/planning/occupations',
+  4: '/planning/gaps',
+};
 
 export enum TagVariants {
   BASE = 'tag',

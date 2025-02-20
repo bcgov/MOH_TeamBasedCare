@@ -1,31 +1,51 @@
 import { useState, useEffect } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
 import { PlanningSteps } from '../common/constants';
+import { planningPath } from '../common/constants';
 import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
+import { useAppContext } from './AppContext';
+import { usePlanningRefresh } from 'src/services/usePlanningRefresh';
 
-const WrapperContent = () => {
+type WrapperProps = {
+  initialStep: number;
+};
+
+const WrapperContent: React.FC<WrapperProps> = ({ initialStep }) => {
+  usePlanningRefresh();
   const {
     state: { canProceedToNext, sessionId },
     updateNextTriggered,
   } = usePlanningContext();
-
-  const [currentStep, setCurrentStep] = useState(1);
+  const { updateActivePath } = useAppContext();
+  const [disableExport, setDisableExport] = useState(false);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const isFirstStep = currentStep === 1;
+
+  useEffect(() => {
+    setCurrentStep(initialStep);
+  }, [initialStep]);
 
   const handleNextStep = () => {
     updateNextTriggered();
   };
+
+  const handleDisableExport = (disable: boolean) => {
+    setDisableExport(disable);
+  };
+
   const handlePreviousStep = () => {
     if (isFirstStep || currentStep < 1) return;
     setCurrentStep(Number(currentStep) - 1);
+    updateActivePath(planningPath[Number(currentStep) - 1]);
   };
 
   useEffect(() => {
     if (canProceedToNext) {
       if (currentStep >= PlanningSteps.length) return;
       setCurrentStep(Number(currentStep) + 1);
+      updateActivePath(planningPath[Number(currentStep) + 1]);
     }
   }, [canProceedToNext]);
 
@@ -48,7 +68,7 @@ const WrapperContent = () => {
           </Button>
 
           {currentStep >= PlanningSteps.length ? (
-            <ExportButton sessionId={sessionId}></ExportButton>
+            <ExportButton disabled={disableExport} sessionId={sessionId}></ExportButton>
           ) : (
             <Button
               variant='primary'
@@ -64,16 +84,20 @@ const WrapperContent = () => {
       </div>
       {/* Works here */}
       <div className='flex-1 flex flex-col min-h-0 overflow-y-auto mt-4'>
-        <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
+        <PlanningContent
+          handleDisableExport={handleDisableExport}
+          step={currentStep}
+          formTitle={PlanningSteps[currentStep - 1]}
+        />
       </div>
     </div>
   );
 };
 
-export const PlanningWrapper = () => {
+export const PlanningWrapper: React.FC<WrapperProps> = ({ initialStep }) => {
   return (
     <PlanningProvider>
-      <WrapperContent />
+      <WrapperContent initialStep={initialStep} />
     </PlanningProvider>
   );
 };

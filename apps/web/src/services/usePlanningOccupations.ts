@@ -19,7 +19,6 @@ export const usePlanningOccupations = ({
     state: { sessionId, refetchActivityGap },
     updateProceedToNext,
   } = usePlanningContext();
-
   const [initialValues, setInitialValues] = useState<PlanningOccupation>({
     occupation: [],
   });

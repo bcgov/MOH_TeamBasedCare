@@ -7,9 +7,14 @@ import { Suggestions } from './planning/Suggestions';
 interface PlanningContentProps {
   step: number;
   formTitle: string;
+  handleDisableExport: (disable: boolean) => void;
 }
 
-export const PlanningContent: React.FC<PlanningContentProps> = ({ step, formTitle }) => {
+export const PlanningContent: React.FC<PlanningContentProps> = ({
+  step,
+  formTitle,
+  handleDisableExport,
+}) => {
   const showStepContent = () => {
     switch (formTitle) {
       case 'Profile':
@@ -19,7 +24,9 @@ export const PlanningContent: React.FC<PlanningContentProps> = ({ step, formTitl
       case 'Occupations/Roles':
         return <Occupation title={formTitle} step={step} />;
       case 'Gaps, Optimizations and Suggestions':
-        return <ActivitiesGap title={formTitle} step={step} />;
+        return (
+          <ActivitiesGap handleDisableExport={handleDisableExport} title={formTitle} step={step} />
+        );
       case 'Suggestions':
         return <Suggestions title={formTitle} step={step} />;
     }

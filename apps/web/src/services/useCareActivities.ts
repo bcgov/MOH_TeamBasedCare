@@ -19,11 +19,12 @@ export const useCareActivities = () => {
     const config = {
       endpoint: API_ENDPOINT.getPlanningCareActivityBundlesForSessionCareLocation(sessionId),
     };
-
-    fetchData(config, (data: BundleRO[]) => {
-      setCareActivities({ result: data });
-    });
-  }, []);
+    if (sessionId && sessionId.length > 0) {
+      fetchData(config, (data: BundleRO[]) => {
+        setCareActivities({ result: data });
+      });
+    }
+  }, [sessionId]);
 
   return { careActivities, isLoading };
 };

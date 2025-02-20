@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Radio, Checkbox } from '@components';
+import { Spinner } from '../generic/Spinner';
 import { Form, Formik, useFormikContext } from 'formik';
 import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
+import { usePlanningProfile } from '../../services/usePlanningProfile';
 import {
   PlanningSessionRO,
   ProfileOptions,
@@ -12,10 +14,8 @@ import {
 } from '@tbcm/common';
 import { dtoValidator } from '../../utils/dto-validator';
 import { RenderSelect } from '../generic/RenderSelect';
-import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
-import { Spinner } from '../generic/Spinner';
 import { AppStorage, StorageKeys } from 'src/utils/storage';
 
 export interface ProfileProps {
