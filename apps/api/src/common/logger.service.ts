@@ -14,6 +14,9 @@ export class AppLogger implements LoggerService {
           format: winston.format.combine(
             winston.format.timestamp(),
             process.env.RUNTIME_ENV === 'local'
+              ? winston.format.colorize({ all: true })
+              : winston.format.uncolorize(),
+            process.env.RUNTIME_ENV === 'local'
               ? nestWinstonModuleUtilities.format.nestLike('TBCM', { prettyPrint: true })
               : winston.format.json(),
           ),

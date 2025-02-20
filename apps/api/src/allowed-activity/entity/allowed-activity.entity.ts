@@ -8,7 +8,7 @@ import { Occupation } from '../../occupation/entity/occupation.entity';
 @Unique('occupation_careActivity', ['occupation', 'careActivity'])
 export class AllowedActivity extends CustomBaseEntity {
   @Column({ type: 'enum', enum: Permissions, nullable: false })
-  permission: string;
+  permission: Permissions;
 
   @ManyToOne(() => Occupation, occupation => occupation.allowedActivities, { nullable: false })
   occupation: Occupation;

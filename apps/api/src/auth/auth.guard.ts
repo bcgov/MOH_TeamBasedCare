@@ -1,10 +1,11 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from './jwt.service';
-import { UserService } from 'src/user/user.service';
-import { KeycloakUser, Role, hasAccess } from '@tbcm/common';
-import { AuthService } from './auth.service';
 import { META_SKIP_AUTH, META_UNPROTECTED } from 'nest-keycloak-connect';
+import { TokenExpiredError } from 'jsonwebtoken';
+import { KeycloakUser, Role, hasAccess } from '@tbcm/common';
+import { UserService } from 'src/user/user.service';
+import { JwtService } from './jwt.service';
+import { AuthService } from './auth.service';
 import { RequestContextService } from 'src/common/request-context.service';
 
 @Injectable()
@@ -46,6 +47,10 @@ export class AuthGuard implements CanActivate {
       // decode from the token
       tokenUser = await this.jwtService.getUserFromToken(token);
     } catch (e) {
+      if (e instanceof TokenExpiredError) {
+        // trigger frontend to refresh token
+        throw new UnauthorizedException('Authentication token expired');
+      }
       // else fetch from the server
       tokenUser = await this.authService.getUserInfo(token);
     }

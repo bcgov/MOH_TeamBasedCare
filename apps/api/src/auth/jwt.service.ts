@@ -1,7 +1,7 @@
-import { BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
-import { KeycloakUser } from '@tbcm/common';
-import jwt, { TokenExpiredError } from 'jsonwebtoken';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
+import { KeycloakUser } from '@tbcm/common';
 
 export class JwtService {
   jwksClient = jwksRsa({
@@ -22,26 +22,19 @@ export class JwtService {
   };
 
   async getUserFromToken(token: string) {
-    try {
-      const decoded = jwt.decode(token, { complete: true });
-      const kid = decoded?.header.kid;
-      const jwks = await this.jwksClient.getSigningKey(kid);
-      const signingKey = jwks.getPublicKey();
-      const verified = jwt.verify(token || '', signingKey);
+    const decoded = jwt.decode(token, { complete: true });
+    const kid = decoded?.header.kid;
+    const jwks = await this.jwksClient.getSigningKey(kid);
+    const signingKey = jwks.getPublicKey();
+    const verified = jwt.verify(token || '', signingKey);
 
-      if (typeof verified !== 'string' && verified.azp !== 'TBCM') {
-        throw new HttpException('Authentication token does not match', HttpStatus.FORBIDDEN);
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { ...user } = decoded?.payload as KeycloakUser;
-
-      return user as KeycloakUser;
-    } catch (e) {
-      if (e instanceof TokenExpiredError) {
-        throw new BadRequestException('Authentication token expired');
-      }
-      throw e;
+    if (typeof verified !== 'string' && verified.azp !== 'TBCM') {
+      throw new HttpException('Authentication token does not match', HttpStatus.FORBIDDEN);
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { ...user } = decoded?.payload as KeycloakUser;
+
+    return user as KeycloakUser;
   }
 }

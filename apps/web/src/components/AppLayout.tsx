@@ -10,6 +10,8 @@ import { Sidebar } from './Sidebar';
 import { UserStatus } from '@tbcm/common';
 
 const AppLayout: React.FC = ({ children }) => {
+  const [mounted, setMounted] = React.useState(false);
+
   const router = useRouter();
   const { state, updateSidebarButtons } = useAppContext();
   const { isAuthenticated, userRoles, userStatus, hasUserRole } = useAuth();
@@ -43,13 +45,6 @@ const AppLayout: React.FC = ({ children }) => {
     updateSidebarButtons(updatedSidebarButtons);
   }, [isAuthenticated, updateSidebarButtons, updatedSidebarButtons]);
 
-  /**
-   * App Layout is only accessible when the user is signed in. It acts as a Home screen
-   */
-  if (!isAuthenticated()) {
-    return <></>;
-  }
-
   let accessError = '';
 
   /** if nav based role exist, and user does not have the required access */
@@ -72,24 +67,34 @@ const AppLayout: React.FC = ({ children }) => {
     accessError = `Your access was revoked. You no longer have permissions to access the application.`;
   }
 
+  useEffect(() => {
+    // to prevent "Error: Hydration failed because the initial UI does not match what was rendered on the server"
+    setMounted(true);
+  }, []);
+
+  /**
+   * App Layout is only accessible when the user is signed in. It acts as a Home screen
+   */
+  if (!isAuthenticated() || !mounted) {
+    return null;
+  }
+
   return (
-    <>
-      <div className='h-screen flex mr-auto'>
-        <Sidebar />
-        <div className='flex flex-1 flex-col w-full p-3 overflow-auto'>
-          <Header
-            title={activeSidebarButton.current?.text}
-            icon={activeSidebarButton.current?.faIcon}
-          />
-          {!accessError && children}
-          {accessError && (
-            <div className='flex justify-center mt-2'>
-              <Alert type='warning'> {accessError} </Alert>
-            </div>
-          )}
-        </div>
+    <div className='h-screen flex mr-auto' suppressHydrationWarning={true}>
+      <Sidebar />
+      <div className='flex flex-1 flex-col w-full p-3 overflow-auto'>
+        <Header
+          title={activeSidebarButton.current?.text}
+          icon={activeSidebarButton.current?.faIcon}
+        />
+        {!accessError && children}
+        {accessError && (
+          <div className='flex justify-center mt-2'>
+            <Alert type='warning'> {accessError} </Alert>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
