@@ -43,6 +43,9 @@ jobs:
           aws-region: ca-central-1
           role-to-assume: ${{ secrets.AWS_SA_ROLE_ARN }}
 
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@v3
+
       - name: Terraform apply
         run: make apply
 
