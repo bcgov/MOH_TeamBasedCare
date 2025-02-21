@@ -126,9 +126,9 @@ export class SeedService {
         if (!headers) {
           headers = Object.keys(data);
         }
-        bundleName = (!data[headers[1]] ? bundleName : data[headers[1]]).trim().replace(/"/g, '');
-        const activityName = data[headers[0]].trim().replace(/"/g, '');
-        const careLocation = 'Acute care medicine';
+        bundleName = data['Care activity bundle'].trim().replace(/"/g, '');
+        const activityName = data['Care activity'].trim().replace(/"/g, '');
+        const careLocation = data['Care setting'].trim().replace(/"/g, '');
         careLocations.add(careLocation);
 
         let activityList: {
@@ -140,11 +140,11 @@ export class SeedService {
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
         }
-        const activityType = data[headers[2]].trim().replace(/"/g, '');
+        const activityType = data['Aspect of practice'].trim().replace(/"/g, '');
 
         activityList.push({ name: activityName, activityType, careLocation });
         bundleVsCareActivity[bundleName] = activityList;
-        for (let index = 3; index < headers.length; index++) {
+        for (let index = 4; index < headers.length; index++) {
           const e = headers[index];
           let action: string = data[e];
           let allowedAction;
