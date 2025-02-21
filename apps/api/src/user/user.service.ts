@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   Authorities,
@@ -40,7 +41,7 @@ export class UserService {
       this.logger.error('user.service.ts :: resolveUser');
       this.logger.error('Cannot resolve user due to invalid email');
       this.logger.error(`keycloak email: ${keycloakUser.email}`);
-      throw new BadRequestException({ message: 'Cannot resolve user due to invalid email' });
+      throw new UnauthorizedException({ message: 'Cannot resolve user due to invalid email' });
     }
 
     // find existing user

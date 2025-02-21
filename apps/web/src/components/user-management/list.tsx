@@ -160,13 +160,17 @@ const TableFooter: React.FC<TableFooterProps> = ({
   onPageOptionsChange,
 }) => {
   return (
-    <td colSpan={100}>
-      <Pagination
-        id='tbcm-user-management-list-table'
-        pageOptions={{ pageIndex, pageSize, total }}
-        onChange={onPageOptionsChange}
-      />
-    </td>
+    <tfoot>
+      <tr>
+        <td colSpan={100}>
+          <Pagination
+            id='tbcm-user-management-list-table'
+            pageOptions={{ pageIndex, pageSize, total }}
+            onChange={onPageOptionsChange}
+          />
+        </td>
+      </tr>
+    </tfoot>
   );
 };
 

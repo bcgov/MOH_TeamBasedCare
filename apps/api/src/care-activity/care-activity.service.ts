@@ -251,13 +251,9 @@ export class CareActivityService {
     await this.careActivityRepo.remove(careActivity);
   }
 
-  async upsertCareActivities(partials: Partial<CareActivity>[]) {
-    return this.careActivityRepo.upsert(
+  async saveCareActivities(partials: Partial<CareActivity>[]) {
+    return this.careActivityRepo.save(
       partials.map(partial => this.careActivityRepo.create(partial)),
-      {
-        skipUpdateIfNoValuesChanged: true,
-        conflictPaths: ['name'],
-      },
     );
   }
 
