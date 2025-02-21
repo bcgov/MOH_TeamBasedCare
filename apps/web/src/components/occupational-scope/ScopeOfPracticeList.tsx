@@ -52,7 +52,11 @@ const TableBody: React.FC<TableBodyProps> = ({ allowedActivities = [] }) => {
   return (
     <tbody>
       {allowedActivities.length === 0 && (
-        <AppErrorMessage message='No care activities found with the matching filter' />
+        <tr>
+          <td colSpan={100}>
+            <AppErrorMessage message='No care activities found with the matching filter' />
+          </td>
+        </tr>
       )}
 
       {allowedActivities?.map((allowedActivity: AllowedActivityByOccupation, index: number) => (
@@ -81,13 +85,17 @@ const TableFooter: React.FC<TableFooterProps> = ({
   onPageOptionsChange,
 }) => {
   return (
-    <td colSpan={100}>
-      <Pagination
-        id='tbcm-occupational-scope-of-practice-list-table'
-        pageOptions={{ pageIndex, pageSize, total }}
-        onChange={onPageOptionsChange}
-      />
-    </td>
+    <tfoot>
+      <tr>
+        <td colSpan={100}>
+          <Pagination
+            id='tbcm-occupational-scope-of-practice-list-table'
+            pageOptions={{ pageIndex, pageSize, total }}
+            onChange={onPageOptionsChange}
+          />
+        </td>
+      </tr>
+    </tfoot>
   );
 };
 

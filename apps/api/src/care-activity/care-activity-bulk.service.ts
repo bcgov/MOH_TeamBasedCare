@@ -325,7 +325,7 @@ export class CareActivityBulkService {
     );
 
     // upsert care activities
-    await this.careActivityService.upsertCareActivities(partialCareActivities);
+    await this.careActivityService.saveCareActivities(partialCareActivities);
 
     // process allowed activity
     const allowedActivities = await this.processAllowedActivities(data, careActivityDisplayNames);

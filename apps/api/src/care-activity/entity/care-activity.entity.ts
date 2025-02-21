@@ -45,8 +45,8 @@ export class CareActivity extends CustomBaseEntity {
   @Column({ type: 'enum', enum: ClinicalType, nullable: true })
   clinicalType?: ClinicalType;
 
-  @ManyToMany(() => Unit, { cascade: true })
-  @JoinTable()
+  @ManyToMany(() => Unit, unit => unit.careActivities, { cascade: true })
+  @JoinTable({ name: 'care_activity_care_locations_unit' })
   careLocations: Unit[];
 
   @BeforeInsert()
