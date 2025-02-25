@@ -122,7 +122,12 @@ export class SeedService {
 
     readable
       .pipe(csv())
-      .on('data', data => {
+      .on('data', row => {
+        const data = Object.keys(row).reduce((acc, key) => {
+          acc[key.trim()] = row[key];
+          return acc;
+        }, {} as { [key: string]: string });
+
         if (!headers) {
           headers = Object.keys(data);
         }
@@ -140,7 +145,9 @@ export class SeedService {
         if (bundleName in bundleVsCareActivity) {
           activityList = bundleVsCareActivity[bundleName];
         }
-        const activityType = data['Aspect of Practice'].trim().replace(/"/g, '');
+        const activityType = data['Aspect of Practice']
+          .trim()
+          .replace(/"/g, '') as CareActivityType;
 
         activityList.push({ name: activityName, activityType, careLocation });
         bundleVsCareActivity[bundleName] = activityList;
