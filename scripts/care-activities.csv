@@ -1,0 +1,155 @@
+Care Setting,Care Activities,Care Activity Bundle,Aspect of Practice,Environmental Services Worker (Housekeeper),Health Care Assistant,Unit Clerk,Indigenous Liaison,Physiotherapist,Occupational Therapist,Respiratory Therapist,Social Worker,Combined Laboratory/X-Ray Technologist,Diagnostic Medical Sonographer,Computed Tomography Technologist,Mammography Technologist,Nuclear Medicine Technologist,Radiological Technologist,Medical Laboratory Assistant,Medical Laboratory Technologist,Advanced Care Paramedic,Community Care Paramedic,Critical Care Paramedic,Primary Care Paramedic,Clinical Pharmacist,Pharmacy Assistant,Pharmacy Technician,Rehabilitation Assistant,Licensed Practical Nurse,Registered Nurse,Registered Psychiatric Nurse
+Emergency Department,Consult with BCEHS or other provider before patient arrives/repatriates to confirm most appropriate facility,Triage,Aspect of Practice,N,N,N,N,LC,LC,N,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,Y
+Emergency Department,Order pre-treatment before patient arrives with BCEHS or other provider,Triage,Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+Emergency Department,Scan / Screen waiting room for change in patient condition - report to Triage Nurse,Triage,Task,Y,Y,N,N,Y,Y,Y,LC,N,N,N,Y,Y,N,Y,N,Y,Y,Y,Y,N,N,N,N,LC,Y,Y
+Emergency Department,Assess changing conditions of patients in waiting room,Triage,Aspect of Practice,N,N,N,N,Y,LC,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,LC,Y,LC
+Emergency Department,"Greet public, redirect people as required",Triage,Task,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,Y,Y,LC,Y,LC,Y,Y,Y,Y,N,Y,Y,LC,Y,Y,Y
+Emergency Department,Taking a patient or ambulance call for potential ED patients,Triage,Aspect of Practice,N,N,N,N,LC,LC,LC,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,N,Y,Y
+Emergency Department,Register ED patient,Triage,Task,N,LC,LC,N,LC,LC,LC,N,N,N,N,Y,Y,N,Y,N,LC,LC,LC,LC,N,N,N,LC,LC,LC,LC
+Emergency Department,Perform initial patient assessment and assign CTAS score,Triage,Aspect of Practice,N,N,N,N,LC,LC,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,Y,Y
+Emergency Department,Apply gauze to a cut or wound,Triage,Task,N,LC,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,LC,LC,Y,Y
+Emergency Department,"Stabilize limb with sling or splint  (e.g. sprain, broken bone)",Triage,Task,N,LC,N,N,LC,LC,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,LC,Y,Y
+Emergency Department,Transfer care from triage to emergency department bed/chair,Triage,Aspect of Practice,N,LC,N,N,Y,Y,Y,N,LC,LC,N,N,N,LC,N,LC,Y,Y,Y,Y,N,N,N,N,Y,Y,Y
+Emergency Department,"Screen for patient ability to perform instrumental activities of daily living (IADLs): using the telephone, shopping, preparing meals, housekeeping, using transportation, taking medication(s), and managing finances",ADL and IADL,Task,N,Y,N,Y,Y,Y,N,Y,N,N,N,N,N,N,N,Y,LC,Y,LC,LC,Y,N,N,LC,Y,Y,Y
+Emergency Department,"Assess for patient ability to perform instrumental activities of daily living (IADL): using the telephone, shopping, preparing meals, housekeeping, using transportation, taking medication(s), and managing finances",ADL and IADL,Aspect of Practice,N,N,N,Y,Y,Y,N,Y,N,N,N,N,N,N,N,N,LC,Y,LC,LC,Y,N,N,N,Y,Y,Y
+Emergency Department,"Assist patients with instrumental activities of daily living (IADL): using the telephone, shopping, preparing meals, housekeeping, using transportation, taking medication(s), and managing finances",ADL and IADL,Task,N,Y,N,Y,Y,Y,LC,Y,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,Y,Y,Y,Y
+Emergency Department,"Screen for patient ability to perform ADLs: bathing/showering, dressing, getting in/out of bed or a chair, walking, using the toilet, and eating",ADL and IADL,Task,N,Y,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,Y,LC,Y,LC,LC,Y,N,N,LC,Y,Y,Y
+Emergency Department,"Assess for patient ability to complete ADLs: bathing/showering, dressing, getting in/out of bed or a chair, walking, using the toilet, and eating",ADL and IADL,Aspect of Practice,N,N,N,Y,Y,Y,N,Y,N,N,N,N,N,N,N,N,LC,Y,LC,LC,Y,N,N,N,Y,Y,Y
+Emergency Department,"Assist patient with ADLs: bathing/showering, dressing, getting in/out of bed or a chair, walking, using the toilet, and eating",ADL and IADL,Task,N,Y,N,N,Y,Y,LC,Y,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,Y,Y,Y
+Emergency Department,Educate patient and family on use of adaptive equipment for ADLs/IADLs,ADL and IADL,Task,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,Y,N,N,LC,Y,Y,Y
+Emergency Department,Refer to community resources for support for ADLs/IADLs,ADL and IADL,Task,N,N,N,Y,Y,Y,N,Y,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,Y
+Emergency Department,Educate patient to complete personal care tasks to support activities of daily living,ADL and IADL,Task,N,Y,N,Y,Y,Y,LC,Y,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,LC,Y,Y,Y
+Emergency Department,Perform oral care,ADL and IADL,Task,N,Y,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,Y,Y,Y
+Emergency Department,Assist with oral care,ADL and IADL,Task,N,Y,N,N,N,Y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,Y,Y,Y
+Emergency Department,Assist with feeding patients on oral diet,ADL and IADL,Task,N,Y,N,Y,Y,Y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,Y,Y,Y
+Emergency Department,Educate patient and family on use of adaptive equipment for activities of daily living,ADL and IADL,Task,N,N,N,Y,Y,Y,LC,N,N,N,N,N,N,N,N,N,N,LC,N,N,Y,N,N,LC,Y,Y,Y
+Emergency Department,Assess airway,Assessments and Interventions,Aspect of Practice,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,LC,LC,LC
+Emergency Department,Assess breathing (rate and depth),Assessments and Interventions,Aspect of Practice,N,Y,N,N,Y,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Conduct auscultation of lungs with stethoscope,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,Y,Y,Y
+Emergency Department,"Assess heart rate, rhythm, sounds",Assessments and Interventions,Aspect of Practice,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,Y,Y,Y
+Emergency Department,Assess peripheral pulses,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Assess for central and peripheral edema,Assessments and Interventions,Aspect of Practice,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,Y,Y,Y
+Emergency Department,Assess Jugular Venous Distention,Assessments and Interventions,Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,LC,N,N,N,LC,LC,LC
+Emergency Department,Assist patient to change into hospital gown,Assessments and Interventions,Task,N,LC,LC,LC,Y,Y,Y,LC,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,Y,Y,Y
+Emergency Department,Assess level of consciousness and orientation (GCS),Assessments and Interventions,Aspect of Practice,N,Y,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Assess pupils,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,LC
+Emergency Department,Assess limb strength,Assessments and Interventions,Aspect of Practice,N,Y,N,N,Y,Y,N,N,N,N,N,Y,Y,N,Y,N,Y,Y,Y,Y,N,N,N,N,Y,Y,Y
+Emergency Department,Screen for hot stroke using FAST VAN,Assessments and Interventions,Task,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,Y,N,Y,Y,Y,Y,LC,N,N,LC,Y,Y,LC
+Emergency Department,Screen for confusion or delirium,Assessments and Interventions,Task,N,N,N,N,Y,Y,N,LC,N,N,N,Y,Y,N,Y,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,LC
+Emergency Department,Perform Positive patient ID (PPID) at POC,Assessments and Interventions,Task,Y,Y,Y,Y,Y,N,Y,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,Y,N,Y,Y,Y
+Emergency Department,"Perform secondary assessment to determine diagnosis, including head-to-toe & systems",Assessments and Interventions,Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,Y,LC,LC
+Emergency Department,Obtain complete vital sign - heart rate,Assessments and Interventions,Task,N,Y,N,N,Y,Y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Obtain vital sign -  BP manually,Assessments and Interventions,Task,N,N,N,N,Y,y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Obtain vital sign -  BP with machine,Assessments and Interventions,Task,N,Y,N,N,Y,Y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Obtain vital sign - respiratory rate,Assessments and Interventions,Task,N,Y,N,N,Y,Y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Obtain vital sign -  Temperature (non-rectal),Assessments and Interventions,Task,N,Y,N,N,Y,Y,Y,LC,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Obtain vital sign -  Temperature (rectal),Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,Y,Y,LC
+Emergency Department,Obtain vital sign -  SPO2,Assessments and Interventions,Task,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Obtain vital sign -  SPO2 on room air,Assessments and Interventions,Task,N,Y,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,Y
+Emergency Department,Assess vital signs and the significance of the findings,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,Y,LC,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Perform capilliary blood glucose point of care testing,Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,LC,N,Y,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Assess the capillary blood glucose and the signficance of the finding,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,Y,Y,N,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Initiate infection prevention and control procedures,Assessments and Interventions,Aspect of Practice,N,Y,N,N,Y,Y,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y,Y
+Emergency Department,Initiate decontamination procedures,Assessments and Interventions,Aspect of Practice,N,N,N,N,N,N,N,N,Y,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,Y,Y,Y
+Emergency Department,"Screen for Infection Diseases (e.g., C-Diff, TB etc.) ",Assessments and Interventions,Task,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,Y,N,N,N,N,N,Y,N,N,N,Y,Y,Y
+Emergency Department,Assess pain,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,Y,N,N,N,Y,Y,Y,Y,Y,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Weigh patient,Assessments and Interventions,Task,N,Y,Y,Y,Y,Y,Y,LC,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y
+Emergency Department,Insert peripheral intravenous catheter (PIV),Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,LC
+Emergency Department,Administer IV fluids for any purpose,Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,LC,Y,LC,N,N,N,N,LC,LC,LC
+Emergency Department,Administer IV fluids for the purpose of managing hypovolemia,Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,Y
+Emergency Department,Communicate assessment of patient with team,Assessments and Interventions,Aspect of Practice,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Apply dressing to wound,Assessments and Interventions,Task,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,LC,Y,Y,LC
+Emergency Department,Apply ice to traumatic limb swelling,Assessments and Interventions,Task,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,N,N,Y,Y,Y,Y,Y,N,N,LC,Y,Y,N
+Emergency Department,Order blood and blood products,Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Verify blood and blood products prior to administration,Assessments and Interventions,Task,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,LC,LC,LC
+Emergency Department,Administer blood and blood products,Assessments and Interventions,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,LC,Y,N,N,N,N,N,Y,LC,N
+Emergency Department,Screen for intimate partner violence,Assessments and Interventions,Task,N,N,N,LC,LC,LC,N,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,Y,Y,LC
+Emergency Department,Screen for adult abuse and neglect,Assessments and Interventions,Task,N,N,N,LC,LC,Y,N,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,Y,Y,LC
+Emergency Department,Report child maltreatment (mandatory),Assessments and Interventions,Task,N,N,N,LC,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,LC
+Emergency Department,Refer to advocacy and support services,Assessments and Interventions,Task,N,N,N,Y,Y,Y,LC,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,LC
+Emergency Department,Develop safety plan for adult abuse and neglect,Assessments and Interventions,Aspect of Practice,N,N,N,LC,LC,LC,LC,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N
+Emergency Department,Consult with SCAN (Suspected Child Abuse & Neglect) clinic,Assessments and Interventions,Aspect of Practice,N,N,N,LC,LC,LC,LC,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N
+Emergency Department,Document AGG/Aggressive Alert,Assessments and Interventions,Task,N,N,N,Y,Y,Y,N,Y,N,LC,LC,N,N,LC,N,N,LC,LC,LC,LC,N,N,N,N,Y,Y,Y
+Emergency Department,Call a Code White for aggressive behaviour,Assessments and Interventions,Task,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,Y,Y,Y,Y,Y,Y
+Emergency Department,Respond to a Code White call,Assessments and Interventions,Aspect of Practice,N,LC,LC,LC,LC,LC,N,LC,N,N,N,LC,LC,N,LC,N,N,N,Y,N,LC,LC,LC,LC,Y,Y,LC
+Emergency Department,Performs focused cardiovascular assessment,Cardiovascular,Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,LC,Y,Y
+Emergency Department,Assess for chest discomfort/pain including atypical presentations,Cardiovascular,Aspect of Practice,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,LC,Y,Y
+Emergency Department,"Take peripheral pulses using ultrasound (i.e., Doppler Ultrasound)",Cardiovascular,Restricted Activity,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,Y,Y,Y
+Emergency Department,"Assess peripheral pulses using ultrasound (i.e., Doppler Ultrasound)",Cardiovascular,Aspect of Practice,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N,Y,Y
+Emergency Department,Assess for peripheral edema,Cardiovascular,Aspect of Practice,N,N,N,N,Y,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,LC,Y,Y
+Emergency Department,Assess and measure Jugular Venous Distention,Cardiovascular,Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,N,N,N
+Emergency Department,Prescribe medications for cardiac arrythmias/dysrythmia,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,Y,N
+Emergency Department,Administer oxygen,Cardiovascular,Restricted Activity,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,LC,Y,Y
+Emergency Department,Perform CPR,Cardiovascular,Task,N,LC,N,N,Y,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,LC,Y,Y,Y
+Emergency Department,Apply an Automatic External Defibrillator,Cardiovascular,Restricted Activity,N,N,N,N,LC,LC,LC,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,LC,LC,Y,Y
+Emergency Department,Apply a Cardiac Assist System (Lucas) Chest Compression Device,Cardiovascular,Task,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,Y,LC
+Emergency Department,Perform rapid defibrillation,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,LC,N
+Emergency Department,Perform intubation as a component of Advanced Cardiac Life Support,Cardiovascular,Restricted Activity,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N,N,Y,LC,Y,LC,N,N,N,N,N,N,N
+Emergency Department,Perform intubation as a component of pediatric Advanced Life Support,Cardiovascular,Restricted Activity,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N,N,Y,LC,Y,LC,N,N,N,N,N,N,N
+Emergency Department,Assist with pericardiocentesis,Cardiovascular,Task,N,N,N,N,N,N,Y,N,N,Y,N,N,N,N,N,N,Y,N,Y,N,N,N,N,N,LC,Y,Y
+Emergency Department,Perform pericardiocentesis,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N
+Emergency Department,Diagnose acute chest pain,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N
+Emergency Department,Administer medications to treat all cardiac emergent conditions,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N,LC,LC
+Emergency Department,Diagnose all cardiac emegent conditions,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N
+Emergency Department,Administer cardiac medications,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,LC,Y,N,N,N,N,N,LC,Y,Y
+Emergency Department,Administer medcations for acute chest pain,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,Y,Y
+Emergency Department,Assist with cardioversion,Cardiovascular,Task,N,N,N,N,N,N,Y,N,N,Y,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,LC,Y,LC
+Emergency Department,Perform cardioversion,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,LC,Y,N,N,N,N,N,N,N,N
+Emergency Department,Apply external pacemaker,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N
+Emergency Department,Initiate transcutaneous pacing,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,LC,Y,N,N,N,N,N,N,N,N
+Emergency Department,Assess pacing activity,Cardiovascular,Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,LC,Y,N,N,N,N,N,N,N,N
+Emergency Department,Provide peripheral arterial line care,Cardiovascular,Restricted Activity,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N,N,LC,LC,Y,N,N,N,N,N,N,Y,Y
+Emergency Department,Assesses patients receiving procedural sedation,Cardiovascular,Aspect of Practice,N,N,N,N,LC,N,Y,N,N,N,N,N,N,N,N,N,Y,LC,Y,N,N,N,N,N,LC,Y,Y
+Emergency Department,Administer medications for cardiac dysrhythmia,Cardiovascular,Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,LC,Y,N,N,N,N,N,N,Y,LC
+Emergency Department,"Assess patient with complaint involving eye, ear, nose or throat","Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,LC,Y
+Emergency Department,Perform a Snellen Test (visual acuity),"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,LC,Y,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,LC,N,N,N,Y,Y,LC
+Emergency Department,Administer analgesic eye drops,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,LC,Y,LC,Y,N,N,N,LC,LC,LC
+Emergency Department,Identify time-sensitive critical occular emergency,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,LC,LC,LC,N,N,N,N,LC,LC,LC
+Emergency Department,Diagnose occular emergency,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N,N,N
+Emergency Department,Perform a slit lamp exam,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Perform fundoscopy,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Measure occular pressure using a tonopen (or other device),"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Contact opthalmologist and provide history and physical to refer emergently,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N
+Emergency Department,Administer medications for eye condition,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,LC,Y,LC,Y,N,N,N,LC,Y,Y
+Emergency Department,Prescribe ongoing medication for occular condition,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,LC,Y,LC,LC,N,N,N,N,N,N
+Emergency Department,Apply immobilizing eye patch for comfort,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,Y,Y,Y
+Emergency Department,Apply eye shield for protection,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,LC,Y,Y,Y
+Emergency Department,Remove foreign body from eye,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N
+Emergency Department,Apply irrigation to eye for chemical splash,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,LC,LC,LC
+Emergency Department,Test PH of eye for chemical burns,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N
+Emergency Department,Diagnose otic emergency,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Perform an external ear exam,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N
+Emergency Department,Perform an otoscopic exam,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Measure audio acuity (unilateral/bilateral/complete/partial),"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Perform specialized otic exam including Rinne and Weber test and tests for vertigo,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,LC,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Irrigate ear to remove cerumen or foreign body,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,LC,LC,LC
+Emergency Department,Prescribe procedural sedation,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Remove deep foreign body in the ear unable to flush out,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Administer otic drops,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,Y,Y,Y
+Emergency Department,Prescribe otic drops,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N
+Emergency Department,Consult otolaryngolositst for appropriate emergent referral,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Develop treatment plan for otic condition,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,LC,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,N
+Emergency Department,Perform cannulith repositioning manouvers for vertigo,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Diagnose emergent nasal conditions,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Perform a basic nasal exam,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y
+Emergency Department,Prescribe nasal medications,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,N,N,N,N,N,N
+Emergency Department,Administer nasal medications,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,LC,Y,LC,Y,N,N,N,LC,Y,Y
+Emergency Department,Perform exam of internal nares using rhinoscope,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Perform cautery for epistaxis,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Apply pressure to epistaxis,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,Y,Y,Y,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,LC,Y,Y,Y
+Emergency Department,Educate patient to apply pressure for epistaxis,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,N,Y,Y,Y
+Emergency Department,Insert tamponading device for epistaxis,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N
+Emergency Department,Remove nasal packing,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,LC,Y,Y
+Emergency Department,Place posterior packing or posterior epistaxis device,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Consult otoloryngologist for appropriate emergent treatment or arrange follow up plan,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,"Remove foreign body without deep instrumentation or sedation (e.g., blow technique with occluded nostril)","Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,LC,LC
+Emergency Department,Remove foreign body from nose with deep instrumentation,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,"Diagnose emergent conditions in the mouth or throat (epiglottitis, stridor threatening airway, expanding hematoma)","Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Perform a basic exam of the mouth and throat,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,Y
+Emergency Department,Perform a complete oropharyngeal exam including flexible endoscope,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Diagnose oropharyngeal problem,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Prescribe medications specific to oropharyngeal conditions,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Consult otolaryngolostist for appropriate emergent management,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N
+Emergency Department,Perform suction of oral secretions and teach patient/family to do same,"Ears, Eyes, Nose, and Throat",Task,N,N,N,N,Y,LC,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,Y
+Emergency Department,Diagnose dental injury,"Ears, Eyes, Nose, and Throat",Restricted Activity,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+Emergency Department,Consult dentist,"Ears, Eyes, Nose, and Throat",Aspect of Practice,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N
