@@ -6,11 +6,11 @@ import { SidebarButton } from './SidebarButton';
 import { SidebarCollapsible } from './SidebarCollapsible';
 import { SidebarButtonKind } from './interface';
 import { useAppContext } from './AppContext';
-import { useAuth } from '@services';
+import { useMe } from '@services';
 
 export const Sidebar: React.FC = () => {
   const { state, toggleSidebarOpen } = useAppContext();
-  const { hasUserRole } = useAuth();
+  const { hasUserRole } = useMe();
 
   return (
     <aside

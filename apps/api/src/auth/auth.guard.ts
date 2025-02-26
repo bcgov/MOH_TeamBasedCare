@@ -38,7 +38,7 @@ export class AuthGuard implements CanActivate {
 
     const token: string | undefined = this.jwtService.extractToken(request.headers || '');
     if (!token) {
-      return false;
+      throw new UnauthorizedException('Authentication is required');
     }
 
     let tokenUser: KeycloakUser;

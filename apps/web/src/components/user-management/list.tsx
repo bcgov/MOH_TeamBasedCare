@@ -15,7 +15,7 @@ import { useCallback } from 'react';
 import { Button } from '../Button';
 import { Tag } from '../generic/Tag';
 import { RoleTagVariant, TagVariants } from 'src/common';
-import { useAuth } from '@services';
+import { useMe } from '@services';
 
 interface TableHeaderProps {
   sortKey?: UserManagementSortKeys;
@@ -69,10 +69,10 @@ const TableBody: React.FC<TableBodyProps> = ({
 }) => {
   const tdStyles = 'table-td px-6 py-2 text-left';
 
-  const { isLoggedInUser } = useAuth();
+  const { me } = useMe();
 
   const getRoles = useCallback((roles: Role[] = []) => {
-    return roles.map(role => RoleOptions.find(option => option.value === role));
+    return roles.sort().map(role => RoleOptions.find(option => option.value === role));
   }, []);
 
   const getStatusOption = useCallback((status: UserStatus) => {
@@ -124,17 +124,17 @@ const TableBody: React.FC<TableBodyProps> = ({
             {getStatusLabel(user.status)}
           </td>
           <td className={`${tdStyles} flex gap-x-4`}>
-            {!isLoggedInUser(user) && (
+            {me?.id !== user.id && (
               <Button variant='link' onClick={() => onEditUserClick(user)}>
                 Edit
               </Button>
             )}
-            {user.status !== UserStatus.REVOKED && !isLoggedInUser(user) && (
+            {user.status !== UserStatus.REVOKED && me?.id !== user.id && (
               <Button variant='link' onClick={() => onRevokeUserClick(user)}>
                 Revoke access
               </Button>
             )}
-            {user.status === UserStatus.REVOKED && !isLoggedInUser(user) && (
+            {user.status === UserStatus.REVOKED && me?.id !== user.id && (
               <Button variant='link' onClick={() => onReProvisionUserClick(user)}>
                 Re-provision access
               </Button>

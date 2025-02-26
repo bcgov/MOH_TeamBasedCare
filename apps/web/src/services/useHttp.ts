@@ -3,6 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
 import { AxiosPublic } from '../utils';
 import { REQUEST_METHOD } from '../common';
+import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
 
 export interface RequestConfig extends AxiosRequestConfig {
   endpoint: string;
@@ -17,6 +18,9 @@ export const useHttp = () => {
       toast.error(toastMessage);
     } else {
       switch (err?.response?.status) {
+        case 401:
+          clearStorageAndRedirectToLandingPage();
+          break;
         case 400:
           toast.error('Kindly verify the input');
           break;

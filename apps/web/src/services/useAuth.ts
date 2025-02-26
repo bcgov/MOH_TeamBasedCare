@@ -1,6 +1,6 @@
 import { useHttp } from '@services';
-import { KeycloakToken, Role, UserRO, UserStatus } from '@tbcm/common';
-import { useCallback, useMemo } from 'react';
+import { KeycloakToken, UserRO } from '@tbcm/common';
+import { useCallback } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
 import {
   clearStorageAndRedirectToLandingPage,
@@ -31,12 +31,8 @@ export const useAuth = () => {
 
   // store user data to the storage
   const storeUserData = useCallback((data: UserRO) => {
-    AppStorage.setItem(StorageKeys.EMAIL, data.email);
-    AppStorage.setItem(StorageKeys.DISPLAY_NAME, data.displayName);
-    AppStorage.setItem(StorageKeys.ROLES, data.roles || []);
-    AppStorage.setItem(StorageKeys.STATUS, data.status);
     AppStorage.setItem(StorageKeys.ID, data.id);
-    AppStorage.setItem(StorageKeys.USER_PREFERENCE, data.userPreference);
+    AppStorage.setItem(StorageKeys.EMAIL, data.id);
   }, []);
 
   // fetch authentication token from authorization code
@@ -114,44 +110,11 @@ export const useAuth = () => {
     [sendApiRequest],
   );
 
-  const userRoles = useMemo(() => {
-    return AppStorage.getItem(StorageKeys.ROLES) as Role[];
-  }, []);
-
-  const userStatus = useMemo(() => {
-    return AppStorage.getItem(StorageKeys.STATUS) as UserStatus;
-  }, []);
-
-  const userId = useMemo(() => {
-    return AppStorage.getItem(StorageKeys.ID) as string;
-  }, []);
-
-  const hasUserRole = useCallback(
-    (roles: Role[]) => {
-      if (!Array.isArray(roles) || !Array.isArray(userRoles)) return false;
-
-      return userRoles.some(role => roles.includes(role));
-    },
-    [userRoles],
-  );
-
-  const isLoggedInUser = useCallback(
-    (user: UserRO) => {
-      return user.id === userId;
-    },
-    [userId],
-  );
-
   return {
     isAuthenticated,
     logMeIn,
     logMeOut,
     fetchAuthTokenFromCode,
     fetchUserFromCode,
-    userRoles,
-    userStatus,
-    userId,
-    hasUserRole,
-    isLoggedInUser,
   };
 };

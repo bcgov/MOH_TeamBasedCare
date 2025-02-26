@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button } from './Button';
-import { useAuth } from '@services';
-import { AppStorage, StorageKeys } from 'src/utils/storage';
+import { useAuth, useMe } from '@services';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { getInitials } from 'src/utils/string/initials';
@@ -12,17 +11,15 @@ import { UserGuideList } from './user-guide/UserGuideList';
 
 export const UserDropdown = () => {
   const { logMeOut } = useAuth();
-  const authUserDisplayName = AppStorage.getItem(StorageKeys.DISPLAY_NAME);
+  const { me } = useMe();
 
   const [showMenu, setShowMenu] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showUserGuideModal, setShowUserGuideModal] = useState(false);
 
   const authInitials = useMemo(() => {
-    return getInitials(authUserDisplayName);
-  }, [authUserDisplayName]);
-
-  if (!authUserDisplayName) return null;
+    return getInitials(me?.displayName);
+  }, [me?.displayName]);
 
   const logout = () => {
     logMeOut();
@@ -54,6 +51,8 @@ export const UserDropdown = () => {
     },
   ];
 
+  if (!me) return null;
+
   return (
     <div className='relative'>
       <div className='flex'>
@@ -66,7 +65,7 @@ export const UserDropdown = () => {
           <div className='inline-flex items-center justify-center h-9 w-9 overflow-hidden rounded-full bg-bcBluePrimary text-white mr-4'>
             {authInitials}
           </div>
-          <p className='text-bcBluePrimary'>{authUserDisplayName}</p>
+          <p className='text-bcBluePrimary'>{me?.displayName}</p>
           <FontAwesomeIcon
             icon={faCaretDown}
             className={`h-5 ml-2 text-bcBluePrimary ${
