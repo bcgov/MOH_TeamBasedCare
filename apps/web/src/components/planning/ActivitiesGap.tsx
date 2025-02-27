@@ -104,8 +104,7 @@ const SwitchTooltip: React.FC<any> = props => {
 };
 
 const TableBody: React.FC = () => {
-  const [openRow, setOpenRow] = useState<boolean>(true);
-  const [selectedRow, setSelectedRow] = useState<number>(0);
+  const [openRows, setOpenRows] = useState<number[]>([]);
   const tdStyles =
     'table-td px-6 py-4 text-center text-sm font-medium text-gray-900 table-firstRow-TD';
   const tdActivityBundle = 'table-firstRow-firstTD';
@@ -113,13 +112,11 @@ const TableBody: React.FC = () => {
 
   const handleSelectRow = (index: number) => {
     // toggle if selected row, open otherwise
-    if (selectedRow === index) {
-      setOpenRow(!openRow);
+    if (openRows.includes(index)) {
+      setOpenRows(openRows.filter(row => row !== index));
     } else {
-      setOpenRow(true);
+      setOpenRows([...openRows, index]);
     }
-
-    setSelectedRow(index);
   };
 
   // already a loader in the overview section
@@ -150,7 +147,7 @@ const TableBody: React.FC = () => {
                   onClick={() => handleSelectRow(index)}
                 >
                   <FontAwesomeIcon
-                    icon={selectedRow == index && openRow ? faCaretUp : faCaretDown}
+                    icon={openRows.includes(index) ? faCaretUp : faCaretDown}
                     className='h-4 text-bcBluePrimary'
                   />
                 </Button>
@@ -169,8 +166,7 @@ const TableBody: React.FC = () => {
                 );
               })}
             </tr>
-            {selectedRow == index &&
-              openRow &&
+            {openRows.includes(index) &&
               (row.careActivities as ActivityGapCareActivity[]).map((value, index: number) => {
                 return (
                   <tr key={`toggledRow${index}`} className='bg-white border-b table-row-fixed'>
