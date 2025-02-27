@@ -7,3 +7,4 @@ export * from './usePlanningContent';
 export * from './usePlanningCareActivities';
 export * from './usePlanningActivitiesGap';
 export * from './useAuth';
+export * from './useMe';

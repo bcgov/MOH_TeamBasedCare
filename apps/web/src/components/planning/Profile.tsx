@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Radio, Checkbox } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
-import { useCareLocations, usePlanningContent, usePlanningContext } from '../../services';
+import { useCareLocations, usePlanningContent, usePlanningContext, useMe } from '../../services';
 import {
   PlanningSessionRO,
   ProfileOptions,
   SaveProfileDTO,
-  UserPreferenceRO,
   formatDateFromNow,
   formatDateTime,
 } from '@tbcm/common';
@@ -16,7 +15,6 @@ import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '../generic/Spinner';
-import { AppStorage, StorageKeys } from 'src/utils/storage';
 
 export interface ProfileProps {
   step: number;
@@ -178,7 +176,7 @@ const ProfileForm = ({
 interface ConfirmDraftRemoveProps {
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
-  handleSubmit: (values: SaveProfileDTO) => void;
+  handleSubmit: (values: SaveProfileDTO) => Promise<void>;
   lastDraft?: PlanningSessionRO;
 }
 
@@ -189,6 +187,7 @@ const ConfirmDraftRemove = ({
   lastDraft,
 }: ConfirmDraftRemoveProps) => {
   const { values, resetForm } = useFormikContext<ProfileFormProps>();
+  const { mutate: refetchUser } = useMe();
 
   return (
     <ModalWrapper
@@ -206,16 +205,9 @@ const ConfirmDraftRemove = ({
       }}
       actionButton={{
         title: 'Continue the process',
-        onClick: () => {
-          handleSubmit(values);
-          // Only want this to occur one time, which is when the user selects the draft checkbox
-          if (values.userPrefNotShowConfirmDraftRemoval) {
-            const updatedVersion: UserPreferenceRO = {
-              notShowConfirmDraftRemoval: true,
-            };
-            // This is required for the storage to update with the newly selected preference
-            AppStorage.setItem(StorageKeys.USER_PREFERENCE, updatedVersion);
-          }
+        onClick: async () => {
+          await handleSubmit(values);
+          refetchUser();
         },
       }}
     >
@@ -254,10 +246,11 @@ const ConfirmDraftRemove = ({
 
 export const Profile: React.FC<ProfileProps> = () => {
   const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
+  const { me } = useMe();
 
   const [showModal, setShowModal] = useState(false);
   // Used to check if the user selected not to see the draft modal
-  const authUserPreference = AppStorage.getItem(StorageKeys.USER_PREFERENCE);
+  const authUserPreference = me?.userPreference || {};
 
   return (
     <Formik

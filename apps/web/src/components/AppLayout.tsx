@@ -1,20 +1,21 @@
-import { useAuth } from '@services';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useRef } from 'react';
+import { UserStatus } from '@tbcm/common';
+import { useAuth, useMe } from '@services';
 import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
 import { Alert } from './Alert';
 import { useAppContext } from './AppContext';
 import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
 import { Sidebar } from './Sidebar';
-import { UserStatus } from '@tbcm/common';
 
 const AppLayout: React.FC = ({ children }) => {
   const [mounted, setMounted] = React.useState(false);
 
   const router = useRouter();
   const { state, updateSidebarButtons } = useAppContext();
-  const { isAuthenticated, userRoles, userStatus, hasUserRole } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { me, hasUserRole } = useMe();
 
   // active sidebar button
   const activeSidebarButton = useRef<SidebarButtonProps | null>(null);
@@ -59,11 +60,11 @@ const AppLayout: React.FC = ({ children }) => {
   /**
    * If a user does not have ANY role to view the application
    */
-  if (userRoles?.length === 0) {
+  if (me?.roles?.length === 0) {
     accessError = `You don't currently have permissions to access the application.`;
   }
 
-  if (userStatus === UserStatus.REVOKED) {
+  if (me?.status === UserStatus.REVOKED) {
     accessError = `Your access was revoked. You no longer have permissions to access the application.`;
   }
 

@@ -1,4 +1,4 @@
-import { useHttp } from '@services';
+import { useHttp, useMe } from '@services';
 import { API_ENDPOINT } from 'src/common';
 import { Button } from './Button';
 import {
@@ -7,8 +7,8 @@ import {
   ActivityGapData,
   ActivityGapHeader,
   formatDateTime,
+  UserRO,
 } from '@tbcm/common';
-import { AppStorage, StorageKeys } from 'src/utils/storage';
 import {
   addLegendWorksheet,
   conditionalFormattingRules,
@@ -23,6 +23,7 @@ interface ExportButtonProps {
 
 export const ExportButton = ({ sessionId }: ExportButtonProps) => {
   const { fetchData } = useHttp();
+  const { me: user } = useMe();
 
   const exportToXlsx = () => {
     const config = {
@@ -30,7 +31,7 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
     };
 
     fetchData(config, async (data: ActivityGap) => {
-      const xlsx = convertActivityGapTableToXLSX(data);
+      const xlsx = convertActivityGapTableToXLSX(data, user);
 
       triggerExcelDownload(xlsx, 'activity_gap_summary');
     });
@@ -42,7 +43,7 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
   );
 };
 
-const convertActivityGapTableToXLSX = (data: ActivityGap) => {
+const convertActivityGapTableToXLSX = (data: ActivityGap, user?: UserRO) => {
   const columns = data.headers.map(({ title }: { title: string }) => {
     if (title === 'Activities Bundle')
       return { header: 'Activities Bundle', key: 'name', width: 50 };
@@ -112,7 +113,7 @@ const convertActivityGapTableToXLSX = (data: ActivityGap) => {
   // Splice and add Informational headers at top
   const careSetting = data.careSetting || '';
   const createdAt = formatDateTime(new Date());
-  const createdBy = AppStorage.getItem(StorageKeys.DISPLAY_NAME);
+  const createdBy = user?.displayName || '';
 
   const informationalRows = [
     [`Care Setting: ${careSetting}`],

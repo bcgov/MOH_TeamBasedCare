@@ -1,5 +1,5 @@
 import { Button, PageTitle } from '@components';
-import { useAuth } from '@services';
+import { useMe } from '@services';
 import { UserRO } from '@tbcm/common';
 import { NextPage } from 'next';
 import { useEffect, useState } from 'react';
@@ -38,7 +38,7 @@ const UserManagement: NextPage = () => {
   const { handleSubmit: handleSubmitRevoke, isLoading: isLoadingRevoke } = useUserRevoke();
   const { handleSubmit: handleSubmitReProvision, isLoading: isLoadingReProvision } =
     useUserReProvision();
-  const { isLoggedInUser } = useAuth();
+  const { me } = useMe();
 
   useEffect(() => {
     if (currentModal === 'invite') {
@@ -56,7 +56,7 @@ const UserManagement: NextPage = () => {
   };
 
   const onEditUserClick = (user: UserRO) => {
-    if (isLoggedInUser(user)) {
+    if (me?.id === user.id) {
       toast.error('Failed to edit self user.');
       return;
     }
@@ -67,7 +67,7 @@ const UserManagement: NextPage = () => {
   };
 
   const onRevokeUserClick = (user: UserRO) => {
-    if (isLoggedInUser(user)) {
+    if (me?.id === user.id) {
       toast.error('Failed to revoke self user access.');
       return;
     }
@@ -78,7 +78,7 @@ const UserManagement: NextPage = () => {
   };
 
   const onReProvisionUserClick = (user: UserRO) => {
-    if (isLoggedInUser(user)) {
+    if (me?.id === user.id) {
       toast.error('Failed to re-provision self user access.');
       return;
     }

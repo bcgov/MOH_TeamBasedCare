@@ -32,7 +32,7 @@ export const usePlanningProfile = () => {
     });
   }, []);
 
-  const handleSubmit = (values: SaveProfileDTO) => {
+  const handleSubmit = async (values: SaveProfileDTO) => {
     // BE does not need to store draft as Profile Option :: So, reset before submitting
     const data: SaveProfileDTO = {
       ...values,
@@ -50,7 +50,7 @@ export const usePlanningProfile = () => {
         data,
       };
 
-      sendApiRequest(config, (data: PlanningSessionRO) => {
+      await sendApiRequest(config, (data: PlanningSessionRO) => {
         updateSessionId(data.id);
         updateProceedToNext();
       });

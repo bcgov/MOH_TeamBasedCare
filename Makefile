@@ -64,7 +64,7 @@ endif
 ifeq ($(ENV_NAME), test)
 DOMAIN=test.moc.gov.bc.ca
 BASTION_INSTANCE_ID = $(BASTION_INSTANCE_ID_TEST)
-DB_HOST = $(DB_HOST_PROD_TEST)
+DB_HOST = $(DB_HOST_TEST)
 KEYCLOAK_AUTH_SERVER_URI = https://common-logon-test.hlth.gov.bc.ca/auth
 endif
 
