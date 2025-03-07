@@ -1,7 +1,8 @@
 import { cleanText } from 'src/common/utils';
-import { BeforeInsert, BeforeUpdate, Column, Entity, Index, ManyToMany } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, Index, ManyToMany, OneToMany } from 'typeorm';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { CareActivity } from 'src/care-activity/entity/care-activity.entity';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 
 @Entity()
 export class Unit extends CustomBaseEntity {
@@ -14,6 +15,9 @@ export class Unit extends CustomBaseEntity {
 
   @ManyToMany(() => CareActivity, activity => activity.careLocations)
   careActivities: CareActivity[];
+
+  @OneToMany(() => AllowedActivity, a => a.unit)
+  allowedActivities: AllowedActivity[];
 
   @BeforeInsert()
   @BeforeUpdate()

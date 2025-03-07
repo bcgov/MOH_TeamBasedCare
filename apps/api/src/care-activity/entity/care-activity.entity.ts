@@ -36,8 +36,8 @@ export class CareActivity extends CustomBaseEntity {
   @ManyToOne(() => Bundle, bundle => bundle.careActivities)
   bundle: Bundle;
 
-  @OneToMany(() => AllowedActivity, allowedActivity => allowedActivity.occupation)
-  occupations: AllowedActivity[];
+  @OneToMany(() => AllowedActivity, allowedActivity => allowedActivity.careActivity)
+  allowedActivities: AllowedActivity[];
 
   @Column({ type: 'enum', enum: CareActivityType, nullable: false })
   activityType: CareActivityType;
