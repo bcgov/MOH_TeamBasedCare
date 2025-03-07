@@ -37,13 +37,13 @@ jobs:
       - name: echo
         run: echo "ENV_NAME = ${{env.ENV_NAME}} or ${{env.NAME}}" >> $GITHUB_OUTPUT
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: setup node v20
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache yarn
         with:
           path: ./.yarn/cache

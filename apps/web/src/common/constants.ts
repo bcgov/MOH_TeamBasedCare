@@ -11,7 +11,7 @@ import {
   faSuitcase,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
-import { Role } from '@tbcm/common';
+import { BULK_UPLOAD_COLUMNS, Role } from '@tbcm/common';
 
 export enum AllowedPath {
   LANDING = '/',
@@ -161,3 +161,15 @@ export const RoleTagVariant = {
   [Role.USER]: TagVariants.GREEN,
   [Role.CONTENT_ADMIN]: TagVariants.PURPLE,
 };
+
+export const UploadSheetColumns = [
+  { header: BULK_UPLOAD_COLUMNS.ID, key: BULK_UPLOAD_COLUMNS.ID, width: 6 },
+  { header: BULK_UPLOAD_COLUMNS.CARE_SETTING, key: BULK_UPLOAD_COLUMNS.CARE_SETTING, width: 13 },
+  { header: BULK_UPLOAD_COLUMNS.CARE_BUNDLE, key: BULK_UPLOAD_COLUMNS.CARE_BUNDLE, width: 13 },
+  { header: BULK_UPLOAD_COLUMNS.CARE_ACTIVITY, key: BULK_UPLOAD_COLUMNS.CARE_ACTIVITY, width: 50 },
+  {
+    header: BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE,
+    key: BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE,
+    width: 13,
+  },
+];

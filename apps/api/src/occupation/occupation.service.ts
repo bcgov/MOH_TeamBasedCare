@@ -5,25 +5,25 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
 import { EditOccupationDTO } from './dto/edit-occupation.dto';
 import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
-import { reverseSortOrder } from 'src/common/utils';
+import { cleanText, reverseSortOrder } from 'src/common/utils';
 
 @Injectable()
 export class OccupationService {
   constructor(
     @InjectRepository(Occupation)
-    private occupationrepository: Repository<Occupation>,
+    private occupationRepository: Repository<Occupation>,
   ) {}
 
   async getAllOccupations(): Promise<Occupation[]> {
-    return this.occupationrepository.find();
+    return this.occupationRepository.find();
   }
 
   findOccupationById(id: string) {
-    return this.occupationrepository.findOneBy({ id });
+    return this.occupationRepository.findOneBy({ id });
   }
 
   async findOccupations(query: FindOccupationsDto): Promise<[Occupation[], number]> {
-    const queryBuilder = this.occupationrepository.createQueryBuilder('o');
+    const queryBuilder = this.occupationRepository.createQueryBuilder('o');
 
     // Search logic below
     if (query.searchText) {
@@ -60,7 +60,7 @@ export class OccupationService {
   }
 
   findAllOccupation(occupationIds: string[]): Promise<Occupation[]> {
-    return this.occupationrepository.find({
+    return this.occupationRepository.find({
       where: { id: In(occupationIds) },
     });
   }
@@ -82,6 +82,18 @@ export class OccupationService {
     Object.assign(occupation, { ...data });
 
     // perform update
-    await this.occupationrepository.save(occupation);
+    await this.occupationRepository.save(occupation);
+  }
+
+  async createByDisplayNames(displayNames: string[]): Promise<Occupation[]> {
+    return this.occupationRepository.save(
+      displayNames
+        .map(displayName => displayName.replace(/"/g, ''))
+        .map(displayName => ({
+          name: cleanText(displayName),
+          displayName,
+          isRegulated: true,
+        })),
+    );
   }
 }

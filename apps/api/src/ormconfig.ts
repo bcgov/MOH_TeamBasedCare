@@ -3,6 +3,8 @@ import { DataSource } from 'typeorm';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { DatabaseNamingStrategy } from './database/database.naming-strategy';
 import DatabaseLogger from './database/database-logger';
+import { join } from 'path';
+
 dotenv.config();
 // Check typeORM documentation for more information.
 
@@ -13,8 +15,8 @@ export const config: PostgresConnectionOptions = {
   username: process.env.POSTGRES_USERNAME || 'freshworks',
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE || 'tbcm',
-  entities: ['dist/**/*.entity.js'],
-  migrations: ['dist/migration/*.js'],
+  entities: [join(__dirname, '/**/*.entity.{ts,js}')],
+  migrations: [join(__dirname, 'migration/*.{ts,js}')],
   subscribers: ['dist/**/*.subscriber.js'],
   synchronize: false,
   migrationsRun: true,

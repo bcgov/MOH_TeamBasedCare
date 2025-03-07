@@ -9,7 +9,10 @@ export interface ConfirmData {
   headers: string[];
   data: CareActivityBulkData[];
   fileName: string;
-  careActivitiesCount: number;
+  total: number;
+  add?: number;
+  edit?: number;
+  newOccupations?: string[];
 }
 
 interface BulkUploadConfirmationModalCMSProps {
@@ -73,7 +76,11 @@ export const BulkUploadConfirmationModalCMS: React.FC<BulkUploadConfirmationModa
         </p>
 
         <ul className='ml-8 list-disc'>
-          <li>{confirmData?.careActivitiesCount} care activities</li>
+          {!!confirmData?.add && <li>Add {confirmData.add} new care activities</li>}
+          {!!confirmData?.edit && <li>Edit {confirmData.edit} care activities</li>}
+          {!!confirmData?.newOccupations?.length && (
+            <li>Add new occupations: {confirmData.newOccupations.join(',')} </li>
+          )}
         </ul>
       </div>
     </ModalWrapper>

@@ -158,7 +158,7 @@ export class AllowedActivityService {
       partials.map(partial => this.allowedActivityRepository.create(partial)),
       {
         skipUpdateIfNoValuesChanged: true,
-        conflictPaths: ['careActivity', 'occupation'],
+        conflictPaths: ['careActivity', 'occupation', 'unit'],
       },
     );
   }
