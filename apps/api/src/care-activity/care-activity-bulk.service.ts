@@ -26,6 +26,8 @@ import { Occupation } from 'src/occupation/entity/occupation.entity';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { AllowedActivityService } from 'src/allowed-activity/allowed-activity.service';
 import { AppLogger } from 'src/common/logger.service';
+import _ from 'lodash';
+import { Unit } from 'src/unit/entity/unit.entity';
 
 @Injectable()
 export class CareActivityBulkService {
@@ -61,16 +63,13 @@ export class CareActivityBulkService {
 
   async validateCareActivitiesBulk(
     careActivitiesBulkDto: CareActivityBulkDTO,
-    isEditing = false,
   ): Promise<CareActivityBulkRO> {
     const { headers, data } = careActivitiesBulkDto;
     const errors: CareActivityBulkROError[] = [];
 
     // validate headers presence
-    if (!headers.length) {
-      errors.push({
-        message: 'No headers found',
-      });
+    if (!Array.isArray(headers) || headers.length === 0 || headers.length > 1000) {
+      throw new BadRequestException('Invalid headers');
     }
 
     // validate data presence
@@ -92,35 +91,25 @@ export class CareActivityBulkService {
       });
     }
 
+    const newOccupations = _.difference(
+      _.difference(headers, Object.values(BULK_UPLOAD_COLUMNS)),
+      occupations.map(o => o.displayName),
+    );
+
     /** validate data content */
 
     // ** ensure all fields are non-empty
     const missingFieldRows = new Set<number>();
-    const idFieldErrorRows = new Set<number>(); // id fields when uploading data should be empty
 
+    const headerWithoutID = headers.slice(1);
     data.forEach(({ rowData, rowNumber }) => {
-      headers.forEach(header => {
-        // id fields when uploading data should be empty
-        if (header === BULK_UPLOAD_COLUMNS.ID && !isEditing) {
-          if (rowData?.[header]) {
-            idFieldErrorRows.add(rowNumber);
-          }
-          return;
-        }
-
+      headerWithoutID.forEach(header => {
         if (!rowData?.[header]) {
           missingFieldRows.add(rowNumber);
           return;
         }
       });
     });
-
-    if (idFieldErrorRows.size > 0) {
-      errors.push({
-        message: 'ID fields should be empty when uploading new data',
-        rowNumber: Array.from(idFieldErrorRows),
-      });
-    }
 
     if (missingFieldRows.size > 0) {
       errors.push({
@@ -131,7 +120,7 @@ export class CareActivityBulkService {
 
     // return if missing fields
     if (errors.length > 0) {
-      return { errors, careActivitiesCount: data.length };
+      return { errors, total: data.length };
     }
 
     // ** ensure care activity names are not duplicated in the supplied data
@@ -237,14 +226,20 @@ export class CareActivityBulkService {
     }
 
     if (errors.length > 0) {
-      return { errors, careActivitiesCount: data.length };
+      return { errors, total: data.length };
     }
 
-    if (!isEditing) {
-      await this.validateCareActivitiesUpload(data, errors);
-    }
+    await this.validateCareActivitiesUpload(data, errors);
 
-    return { errors, careActivitiesCount: data.length };
+    const countToAdd = data.filter(r => !r.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).length;
+
+    return {
+      errors,
+      total: data.length,
+      add: countToAdd,
+      edit: data.length - countToAdd,
+      newOccupations,
+    };
   }
 
   async validateCareActivitiesUpload(
@@ -253,11 +248,31 @@ export class CareActivityBulkService {
   ) {
     // This method assumes all column values exist in the rowData array
 
+    // validate rows with ID
+    const activities = await this.careActivityRepo.find({
+      where: {
+        id: In(data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).filter(Boolean)),
+      },
+    });
+    const missingIds = _.difference(
+      data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean),
+      activities.map(e => e.id),
+    );
+    missingIds.forEach(id => {
+      const rowNumber = data.find(c => c.rowData[BULK_UPLOAD_COLUMNS.ID])!.rowNumber;
+      errors.push({
+        message: `Care Activity not found - ${id}`,
+        rowNumber: [rowNumber],
+      });
+    });
+
     // ** ensure care activity names are not duplicated in the database
     const duplicateCareActivitiesDb = await this.careActivityRepo.find({
       where: {
         name: In(
-          data.map(c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY])),
+          data
+            .filter(row => !row.rowData.ID?.trim())
+            .map(c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY])),
         ),
       },
     });
@@ -280,15 +295,22 @@ export class CareActivityBulkService {
    * Upload Care Activities Bulk
    *
    */
-  async uploadCareActivitiesBulk(careActivitiesBulkDto: CareActivityBulkDTO, isEditing = false) {
+  async uploadCareActivitiesBulk(careActivitiesBulkDto: CareActivityBulkDTO) {
     const { errors: validationErrors } = await this.validateCareActivitiesBulk(
       careActivitiesBulkDto,
-      isEditing,
     );
 
     if (validationErrors.length > 0) {
       throw new BadRequestException(
         'There are some validation errors while confirming, please try again by reuploading the template',
+      );
+    }
+    if (
+      !Array.isArray(careActivitiesBulkDto.headers) ||
+      careActivitiesBulkDto.headers.length > 1000
+    ) {
+      throw new BadRequestException(
+        'Invalid headers: must be an array with a maximum length of 1000',
       );
     }
 
@@ -316,6 +338,15 @@ export class CareActivityBulkService {
 
     // upsert care bundles
     await this.bundleService.upsertBundles(Array.from(careBundleDisplayNames));
+
+    const occupations = await this.occupationService.getAllOccupations();
+    const newOccupations = _.difference(
+      _.difference(careActivitiesBulkDto.headers, Object.values(BULK_UPLOAD_COLUMNS)),
+      occupations.map(o => o.displayName),
+    );
+    if (newOccupations.length) {
+      await this.occupationService.createByDisplayNames(newOccupations);
+    }
 
     // Process care activities
     const partialCareActivities = await this.processCareActivities(
@@ -355,11 +386,8 @@ export class CareActivityBulkService {
     );
 
     // care activity object to be upserted
-    const partialCareActivities: Partial<CareActivity>[] = [];
-
-    // loop all care activities, and create care activity processable entity
-    data.forEach(({ rowData }) => {
-      const careActivity = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
+    return data.map(({ rowData }) => {
+      const displayName = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
       const activityType = rowData[BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE] as CareActivityType;
       const careSetting = rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING];
       const careBundle = rowData[BULK_UPLOAD_COLUMNS.CARE_BUNDLE];
@@ -367,30 +395,33 @@ export class CareActivityBulkService {
       const careSettingEntity = careSettingEntities.find(
         entity => entity.name === this.getNameFromDisplayName(careSetting),
       );
-      const bundleEntity = bundleEntities.find(
+      const bundle = bundleEntities.find(
         entity => entity.name === this.getNameFromDisplayName(careBundle),
       );
 
-      if (!careSettingEntity || !bundleEntity) {
+      if (!careSettingEntity || !bundle) {
         // ideally code should never reach this error. At this point, both careSetting and bundle from the sheet should have been upserted
         // New ones should have been inserted in previous step. If still not, verify the names and cleanText names
         this.logger.error(
-          `Something went wrong processing care activity - Care setting / bundle not found in db - careActivity: ${careActivity}, careBundle: ${careBundle}, careSetting: ${careSetting}`,
+          `Something went wrong processing care activity - Care setting / bundle not found in db - careActivity: ${displayName}, careBundle: ${careBundle}, careSetting: ${careSetting}`,
         );
         throw new UnprocessableEntityException(
-          `Something went wrong processing care activity - ${careActivity}`,
+          `Something went wrong processing care activity - ${displayName}`,
         );
       }
 
-      partialCareActivities.push({
-        name: careActivity,
+      const activity: Partial<CareActivity> = {
+        displayName,
+        name: cleanText(displayName),
         activityType,
-        bundle: bundleEntity,
+        bundle,
         careLocations: [careSettingEntity],
-      });
+      };
+      if (rowData[BULK_UPLOAD_COLUMNS.ID]) {
+        activity.id = rowData[BULK_UPLOAD_COLUMNS.ID];
+      }
+      return activity;
     });
-
-    return partialCareActivities;
   }
 
   /**
@@ -404,6 +435,13 @@ export class CareActivityBulkService {
   ) {
     // fetch occupations
     const occupations = await this.occupationService.getAllOccupations();
+
+    const unitEntities = _.keyBy(await this.unitService.getAllUnits(), 'displayName');
+    const careActivityUnitMap = data.reduce<Record<string, Unit>>((a, c) => {
+      a[c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]] =
+        unitEntities[c.rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING]];
+      return a;
+    }, {});
 
     // care activity - allowed activity mapping
     const careActivityAllowedActivityMapping: Record<
@@ -476,11 +514,39 @@ export class CareActivityBulkService {
         const permission = mapping[occupationDisplayName];
         const occupation = occupationMap[occupationDisplayName];
         const careActivity = careActivityMap[careActivityDisplayName];
+        const unit = careActivityUnitMap[careActivityDisplayName];
 
-        allowedActivities.push({ permission, occupation, careActivity });
+        allowedActivities.push({ permission, occupation, careActivity, unit });
       });
     });
 
     return allowedActivities;
+  }
+
+  async downloadCareActivities() {
+    const activities = await this.careActivityRepo.find({
+      relations: ['bundle', 'careLocations', 'allowedActivities', 'allowedActivities.occupation'],
+    });
+
+    const occupations = await this.occupationService.getAllOccupations();
+
+    return activities.map(a => {
+      const activityOccupations: Record<string, string> = {
+        [BULK_UPLOAD_COLUMNS.ID]: a.id,
+        [BULK_UPLOAD_COLUMNS.CARE_SETTING]: a.careLocations.map(l => l.displayName).join(','),
+        [BULK_UPLOAD_COLUMNS.CARE_BUNDLE]: a.bundle.displayName,
+        [BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]: a.displayName,
+        [BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE]: a.activityType,
+      };
+      a.allowedActivities.forEach(o => {
+        activityOccupations[o.occupation.displayName] = o.permission;
+      });
+      occupations.forEach(o => {
+        if (!activityOccupations[o.displayName]) {
+          activityOccupations[o.displayName] = 'N';
+        }
+      });
+      return activityOccupations;
+    });
   }
 }

@@ -58,6 +58,12 @@ export class CareActivityController {
     ]);
   }
 
+  @Get('cms/download')
+  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  async downloadCareActivities() {
+    return this.careActivityBulkService.downloadCareActivities();
+  }
+
   @Get('cms/find')
   @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
   async findCareActivitiesCMS(

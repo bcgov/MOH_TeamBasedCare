@@ -68,9 +68,11 @@ const TableBody: React.FC<TableBodyProps> = ({
           <td className={tdStyles}>{formatDate(careActivity.updatedAt) || '-'}</td>
           <td className={`${tdStyles}`}>
             <div className='flex justify-end gap-4'>
-              <Button variant='link' disabled>
-                Edit
-              </Button>
+              {false && (
+                <Button variant='link' disabled>
+                  Edit
+                </Button>
+              )}
 
               <Button
                 variant='link'
