@@ -2,10 +2,11 @@ import useSWR from 'swr';
 import { Role, UserRO } from '@tbcm/common';
 import { useCallback } from 'react';
 import { AxiosPublic } from 'src/utils';
+import { API_ENDPOINT } from 'src/common';
 
 export const useMe = () => {
   const { data: me, ...response } = useSWR<UserRO>(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/user`,
+    API_ENDPOINT.AUTH_USER,
     (url: string) => AxiosPublic(url).then(res => res.data),
     {
       revalidateOnFocus: true,
