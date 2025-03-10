@@ -4,6 +4,9 @@ export class CareActivityBulkROError {
 }
 
 export class CareActivityBulkRO {
+  add?: number;
+  edit?: number;
+  total!: number;
+  newOccupations?: string[];
   errors!: CareActivityBulkROError[];
-  careActivitiesCount!: number;
 }

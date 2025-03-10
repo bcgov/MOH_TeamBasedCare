@@ -3,14 +3,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useHttp } from '@services';
 import {
   BULK_UPLOAD_ALLOWED_PERMISSIONS,
-  BULK_UPLOAD_COLUMNS,
   CareActivityBulkData,
   CareActivityBulkRO,
   CareActivityType,
 } from '@tbcm/common';
-import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
-import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
-import { OccupationItemProps } from 'src/common/interfaces';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import { API_ENDPOINT, REQUEST_METHOD, UploadSheetColumns } from 'src/common';
 import { Alert } from 'src/components/Alert';
 import { Button } from 'src/components/Button';
 import { FileUpload } from 'src/components/FileUpload';
@@ -26,13 +24,13 @@ import {
   triggerExcelDownload,
 } from 'src/utils/excel-utils';
 import { BulkUploadConfirmationModalCMS, ConfirmData } from './bulk-upload-confirmation-modal';
+import dayjs from 'dayjs';
 
 interface BulkUploadModalCMSProps {
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
 }
 
-const UPLOAD_FILE_NAME = 'upload-care-activity-template';
 const CARE_ACTIVITY_SHEET_NAME = 'Care_Activities';
 
 export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
@@ -46,83 +44,70 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
   const [validationMessage, setValidationMessage] = useState<JSX.Element>(<></>);
   const [validationMessageType, setValidationMessageType] = useState<'warning' | 'success'>();
 
-  const columns: HeaderColumns[] = useMemo(
-    () => [
-      { header: BULK_UPLOAD_COLUMNS.ID, key: 'id', width: 6 },
-      { header: BULK_UPLOAD_COLUMNS.CARE_SETTING, key: 'care_setting', width: 13 },
-      { header: BULK_UPLOAD_COLUMNS.CARE_BUNDLE, key: 'care_activity_bundle', width: 13 },
-      { header: BULK_UPLOAD_COLUMNS.CARE_ACTIVITY, key: 'care_activity', width: 50 },
-      { header: BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE, key: 'aspect_of_practice', width: 13 },
-    ],
-    [],
-  );
+  const createSheets = useCallback(async (activities: Record<string, string>[]) => {
+    const workbook = createNewWorkbook();
 
-  const createUploadTemplate = useCallback(
-    async (occupations: OccupationItemProps[]) => {
-      const workbook = createNewWorkbook();
+    // add upload worksheet
+    const gapMatrixWorksheet = workbook.addWorksheet(CARE_ACTIVITY_SHEET_NAME, {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
 
-      // add upload worksheet
-      const gapMatrixWorksheet = workbook.addWorksheet(CARE_ACTIVITY_SHEET_NAME, {
-        views: [{ state: 'frozen', ySplit: 1 }],
-      });
+    const headerColumns: HeaderColumns[] = Object.keys(activities[0]).map((header, index) => ({
+      header: header,
+      key: header,
+      width: index === 0 ? 6 : index === 3 ? 50 : 13,
+    }));
 
-      const headerColumns: HeaderColumns[] = [...columns];
+    // Determine the maximum row and column count
+    const maxRow = 10000;
+    const maxCol = headerColumns.length;
+    const excelMaxRows = 1048576;
 
-      occupations.forEach(occupation => {
-        headerColumns.push({
-          header: occupation.displayName,
-          key: occupation.displayName,
-          width: 13,
-        });
-      });
+    // Add header
+    gapMatrixWorksheet.columns = headerColumns;
 
-      // Determine the maximum row and column count
-      const maxRow = 10000;
-      const maxCol = headerColumns.length;
-      const excelMaxRows = 1048576;
+    // Add rows
+    gapMatrixWorksheet.insertRows(2, activities, 'i');
 
-      // Add header
-      gapMatrixWorksheet.columns = headerColumns;
+    // add conditional formatting rules
+    gapMatrixWorksheet.addConditionalFormatting({
+      ref: `${getExcelColumnName(6)}2:${getExcelColumnName(maxCol)}${maxRow}`,
+      rules: conditionalFormattingRules,
+    });
 
-      // add conditional formatting rules
-      gapMatrixWorksheet.addConditionalFormatting({
-        ref: `${getExcelColumnName(6)}2:${getExcelColumnName(maxCol)}${maxRow}`,
-        rules: conditionalFormattingRules,
-      });
+    // subsequent rows - empty
+    gapMatrixWorksheet.addConditionalFormatting({
+      ref: `A${maxRow + 1}:XFD${excelMaxRows}`,
+      rules: emptyGrayConditionalFormattingRules,
+    });
 
-      // subsequent rows - empty
-      gapMatrixWorksheet.addConditionalFormatting({
-        ref: `A${maxRow + 1}:XFD${excelMaxRows}`,
-        rules: emptyGrayConditionalFormattingRules,
-      });
+    // subsequent columns - empty
+    gapMatrixWorksheet.addConditionalFormatting({
+      ref: `${getExcelColumnName(maxCol + 1)}2:XFD${excelMaxRows}`,
+      rules: emptyGrayConditionalFormattingRules,
+    });
 
-      // subsequent columns - empty
-      gapMatrixWorksheet.addConditionalFormatting({
-        ref: `${getExcelColumnName(maxCol + 1)}2:XFD${excelMaxRows}`,
-        rules: emptyGrayConditionalFormattingRules,
-      });
+    /** Enable sheet protection */
 
-      /** Enable sheet protection */
+    // Set the locked property of all cells to false (unprotected)
+    for (let rowNumber = 1; rowNumber <= maxRow; rowNumber++) {
+      for (let colNumber = 1; colNumber <= maxCol; colNumber++) {
+        const cell = gapMatrixWorksheet.getRow(rowNumber).getCell(colNumber);
 
-      // Set the locked property of all cells to false (unprotected)
-      for (let rowNumber = 1; rowNumber <= maxRow; rowNumber++) {
-        for (let colNumber = 1; colNumber <= maxCol; colNumber++) {
-          const cell = gapMatrixWorksheet.getRow(rowNumber).getCell(colNumber);
+        let locked = false;
 
-          let locked = false;
+        // if colNumber = 1 (id column) then keep the column locked and hidden
+        if (colNumber === 1) {
+          locked = true;
+          cell.style = headerStyle;
+        }
 
-          // if colNumber = 1 (id column) then keep the column locked and hidden
-          if (colNumber === 1) {
-            locked = true;
-            cell.style = headerStyle;
-          }
-
-          // if rowNumber = 1 (header row) then keep the row locked and hidden
-          if (rowNumber === 1) {
-            locked = true;
-            cell.style = headerStyle;
-          }
-
+        // if rowNumber = 1 (header row) then keep the row locked and hidden
+        if (rowNumber === 1) {
+          locked = true;
+          cell.style = headerStyle;
+          cell.alignment = { wrapText: false };
+        } else {
           // care activity type data validation
           if (colNumber === 5) {
             cell.dataValidation = {
@@ -158,34 +143,29 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           cell.protection = { locked };
         }
       }
+    }
 
-      await gapMatrixWorksheet.protect('gap-matrix-worksheet', {
-        formatColumns: true, // Allows the user to change column width and hide/unhide columns
-      });
+    // add legend worksheet
+    addLegendWorksheet(workbook);
 
-      // add legend worksheet
-      addLegendWorksheet(workbook);
+    // return the entire workbook as xlsx
+    return workbook.xlsx;
+  }, []);
 
-      // return the entire workbook as xlsx
-      return workbook.xlsx;
-    },
-    [columns],
-  );
-
-  const onDownloadTemplateClick = useCallback(async () => {
-    const config = { endpoint: API_ENDPOINT.OCCUPATIONS };
+  const onDownloadClick = useCallback(async () => {
+    const config = { endpoint: API_ENDPOINT.CARE_ACTIVITY_DOWNLOAD };
 
     fetchData(
       config,
-      async (occupations: OccupationItemProps[]) => {
-        const xlsx = await createUploadTemplate(occupations);
+      async (occupations: Record<string, string>[]) => {
+        const xlsx = await createSheets(occupations);
 
-        await triggerExcelDownload(xlsx, UPLOAD_FILE_NAME);
+        await triggerExcelDownload(xlsx, `care-activities-${dayjs().format('YYYY-MM-DD')}`);
       },
-      'Failed to download template',
+      'Failed to download current data',
       () => {},
     );
-  }, [createUploadTemplate, fetchData]);
+  }, [createSheets, fetchData]);
 
   const resetValidationMessage = useCallback(() => {
     setValidationMessageType(undefined);
@@ -281,7 +261,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
       }
 
       // if all other columns - id, care unit, activities, bundle, etc are available in the sheet
-      if (!columns.every(c => (careActivitiesHeaders || []).includes(c.header))) {
+      if (!UploadSheetColumns.every(c => (careActivitiesHeaders || []).includes(c.header))) {
         throw new Error(
           'Some of the headers are missing. The excel is possibly renamed / tampered',
         );
@@ -302,7 +282,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
 
       sendApiRequest(
         config,
-        async ({ errors, careActivitiesCount }: CareActivityBulkRO) => {
+        async ({ errors, total, add, edit, newOccupations }: CareActivityBulkRO) => {
           if (errors.length > 0) {
             setValidationMessageType('warning');
             setValidationMessage(
@@ -340,8 +320,12 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           setValidationMessage(
             <>
               <p>
-                {'The file has been successfully processed. Click "Confirm" to add '}
-                <b>{careActivitiesCount} care activities</b> into the system
+                {'The file has been successfully processed. Click "Confirm" to '}
+                <b>
+                  {add ? `add ${add} care activities into the system` : ''}
+                  {!!add && !!edit && ' and '}
+                  {edit ? `edit ${edit} existing care activities` : ''}
+                </b>
               </p>
             </>,
           );
@@ -351,14 +335,17 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
             headers: careActivitiesHeaders,
             data: careActivitiesData,
             fileName: file.name,
-            careActivitiesCount,
+            total,
+            add,
+            edit,
+            newOccupations,
           });
         },
         () => {},
         'Failed to validate the uploaded template',
       );
     },
-    [columns, sendApiRequest],
+    [sendApiRequest],
   );
 
   const onConfirmClick = () => {
@@ -388,11 +375,11 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
             variant='link'
             disabled={isLoading}
             classes='w-full bg-bcLightGray text-bcBlueLink'
-            onClick={() => onDownloadTemplateClick()}
+            onClick={() => onDownloadClick()}
           >
             <div className='flex flex-row p-4 items-center'>
               <FontAwesomeIcon icon={faDownload} className='h-4 text-bcBluePrimary mr-4' />
-              Download template .xlsx
+              Download current data .xlsx
             </div>
           </Button>
         </div>

@@ -132,11 +132,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         >
           <FontAwesomeIcon icon={faCloudUploadAlt} className='h-8 text-bcBluePrimary' />
           {file && (
-            <div className='flex flex-row gap-2 items-center'>
+            <div className='flex flex-row gap-2 items-center w-full justify-center'>
               <h1 className='text-bcBluePrimary'>{file.name}</h1>
               <FontAwesomeIcon
                 icon={faTimes}
-                className='px-4 h-4 text-bcRedError cursor-pointer'
+                className='text-bcRedError cursor-pointer w-4 h-4'
                 onClick={e => {
                   e.preventDefault();
                   onFileRemove();

@@ -82,4 +82,5 @@ export const API_ENDPOINT = {
   RE_PROVISION_USER: (id: string) => `/user/${id}/re-provision`,
   CARE_ACTIVITY_CMS_BULK_VALIDATE: '/care-activity/cms/bulk/validate',
   CARE_ACTIVITY_CMS_BULK_UPLOAD: '/care-activity/cms/bulk/upload',
+  CARE_ACTIVITY_DOWNLOAD: '/care-activity/cms/download',
 };
