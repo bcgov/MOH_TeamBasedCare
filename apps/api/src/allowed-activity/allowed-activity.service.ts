@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AllowedActivity } from './entity/allowed-activity.entity';
 import { GetAllowedActivitiesByOccupationDto } from './dto/get-allowed-activities-by-occupation.dto';
@@ -161,5 +161,25 @@ export class AllowedActivityService {
         conflictPaths: ['careActivity', 'occupation', 'unit'],
       },
     );
+  }
+
+  async removeAllowedActivities(partials: Partial<AllowedActivity>[]) {
+    const allowedActivities = await this.allowedActivityRepository.find({
+      where: {
+        careActivity: { id: In(partials.map(a => a.careActivity?.id)) },
+      },
+      relations: ['careActivity', 'occupation', 'unit'],
+    });
+    const disallowedActivities = allowedActivities.filter(a =>
+      partials.some(
+        e =>
+          e.careActivity?.id === a.careActivity.id &&
+          e.occupation?.id === a.occupation.id &&
+          e.unit?.id === a.unit?.id,
+      ),
+    );
+    if (disallowedActivities.length) {
+      await this.allowedActivityRepository.delete(disallowedActivities.map(a => a.id));
+    }
   }
 }

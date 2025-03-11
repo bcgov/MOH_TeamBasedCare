@@ -31,7 +31,7 @@ export class AuditSubscriber<T> implements EntitySubscriberInterface<T> {
   }
 
   afterRemove(event: RemoveEvent<T>) {
-    this.saveHistory(event.connection, event.entity as ObjectLiteral, AuditAction.DELETE);
+    this.saveHistory(event.connection, (event.entity ?? {}) as ObjectLiteral, AuditAction.DELETE);
   }
 
   beforeInsert(event: InsertEvent<T>) {

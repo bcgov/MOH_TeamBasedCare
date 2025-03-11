@@ -320,17 +320,14 @@ export class CareActivityBulkService {
     // care settings and care bundles list definitions
     const careSettingDisplayNames = new Set<string>();
     const careBundleDisplayNames = new Set<string>();
-    const careActivityDisplayNames = new Set<string>();
 
     // loop all care activities, and create a list of care settings and care bundles
     data.forEach(({ rowData }) => {
       const careSetting = rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING];
       const careBundle = rowData[BULK_UPLOAD_COLUMNS.CARE_BUNDLE];
-      const careActivity = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
 
       careSettingDisplayNames.add(this.trimDisplayName(careSetting));
       careBundleDisplayNames.add(this.trimDisplayName(careBundle));
-      careActivityDisplayNames.add(this.trimDisplayName(careActivity));
     });
 
     // upsert care settings (aka care locations) (aka Units)
@@ -356,13 +353,21 @@ export class CareActivityBulkService {
     );
 
     // upsert care activities
-    await this.careActivityService.saveCareActivities(partialCareActivities);
+    const activities = await this.careActivityService.saveCareActivities(partialCareActivities);
 
     // process allowed activity
-    const allowedActivities = await this.processAllowedActivities(data, careActivityDisplayNames);
+    const { allowedActivities, disallowedActivities } = await this.processAllowedActivities(
+      data,
+      activities,
+    );
 
     // upsert allowed activities
-    await this.allowedActivityService.upsertAllowedActivities(allowedActivities);
+    if (allowedActivities.length) {
+      await this.allowedActivityService.upsertAllowedActivities(allowedActivities);
+    }
+    if (disallowedActivities.length) {
+      await this.allowedActivityService.removeAllowedActivities(disallowedActivities);
+    }
   }
 
   /**
@@ -375,6 +380,12 @@ export class CareActivityBulkService {
     careSettingDisplayNames: Set<string>,
     careBundleDisplayNames: Set<string>,
   ) {
+    const existingActivities = await this.careActivityRepo.find({
+      where: {
+        id: In(data.map(e => e.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean)),
+      },
+      relations: ['careLocations'],
+    });
     // fetch care setting entities from database for relational mapping purposes with care activities
     const careSettingEntities = await this.unitService.getUnitsByNames(
       Array.from(careSettingDisplayNames),
@@ -410,15 +421,15 @@ export class CareActivityBulkService {
         );
       }
 
-      const activity: Partial<CareActivity> = {
-        displayName,
-        name: cleanText(displayName),
-        activityType,
-        bundle,
-        careLocations: [careSettingEntity],
-      };
-      if (rowData[BULK_UPLOAD_COLUMNS.ID]) {
-        activity.id = rowData[BULK_UPLOAD_COLUMNS.ID];
+      const id = rowData[BULK_UPLOAD_COLUMNS.ID];
+      const activity = existingActivities.find(a => a.id === id) ?? this.careActivityRepo.create();
+      activity.activityType = activityType;
+      activity.name = displayName;
+      activity.bundle = bundle;
+      if (!activity.careLocations?.length) {
+        activity.careLocations = [careSettingEntity];
+      } else if (!activity.careLocations.some(l => l.id === careSettingEntity.id)) {
+        activity.careLocations.push(careSettingEntity);
       }
       return activity;
     });
@@ -429,10 +440,7 @@ export class CareActivityBulkService {
    * Process Allowed Activities
    *
    */
-  async processAllowedActivities(
-    data: CareActivityBulkData[],
-    careActivityDisplayNames: Set<string>,
-  ) {
+  async processAllowedActivities(data: CareActivityBulkData[], careActivities: CareActivity[]) {
     // fetch occupations
     const occupations = await this.occupationService.getAllOccupations();
 
@@ -444,10 +452,10 @@ export class CareActivityBulkService {
     }, {});
 
     // care activity - allowed activity mapping
-    const careActivityAllowedActivityMapping: Record<
-      string,
-      { [occupation: string]: Permissions }
-    > = {};
+    const allowedActivityMapping: Record<string, { [occupation: string]: Permissions }> = {};
+
+    // care activity - allowed activity mapping
+    const disallowedActivityMapping: Record<string, string[]> = {};
 
     // loop all care activities, and map values
     data.forEach(({ rowData }) => {
@@ -455,8 +463,8 @@ export class CareActivityBulkService {
       const careActivityDisplayName = this.trimDisplayName(careActivity);
 
       // if mapping does not exist, create
-      if (!careActivityAllowedActivityMapping[careActivityDisplayName]) {
-        careActivityAllowedActivityMapping[careActivityDisplayName] = {};
+      if (!allowedActivityMapping[careActivityDisplayName]) {
+        allowedActivityMapping[careActivityDisplayName] = {};
       }
 
       // loop all occupations, and map values
@@ -466,29 +474,26 @@ export class CareActivityBulkService {
 
         // ignore not allowed activity ['N']
         if (!(Object.values(Permissions) as string[]).includes(permission)) {
-          // TODO when enabling edit: when 'N', remove allowed activities in db, if available
-          // For now, when adding a record, no action is required
+          if (!disallowedActivityMapping[careActivityDisplayName]) {
+            disallowedActivityMapping[careActivityDisplayName] = [];
+          }
+          disallowedActivityMapping[careActivityDisplayName].push(occupationDisplayName);
           return;
         }
 
-        careActivityAllowedActivityMapping[careActivityDisplayName][occupationDisplayName] =
+        allowedActivityMapping[careActivityDisplayName][occupationDisplayName] =
           permission as Permissions;
       });
     });
-
-    // fetch care activities from database for relational mapping purposes with allowed activities
-    const careActivityEntities = await this.careActivityService.getManyByNames(
-      Array.from(careActivityDisplayNames),
-    );
 
     // care activity map as helper - so we don't have to perform find operation every time
     const careActivityMap: Record<string, CareActivity> = {};
 
     // fill in care activity map helper
-    careActivityEntities.forEach(careActivity => {
-      const careActivityDisplayName = careActivity.displayName;
-      if (!careActivityMap[careActivityDisplayName]) {
-        careActivityMap[careActivityDisplayName] = careActivity;
+    careActivities.forEach(careActivity => {
+      const displayName = careActivity.displayName;
+      if (!careActivityMap[displayName]) {
+        careActivityMap[displayName] = careActivity;
       }
     });
 
@@ -507,8 +512,8 @@ export class CareActivityBulkService {
     const allowedActivities: Partial<AllowedActivity>[] = [];
 
     // process mapping
-    Object.keys(careActivityAllowedActivityMapping).forEach(careActivityDisplayName => {
-      const mapping = careActivityAllowedActivityMapping[careActivityDisplayName];
+    Object.keys(allowedActivityMapping).forEach(careActivityDisplayName => {
+      const mapping = allowedActivityMapping[careActivityDisplayName];
 
       Object.keys(mapping).forEach(occupationDisplayName => {
         const permission = mapping[occupationDisplayName];
@@ -520,7 +525,18 @@ export class CareActivityBulkService {
       });
     });
 
-    return allowedActivities;
+    const disallowedActivities: Partial<AllowedActivity>[] = [];
+    Object.keys(disallowedActivityMapping).forEach(careActivityDisplayName => {
+      const occupations = disallowedActivityMapping[careActivityDisplayName];
+      occupations.forEach(occupationDisplayName => {
+        const occupation = occupationMap[occupationDisplayName];
+        const careActivity = careActivityMap[careActivityDisplayName];
+        const unit = careActivityUnitMap[careActivityDisplayName];
+        disallowedActivities.push({ occupation, careActivity, unit });
+      });
+    });
+
+    return { allowedActivities, disallowedActivities };
   }
 
   async downloadCareActivities() {
