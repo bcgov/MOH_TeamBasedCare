@@ -30,7 +30,7 @@ const ContentManagement: NextPage = () => {
     onRefreshList,
   } = useCareActivitiesFindCMS();
 
-  const { careLocations: careSettings, isLoading: isLoadingCareLocations } = useCareLocations();
+  const { careLocations: careSettings, isValidating: isLoadingCareLocations } = useCareLocations();
 
   const [showModal, setShowModal] = useState(false);
   const [currentModal, setCurrentModal] = useState<'delete' | 'bulk-upload'>();

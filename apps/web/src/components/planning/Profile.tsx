@@ -35,7 +35,7 @@ const ProfileForm = ({
   isLoading: boolean;
 }) => {
   const { values, initialValues, setValues } = useFormikContext<ProfileFormProps>();
-  const { careLocations, isLoading: isLoadingCareLocations } = useCareLocations();
+  const { careLocations, isValidating: isLoadingCareLocations } = useCareLocations();
   const [showModal, setShowModal] = useState(false);
   const { updateSessionId } = usePlanningContext();
   const [lastDraftUpdatedFromNow, setLastDraftUpdatedFromNow] = useState('');

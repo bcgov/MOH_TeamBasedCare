@@ -229,7 +229,7 @@ export class CareActivityBulkService {
       return { errors, total: data.length };
     }
 
-    await this.validateCareActivitiesUpload(data, errors);
+    await this.checkCareActivitiesUniq(data, errors);
 
     const countToAdd = data.filter(r => !r.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).length;
 
@@ -242,18 +242,23 @@ export class CareActivityBulkService {
     };
   }
 
-  async validateCareActivitiesUpload(
-    data: CareActivityBulkData[],
-    errors: CareActivityBulkROError[],
-  ) {
+  async checkCareActivitiesUniq(data: CareActivityBulkData[], errors: CareActivityBulkROError[]) {
     // This method assumes all column values exist in the rowData array
 
     // validate rows with ID
-    const activities = await this.careActivityRepo.find({
-      where: {
-        id: In(data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).filter(Boolean)),
-      },
-    });
+    let activities: CareActivity[];
+    try {
+      activities = await this.careActivityRepo.find({
+        where: {
+          id: In(data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).filter(Boolean)),
+        },
+      });
+    } catch (e) {
+      errors.push({
+        message: `ID must be empty for new care activities or should not be modified.`,
+      });
+      return;
+    }
     const missingIds = _.difference(
       data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean),
       activities.map(e => e.id),

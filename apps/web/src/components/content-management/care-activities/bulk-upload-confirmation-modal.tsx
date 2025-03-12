@@ -1,4 +1,4 @@
-import { useHttp } from '@services';
+import { useCareLocations, useHttp } from '@services';
 import { CareActivityBulkData } from '@tbcm/common';
 import { Dispatch, SetStateAction } from 'react';
 import { toast } from 'react-toastify';
@@ -29,6 +29,7 @@ export const BulkUploadConfirmationModalCMS: React.FC<BulkUploadConfirmationModa
   confirmData,
 }) => {
   const { sendApiRequest, isLoading } = useHttp();
+  const { mutate: refreshCareLocations } = useCareLocations();
 
   const onConfirmClick = () => {
     if (!confirmData) {
@@ -49,6 +50,7 @@ export const BulkUploadConfirmationModalCMS: React.FC<BulkUploadConfirmationModa
       async () => {
         setShowModal(false);
         setUploadModal(false);
+        refreshCareLocations();
         toast.success('Successfully uploaded');
       },
       () => {},
