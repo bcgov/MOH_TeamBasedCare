@@ -90,8 +90,8 @@ export class OccupationService {
       displayNames
         .map(displayName => displayName.replace(/"/g, ''))
         .map(displayName => ({
-          name: cleanText(displayName),
           displayName,
+          name: cleanText(displayName),
           isRegulated: true,
         })),
     );

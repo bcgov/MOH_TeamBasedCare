@@ -252,7 +252,7 @@ export class CareActivityService {
   }
 
   async saveCareActivities(partials: Partial<CareActivity>[]) {
-    return this.careActivityRepo.upsert(partials, { conflictPaths: ['id'] });
+    return this.careActivityRepo.save(partials);
   }
 
   async getManyByNames(names: string[]) {

@@ -1,24 +1,19 @@
-import { useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
-import { OptionType } from '../components/generic/RenderSelect';
-import { useHttp } from './useHttp';
 import { UnitRO } from '@tbcm/common';
+import { OptionType } from 'src/components/generic/RenderSelect';
+import { AxiosPublic } from 'src/utils';
+import useSWR from 'swr';
 
 export const useCareLocations = () => {
-  const { fetchData, isLoading } = useHttp();
-  const [careLocations, setCareLocations] = useState<OptionType[]>([]);
+  const response = useSWR<UnitRO[]>(API_ENDPOINT.CARE_LOCATIONS, (url: string) =>
+    AxiosPublic(url).then(res => res.data),
+  );
 
-  useEffect(() => {
-    const config = { endpoint: API_ENDPOINT.CARE_LOCATIONS };
+  const careLocations: OptionType[] =
+    response.data?.map(unit => ({
+      value: unit.id,
+      label: unit.displayName,
+    })) ?? [];
 
-    fetchData(config, (data: UnitRO[]) => {
-      setCareLocations(
-        data.map(unit => {
-          return { value: unit.id, label: unit.displayName };
-        }),
-      );
-    });
-  }, []);
-
-  return { careLocations, isLoading };
+  return { careLocations, ...response };
 };

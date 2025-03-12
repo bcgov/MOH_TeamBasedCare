@@ -369,6 +369,17 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           Download and utilize the content configuration template for updates. Once you finish
           updating, upload the file to sync content to the database.
         </div>
+        <ol className='list-decimal ml-4 pl-4 my-2 text-md'>
+          <li>
+            To add a new care activity, add a new row without <b>ID.</b>
+          </li>
+          <li>
+            To edit, keep <b>ID</b> column as it is and edit other columns.
+          </li>
+          <li>
+            To delete, use <b>Delete</b> button on Care Activity table.
+          </li>
+        </ol>
 
         <div className='mt-4'>
           <Button
