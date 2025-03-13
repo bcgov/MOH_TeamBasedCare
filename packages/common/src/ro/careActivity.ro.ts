@@ -7,7 +7,7 @@ export class CareActivityRO {
   id!: string;
 
   @Expose()
-  name: string;
+  name!: string;
 
   @Expose()
   activityType!: CareActivityType;
@@ -17,8 +17,6 @@ export class CareActivityRO {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
-    // data: as CareActivity; can't expose entities to common package
     Object.assign(this, data);
-    this.name = data.displayName;
   }
 }
