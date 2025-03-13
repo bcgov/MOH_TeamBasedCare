@@ -18,5 +18,6 @@ export class CareActivityRO {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     Object.assign(this, data);
+    this.name = data.displayName ?? data.name;
   }
 }
