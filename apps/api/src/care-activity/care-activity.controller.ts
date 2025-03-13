@@ -90,11 +90,11 @@ export class CareActivityController {
     await this.careActivityService.updateCareActivity(id, data);
   }
 
-  @Delete(':id')
+  @Delete(':id/:unitName')
   @HttpCode(HttpStatus.NO_CONTENT)
   @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
-  async removeCareActivity(@Param('id') id: string) {
-    await this.careActivityService.removeCareActivity(id);
+  async removeCareActivity(@Param('id') id: string, @Param('unitName') unitName: string) {
+    await this.careActivityService.removeCareActivity(id, unitName);
   }
 
   /** CMS Bulk */

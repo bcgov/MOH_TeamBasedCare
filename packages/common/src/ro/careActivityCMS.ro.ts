@@ -4,19 +4,19 @@ import { CareActivityRO } from './careActivity.ro';
 @Exclude()
 export class CareActivityCMSRO extends CareActivityRO {
   @Expose()
-  bundleName: string;
+  bundleName!: string;
 
   @Expose()
   updatedAt!: Date;
 
   @Expose()
-  updatedBy: string;
+  updatedBy!: string;
+
+  @Expose()
+  unitName!: string;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     super(data);
-
-    this.bundleName = data.bundle?.displayName;
-    this.updatedBy = data.updatedBy?.displayName;
   }
 }

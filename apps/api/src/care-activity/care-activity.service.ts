@@ -4,7 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { BundleRO, CareActivitiesCMSFindSortKeys, SortOrder } from '@tbcm/common';
+import { BundleRO, CareActivitiesCMSFindSortKeys, CareActivityRO, SortOrder } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
 import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
@@ -90,7 +90,9 @@ export class CareActivityService {
       .getManyAndCount();
   }
 
-  async findCareActivitiesCMS(query: FindCareActivitiesCMSDto): Promise<[CareActivity[], number]> {
+  async findCareActivitiesCMS(
+    query: FindCareActivitiesCMSDto,
+  ): Promise<[CareActivityRO[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
       .leftJoinAndSelect('ca.bundle', 'ca_b')
@@ -124,15 +126,26 @@ export class CareActivityService {
       if (query.sortBy === CareActivitiesCMSFindSortKeys.UPDATED_BY) {
         orderBy = 'ca_up.displayName';
       }
+      if (query.sortBy === CareActivitiesCMSFindSortKeys.CARE_SETTING_NAME) {
+        orderBy = 'ca_cl.displayName';
+      }
 
       queryBuilder.orderBy(orderBy, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
     }
 
-    // return the paginated response
-    return queryBuilder
-      .skip((query.page - 1) * query.pageSize)
-      .take(query.pageSize)
-      .getManyAndCount();
+    const all = await queryBuilder.getRawMany();
+    const count = all.length;
+    const skip = (query.page - 1) * query.pageSize;
+    const result = all.slice(skip, skip + query.pageSize).map(raw => ({
+      id: raw.ca_id,
+      name: raw.ca_display_name,
+      activityType: raw.ca_activity_type,
+      clinicalType: raw.ca_clinical_type,
+      bundleName: raw.ca_b_display_name,
+      updatedBy: raw.ca_up_display_name,
+      unitName: raw.ca_cl_display_name,
+    }));
+    return [result, count];
   }
 
   async createCareActivitySearchTerm(term: string) {
@@ -227,19 +240,26 @@ export class CareActivityService {
     await this.careActivityRepo.save(careActivity);
   }
 
-  async removeCareActivity(id: string) {
+  async removeCareActivity(id: string, unitName: string) {
     // validate id exist
     if (!id) {
       throw new BadRequestException({
         message: 'Cannot delete care activity: id missing',
+      });
+    }
+    if (!unitName) {
+      throw new BadRequestException({
+        message: 'Cannot delete care activity: unit name missing',
         data: { id },
       });
     }
 
     // fetch care activity
-    const careActivity = await this.findOneById(id);
+    const careActivity = await this.careActivityRepo.findOne({
+      where: { id },
+      relations: ['careLocations'],
+    });
 
-    // validate care activity exist
     if (!careActivity) {
       throw new NotFoundException({
         message: 'Cannot delete care activity: id not found',
@@ -247,8 +267,21 @@ export class CareActivityService {
       });
     }
 
+    if (!careActivity?.careLocations.some(u => u.displayName === unitName)) {
+      throw new NotFoundException({
+        message: 'Cannot delete care activity: not related to the unit',
+        data: { id, unitName },
+      });
+    }
+
+    careActivity.careLocations = careActivity.careLocations.filter(u => u.displayName !== unitName);
+
     // remove activity
-    await this.careActivityRepo.remove(careActivity);
+    if (careActivity.careLocations.length) {
+      await this.careActivityRepo.save(careActivity);
+    } else {
+      await this.careActivityRepo.remove(careActivity);
+    }
   }
 
   async saveCareActivities(partials: Partial<CareActivity>[]) {

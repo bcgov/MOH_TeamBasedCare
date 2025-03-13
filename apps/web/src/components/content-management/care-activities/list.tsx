@@ -1,9 +1,4 @@
-import {
-  CareActivitiesCMSFindSortKeys,
-  CareActivityCMSRO,
-  formatDate,
-  SortOrder,
-} from '@tbcm/common';
+import { CareActivitiesCMSFindSortKeys, CareActivityCMSRO, SortOrder } from '@tbcm/common';
 import { isOdd } from 'src/common/util';
 import { Button } from '../../Button';
 import { Spinner } from '../../generic/Spinner';
@@ -22,9 +17,9 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 
   const headers = [
     { label: 'Care activities', name: CareActivitiesCMSFindSortKeys.DISPLAY_NAME },
+    { label: 'Care Setting', name: CareActivitiesCMSFindSortKeys.CARE_SETTING_NAME },
     { label: 'Bundle', name: CareActivitiesCMSFindSortKeys.BUNDLE_NAME },
     { label: 'Last updated by', name: CareActivitiesCMSFindSortKeys.UPDATED_BY },
-    { label: 'Last updated on', name: CareActivitiesCMSFindSortKeys.UPDATED_AT },
     { label: '' },
   ];
 
@@ -63,9 +58,9 @@ const TableBody: React.FC<TableBodyProps> = ({
       {careActivities?.map((careActivity, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{careActivity.name}</td>
+          <td className={tdStyles}>{careActivity.unitName || '-'}</td>
           <td className={tdStyles}>{careActivity.bundleName || '-'}</td>
           <td className={tdStyles}>{careActivity.updatedBy || '-'}</td>
-          <td className={tdStyles}>{formatDate(careActivity.updatedAt) || '-'}</td>
           <td className={`${tdStyles}`}>
             <div className='flex justify-end gap-4'>
               {false && (

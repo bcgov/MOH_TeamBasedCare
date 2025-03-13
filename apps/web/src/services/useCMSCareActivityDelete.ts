@@ -8,7 +8,7 @@ export const useCMSCareActivityDelete = () => {
 
   const handleSubmit = (careActivity: CareActivityCMSRO, cb?: () => void) => {
     const config = {
-      endpoint: `${API_ENDPOINT.CARE_ACTIVITY}/${careActivity.id}`,
+      endpoint: `${API_ENDPOINT.CARE_ACTIVITY}/${careActivity.id}/${careActivity.unitName}`,
       method: REQUEST_METHOD.DELETE,
     };
 
