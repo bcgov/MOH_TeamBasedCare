@@ -52,8 +52,7 @@ export class CareActivity extends CustomBaseEntity {
   @BeforeInsert()
   @BeforeUpdate()
   updateDisplayName(): void {
-    if (this.name) {
-      this.displayName = this.name;
+    if (this.displayName) {
       this.name = cleanText(this.name);
     }
   }
