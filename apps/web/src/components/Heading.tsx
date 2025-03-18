@@ -1,14 +1,16 @@
+import classNames from 'classnames';
+
 interface HeadingProps {
   title?: string;
   subTitle?: string;
   className?: string;
 }
 
-export const Heading: React.FC<HeadingProps> = ({ title, subTitle, className = '' }) => {
+export const Heading: React.FC<HeadingProps> = ({ title, subTitle, className = 'truncate' }) => {
   return (
     <>
       {title && (
-        <p className={`text-2xl font-bold text-gray-900 truncate dark:text-white ${className}`}>
+        <p className={classNames('text-2xl font-bold text-gray-900 dark:text-white', className)}>
           {title}
         </p>
       )}

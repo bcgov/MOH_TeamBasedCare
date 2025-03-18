@@ -7,7 +7,8 @@ export interface SelectProps<T extends OptionValueType> {
   options: HeadlessListOptions<T>[];
   value: T | T[];
   label?: string;
-  menuPlacement?: 'bottom' | 'top';
+  menuPlacement?: 'bottom' | 'top' | 'right' | 'left';
+  className?: string;
 }
 
 export interface BasicSelectProps<T extends OptionValueType> extends SelectProps<T> {
@@ -23,7 +24,7 @@ export interface MultiSelectProps<T extends OptionValueType> extends SelectProps
 }
 
 export const BasicSelect = <T extends OptionValueType>(props: BasicSelectProps<T>) => {
-  const { id, value, label, options, onChange, menuPlacement, buttonClassName } = props;
+  const { id, value, label, options, onChange, menuPlacement, buttonClassName, className } = props;
 
   return (
     <>
@@ -35,6 +36,7 @@ export const BasicSelect = <T extends OptionValueType>(props: BasicSelectProps<T
         onChange={value => onChange(value as T)}
         menuPlacement={menuPlacement}
         buttonClassName={buttonClassName}
+        className={className}
       />
     </>
   );

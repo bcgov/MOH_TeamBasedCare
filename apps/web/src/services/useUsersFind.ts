@@ -57,7 +57,7 @@ export const useUsersFind = () => {
     resetPageIndex();
   };
 
-  const onSearchTextChange = ({ text }: { text: string }) => {
+  const onSearchTextChange = (text: string) => {
     setSearchText(text);
 
     // reset to first page

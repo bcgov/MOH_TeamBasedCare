@@ -87,11 +87,14 @@ const convertActivityGapTableToXLSX = (data: ActivityGap, user?: UserRO) => {
     views: [{ state: 'frozen', xSplit: 1, ySplit: 4 }],
   });
 
-  // header row style
-  gapMatrixWorksheet.getRow(1).style = headerStyle;
-
   // Add header
   gapMatrixWorksheet.columns = columns;
+
+  // header row style
+  const headerRow = gapMatrixWorksheet.getRow(1);
+  gapMatrixWorksheet.columns.forEach((col, index) => {
+    headerRow.getCell(index + 1).style = headerStyle;
+  });
 
   // Add array rows
   resultData.forEach(rowData => {

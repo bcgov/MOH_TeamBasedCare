@@ -5,6 +5,7 @@ import { faCaretDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { OptionValueType, SelectOption } from 'src/common/select-options.constants';
 import { Tag } from './generic/Tag';
 import { TagVariants } from 'src/common';
+import classNames from 'classnames';
 
 export interface HeadlessListOptions<T extends OptionValueType> extends SelectOption<T> {
   tagVariant?: TagVariants;
@@ -18,7 +19,7 @@ export interface HeadlessListProps<T extends OptionValueType> {
   className?: string;
   buttonClassName?: string;
   isMulti?: boolean;
-  menuPlacement?: 'bottom' | 'top';
+  menuPlacement?: 'bottom' | 'top' | 'right' | 'left';
 }
 
 export const HeadlessList = <T extends OptionValueType>({
@@ -80,13 +81,26 @@ export const HeadlessList = <T extends OptionValueType>({
     onChange(value);
   };
 
+  const getPlacementStyle = () => {
+    switch (menuPlacement) {
+      case 'top':
+        return 'top-0 -translate-y-full';
+      case 'right':
+        return 'right-0';
+      case 'left':
+        return '-left-1 top-1 -translate-x-full';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className={`w-full ${className}`}>
       <Listbox value={selected} onChange={onListBoxChange} multiple={isMulti}>
         <div className='relative'>
           <Listbox.Button
             id={id}
-            className={`relative border min-h-[2.5rem] w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm ${buttonClassName}`}
+            className={`relative border w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm ${buttonClassName}`}
           >
             <span className='block truncate'>
               {isMulti ? displayMulti(selected as T[]) : displayText(selected as T)}
@@ -106,9 +120,10 @@ export const HeadlessList = <T extends OptionValueType>({
             leaveTo='opacity-0'
           >
             <Listbox.Options
-              className={`${
-                menuPlacement === 'top' ? 'top-0 -translate-y-full' : ''
-              } absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm`}
+              className={classNames(
+                'absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10',
+                getPlacementStyle(),
+              )}
             >
               {options.map((option, index) => (
                 <Listbox.Option

@@ -20,11 +20,12 @@ import {
   CareActivityRO,
   PaginationRO,
   Role,
+  CareActivityDetailRO,
+  EditCareActivityDTO,
 } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
-import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
 import { CareActivityBulkService } from './care-activity-bulk.service';
 
@@ -38,9 +39,15 @@ export class CareActivityController {
     private careActivityBulkService: CareActivityBulkService,
   ) {}
 
-  @Get('/bundle')
-  async getAllBundles(): Promise<PaginationRO<BundleRO[]>> {
+  @Get('/bundles')
+  async getAllBundles(): Promise<BundleRO[]> {
     const bundles = await this.careActivityService.getAllBundles();
+    return bundles.map(bundle => new BundleRO(bundle));
+  }
+
+  @Get('/by-bundles')
+  async getAllBundlesWithActivities(): Promise<PaginationRO<BundleRO[]>> {
+    const bundles = await this.careActivityService.getAllBundlesWithActivities();
     return new PaginationRO<BundleRO[]>([
       bundles.map(bundle => new BundleRO(bundle)),
       bundles?.length,
@@ -81,6 +88,16 @@ export class CareActivityController {
     const commonSearchTerms = await this.careActivityService.getCommonSearchTerms();
 
     return commonSearchTerms;
+  }
+
+  @Get(':id')
+  async getCareActivityById(
+    @Param('id') id: string,
+    @Query('unitId') unitId: string,
+  ): Promise<CareActivityDetailRO> {
+    const careActivity = await this.careActivityService.getCareActivityById(id, unitId);
+    const careActivityDetail = new CareActivityDetailRO(careActivity);
+    return this.careActivityService.fillMissingAllowedActivities(careActivityDetail);
   }
 
   @Patch(':id')

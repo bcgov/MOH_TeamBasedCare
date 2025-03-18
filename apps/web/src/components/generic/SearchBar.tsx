@@ -1,12 +1,14 @@
+import { debounce } from 'lodash';
 import { MutableRefObject, useEffect, useRef } from 'react';
 
 interface SearchBarProps {
   placeholderText?: string;
-  handleChange?: ({ target }: React.ChangeEvent<HTMLInputElement>) => void;
+  handleChange: ({ target }: React.ChangeEvent<HTMLInputElement>) => void;
   bgWhite?: boolean;
   value?: string;
   ref?: MutableRefObject<HTMLInputElement | null>;
   className?: string;
+  wait?: number;
 }
 
 export const SearchBar = ({
@@ -15,8 +17,10 @@ export const SearchBar = ({
   bgWhite,
   value,
   className = '',
+  wait = 500,
 }: SearchBarProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const debouncedSearch = debounce(handleChange, wait);
 
   useEffect(() => {
     if (inputRef.current && inputRef.current.value !== value) {
@@ -53,7 +57,7 @@ export const SearchBar = ({
             bgWhite ? 'bg-white-700' : 'bg-gray-700'
           } dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500`}
           placeholder={placeholderText}
-          onChange={handleChange}
+          onChange={debouncedSearch}
           autoComplete='off'
           defaultValue={value}
           ref={inputRef}

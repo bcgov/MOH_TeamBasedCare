@@ -4,12 +4,22 @@ import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
 import { CareActivity } from './entity/care-activity.entity';
 import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
-import { BundleRO, CareActivitiesCMSFindSortKeys, CareActivityRO, SortOrder } from '@tbcm/common';
+import {
+  AllowedActivityRO,
+  BundleRO,
+  CareActivitiesCMSFindSortKeys,
+  CareActivityDetailRO,
+  CareActivityRO,
+  EditCareActivityDTO,
+  SortOrder,
+} from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
-import { EditCareActivityDTO } from './dto/edit-care-activity.dto';
 import { UnitService } from 'src/unit/unit.service';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
 import { cleanText } from 'src/common/utils';
+import { OccupationService } from 'src/occupation/occupation.service';
+import _ from 'lodash';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 
 @Injectable()
 export class CareActivityService {
@@ -18,10 +28,13 @@ export class CareActivityService {
     private readonly bundleRepo: Repository<Bundle>,
     @InjectRepository(CareActivity)
     private readonly careActivityRepo: Repository<CareActivity>,
+    @InjectRepository(AllowedActivity)
+    private readonly allowedActivityRepo: Repository<AllowedActivity>,
     @InjectRepository(CareActivitySearchTerm)
     private readonly careActivitySearchTermRepo: Repository<CareActivitySearchTerm>,
     @Inject(UnitService)
     private readonly unitService: UnitService,
+    private readonly occupationService: OccupationService,
   ) {}
 
   findOneById(id: string) {
@@ -50,6 +63,14 @@ export class CareActivityService {
   }
 
   async getAllBundles(): Promise<Bundle[]> {
+    return this.bundleRepo.find({
+      order: {
+        name: 'ASC',
+      },
+    });
+  }
+
+  async getAllBundlesWithActivities(): Promise<Bundle[]> {
     return this.bundleRepo.find({
       relations: ['careActivities'],
       order: {
@@ -95,9 +116,9 @@ export class CareActivityService {
   ): Promise<[CareActivityRO[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
+      .innerJoinAndSelect('ca.careLocations', 'ca_cl')
       .leftJoinAndSelect('ca.bundle', 'ca_b')
-      .leftJoinAndSelect('ca.updatedBy', 'ca_up')
-      .leftJoinAndSelect('ca.careLocations', 'ca_cl');
+      .leftJoinAndSelect('ca.updatedBy', 'ca_up');
 
     // Search logic below
     if (query.searchText) {
@@ -144,6 +165,7 @@ export class CareActivityService {
       bundleName: raw.ca_b_display_name,
       updatedBy: raw.ca_up_display_name,
       unitName: raw.ca_cl_display_name,
+      unitId: raw.ca_cl_id,
     }));
     return [result, count];
   }
@@ -179,8 +201,23 @@ export class CareActivityService {
     // validate id exist
     if (!id) throw new NotFoundException();
 
+    const { unitId, bundleId, description, name, activityType, allowedActivities } = data;
+
     // fetch care activity
-    const careActivity = await this.findOneById(id);
+    const careActivity = await this.careActivityRepo.findOne({
+      where: {
+        id,
+        careLocations: { id: data.unitId },
+        allowedActivities: { unit: { id: data.unitId } },
+      },
+      relations: [
+        'bundle',
+        'careLocations',
+        'allowedActivities',
+        'allowedActivities.unit',
+        'allowedActivities.occupation',
+      ],
+    });
 
     // validate care activity exist
     if (!careActivity) {
@@ -190,11 +227,15 @@ export class CareActivityService {
       });
     }
 
-    // deconstruct
-    const { bundle: bundleId, careLocations: careLocationIds, ...careActivityLiterals } = data;
+    if (!careActivity.careLocations.some(u => u.id === unitId)) {
+      throw new NotFoundException({
+        message: 'Cannot update care activity: not related to the unit',
+        data: { id, unitId: data.unitId },
+      });
+    }
 
     // if bundle is updated, fetch and update entity
-    if (bundleId) {
+    if (bundleId && careActivity.bundle.id !== bundleId) {
       const bundle = await this.bundleRepo.findOneBy({ id: bundleId });
       if (!bundle) {
         throw new NotFoundException({
@@ -202,52 +243,70 @@ export class CareActivityService {
           data: { id: bundleId },
         });
       }
-
-      careActivity.bundle = bundle;
     }
 
-    // if care settings / units / care locations are updated, fetch and update entities
-    if (Array.isArray(careLocationIds)) {
-      const careLocations = await this.unitService.getManyByIds(careLocationIds);
+    await this.careActivityRepo.manager.transaction(async manager => {
+      await manager.update(CareActivity, id, {
+        bundle: { id: bundleId },
+        displayName: name,
+        description,
+        activityType,
+      });
 
-      // if some care location Ids are invalid, throw error
-      if (careLocationIds.length !== careLocations.length) {
-        const missingCareLocationIds = careLocationIds.reduce<string[]>((acc, id) => {
-          if (!careLocations.map(c => c.id).includes(id)) {
-            acc.push(id);
-          }
+      // update allowed activities for the unit
+      const currrentAllowedActivityMap = new Map(
+        careActivity.allowedActivities.map(aa => [aa.id, aa]),
+      );
 
-          return acc;
-        }, []);
-
-        throw new NotFoundException({
-          message: 'Cannot update care activity: Care location(s) not found',
-          data: {
-            id: missingCareLocationIds,
-          },
-        });
+      // construct allowed activities to be deleted for occupation to be marked 'N'
+      const allowedActivitiesToDelete = allowedActivities
+        .filter(aa => aa.id && aa.permission === 'N')
+        .map(aa => aa.id);
+      if (allowedActivitiesToDelete.length) {
+        await manager.delete(AllowedActivity, allowedActivitiesToDelete);
       }
 
-      // else update
-      careActivity.careLocations = careLocations;
-    }
+      const allowedActivitiesToUpdate = allowedActivities
+        .filter(aa => aa.id && aa.permission !== 'N')
+        .map(aa => {
+          const existing = currrentAllowedActivityMap.get(aa.id);
+          if (existing) {
+            existing.permission = aa.permission;
+            return existing;
+          }
+        })
+        .filter(Boolean) as AllowedActivity[];
 
-    // update entity object for literals
-    // Using Object.assign to update the entity object, which will trigger the entity's @BeforeUpdate hook on save
-    Object.assign(careActivity, { ...careActivityLiterals });
+      if (allowedActivitiesToUpdate.length) {
+        await manager.save(allowedActivitiesToUpdate);
+      }
 
-    // perform update
-    await this.careActivityRepo.save(careActivity);
+      // new allowed activities
+      const allowedActivitiesToCreate = allowedActivities
+        .filter(aa => !aa.id && aa.permission !== 'N')
+        .map(aa => {
+          return this.allowedActivityRepo.create({
+            permission: aa.permission,
+            occupation: { id: aa.occupationId },
+            unit: { id: unitId },
+            careActivity: { id },
+          });
+        });
+
+      if (allowedActivitiesToCreate.length) {
+        await manager.save(allowedActivitiesToCreate);
+      }
+    });
   }
 
-  async removeCareActivity(id: string, unitName: string) {
+  async removeCareActivity(id: string, unitId: string) {
     // validate id exist
     if (!id) {
       throw new BadRequestException({
         message: 'Cannot delete care activity: id missing',
       });
     }
-    if (!unitName) {
+    if (!unitId) {
       throw new BadRequestException({
         message: 'Cannot delete care activity: unit name missing',
         data: { id },
@@ -267,14 +326,14 @@ export class CareActivityService {
       });
     }
 
-    if (!careActivity?.careLocations.some(u => u.displayName === unitName)) {
+    if (!careActivity?.careLocations.some(u => u.id === unitId)) {
       throw new NotFoundException({
         message: 'Cannot delete care activity: not related to the unit',
-        data: { id, unitName },
+        data: { id, unitId },
       });
     }
 
-    careActivity.careLocations = careActivity.careLocations.filter(u => u.displayName !== unitName);
+    careActivity.careLocations = careActivity.careLocations.filter(u => u.id !== unitId);
 
     // remove activity
     if (careActivity.careLocations.length) {
@@ -292,5 +351,49 @@ export class CareActivityService {
     return this.careActivityRepo.find({
       where: { name: In(names.map(name => cleanText(name))) },
     });
+  }
+
+  async getCareActivityById(id: string, unitId: string): Promise<CareActivity | null> {
+    const activity = await this.careActivityRepo
+      .createQueryBuilder('ca')
+      .innerJoinAndSelect('ca.careLocations', 'cl')
+      .innerJoinAndSelect('ca.bundle', 'b')
+      .leftJoinAndSelect('ca.allowedActivities', 'aa')
+      .leftJoinAndSelect('aa.occupation', 'o')
+      .leftJoinAndSelect('aa.unit', 'u')
+      .where('ca.id = :id', { id })
+      .andWhere('cl.id = :unitId', { unitId })
+      .getOne();
+
+    if (!activity) {
+      throw new BadRequestException({
+        message: 'Care activity not found',
+        data: { id, unitId },
+      });
+    }
+
+    activity.allowedActivities = activity.allowedActivities.filter(aa => aa.unit.id === unitId);
+    return activity;
+  }
+
+  async fillMissingAllowedActivities(
+    careActivity: CareActivityDetailRO,
+  ): Promise<CareActivityDetailRO> {
+    const occupations = await this.occupationService.getAllOccupations();
+    const missingDisallowedActivities = occupations
+      .filter(o => !careActivity.allowedActivities.some(aa => aa.occupation.id === o.id))
+      .map(o => ({
+        id: '',
+        unit: careActivity.careLocation,
+        occupation: o,
+        permission: 'N',
+      })) as AllowedActivityRO[];
+
+    careActivity.allowedActivities = _.sortBy(
+      careActivity.allowedActivities.concat(missingDisallowedActivities),
+      'occupation.displayName',
+    );
+
+    return careActivity;
   }
 }
