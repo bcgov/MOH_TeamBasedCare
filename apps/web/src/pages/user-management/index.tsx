@@ -7,10 +7,10 @@ import { toast } from 'react-toastify';
 import AppLayout from 'src/components/AppLayout';
 import { ModalWrapper } from 'src/components/Modal';
 import { Card } from 'src/components/generic/Card';
+import { SearchBar } from 'src/components/generic/SearchBar';
 import { EditUser } from 'src/components/user-management/editUser';
 import { InviteUser } from 'src/components/user-management/inviteUser';
 import { UserManagementList } from 'src/components/user-management/list';
-import { UserManagementSearch } from 'src/components/user-management/search';
 import { useUserReProvision } from 'src/services/useUserReProvision';
 import { useUserRevoke } from 'src/services/useUserRevoke';
 import { useUsersFind } from 'src/services/useUsersFind';
@@ -110,7 +110,7 @@ const UserManagement: NextPage = () => {
         <Card bgWhite className='mt-4'>
           <PageTitle
             title='Users'
-            secondary={<UserManagementSearch onSearchTextChange={onSearchTextChange} />}
+            secondary={<SearchBar handleChange={e => onSearchTextChange(e.target.value)} />}
           />
           <UserManagementList
             users={users}

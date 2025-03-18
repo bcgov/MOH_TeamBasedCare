@@ -1,11 +1,13 @@
 import { useFormikContext } from 'formik';
 
 import { Field, FieldProps } from '@components';
+import classNames from 'classnames';
 
 interface TextareaProps extends FieldProps {
   maxLength?: number;
   rows?: number;
   placeholder?: string;
+  className?: string;
 }
 
 export const Textarea = (props: TextareaProps) => {
@@ -27,12 +29,16 @@ export const Textarea = (props: TextareaProps) => {
         placeholder={placeholder}
         maxLength={maxLength}
         as='textarea'
-        className='bg-white h-[150px] w-full border rounded border-bcGray p-1.5 '
+        className={classNames(
+          'bg-white h-[150px] w-full border rounded border-bcGray p-1.5 ',
+          props.className,
+        )}
       />
       {maxLength ? (
         <>
-          <p aria-hidden className='text-right relative -top-12 -left-4 h-0'>
-            {values[name]?.length}/{maxLength} <span className='sr-only'>characters remaining</span>
+          <p aria-hidden className='text-right relative bottom-10 right-4 h-0'>
+            {values[name]?.length ?? 0}/{maxLength}{' '}
+            <span className='sr-only'>characters remaining</span>
           </p>
           <p className='sr-only' role='alert'>
             {showMaxLength()}

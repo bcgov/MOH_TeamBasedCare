@@ -12,7 +12,7 @@ export const useCareLocations = () => {
   const careLocations: OptionType[] =
     response.data?.map(unit => ({
       value: unit.id,
-      label: unit.displayName,
+      label: unit.displayName ?? '',
     })) ?? [];
 
   return { careLocations, ...response };

@@ -5,10 +5,9 @@ import { toast } from 'react-toastify';
 
 export const useCMSCareActivityDelete = () => {
   const { sendApiRequest, isLoading } = useHttp();
-
   const handleSubmit = (careActivity: CareActivityCMSRO, cb?: () => void) => {
     const config = {
-      endpoint: `${API_ENDPOINT.CARE_ACTIVITY}/${careActivity.id}/${careActivity.unitName}`,
+      endpoint: `${API_ENDPOINT.CARE_ACTIVITY}/${careActivity.id}/${careActivity.unitId}`,
       method: REQUEST_METHOD.DELETE,
     };
 

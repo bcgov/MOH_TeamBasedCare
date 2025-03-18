@@ -22,6 +22,7 @@ export enum AllowedPath {
   CARE_TERMINOLOGIES_ID = '/care-terminologies/:id',
   USER_MANAGEMENT = '/user-management',
   CONTENT_MANAGEMENT = '/content-management',
+  CONTENT_MANAGEMENT_CARE_ACTIVITY = '/content-management/care-activity/:id',
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [
@@ -173,3 +174,5 @@ export const UploadSheetColumns = [
     width: 13,
   },
 ];
+
+export const CareActivitySheetName = 'Care_Activities';

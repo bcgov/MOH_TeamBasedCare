@@ -339,9 +339,21 @@ export class CareActivityBulkService {
 
     // upsert care settings (aka care locations) (aka Units)
     await this.unitService.saveCareLocations(Array.from(careSettingDisplayNames));
+    const units = await this.unitService.getAllUnits();
+    await this.unitService.saveCareLocations(
+      Array.from(careSettingDisplayNames).filter(displayName =>
+        units.every(u => u.name !== cleanText(displayName)),
+      ),
+    );
 
     // upsert care bundles
     await this.bundleService.upsertBundles(Array.from(careBundleDisplayNames));
+    const bundles = await this.bundleService.getManyByNames(Array.from(careBundleDisplayNames));
+    await this.bundleService.upsertBundles(
+      Array.from(careBundleDisplayNames).filter(displayName =>
+        bundles.every(b => b.name !== cleanText(displayName)),
+      ),
+    );
 
     const occupations = await this.occupationService.getAllOccupations();
     const newOccupations = _.difference(
@@ -404,7 +416,8 @@ export class CareActivityBulkService {
     );
 
     // care activity object to be upserted
-    return data.map(({ rowData }) => {
+    const careActivities: Map<string, CareActivity> = new Map();
+    data.forEach(({ rowData }) => {
       const displayName = rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY];
       const activityType = rowData[BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE] as CareActivityType;
       const careSetting = rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING];
@@ -429,7 +442,10 @@ export class CareActivityBulkService {
       }
 
       const id = rowData[BULK_UPLOAD_COLUMNS.ID];
-      const activity = existingActivities.find(a => a.id === id) ?? this.careActivityRepo.create();
+      const activity =
+        careActivities.get(id) ??
+        existingActivities.find(a => a.id === id) ??
+        this.careActivityRepo.create();
       activity.activityType = activityType;
       activity.name = displayName;
       activity.displayName = displayName;
@@ -439,8 +455,10 @@ export class CareActivityBulkService {
       } else if (!activity.careLocations.some(l => l.id === careSettingEntity.id)) {
         activity.careLocations.push(careSettingEntity);
       }
-      return activity;
+      careActivities.set(id, activity);
     });
+
+    return Array.from(careActivities.values());
   }
 
   /**

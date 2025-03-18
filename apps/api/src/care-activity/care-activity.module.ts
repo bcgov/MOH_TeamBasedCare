@@ -13,10 +13,11 @@ import { CareActivityBulkService } from './care-activity-bulk.service';
 import { OccupationModule } from 'src/occupation/occupation.module';
 import { BundleService } from './bundle.service';
 import { AllowedActivityModule } from 'src/allowed-activity/allowed-activity.module';
+import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CareActivity, Bundle, CareActivitySearchTerm]),
+    TypeOrmModule.forFeature([AllowedActivity, CareActivity, Bundle, CareActivitySearchTerm]),
     UnitModule,
     OccupationModule,
     forwardRef(() => AllowedActivityModule),
