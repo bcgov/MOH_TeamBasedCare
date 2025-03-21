@@ -246,7 +246,11 @@ export class PlanningSessionService {
       .select('aa.permission, aa.care_activity_id, aa.occupation_id')
       .innerJoin('ps.careActivity', 'ca')
       .innerJoin('ps.occupation', 'o')
-      .innerJoin(AllowedActivity, 'aa', 'aa.careActivity = ca.id and aa.occupation = o.id')
+      .innerJoin(
+        AllowedActivity,
+        'aa',
+        'aa.careActivity = ca.id and aa.occupation = o.id and ps.careLocation.id = aa.unit_id',
+      )
       .where('ps.id = :sessionId', { sessionId })
       .getRawMany();
 
