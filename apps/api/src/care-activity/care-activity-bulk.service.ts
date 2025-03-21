@@ -399,12 +399,15 @@ export class CareActivityBulkService {
     careSettingDisplayNames: Set<string>,
     careBundleDisplayNames: Set<string>,
   ) {
-    const existingActivities = await this.careActivityRepo.find({
-      where: {
-        id: In(data.map(e => e.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean)),
-      },
-      relations: ['careLocations'],
-    });
+    const careActivityIds = data.map(e => e.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean);
+    const existingActivities = careActivityIds.length
+      ? await this.careActivityRepo.find({
+          where: {
+            id: In(data.map(e => e.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean)),
+          },
+          relations: ['careLocations'],
+        })
+      : [];
     // fetch care setting entities from database for relational mapping purposes with care activities
     const careSettingEntities = await this.unitService.getUnitsByNames(
       Array.from(careSettingDisplayNames),
@@ -443,7 +446,7 @@ export class CareActivityBulkService {
 
       const id = rowData[BULK_UPLOAD_COLUMNS.ID];
       const activity =
-        careActivities.get(id) ??
+        careActivities.get(cleanText(displayName)) ??
         existingActivities.find(a => a.id === id) ??
         this.careActivityRepo.create();
       activity.activityType = activityType;
@@ -455,7 +458,7 @@ export class CareActivityBulkService {
       } else if (!activity.careLocations.some(l => l.id === careSettingEntity.id)) {
         activity.careLocations.push(careSettingEntity);
       }
-      careActivities.set(id, activity);
+      careActivities.set(cleanText(displayName), activity);
     });
 
     return Array.from(careActivities.values());
