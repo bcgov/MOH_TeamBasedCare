@@ -15,6 +15,9 @@ export class CareActivityCMSRO extends CareActivityRO {
   @Expose()
   unitName!: string;
 
+  @Expose()
+  unitId!: string;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     super(data);
