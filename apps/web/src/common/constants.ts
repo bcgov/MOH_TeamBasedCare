@@ -77,7 +77,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     active: false,
     faIcon: faSuitcase,
     path: AllowedPath.CONTENT_MANAGEMENT,
-    hidden: typeof window !== 'undefined' && window.origin === 'https://moc.gov.bc.ca',
+    hidden: false,
     roles: [Role.CONTENT_ADMIN],
   },
 ];
