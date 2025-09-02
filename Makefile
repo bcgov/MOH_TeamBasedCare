@@ -175,7 +175,7 @@ docker-build:
 run-local:
 	@echo "++\n***** Running docker-compose\n++"
 	@yarn
-	@docker-compose up --build -d
+	@docker-compose up --build
 	@echo "++\n*****"
 
 run-local-server:

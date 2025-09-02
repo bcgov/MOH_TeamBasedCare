@@ -1,6 +1,6 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
-# RUN yarn set version berry
+RUN yarn set version berry
 # Copying repo resources
 COPY ./packages ./packages
 COPY ./apps ./apps

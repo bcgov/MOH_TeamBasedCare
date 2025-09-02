@@ -4,6 +4,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../app.module';
 import { AppLogger } from '../../common/logger.service';
 import { getGenericError } from '../../common/utils';
+import { SeedService } from './seed-service';
+import * as fs from 'fs';
 
 /**
  * Seeds the database with entries for testing purposes.
@@ -17,7 +19,7 @@ const node_env = process.env.NODE_ENV;
   logger.log('Seeding script started');
   try {
     if (node_env === 'development' || node_env === 'test') {
-      // const seeder = appContext.get(SeedService);
+      const seeder = appContext.get(SeedService);
       switch (process.env.SEED_TYPE) {
         case 'SEED_CARE_ACTIVITIES':
           const path = process.env.npm_config_path;
@@ -27,7 +29,8 @@ const node_env = process.env.NODE_ENV;
             );
             break;
           }
-          // await seeder.updateCareActivities(path);
+          const fileBuffer = fs.readFileSync(path);
+          await seeder.updateCareActivities(fileBuffer);
           break;
         default:
           throw new Error('Seed type not configured');

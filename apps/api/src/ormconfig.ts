@@ -11,7 +11,7 @@ dotenv.config();
 export const config: PostgresConnectionOptions = {
   host: process.env.POSTGRES_HOST,
   type: 'postgres',
-  port: +(process.env.PORTGRES_PORT || 5432),
+  port: +(process.env.POSTGRES_PORT || 5432),
   username: process.env.POSTGRES_USERNAME || 'freshworks',
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE || 'tbcm',

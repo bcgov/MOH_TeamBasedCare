@@ -63,6 +63,5 @@
       "prettier --write",
       "eslint --cache --fix"
     ]
-  },
-  "packageManager": "yarn@3.2.3"
+  }
 }
