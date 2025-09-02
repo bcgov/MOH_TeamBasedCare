@@ -6,6 +6,10 @@ import { AppLogger } from '../../common/logger.service';
 import { getGenericError } from '../../common/utils';
 import { SeedService } from './seed-service';
 import * as fs from 'fs';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 /**
  * Seeds the database with entries for testing purposes.
@@ -17,6 +21,10 @@ const node_env = process.env.NODE_ENV;
   const logger: AppLogger = appContext.get(Logger);
 
   logger.log('Seeding script started');
+  
+  // Initialize database connection
+  await appContext.init();
+  
   try {
     if (node_env === 'development' || node_env === 'test') {
       const seeder = appContext.get(SeedService);

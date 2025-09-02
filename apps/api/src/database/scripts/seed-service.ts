@@ -101,28 +101,29 @@ export class SeedService {
   }
 
   async updateCareActivities(file: Buffer): Promise<void> {
-    let headers: string[];
-    const bundleVsCareActivity: {
-      [key: string]: {
-        name: string;
-        activityType: CareActivityType;
-        careLocation: string;
-      }[];
-    } = {};
-    const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
-    const careLocations = new Set<string>();
+    return new Promise((resolve, reject) => {
+      let headers: string[];
+      const bundleVsCareActivity: {
+        [key: string]: {
+          name: string;
+          activityType: CareActivityType;
+          careLocation: string;
+        }[];
+      } = {};
+      const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
+      const careLocations = new Set<string>();
 
-    let bundleName: string;
+      let bundleName: string;
 
-    const readable = new Readable();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    readable._read = () => {}; // _read is required but you can noop it
-    readable.push(file);
-    readable.push(null);
+      const readable = new Readable();
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      readable._read = () => {}; // _read is required but you can noop it
+      readable.push(file);
+      readable.push(null);
 
-    readable
-      .pipe(csv())
-      .on('data', row => {
+      readable
+        .pipe(csv())
+        .on('data', row => {
         const data = Object.keys(row).reduce((acc, key) => {
           acc[key.trim()] = row[key];
           return acc;
@@ -237,7 +238,10 @@ export class SeedService {
             return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
           }),
         );
-      });
+        resolve();
+      })
+      .on('error', reject);
+    });
   }
 
   private async findAllCareActivities(careActivities: string[]): Promise<CareActivity[]> {
@@ -305,6 +309,7 @@ export class SeedService {
       careActivities.map(({ name, activityType, careLocation }) =>
         this.upsertCareActivity({
           name,
+          displayName: name, // Use name as displayName if not provided
           bundle,
           activityType,
           careLocations: careLocation ? [careLocation] : [],

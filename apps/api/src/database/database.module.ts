@@ -35,8 +35,8 @@ const getEnvironmentSpecificConfig = (env?: string) => {
       };
     default:
       return {
-        entities: ['dist/**/*.entity.js'],
-        migrations: ['dist/migration/*.js'],
+        entities: [join(__dirname, '../**/*.entity.{ts,js}')],
+        migrations: [join(__dirname, '../migration/*.{ts,js}')],
         logging: ['error', 'warn', 'migration'] as LoggerOptions,
       };
   }
