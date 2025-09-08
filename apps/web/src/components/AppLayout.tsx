@@ -33,7 +33,7 @@ const AppLayout: React.FC = ({ children }) => {
 
         return item;
       }),
-    [], // eslint-disable-line react-hooks/exhaustive-deps
+    [],
   );
 
   useEffect(() => {

@@ -31,7 +31,7 @@ const enum PlanningActions {
   REFETCH_ACTIVITY_GAP = 'REFETCH_ACTIVITY_GAP',
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function reducer(state: any, action: any): PlanningContextStateProps {
   switch (action.type) {
     case PlanningActions.NEXT_TRIGGERED:

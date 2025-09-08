@@ -99,7 +99,7 @@ export const emptyGrayConditionalFormattingRules: ExcelJS.ConditionalFormattingR
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const addLegendWorksheet = (workbook: any) => {
   const legendWorksheet = workbook.addWorksheet('Legend');
 
@@ -135,7 +135,7 @@ export const addLegendWorksheet = (workbook: any) => {
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const triggerExcelDownload = async (xlsx: any, title: string) => {
   FileDownload.download(
     await xlsx.writeBuffer(),

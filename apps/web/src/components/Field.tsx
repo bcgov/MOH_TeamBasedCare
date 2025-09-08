@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { Error, Label, Description } from '@components';
 import { Field as FormikField, useField, FieldAttributes } from 'formik';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export interface FieldProps extends FieldAttributes<any> {
   name: string;
   label: string | React.ReactNode;

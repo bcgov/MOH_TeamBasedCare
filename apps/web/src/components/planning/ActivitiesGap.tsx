@@ -61,7 +61,7 @@ const TableHeader: React.FC = () => {
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const SwitchTooltip: React.FC<any> = props => {
   const { item, positionBottomLeft, occupation } = props;
   const position = positionBottomLeft ? PopoverPosition.BOTTOM_LEFT : PopoverPosition.BOTTOM_RIGHT;

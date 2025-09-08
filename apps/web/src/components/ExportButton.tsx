@@ -100,7 +100,7 @@ const convertActivityGapTableToXLSX = (data: ActivityGap, user?: UserRO) => {
   resultData.forEach(rowData => {
     const row = gapMatrixWorksheet.addRow(rowData);
     if (rowData.isBundleHeader) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       row.eachCell((cell: any) => {
         cell.style = { font: { bold: true } };
       });

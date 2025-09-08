@@ -82,7 +82,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
 
       const careActivitiesHeaders: string[] = [];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const careActivitiesData: CareActivityBulkData[] = [];
 
       try {
@@ -93,7 +93,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
 
       let isCareActivitySheetAvailable = false;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       workbook.eachSheet((worksheet: any) => {
         // do not need to read other worksheets
         if (worksheet.name !== CareActivitySheetName) {
@@ -104,11 +104,11 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
         isCareActivitySheetAvailable = true;
 
         // Iterate over all rows that have values in a worksheet
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         worksheet.eachRow({ includeEmpty: false }, (row: any, rowNumber: number) => {
           // header row
           if (rowNumber === 1) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             row.eachCell({ includeEmpty: false }, (cell: any) => {
               careActivitiesHeaders.push(cell.value);
             });
@@ -116,10 +116,10 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           }
 
           // care activity rows
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const careActivityRowData: any = {};
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           row.eachCell({ includeEmpty: true }, (cell: any, cellNumber: number) => {
             careActivityRowData[careActivitiesHeaders[cellNumber - 1]] =
               typeof cell.value === 'string' ? cell.value.trim() : cell.value;

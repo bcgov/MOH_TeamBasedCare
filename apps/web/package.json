@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint --fix --cache \"src/**/*.{js,ts,tsx}\"",
     "test": "jest",
     "open:cypress": "cypress open",
     "cypress": "cypress run"
@@ -47,7 +47,7 @@
     "cy-verify-downloads": "0.1.8",
     "cypress": "13.7.1",
     "dotenv": "16.0.0",
-    "eslint": "8.57.0",
+    "eslint": "9.35.0",
     "eslint-config-next": "14.1.4",
     "eslint-plugin-jest-dom": "5.2.0",
     "eslint-plugin-testing-library": "6.2.0",

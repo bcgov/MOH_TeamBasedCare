@@ -74,7 +74,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       try {
         handleMaxFileSize(selectedFile);
         handleErrorBeforeSelection?.(selectedFile);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
       } catch (err: any) {
         setFileError(err.message);
         onFileRemove();
@@ -87,7 +87,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       try {
         await handleFile?.(selectedFile);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
       } catch (err: any) {
         setFileError(err.message);
         return;
