@@ -46,7 +46,7 @@
     "babel-jest": "29.7.0",
     "cy-verify-downloads": "0.1.8",
     "cypress": "13.7.1",
-    "dotenv": "16.0.0",
+    "dotenv": "16.4.5",
     "eslint": "9.35.0",
     "eslint-config-next": "14.1.4",
     "eslint-plugin-jest-dom": "5.2.0",

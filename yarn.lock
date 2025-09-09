@@ -2086,7 +2086,7 @@ __metadata:
     class-transformer: 0.5.1
     csv-parser: 3.0.0
     csv-stringify: 6.0.4
-    dotenv: 10.0.0
+    dotenv: 16.4.5
     eslint: 9.35.0
     express: 4.19.2
     handlebars: 4.7.7
@@ -2160,7 +2160,7 @@ __metadata:
     cookie: 0.4.2
     cy-verify-downloads: 0.1.8
     cypress: 13.7.1
-    dotenv: 16.0.0
+    dotenv: 16.4.5
     eslint: 9.35.0
     eslint-config-next: 14.1.4
     eslint-plugin-jest-dom: 5.2.0
@@ -6186,17 +6186,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:10.0.0":
-  version: 10.0.0
-  resolution: "dotenv@npm:10.0.0"
-  checksum: f412c5fe8c24fbe313d302d2500e247ba8a1946492db405a4de4d30dd0eb186a88a43f13c958c5a7de303938949c4231c56994f97d05c4bc1f22478d631b4005
-  languageName: node
-  linkType: hard
-
-"dotenv@npm:16.0.0":
-  version: 16.0.0
-  resolution: "dotenv@npm:16.0.0"
-  checksum: 664cebb51f0a9a1d1b930f51f0271e72e26d62feaecc9dc03df39453dd494b4e724809ca480fb3ec3213382b1ed3f791aaeb83569a137f9329ce58efd4853dbf
+"dotenv@npm:16.4.5":
+  version: 16.4.5
+  resolution: "dotenv@npm:16.4.5"
+  checksum: 301a12c3d44fd49888b74eb9ccf9f07a1f5df43f489e7fcb89647a2edcd84c42d6bc349dc8df099cd18f07c35c7b04685c1a4f3e6a6a9e6b30f8d48c15b7f49c
   languageName: node
   linkType: hard
 
