@@ -2094,7 +2094,7 @@ __metadata:
     js-yaml: 4.1.0
     jsonwebtoken: 9.0.2
     jwks-rsa: 2.0.5
-    keycloak-connect: 22.0.3
+    keycloak-connect: 22.0.5
     lodash: 4.17.21
     nanoid: 3.3.3
     nest-keycloak-connect: 1.10.0
@@ -10475,16 +10475,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"keycloak-connect@npm:22.0.3":
-  version: 22.0.3
-  resolution: "keycloak-connect@npm:22.0.3"
+"keycloak-connect@npm:22.0.5":
+  version: 22.0.5
+  resolution: "keycloak-connect@npm:22.0.5"
   dependencies:
     chromedriver: latest
     jwk-to-pem: ^2.0.0
   dependenciesMeta:
     chromedriver:
       optional: true
-  checksum: ea3882fb78fb375f7133e2401cb9bc0462b6f70c82cccf77e7fa2b6fc66650381f6d414599a345c81db311e379e034fe87cf24099341e35c8a73bc137f7d5d2e
+  checksum: bfcd40b824e94642037e16b2bff53959d4dee1e47134eb5ab9ab96cc520eb113ea04d363921df0059c822fbffd1dbf2692f4ceed2dc6768ab2a57ca6c82b17e0
   languageName: node
   linkType: hard
 
