@@ -2077,7 +2077,7 @@ __metadata:
     "@types/js-yaml": 4.0.5
     "@types/jsonwebtoken": 8.5.8
     "@types/multer": 1.4.11
-    "@types/node": 16.0.0
+    "@types/node": 22.15.28
     "@types/supertest": 2.0.11
     "@types/zen-observable": 0.8.3
     "@vendia/serverless-express": 4.3.11
@@ -2121,7 +2121,7 @@ __metadata:
   resolution: "@tbcm/common@workspace:packages/common"
   dependencies:
     "@types/jest": 29.5.12
-    "@types/node": 16.11.7
+    "@types/node": 22.15.28
     class-transformer: 0.5.1
     class-validator: 0.14.1
     dayjs: 1.11.0
@@ -2662,17 +2662,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:16.0.0":
-  version: 16.0.0
-  resolution: "@types/node@npm:16.0.0"
-  checksum: 57e5731ba8d64d9a6434c69f1153186b7fc1b0f58ae54f3eb8c32cd122e87e9aca35947f62e92e1902027994dac97b5bff7cce4d9c56cb319f07f694fe55d012
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:16.11.7":
-  version: 16.11.7
-  resolution: "@types/node@npm:16.11.7"
-  checksum: 2706403e6efc4aa40fdce8f0b5d9884d5600c3c8610aedc7fa5e7e298d30366f7e8b7296028d52898dca3edef4c3e827b03bf20952c4780f13fa4e79864f7a86
+"@types/node@npm:22.15.28":
+  version: 22.15.28
+  resolution: "@types/node@npm:22.15.28"
+  dependencies:
+    undici-types: ~6.21.0
+  checksum: 80a82dd77df11aae3cec5ee161106e08813ebfc07cc98ad1ac02052ef32c6e5e0d84182e20084ba25e70c21a900b1b8914f0622337e9b04cb77e8c04ce4f0ae1
   languageName: node
   linkType: hard
 
@@ -15608,6 +15603,13 @@ __metadata:
   version: 2.0.5
   resolution: "undefsafe@npm:2.0.5"
   checksum: f42ab3b5770fedd4ada175fc1b2eb775b78f609156f7c389106aafd231bfc210813ee49f54483d7191d7b76e483bc7f537b5d92d19ded27156baf57592eb02cc
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 46331c7d6016bf85b3e8f20c159d62f5ae471aba1eb3dc52fff35a0259d58dcc7d592d4cc4f00c5f9243fa738a11cfa48bd20203040d4a9e6bc25e807fab7ab3
   languageName: node
   linkType: hard
 
