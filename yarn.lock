@@ -2097,7 +2097,7 @@ __metadata:
     keycloak-connect: 22.0.5
     lodash: 4.17.21
     nanoid: 3.3.3
-    nest-keycloak-connect: 1.10.0
+    nest-keycloak-connect: 1.10.1
     nest-winston: 1.9.4
     pg: 8.11.3
     reflect-metadata: 0.1.13
@@ -11451,18 +11451,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nest-keycloak-connect@npm:1.10.0":
-  version: 1.10.0
-  resolution: "nest-keycloak-connect@npm:1.10.0"
+"nest-keycloak-connect@npm:1.10.1":
+  version: 1.10.1
+  resolution: "nest-keycloak-connect@npm:1.10.1"
   peerDependencies:
     "@nestjs/common": ">=6.0.0 <11.0.0"
     "@nestjs/core": ">=6.0.0 <11.0.0"
     "@nestjs/graphql": ">=6"
-    keycloak-connect: ">=10.0.0 <25.0.0"
+    keycloak-connect: ">=10.0.0"
   peerDependenciesMeta:
     "@nestjs/graphql":
       optional: true
-  checksum: 396fd4f63db7a59cc841b4dec88ac8707cdd923623d90aaecb06ad8efdd8d4a71301560d6f310113906cef74369e92a640f6864affb5e2442b234021f0e6fda8
+  checksum: cefe3c115540de07ebd73e878e0c745ad9cc607631362dcc802e72d3d9ae8f3acbde6dba0e5b436b26219f41094aa180f89e3f7fea0dfdd3b9fbb6c74111d126
   languageName: node
   linkType: hard
 
