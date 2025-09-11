@@ -258,7 +258,7 @@ build-api:
 	@echo 'Hardlink local packages...\n' 
 	@cp -r ./packages/* .build/api/node_modules/@tbcm/
 	@echo 'Copy api ...\n' && cp -r apps/api/dist/* .build/api
-	@echo 'Copy api/ormconfig ...\n' && cp -r apps/api/dist/ormconfig.js .build/api
+	@echo 'Copy api/ormconfig ...\n' && cp -r apps/api/dist/apps/api/src/ormconfig.js .build/api
 	@echo 'Creating Zip ...\n' && cd .build && zip -r api.zip ./api && cd ..
 	@echo 'Copying to terraform build location...\n'
 	@cp ./.build/api.zip ./terraform/build/api.zip
