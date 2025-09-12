@@ -35,7 +35,7 @@ export const useHttp = () => {
   const fetchData = useCallback(
     async (
       requestConfig: RequestConfig,
-      handleData,
+      handleData: (data: any) => void,
       errorToastMessage?: string,
       handleError?: () => void,
     ) => {

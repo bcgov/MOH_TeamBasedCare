@@ -25,7 +25,7 @@ export const Disclosure: React.FC<DisclosureProps> = ({
   dropdownIconPosition = 'right',
 }) => {
   const caretIcon = useCallback(
-    open => (
+    (open: boolean) => (
       <FontAwesomeIcon
         icon={faChevronDown}
         className={`h-3 w-3 my-auto ${open ? 'transform rotate-180 duration-300' : 'duration-300'}`}

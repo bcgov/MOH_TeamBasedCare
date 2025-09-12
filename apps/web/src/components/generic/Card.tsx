@@ -1,5 +1,6 @@
 import { faCheck, faExclamation, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { PropsWithChildren } from 'react';
 import { Heading } from '../Heading';
 
 export interface CardProps {
@@ -17,7 +18,7 @@ export enum CardColor {
   RED = 'red',
 }
 
-export const Card: React.FC<CardProps> = ({
+export const Card: React.FC<PropsWithChildren<CardProps>> = ({
   color,
   title,
   subtitle,

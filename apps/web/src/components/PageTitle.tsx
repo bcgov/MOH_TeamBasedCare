@@ -1,7 +1,7 @@
 export interface PageTitleProps {
   title?: string;
   description?: string;
-  secondary?: JSX.Element;
+  secondary?: React.ReactElement;
 }
 
 export const PageTitle: React.FC<PageTitleProps> = ({ title, description, secondary }) => {

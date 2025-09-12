@@ -34,7 +34,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
   const [canConfirm, setCanConfirm] = useState(false);
   const [confirmData, setConfirmData] = useState<ConfirmData>();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [validationMessage, setValidationMessage] = useState<JSX.Element>(<></>);
+  const [validationMessage, setValidationMessage] = useState<React.ReactElement>(<></>);
   const [validationMessageType, setValidationMessageType] = useState<'warning' | 'success'>();
 
   const onDownloadClick = useCallback(async () => {
