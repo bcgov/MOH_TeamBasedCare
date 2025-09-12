@@ -48,8 +48,8 @@ export const Card: React.FC<CardProps> = ({
               color === CardColor.GREEN // inline conditional logic for JIT compiler to purge css classes properly; ref: Dynamic values section at https://v2.tailwindcss.com/docs/just-in-time-mode
                 ? 'bg-green-100'
                 : color === CardColor.YELLOW
-                ? 'bg-yellow-100'
-                : 'bg-red-100'
+                  ? 'bg-yellow-100'
+                  : 'bg-red-100'
             }`}
           >
             <FontAwesomeIcon
@@ -57,8 +57,8 @@ export const Card: React.FC<CardProps> = ({
                 color === CardColor.GREEN // inline conditional logic for JIT compiler to purge css classes properly; ref: Dynamic values section at https://v2.tailwindcss.com/docs/just-in-time-mode
                   ? 'text-green-600'
                   : color === CardColor.YELLOW
-                  ? 'text-yellow-600'
-                  : 'text-red-600'
+                    ? 'text-yellow-600'
+                    : 'text-red-600'
               }`}
               icon={icon}
             />

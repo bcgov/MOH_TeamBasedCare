@@ -93,8 +93,8 @@ export const AppMenu: React.FC<AppMenuProps> = ({
                         item.color === 'red'
                           ? 'text-bcRedError'
                           : item.color === 'blue'
-                          ? 'text-bcBlueAccent'
-                          : ''
+                            ? 'text-bcBlueAccent'
+                            : ''
                       }`}
                       role='menuitem'
                       tabIndex={-1}

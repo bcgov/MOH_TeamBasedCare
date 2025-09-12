@@ -9,7 +9,7 @@ export enum StorageKeys {
 }
 
 const APP_STORAGE_KEY = 'tbcm';
- 
+
 type AppStorageType = Record<string, any>;
 
 export class AppStorage {
@@ -41,7 +41,6 @@ export class AppStorage {
     this.updateStorage({});
   }
 
-   
   static setItem(key: string, value: any) {
     if (!key || value === null || value === undefined) return;
 

@@ -1,6 +1,4 @@
 // TODO: fix these
- 
- 
 
 function objectValues<T extends {}>(obj: T) {
   return Object.keys(obj).map(objKey => obj[objKey as keyof T]);

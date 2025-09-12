@@ -61,7 +61,6 @@ const TableHeader: React.FC = () => {
   );
 };
 
- 
 const SwitchTooltip: React.FC<any> = props => {
   const { item, positionBottomLeft, occupation } = props;
   const position = positionBottomLeft ? PopoverPosition.BOTTOM_LEFT : PopoverPosition.BOTTOM_RIGHT;

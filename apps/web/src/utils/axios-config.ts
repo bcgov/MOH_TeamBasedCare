@@ -10,7 +10,6 @@ export const AxiosPublic = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
- 
 const handleResponseSuccess = (response: any) => {
   return response;
 };

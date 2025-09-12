@@ -2,7 +2,6 @@ import { HttpStatus } from '@nestjs/common';
 import { SortOrder } from '@tbcm/common';
 import { GenericError } from './generic-exception';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getGenericError = (error: any): GenericError => {
   const customError = {
     errorType: error?.response?.statusText || error?.message || 'INTERNAL_SERVER_ERROR',

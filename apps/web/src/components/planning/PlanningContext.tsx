@@ -31,7 +31,6 @@ const enum PlanningActions {
   REFETCH_ACTIVITY_GAP = 'REFETCH_ACTIVITY_GAP',
 }
 
- 
 function reducer(state: any, action: any): PlanningContextStateProps {
   switch (action.type) {
     case PlanningActions.NEXT_TRIGGERED:

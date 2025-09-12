@@ -15,5 +15,12 @@
     "require": ["tsconfig-paths/register"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "./env.js", "eslint.config.js", "../../eslint.config.js"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "./env.js",
+    "eslint.config.js",
+    "../../eslint.config.js"
+  ]
 }

@@ -99,7 +99,6 @@ export const emptyGrayConditionalFormattingRules: ExcelJS.ConditionalFormattingR
   },
 ];
 
- 
 export const addLegendWorksheet = (workbook: any) => {
   const legendWorksheet = workbook.addWorksheet('Legend');
 
@@ -135,7 +134,6 @@ export const addLegendWorksheet = (workbook: any) => {
   });
 };
 
- 
 export const triggerExcelDownload = async (xlsx: any, title: string) => {
   FileDownload.download(
     await xlsx.writeBuffer(),

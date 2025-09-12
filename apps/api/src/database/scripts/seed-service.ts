@@ -41,7 +41,7 @@ export class SeedService {
     }[] = [];
 
     const readable = new Readable();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     readable._read = () => {}; // _read is required but you can noop it
     readable.push(file);
     readable.push(null);
@@ -116,7 +116,7 @@ export class SeedService {
       let bundleName: string;
 
       const readable = new Readable();
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
+
       readable._read = () => {}; // _read is required but you can noop it
       readable.push(file);
       readable.push(null);
@@ -124,123 +124,126 @@ export class SeedService {
       readable
         .pipe(csv())
         .on('data', row => {
-        const data = Object.keys(row).reduce((acc, key) => {
-          acc[key.trim()] = row[key];
-          return acc;
-        }, {} as { [key: string]: string });
+          const data = Object.keys(row).reduce(
+            (acc, key) => {
+              acc[key.trim()] = row[key];
+              return acc;
+            },
+            {} as { [key: string]: string },
+          );
 
-        if (!headers) {
-          headers = Object.keys(data);
-        }
-        bundleName = data['Care Activity Bundle'].trim().replace(/"/g, '');
-        const activityName = data['Care Activities'].trim().replace(/"/g, '');
-        const careLocation = data['Care Setting'].trim().replace(/"/g, '');
-        careLocations.add(careLocation);
+          if (!headers) {
+            headers = Object.keys(data);
+          }
+          bundleName = data['Care Activity Bundle'].trim().replace(/"/g, '');
+          const activityName = data['Care Activities'].trim().replace(/"/g, '');
+          const careLocation = data['Care Setting'].trim().replace(/"/g, '');
+          careLocations.add(careLocation);
 
-        let activityList: {
-          name: string;
-          activityType: CareActivityType;
-          careLocation: string;
-        }[] = [];
+          let activityList: {
+            name: string;
+            activityType: CareActivityType;
+            careLocation: string;
+          }[] = [];
 
-        if (bundleName in bundleVsCareActivity) {
-          activityList = bundleVsCareActivity[bundleName];
-        }
-        const activityType = data['Aspect of Practice']
-          .trim()
-          .replace(/"/g, '') as CareActivityType;
+          if (bundleName in bundleVsCareActivity) {
+            activityList = bundleVsCareActivity[bundleName];
+          }
+          const activityType = data['Aspect of Practice']
+            .trim()
+            .replace(/"/g, '') as CareActivityType;
 
-        activityList.push({ name: activityName, activityType, careLocation });
-        bundleVsCareActivity[bundleName] = activityList;
-        for (let index = 4; index < headers.length; index++) {
-          const e = headers[index];
-          let action: string = data[e];
-          let allowedAction;
-          if (action?.length > 0) {
-            action = cleanText(action);
-            if (action.includes('y')) {
-              allowedAction = Permissions.PERFORM;
-            } else if (action.includes('lc')) {
-              allowedAction = Permissions.LIMITS;
+          activityList.push({ name: activityName, activityType, careLocation });
+          bundleVsCareActivity[bundleName] = activityList;
+          for (let index = 4; index < headers.length; index++) {
+            const e = headers[index];
+            let action: string = data[e];
+            let allowedAction;
+            if (action?.length > 0) {
+              action = cleanText(action);
+              if (action.includes('y')) {
+                allowedAction = Permissions.PERFORM;
+              } else if (action.includes('lc')) {
+                allowedAction = Permissions.LIMITS;
+              }
+            }
+
+            if (allowedAction) {
+              if (!occupationVsCareActivity[e]) {
+                occupationVsCareActivity[e] = {};
+              }
+              occupationVsCareActivity[e][cleanText(activityName)] = allowedAction;
             }
           }
+        })
+        .on('end', async () => {
+          // Save the result
 
-          if (allowedAction) {
-            if (!occupationVsCareActivity[e]) {
-              occupationVsCareActivity[e] = {};
-            }
-            occupationVsCareActivity[e][cleanText(activityName)] = allowedAction;
-          }
-        }
-      })
-      .on('end', async () => {
-        // Save the result
+          // save care locations (aka Units)
+          await this.unitService.saveCareLocations(Array.from(careLocations));
 
-        // save care locations (aka Units)
-        await this.unitService.saveCareLocations(Array.from(careLocations));
+          const consolidatedCareActivities: {
+            name: string;
+            activityType: CareActivityType;
+            // clinicalType: ClinicalType;
+            careLocation: string;
+          }[] = Object.values(bundleVsCareActivity).flat(1);
 
-        const consolidatedCareActivities: {
-          name: string;
-          activityType: CareActivityType;
-          // clinicalType: ClinicalType;
-          careLocation: string;
-        }[] = Object.values(bundleVsCareActivity).flat(1);
+          const careLocationNames = new Set<string>();
 
-        const careLocationNames = new Set<string>();
+          consolidatedCareActivities
+            .filter(ca => 'careLocation' in ca)
+            .forEach(ca => careLocationNames.add(ca.careLocation));
 
-        consolidatedCareActivities
-          .filter(ca => 'careLocation' in ca)
-          .forEach(ca => careLocationNames.add(ca.careLocation));
+          // get locations DB mapping
+          const careLocationsDbByNames = await this.unitService.getUnitsByNames(
+            Array.from(careLocationNames),
+          );
 
-        // get locations DB mapping
-        const careLocationsDbByNames = await this.unitService.getUnitsByNames(
-          Array.from(careLocationNames),
-        );
+          await Promise.allSettled(
+            Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) => {
+              const careActivitiesWithUnit: {
+                name: string;
+                activityType: CareActivityType;
+                careLocation: Unit | undefined;
+              }[] = [];
 
-        await Promise.allSettled(
-          Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) => {
-            const careActivitiesWithUnit: {
-              name: string;
-              activityType: CareActivityType;
-              careLocation: Unit | undefined;
-            }[] = [];
-
-            careActivities.forEach(ca => {
-              careActivitiesWithUnit.push({
-                ...ca,
-                careLocation: careLocationsDbByNames.find(
-                  _ => _.name === cleanText(ca.careLocation),
-                ),
+              careActivities.forEach(ca => {
+                careActivitiesWithUnit.push({
+                  ...ca,
+                  careLocation: careLocationsDbByNames.find(
+                    _ => _.name === cleanText(ca.careLocation),
+                  ),
+                });
               });
-            });
 
-            return this.saveCareActivity(bundleName, careActivitiesWithUnit);
-          }),
-        );
+              return this.saveCareActivity(bundleName, careActivitiesWithUnit);
+            }),
+          );
 
-        const consolidatedCareActivitiesName: string[] = consolidatedCareActivities.map(
-          careActivity => cleanText(careActivity.name),
-        );
+          const consolidatedCareActivitiesName: string[] = consolidatedCareActivities.map(
+            careActivity => cleanText(careActivity.name),
+          );
 
-        //Delete object to free-up space
-        Object.keys(bundleVsCareActivity).forEach(key => {
-          delete bundleVsCareActivity[key];
-        });
+          //Delete object to free-up space
+          Object.keys(bundleVsCareActivity).forEach(key => {
+            delete bundleVsCareActivity[key];
+          });
 
-        const careActivityDBMap: { [key: string]: CareActivity } = {};
+          const careActivityDBMap: { [key: string]: CareActivity } = {};
 
-        (await this.findAllCareActivities(consolidatedCareActivitiesName)).forEach(eachCA => {
-          careActivityDBMap[eachCA.name] = eachCA;
-        });
+          (await this.findAllCareActivities(consolidatedCareActivitiesName)).forEach(eachCA => {
+            careActivityDBMap[eachCA.name] = eachCA;
+          });
 
-        await Promise.allSettled(
-          Object.entries(occupationVsCareActivity).map(([occupationName, activityMap]) => {
-            return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
-          }),
-        );
-        resolve();
-      })
-      .on('error', reject);
+          await Promise.allSettled(
+            Object.entries(occupationVsCareActivity).map(([occupationName, activityMap]) => {
+              return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
+            }),
+          );
+          resolve();
+        })
+        .on('error', reject);
     });
   }
 
