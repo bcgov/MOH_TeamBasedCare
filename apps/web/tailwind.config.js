@@ -1,7 +1,6 @@
 module.exports = {
-  mode: 'jit',
-  purge: ['out/**/*.html', './src/pages/**/*.tsx', './src/components/**/*.tsx'],
-  darkMode: false, // or 'media' or 'class'
+  content: ['out/**/*.html', './src/pages/**/*.tsx', './src/components/**/*.tsx'],
+  darkMode: 'media', 
   theme: {
     fontFamily: {
       sans: ['BCSans'],
@@ -87,14 +86,6 @@ module.exports = {
       padding: {
         0.5: '2px',
       },
-    },
-  },
-  variants: {
-    extend: {
-      opacity: ['disabled'],
-      backgroundColor: ['disabled'],
-      textColor: ['disabled'],
-      backgroundColor: ['even'],
     },
   },
   plugins: [require('@tailwindcss/typography'), require('tailwind-accent-color')()],
