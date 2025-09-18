@@ -9,7 +9,11 @@ export interface ModalProps {
 
 const { Root, Child } = Transition;
 
-const ModalContainer: React.FC<PropsWithChildren<ModalProps>> = ({ children, open, handleClose = void 0 }) => {
+const ModalContainer: React.FC<PropsWithChildren<ModalProps>> = ({
+  children,
+  open,
+  handleClose = void 0,
+}) => {
   return (
     <Root show={open} as={Fragment}>
       <Dialog
