@@ -1,6 +1,6 @@
 module.exports = {
   content: ['out/**/*.html', './src/pages/**/*.tsx', './src/components/**/*.tsx'],
-  darkMode: 'media', 
+  darkMode: 'class',
   theme: {
     fontFamily: {
       sans: ['BCSans'],
