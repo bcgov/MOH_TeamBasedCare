@@ -279,7 +279,7 @@ export const createDownloadSheets = async (activities: Record<string, string>[])
   });
 
   //If we have no activities, return an empty xlsx instead of throwing runtime error
-  if (!activities || activities.length===0){
+  if (!activities || activities.length === 0) {
     return workbook.xlsx;
   }
 
@@ -292,7 +292,7 @@ export const createDownloadSheets = async (activities: Record<string, string>[])
   activitySheet.columns = columns;
 
   activitySheet.insertRows(2, activities, 'i');
-  
+
   setValidationFormat(activitySheet);
 
   addLegendWorksheet(workbook);
