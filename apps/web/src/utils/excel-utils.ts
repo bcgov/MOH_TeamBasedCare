@@ -278,6 +278,11 @@ export const createDownloadSheets = async (activities: Record<string, string>[])
     views: [{ state: 'frozen', ySplit: 1 }],
   });
 
+  //If we have no activities, return an empty xlsx instead of throwing runtime error
+  if (!activities || activities.length===0){
+    return workbook.xlsx;
+  }
+
   const columns: HeaderColumns[] = Object.keys(activities[0]).map((header, index) => ({
     header: header,
     key: header,
@@ -287,7 +292,7 @@ export const createDownloadSheets = async (activities: Record<string, string>[])
   activitySheet.columns = columns;
 
   activitySheet.insertRows(2, activities, 'i');
-
+  
   setValidationFormat(activitySheet);
 
   addLegendWorksheet(workbook);
