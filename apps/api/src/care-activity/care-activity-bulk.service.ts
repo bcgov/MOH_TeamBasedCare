@@ -303,9 +303,8 @@ export class CareActivityBulkService {
    *
    */
   async uploadCareActivitiesBulk(careActivitiesBulkDto: CareActivityBulkDTO) {
-    const { errors: validationErrors } = await this.validateCareActivitiesBulk(
-      careActivitiesBulkDto,
-    );
+    const { errors: validationErrors } =
+      await this.validateCareActivitiesBulk(careActivitiesBulkDto);
 
     if (validationErrors.length > 0) {
       throw new BadRequestException(

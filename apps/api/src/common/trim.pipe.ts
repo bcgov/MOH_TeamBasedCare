@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, PipeTransform, ArgumentMetadata } from '@nestjs/common';
 
 @Injectable()
@@ -20,7 +19,6 @@ export class TrimPipe implements PipeTransform {
     return values;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transform(values: any, metadata: ArgumentMetadata) {
     const { type } = metadata;
 

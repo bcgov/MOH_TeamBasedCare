@@ -3,7 +3,7 @@
   "private": true,
   "description": "Team based care mapping app packages",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "format:staged": "yarn pretty-quick --staged",

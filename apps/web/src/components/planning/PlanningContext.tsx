@@ -31,7 +31,6 @@ const enum PlanningActions {
   REFETCH_ACTIVITY_GAP = 'REFETCH_ACTIVITY_GAP',
 }
 
- 
 function reducer(state: any, action: any): PlanningContextStateProps {
   switch (action.type) {
     case PlanningActions.NEXT_TRIGGERED:
@@ -74,7 +73,7 @@ function reducer(state: any, action: any): PlanningContextStateProps {
 
 export const PlanningContext = createContext<PlanningContextType | null>(null);
 
-export const PlanningProvider = ({ children }: { children: JSX.Element }) => {
+export const PlanningProvider = ({ children }: { children: React.ReactElement }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const updateNextTriggered = () => dispatch({ type: PlanningActions.NEXT_TRIGGERED });

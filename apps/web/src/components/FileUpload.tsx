@@ -74,7 +74,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       try {
         handleMaxFileSize(selectedFile);
         handleErrorBeforeSelection?.(selectedFile);
-         
       } catch (err: any) {
         setFileError(err.message);
         onFileRemove();
@@ -87,7 +86,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       try {
         await handleFile?.(selectedFile);
-         
       } catch (err: any) {
         setFileError(err.message);
         return;

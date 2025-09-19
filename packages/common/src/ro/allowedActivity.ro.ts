@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Exclude, Expose } from 'class-transformer';
 import { BaseRO } from './base.ro';
 import { UnitRO } from './unit.ro';

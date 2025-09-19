@@ -23,7 +23,6 @@ const OccupationForm = ({ searchValue = '' }) => {
   );
 };
 
- 
 export const Occupation: React.FC<OccupationProps> = () => {
   const [searchValue, setSearchValue]: [string, (search: string) => void] = useState('');
 

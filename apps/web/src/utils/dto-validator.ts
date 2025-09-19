@@ -1,4 +1,3 @@
- 
 import { validateSync } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 

@@ -1,3 +1,5 @@
+import { PropsWithChildren } from 'react';
+
 interface BannerProps {
   style: keyof typeof bannerColour;
   image?: string;
@@ -9,7 +11,7 @@ export const bannerColour: Record<string, string> = {
   muted: '',
 };
 
-export const Banner: React.FC<BannerProps> = props => {
+export const Banner: React.FC<PropsWithChildren<BannerProps>> = props => {
   const { style, image, children } = props;
 
   const defaultStyle = `flex items-center h-14 mb-5 font-bold rounded`;

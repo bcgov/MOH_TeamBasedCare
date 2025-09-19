@@ -1,6 +1,4 @@
 // TODO: fix these
- 
- 
 
 function objectValues<T extends {}>(obj: T) {
   return Object.keys(obj).map(objKey => obj[objKey as keyof T]);
@@ -52,7 +50,7 @@ export default function Table<T extends MinTableItem>(props: TableProps<T>) {
 
           return (
             <td className='text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap'>
-              {isPrimitive(item[itemProperty]) ? item[itemProperty] : ''}
+              {isPrimitive(item[itemProperty]) ? String(item[itemProperty]) : ''}
             </td>
           );
         })}

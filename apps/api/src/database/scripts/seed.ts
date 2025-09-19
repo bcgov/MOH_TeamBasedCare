@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../../app.module';
@@ -21,10 +20,10 @@ const node_env = process.env.NODE_ENV;
   const logger: AppLogger = appContext.get(Logger);
 
   logger.log('Seeding script started');
-  
+
   // Initialize database connection
   await appContext.init();
-  
+
   try {
     if (node_env === 'development' || node_env === 'test') {
       const seeder = appContext.get(SeedService);
