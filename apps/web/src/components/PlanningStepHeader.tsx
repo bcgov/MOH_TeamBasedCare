@@ -1,9 +1,9 @@
-import { useRef } from 'react';
+import { PropsWithChildren, useRef } from 'react';
 
 /**
  * a styled header that auto focuses when the step parameter changes
  */
-export const PlanningStepHeader: React.FC = ({ children }) => {
+export const PlanningStepHeader: React.FC<PropsWithChildren> = ({ children }) => {
   const headerRef = useRef<HTMLHeadingElement>(null);
 
   return (

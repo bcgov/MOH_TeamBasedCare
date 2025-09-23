@@ -11,7 +11,6 @@ export class BaseRO {
   @Expose()
   name?: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     Object.assign(this, data);
   }

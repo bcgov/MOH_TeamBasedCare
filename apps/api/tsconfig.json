@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": "./",
+    "rootDir": "./src",
     "allowJs": true,
     "strictPropertyInitialization": false,
     "experimentalDecorators": true
@@ -13,5 +14,13 @@
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "./env.js"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "./env.js",
+    "eslint.config.js",
+    "../../eslint.config.js"
+  ]
 }

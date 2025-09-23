@@ -18,10 +18,10 @@ jobs:
         run: sleep 60
       - name: checkout
         uses: actions/checkout@v4
-      - name: setup node v20
+      - name: setup node v22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: ZAP Scan
         uses: zaproxy/action-full-scan@v0.9.0
         with:

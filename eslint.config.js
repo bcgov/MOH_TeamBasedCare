@@ -28,7 +28,7 @@ module.exports = [
       'no-console': 'error',
       '@typescript-eslint/no-var-requires': 'off',
       // Rule mapping for ESLint v9 compatibility
-      '@typescript-eslint/ban-types': 'off', 
+      '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
     },
   },

@@ -9,7 +9,6 @@ export class PlanningSessionCareSettingRO {
   @Expose()
   name!: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     Object.assign(this, { id: '', name: '' }, data);
     this.name = data.displayName;
@@ -24,7 +23,6 @@ export class PlanningSessionBundleRO {
   @Expose()
   name!: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     Object.assign(this, data);
     this.name = data.displayName;
@@ -48,14 +46,12 @@ export class PlanningSessionRO {
   @Expose()
   bundles!: PlanningSessionBundleRO[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     Object.assign(this, data);
 
     /** Bundles */
     const bundles: PlanningSessionBundleRO[] = [];
     if (data?.careActivity?.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data.careActivity.forEach((ca: any) => {
         if (ca.bundle) {
           bundles.push(new PlanningSessionBundleRO(ca.bundle));

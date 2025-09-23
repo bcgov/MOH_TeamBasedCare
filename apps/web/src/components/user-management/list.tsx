@@ -113,12 +113,12 @@ const TableBody: React.FC<TableBodyProps> = ({
               getStatusColor(user.status) === 'red'
                 ? 'text-bcRedError'
                 : getStatusColor(user.status) === 'yellow'
-                ? 'text-bcYellowWarning'
-                : getStatusColor(user.status) === 'green'
-                ? 'text-bcGreenHiredText'
-                : getStatusColor(user.status) === 'blue'
-                ? 'text-bcBlueAccent'
-                : ''
+                  ? 'text-bcYellowWarning'
+                  : getStatusColor(user.status) === 'green'
+                    ? 'text-bcGreenHiredText'
+                    : getStatusColor(user.status) === 'blue'
+                      ? 'text-bcBlueAccent'
+                      : ''
             }`}
           >
             {getStatusLabel(user.status)}
