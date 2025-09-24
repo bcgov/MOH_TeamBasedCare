@@ -236,11 +236,24 @@ export class SeedService {
             careActivityDBMap[eachCA.name] = eachCA;
           });
 
-          await Promise.allSettled(
-            Object.entries(occupationVsCareActivity).map(([occupationName, activityMap]) => {
-              return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
-            }),
-          );
+          // Process allowed activities in smaller batches to prevent connection timeouts
+          const occupationEntries = Object.entries(occupationVsCareActivity);
+          const batchSize = 5; // Process 5 occupations at a time
+
+          for (let i = 0; i < occupationEntries.length; i += batchSize) {
+            const batch = occupationEntries.slice(i, i + batchSize);
+
+            await Promise.allSettled(
+              batch.map(([occupationName, activityMap]) => {
+                return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
+              }),
+            );
+
+            // Add a small delay between batches to prevent overwhelming the database
+            if (i + batchSize < occupationEntries.length) {
+              await new Promise<void>(resolve => setTimeout(resolve, 100));
+            }
+          }
           resolve();
         })
         .on('error', reject);
@@ -373,34 +386,43 @@ export class SeedService {
    * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
    */
   private async upsertAllowedActivity(partialEntity: Partial<AllowedActivity>) {
-    // throw error if careActivity or occupation not provided; @Unique constraint on the entity
-    if (!partialEntity.careActivity || !partialEntity.occupation) {
-      throw new BadRequestException({
-        message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
+    try {
+      // throw error if careActivity or occupation not provided; @Unique constraint on the entity
+      if (!partialEntity.careActivity || !partialEntity.occupation) {
+        throw new BadRequestException({
+          message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
+        });
+      }
+
+      // find allowed activity, if exists
+      let entity = await this.allowedActRepo.findOne({
+        where: {
+          careActivity: {
+            id: partialEntity.careActivity.id,
+          },
+          occupation: {
+            id: partialEntity.occupation.id,
+          },
+        },
       });
+
+      // if found, and partial activity does not contain the id
+      if (entity && !partialEntity.id) {
+        partialEntity.id = entity.id;
+      }
+
+      // upsert
+      entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
+
+      return entity;
+    } catch (error) {
+      this.logger.error(
+        `Failed to upsert allowed activity for occupation ${partialEntity.occupation?.name} and care activity ${partialEntity.careActivity?.name}`,
+        String(error),
+      );
+      // Don't rethrow the error to allow other records to continue processing
+      return null;
     }
-
-    // find allowed activity, if exists
-    let entity = await this.allowedActRepo.findOne({
-      where: {
-        careActivity: {
-          id: partialEntity.careActivity.id,
-        },
-        occupation: {
-          id: partialEntity.occupation.id,
-        },
-      },
-    });
-
-    // if found, and partial activity does not contain the id
-    if (entity && !partialEntity.id) {
-      partialEntity.id = entity.id;
-    }
-
-    // upsert
-    entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
-
-    return entity;
   }
 
   private async saveAllowedActivity(
@@ -418,8 +440,28 @@ export class SeedService {
       };
     });
 
-    await Promise.all(
-      allowedActivities.map(allowedActivity => this.upsertAllowedActivity(allowedActivity)),
-    );
+    // Process allowed activities in smaller batches to prevent connection issues
+    const batchSize = 10; // Process 10 allowed activities at a time
+
+    for (let i = 0; i < allowedActivities.length; i += batchSize) {
+      const batch = allowedActivities.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(
+          batch.map(allowedActivity => this.upsertAllowedActivity(allowedActivity)),
+        );
+      } catch (error) {
+        this.logger.error(
+          `Error processing batch ${i / batchSize + 1} for occupation ${occupationName}`,
+          String(error),
+        );
+        // Continue with next batch instead of failing completely
+      }
+
+      // Small delay between batches
+      if (i + batchSize < allowedActivities.length) {
+        await new Promise<void>(resolve => setTimeout(resolve, 50));
+      }
+    }
   }
 }
