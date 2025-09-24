@@ -172,6 +172,11 @@ docker-build:
 	@docker-compose build
 	@echo "++\n*****"
 
+seed-local-db:
+	@echo "++\n***** Seeding local database\n++"
+	npm_config_path="$(PWD)/scripts/care-activities.csv" yarn run db:seed-care-activities
+	@echo "++\n*****"
+
 run-local:
 	@echo "++\n***** Running docker-compose\n++"
 	@yarn
