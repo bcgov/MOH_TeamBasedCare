@@ -17,6 +17,9 @@ node_modules
 .history
 .vscode
 
+# ts build artifacts
+*.tsbuildinfo
+
 .eslintcache
 .pgdata
 .build
