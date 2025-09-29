@@ -172,10 +172,15 @@ docker-build:
 	@docker-compose build
 	@echo "++\n*****"
 
+seed-local-db:
+	@echo "++\n***** Seeding local database\n++"
+	npm_config_path="$(PWD)/scripts/care-activities.csv" yarn run db:seed-care-activities
+	@echo "++\n*****"
+
 run-local:
 	@echo "++\n***** Running docker-compose\n++"
 	@yarn
-	@docker-compose up --build -d
+	@docker-compose up --build
 	@echo "++\n*****"
 
 run-local-server:
@@ -205,6 +210,22 @@ local-client-workspace:
 
 local-server-workspace:
 	@docker exec -it $(PROJECT)_api sh
+
+test-api:
+	@echo "++\n***** Running API Jest tests\n++"
+	@cd apps/api && yarn test
+	@echo "++\n*****"
+
+test-web:
+	@echo "++\n***** Running Web Jest tests\n++"
+	@cd apps/web && yarn test
+	@echo "++\n*****"
+
+test-jest:
+	@echo "++\n***** Running All Jest tests (API + Web)\n++"
+	@make test-api
+	@make test-web
+	@echo "++\n*****"
 
 test-pa11y:
 	@make start-test-db

@@ -41,7 +41,7 @@ export class SeedService {
     }[] = [];
 
     const readable = new Readable();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     readable._read = () => {}; // _read is required but you can noop it
     readable.push(file);
     readable.push(null);
@@ -101,143 +101,163 @@ export class SeedService {
   }
 
   async updateCareActivities(file: Buffer): Promise<void> {
-    let headers: string[];
-    const bundleVsCareActivity: {
-      [key: string]: {
-        name: string;
-        activityType: CareActivityType;
-        careLocation: string;
-      }[];
-    } = {};
-    const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
-    const careLocations = new Set<string>();
-
-    let bundleName: string;
-
-    const readable = new Readable();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    readable._read = () => {}; // _read is required but you can noop it
-    readable.push(file);
-    readable.push(null);
-
-    readable
-      .pipe(csv())
-      .on('data', row => {
-        const data = Object.keys(row).reduce((acc, key) => {
-          acc[key.trim()] = row[key];
-          return acc;
-        }, {} as { [key: string]: string });
-
-        if (!headers) {
-          headers = Object.keys(data);
-        }
-        bundleName = data['Care Activity Bundle'].trim().replace(/"/g, '');
-        const activityName = data['Care Activities'].trim().replace(/"/g, '');
-        const careLocation = data['Care Setting'].trim().replace(/"/g, '');
-        careLocations.add(careLocation);
-
-        let activityList: {
+    return new Promise((resolve, reject) => {
+      let headers: string[];
+      const bundleVsCareActivity: {
+        [key: string]: {
           name: string;
           activityType: CareActivityType;
           careLocation: string;
-        }[] = [];
+        }[];
+      } = {};
+      const occupationVsCareActivity: { [key: string]: { [key: string]: Permissions } } = {};
+      const careLocations = new Set<string>();
 
-        if (bundleName in bundleVsCareActivity) {
-          activityList = bundleVsCareActivity[bundleName];
-        }
-        const activityType = data['Aspect of Practice']
-          .trim()
-          .replace(/"/g, '') as CareActivityType;
+      let bundleName: string;
 
-        activityList.push({ name: activityName, activityType, careLocation });
-        bundleVsCareActivity[bundleName] = activityList;
-        for (let index = 4; index < headers.length; index++) {
-          const e = headers[index];
-          let action: string = data[e];
-          let allowedAction;
-          if (action?.length > 0) {
-            action = cleanText(action);
-            if (action.includes('y')) {
-              allowedAction = Permissions.PERFORM;
-            } else if (action.includes('lc')) {
-              allowedAction = Permissions.LIMITS;
+      const readable = new Readable();
+
+      readable._read = () => {}; // _read is required but you can noop it
+      readable.push(file);
+      readable.push(null);
+
+      readable
+        .pipe(csv())
+        .on('data', row => {
+          const data = Object.keys(row).reduce(
+            (acc, key) => {
+              acc[key.trim()] = row[key];
+              return acc;
+            },
+            {} as { [key: string]: string },
+          );
+
+          if (!headers) {
+            headers = Object.keys(data);
+          }
+          bundleName = data['Care Activity Bundle'].trim().replace(/"/g, '');
+          const activityName = data['Care Activities'].trim().replace(/"/g, '');
+          const careLocation = data['Care Setting'].trim().replace(/"/g, '');
+          careLocations.add(careLocation);
+
+          let activityList: {
+            name: string;
+            activityType: CareActivityType;
+            careLocation: string;
+          }[] = [];
+
+          if (bundleName in bundleVsCareActivity) {
+            activityList = bundleVsCareActivity[bundleName];
+          }
+          const activityType = data['Aspect of Practice']
+            .trim()
+            .replace(/"/g, '') as CareActivityType;
+
+          activityList.push({ name: activityName, activityType, careLocation });
+          bundleVsCareActivity[bundleName] = activityList;
+          for (let index = 4; index < headers.length; index++) {
+            const e = headers[index];
+            let action: string = data[e];
+            let allowedAction;
+            if (action?.length > 0) {
+              action = cleanText(action);
+              if (action.includes('y')) {
+                allowedAction = Permissions.PERFORM;
+              } else if (action.includes('lc')) {
+                allowedAction = Permissions.LIMITS;
+              }
+            }
+
+            if (allowedAction) {
+              if (!occupationVsCareActivity[e]) {
+                occupationVsCareActivity[e] = {};
+              }
+              occupationVsCareActivity[e][cleanText(activityName)] = allowedAction;
             }
           }
+        })
+        .on('end', async () => {
+          // Save the result
 
-          if (allowedAction) {
-            if (!occupationVsCareActivity[e]) {
-              occupationVsCareActivity[e] = {};
-            }
-            occupationVsCareActivity[e][cleanText(activityName)] = allowedAction;
-          }
-        }
-      })
-      .on('end', async () => {
-        // Save the result
+          // save care locations (aka Units)
+          await this.unitService.saveCareLocations(Array.from(careLocations));
 
-        // save care locations (aka Units)
-        await this.unitService.saveCareLocations(Array.from(careLocations));
+          const consolidatedCareActivities: {
+            name: string;
+            activityType: CareActivityType;
+            // clinicalType: ClinicalType;
+            careLocation: string;
+          }[] = Object.values(bundleVsCareActivity).flat(1);
 
-        const consolidatedCareActivities: {
-          name: string;
-          activityType: CareActivityType;
-          // clinicalType: ClinicalType;
-          careLocation: string;
-        }[] = Object.values(bundleVsCareActivity).flat(1);
+          const careLocationNames = new Set<string>();
 
-        const careLocationNames = new Set<string>();
+          consolidatedCareActivities
+            .filter(ca => 'careLocation' in ca)
+            .forEach(ca => careLocationNames.add(ca.careLocation));
 
-        consolidatedCareActivities
-          .filter(ca => 'careLocation' in ca)
-          .forEach(ca => careLocationNames.add(ca.careLocation));
+          // get locations DB mapping
+          const careLocationsDbByNames = await this.unitService.getUnitsByNames(
+            Array.from(careLocationNames),
+          );
 
-        // get locations DB mapping
-        const careLocationsDbByNames = await this.unitService.getUnitsByNames(
-          Array.from(careLocationNames),
-        );
+          await Promise.allSettled(
+            Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) => {
+              const careActivitiesWithUnit: {
+                name: string;
+                activityType: CareActivityType;
+                careLocation: Unit | undefined;
+              }[] = [];
 
-        await Promise.allSettled(
-          Object.entries(bundleVsCareActivity).map(([bundleName, careActivities]) => {
-            const careActivitiesWithUnit: {
-              name: string;
-              activityType: CareActivityType;
-              careLocation: Unit | undefined;
-            }[] = [];
-
-            careActivities.forEach(ca => {
-              careActivitiesWithUnit.push({
-                ...ca,
-                careLocation: careLocationsDbByNames.find(
-                  _ => _.name === cleanText(ca.careLocation),
-                ),
+              careActivities.forEach(ca => {
+                careActivitiesWithUnit.push({
+                  ...ca,
+                  careLocation: careLocationsDbByNames.find(
+                    _ => _.name === cleanText(ca.careLocation),
+                  ),
+                });
               });
-            });
 
-            return this.saveCareActivity(bundleName, careActivitiesWithUnit);
-          }),
-        );
+              return this.saveCareActivity(bundleName, careActivitiesWithUnit);
+            }),
+          );
 
-        const consolidatedCareActivitiesName: string[] = consolidatedCareActivities.map(
-          careActivity => cleanText(careActivity.name),
-        );
+          const consolidatedCareActivitiesName: string[] = consolidatedCareActivities.map(
+            careActivity => cleanText(careActivity.name),
+          );
 
-        //Delete object to free-up space
-        Object.keys(bundleVsCareActivity).forEach(key => {
-          delete bundleVsCareActivity[key];
-        });
+          //Delete object to free-up space
+          Object.keys(bundleVsCareActivity).forEach(key => {
+            delete bundleVsCareActivity[key];
+          });
 
-        const careActivityDBMap: { [key: string]: CareActivity } = {};
+          const careActivityDBMap: { [key: string]: CareActivity } = {};
 
-        (await this.findAllCareActivities(consolidatedCareActivitiesName)).forEach(eachCA => {
-          careActivityDBMap[eachCA.name] = eachCA;
-        });
+          (await this.findAllCareActivities(consolidatedCareActivitiesName)).forEach(eachCA => {
+            careActivityDBMap[eachCA.name] = eachCA;
+          });
 
-        await Promise.allSettled(
-          Object.entries(occupationVsCareActivity).map(([occupationName, activityMap]) => {
-            return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
-          }),
-        );
-      });
+          // Process allowed activities in smaller batches to prevent connection timeouts
+          const occupationEntries = Object.entries(occupationVsCareActivity);
+          const batchSize = 5; // Process 5 occupations at a time
+
+          for (let i = 0; i < occupationEntries.length; i += batchSize) {
+            const batch = occupationEntries.slice(i, i + batchSize);
+
+            await Promise.allSettled(
+              batch.map(([occupationName, activityMap]) => {
+                return this.saveAllowedActivity(occupationName, activityMap, careActivityDBMap);
+              }),
+            );
+
+            // Add a small delay between batches to prevent overwhelming the database
+            if (i + batchSize < occupationEntries.length) {
+              await new Promise<void>(resolve => setTimeout(resolve, 100));
+            }
+          }
+          resolve();
+        })
+        .on('error', reject);
+    });
   }
 
   private async findAllCareActivities(careActivities: string[]): Promise<CareActivity[]> {
@@ -305,6 +325,7 @@ export class SeedService {
       careActivities.map(({ name, activityType, careLocation }) =>
         this.upsertCareActivity({
           name,
+          displayName: name, // Use name as displayName if not provided
           bundle,
           activityType,
           careLocations: careLocation ? [careLocation] : [],
@@ -365,34 +386,43 @@ export class SeedService {
    * @explanation Not using inbuilt typeorm method "upsert": It does not update the relations
    */
   private async upsertAllowedActivity(partialEntity: Partial<AllowedActivity>) {
-    // throw error if careActivity or occupation not provided; @Unique constraint on the entity
-    if (!partialEntity.careActivity || !partialEntity.occupation) {
-      throw new BadRequestException({
-        message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
+    try {
+      // throw error if careActivity or occupation not provided; @Unique constraint on the entity
+      if (!partialEntity.careActivity || !partialEntity.occupation) {
+        throw new BadRequestException({
+          message: 'Cannot save Allowed Activity: CareActivity or Occupation not found',
+        });
+      }
+
+      // find allowed activity, if exists
+      let entity = await this.allowedActRepo.findOne({
+        where: {
+          careActivity: {
+            id: partialEntity.careActivity.id,
+          },
+          occupation: {
+            id: partialEntity.occupation.id,
+          },
+        },
       });
+
+      // if found, and partial activity does not contain the id
+      if (entity && !partialEntity.id) {
+        partialEntity.id = entity.id;
+      }
+
+      // upsert
+      entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
+
+      return entity;
+    } catch (error) {
+      this.logger.error(
+        `Failed to upsert allowed activity for occupation ${partialEntity.occupation?.name} and care activity ${partialEntity.careActivity?.name}`,
+        String(error),
+      );
+      // Don't rethrow the error to allow other records to continue processing
+      return null;
     }
-
-    // find allowed activity, if exists
-    let entity = await this.allowedActRepo.findOne({
-      where: {
-        careActivity: {
-          id: partialEntity.careActivity.id,
-        },
-        occupation: {
-          id: partialEntity.occupation.id,
-        },
-      },
-    });
-
-    // if found, and partial activity does not contain the id
-    if (entity && !partialEntity.id) {
-      partialEntity.id = entity.id;
-    }
-
-    // upsert
-    entity = await this.allowedActRepo.save(this.allowedActRepo.create(partialEntity));
-
-    return entity;
   }
 
   private async saveAllowedActivity(
@@ -410,8 +440,28 @@ export class SeedService {
       };
     });
 
-    await Promise.all(
-      allowedActivities.map(allowedActivity => this.upsertAllowedActivity(allowedActivity)),
-    );
+    // Process allowed activities in smaller batches to prevent connection issues
+    const batchSize = 10; // Process 10 allowed activities at a time
+
+    for (let i = 0; i < allowedActivities.length; i += batchSize) {
+      const batch = allowedActivities.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(
+          batch.map(allowedActivity => this.upsertAllowedActivity(allowedActivity)),
+        );
+      } catch (error) {
+        this.logger.error(
+          `Error processing batch ${i / batchSize + 1} for occupation ${occupationName}`,
+          String(error),
+        );
+        // Continue with next batch instead of failing completely
+      }
+
+      // Small delay between batches
+      if (i + batchSize < allowedActivities.length) {
+        await new Promise<void>(resolve => setTimeout(resolve, 50));
+      }
+    }
   }
 }

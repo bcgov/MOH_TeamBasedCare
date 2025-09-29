@@ -6,7 +6,7 @@ export enum PopoverPosition {
   BOTTOM_LEFT = 'bottom-left',
 }
 interface PopoverProps {
-  title: string | JSX.Element;
+  title: string | React.ReactElement;
   children: (close: () => void) => ReactNode;
   position?: 'bottom-right' | 'bottom-left';
 }

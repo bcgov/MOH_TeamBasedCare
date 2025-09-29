@@ -10,7 +10,6 @@ export class CareActivityRO extends BaseRO {
   @Expose()
   clinicalType!: ClinicalType;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data: any) {
     super(data);
     Object.assign(this, data);

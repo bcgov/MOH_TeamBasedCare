@@ -7,6 +7,9 @@ export class AddUnitColumnToAllowedActivity1741307582814 implements MigrationInt
 
     assert(!!table, 'allowed_activity table not found');
 
+    // Ensure required units exist before proceeding
+    await this.ensureRequiredUnitsExist(queryRunner);
+
     const column = table.findColumnByName('unit');
     if (!column) {
       await queryRunner.addColumn(
@@ -116,6 +119,30 @@ export class AddUnitColumnToAllowedActivity1741307582814 implements MigrationInt
           columnNames: ['occupation_id', 'care_activity_id'],
         }),
       );
+    }
+  }
+
+  private async ensureRequiredUnitsExist(queryRunner: QueryRunner): Promise<void> {
+    // Check and create emergencydepartment unit if it doesn't exist
+    const emergencyDeptCheck = await queryRunner.query(
+      `SELECT id FROM unit WHERE name = 'emergencydepartment'`,
+    );
+    if (emergencyDeptCheck.length === 0) {
+      await queryRunner.query(`
+        INSERT INTO unit (name, display_name) 
+        VALUES ('emergencydepartment', 'Emergency Department')
+      `);
+    }
+
+    // Check and create acutecaremedicine unit if it doesn't exist
+    const acuteCareCheck = await queryRunner.query(
+      `SELECT id FROM unit WHERE name = 'acutecaremedicine'`,
+    );
+    if (acuteCareCheck.length === 0) {
+      await queryRunner.query(`
+        INSERT INTO unit (name, display_name) 
+        VALUES ('acutecaremedicine', 'Acute Care Medicine')
+      `);
     }
   }
 }

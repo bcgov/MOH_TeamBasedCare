@@ -32,7 +32,6 @@ export class JwtService {
       throw new HttpException('Authentication token does not match', HttpStatus.FORBIDDEN);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { ...user } = decoded?.payload as KeycloakUser;
 
     return user as KeycloakUser;

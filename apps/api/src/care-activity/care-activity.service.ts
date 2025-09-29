@@ -372,7 +372,9 @@ export class CareActivityService {
       });
     }
 
-    activity.allowedActivities = activity.allowedActivities.filter(aa => aa.unit.id === unitId);
+    activity.allowedActivities = activity.allowedActivities.filter(
+      aa => aa.unit && aa.unit.id === unitId,
+    );
     return activity;
   }
 

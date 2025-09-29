@@ -12,7 +12,6 @@ export interface RequestConfig extends AxiosRequestConfig {
 export const useHttp = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const errorHandler = (err: any, toastMessage?: string) => {
     if (toastMessage) {
       toast.error(toastMessage);
@@ -36,7 +35,7 @@ export const useHttp = () => {
   const fetchData = useCallback(
     async (
       requestConfig: RequestConfig,
-      handleData,
+      handleData: (data: any) => void,
       errorToastMessage?: string,
       handleError?: () => void,
     ) => {
@@ -63,7 +62,7 @@ export const useHttp = () => {
   const sendApiRequest = useCallback(
     async (
       requestConfig: RequestConfig,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       handleData: (result?: any) => void,
       handleError?: () => void,
       errorToastMessage?: string,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, PropsWithChildren } from 'react';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -22,7 +22,7 @@ interface AppMenuProps {
 
 export const HIDE_MENU_DELAY = 100;
 
-export const AppMenu: React.FC<AppMenuProps> = ({
+export const AppMenu: React.FC<PropsWithChildren<AppMenuProps>> = ({
   handleMenuHide,
   hideOnClick,
   groups = [],
@@ -93,8 +93,8 @@ export const AppMenu: React.FC<AppMenuProps> = ({
                         item.color === 'red'
                           ? 'text-bcRedError'
                           : item.color === 'blue'
-                          ? 'text-bcBlueAccent'
-                          : ''
+                            ? 'text-bcBlueAccent'
+                            : ''
                       }`}
                       role='menuitem'
                       tabIndex={-1}

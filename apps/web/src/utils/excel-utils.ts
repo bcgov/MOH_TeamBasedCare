@@ -99,7 +99,6 @@ export const emptyGrayConditionalFormattingRules: ExcelJS.ConditionalFormattingR
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const addLegendWorksheet = (workbook: any) => {
   const legendWorksheet = workbook.addWorksheet('Legend');
 
@@ -135,7 +134,6 @@ export const addLegendWorksheet = (workbook: any) => {
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const triggerExcelDownload = async (xlsx: any, title: string) => {
   FileDownload.download(
     await xlsx.writeBuffer(),
@@ -279,6 +277,11 @@ export const createDownloadSheets = async (activities: Record<string, string>[])
   const activitySheet = workbook.addWorksheet(CareActivitySheetName, {
     views: [{ state: 'frozen', ySplit: 1 }],
   });
+
+  //If we have no activities, return an empty xlsx instead of throwing runtime error
+  if (!activities || activities.length === 0) {
+    return workbook.xlsx;
+  }
 
   const columns: HeaderColumns[] = Object.keys(activities[0]).map((header, index) => ({
     header: header,

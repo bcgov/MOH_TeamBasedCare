@@ -39,11 +39,5 @@ export const UserGuideList = () => {
   }
 
   // list view
-  return (
-    <>
-      {files?.map(file => (
-        <UserGuideRow key={file.name} file={file} />
-      ))}
-    </>
-  );
+  return <>{files?.map(file => <UserGuideRow key={file.name} file={file} />)}</>;
 };
