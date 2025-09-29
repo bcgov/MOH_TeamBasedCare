@@ -9,7 +9,11 @@ export interface ModalProps {
 
 const { Root, Child } = Transition;
 
-const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose = void 0 }) => {
+const ModalContainer: React.FC<PropsWithChildren<ModalProps>> = ({
+  children,
+  open,
+  handleClose = void 0,
+}) => {
   return (
     <Root show={open} as={Fragment}>
       <Dialog
@@ -29,7 +33,7 @@ const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose = vo
             leaveFrom='opacity-100'
             leaveTo='opacity-0'
           >
-            <Dialog.Overlay className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
+            <div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
           </Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
@@ -55,7 +59,7 @@ const ModalContainer: React.FC<ModalProps> = ({ children, open, handleClose = vo
   );
 };
 
-interface ModalInterface extends React.FC<ModalProps> {
+interface ModalInterface extends React.FC<PropsWithChildren<ModalProps>> {
   Title: typeof Dialog.Title;
   Description: typeof Dialog.Description;
 }
@@ -64,7 +68,7 @@ const Modal = ModalContainer as ModalInterface;
 Modal.Title = Dialog.Title;
 Modal.Description = Dialog.Description;
 
-const ModalFooter = ({ children }: PropsWithChildren<ReactNode>) => {
+const ModalFooter = ({ children }: PropsWithChildren) => {
   return (
     <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3'>{children}</div>
   );
@@ -83,7 +87,7 @@ interface ModalWrapperProps {
   isOpen: boolean;
   setIsOpen: (value: React.SetStateAction<boolean>) => void;
   title?: string;
-  description?: string | JSX.Element;
+  description?: string | React.ReactElement;
   closeButton?: ModalButtonProps;
   actionButton?: ModalButtonProps;
   children?: ReactNode;

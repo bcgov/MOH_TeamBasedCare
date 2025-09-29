@@ -10,7 +10,6 @@ export class EmptyResponse {
     nullable: false,
     required: true,
   })
-  // eslint-disable-next-line @typescript-eslint/ban-types
   data!: {};
 
   static get(): EmptyResponse {

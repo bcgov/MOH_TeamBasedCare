@@ -41,7 +41,7 @@ export class SeedService {
     }[] = [];
 
     const readable = new Readable();
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     readable._read = () => {}; // _read is required but you can noop it
     readable.push(file);
     readable.push(null);
@@ -116,7 +116,7 @@ export class SeedService {
       let bundleName: string;
 
       const readable = new Readable();
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
+
       readable._read = () => {}; // _read is required but you can noop it
       readable.push(file);
       readable.push(null);
@@ -124,10 +124,13 @@ export class SeedService {
       readable
         .pipe(csv())
         .on('data', row => {
-          const data = Object.keys(row).reduce((acc, key) => {
-            acc[key.trim()] = row[key];
-            return acc;
-          }, {} as { [key: string]: string });
+          const data = Object.keys(row).reduce(
+            (acc, key) => {
+              acc[key.trim()] = row[key];
+              return acc;
+            },
+            {} as { [key: string]: string },
+          );
 
           if (!headers) {
             headers = Object.keys(data);

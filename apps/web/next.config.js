@@ -5,5 +5,4 @@ module.exports = {
     scrollRestoration: true,
   },
   reactStrictMode: true,
-  swcMinify: false,
 };

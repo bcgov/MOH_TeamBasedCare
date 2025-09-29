@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Exclude, Expose } from 'class-transformer';
 import { CareActivityType, ClinicalType } from '../constants';
 import { AllowedActivityRO } from './allowedActivity.ro';

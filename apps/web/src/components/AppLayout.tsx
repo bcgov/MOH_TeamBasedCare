@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 import { UserStatus } from '@tbcm/common';
 import { useAuth, useMe } from '@services';
 import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
@@ -9,7 +9,7 @@ import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
 import { Sidebar } from './Sidebar';
 
-const AppLayout: React.FC = ({ children }) => {
+const AppLayout: React.FC<PropsWithChildren> = ({ children }) => {
   const [mounted, setMounted] = React.useState(false);
 
   const router = useRouter();
@@ -33,7 +33,7 @@ const AppLayout: React.FC = ({ children }) => {
 
         return item;
       }),
-    [], // eslint-disable-line react-hooks/exhaustive-deps
+    [],
   );
 
   useEffect(() => {

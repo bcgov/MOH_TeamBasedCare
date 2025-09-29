@@ -5,13 +5,18 @@ import {
   faTimesCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { PropsWithChildren } from 'react';
 
 interface AlertProps {
   type: 'warning' | 'info' | 'error' | 'success';
   className?: string;
 }
 
-export const Alert: React.FC<AlertProps> = ({ type, className = '', children }) => {
+export const Alert: React.FC<PropsWithChildren<AlertProps>> = ({
+  type,
+  className = '',
+  children,
+}) => {
   return (
     <div
       role='alert'

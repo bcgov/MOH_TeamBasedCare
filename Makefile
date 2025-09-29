@@ -211,6 +211,22 @@ local-client-workspace:
 local-server-workspace:
 	@docker exec -it $(PROJECT)_api sh
 
+test-api:
+	@echo "++\n***** Running API Jest tests\n++"
+	@cd apps/api && yarn test
+	@echo "++\n*****"
+
+test-web:
+	@echo "++\n***** Running Web Jest tests\n++"
+	@cd apps/web && yarn test
+	@echo "++\n*****"
+
+test-jest:
+	@echo "++\n***** Running All Jest tests (API + Web)\n++"
+	@make test-api
+	@make test-web
+	@echo "++\n*****"
+
 test-pa11y:
 	@make start-test-db
 	@yarn build
