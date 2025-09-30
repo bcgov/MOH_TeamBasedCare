@@ -9,15 +9,22 @@ export class JwtService {
   });
 
   extractToken = (headers: { [key: string]: string }): string | undefined => {
-    if (headers.authorization) {
-      const auth = headers.authorization.split(' ');
+    const getHeader = (name: string) => {
+      return headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()];
+    }
+    const authorization = getHeader('Authorization');
+    if (authorization) {
+      const auth = authorization.split(' ');
       const type = auth[0].toLowerCase();
       if (type !== 'bearer') {
         throw new HttpException('Bearer token not found', HttpStatus.BAD_REQUEST);
       }
       return auth[1];
-    } else if (headers['x-api-key']) {
-      return headers['x-api-key'];
+    } else {
+      const apiKey = getHeader('x-api-key');
+      if (apiKey){
+        return apiKey;
+      }
     }
   };
 
