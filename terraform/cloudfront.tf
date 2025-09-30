@@ -118,7 +118,7 @@ resource "aws_cloudfront_distribution" "app" {
 
     forwarded_values {
       query_string = true
-      headers      = ["authorization", "user-agent", "x-forwarded-for"]
+      headers      = ["Authorization", "authorization", "user-agent", "x-forwarded-for"]
       cookies {
         forward = "all"
       }
