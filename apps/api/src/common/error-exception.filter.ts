@@ -65,11 +65,13 @@ export class ErrorExceptionFilter implements ExceptionFilter {
 
     const privateKeys: string[] = ['password', 'payload'];
     const body = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;
-    privateKeys.forEach(key => {
-      if (body[key]) {
-        delete body[key];
-      }
-    });
+    if (body && typeof body === 'object') {
+      privateKeys.forEach(key => {
+        if (body[key]) {
+          delete body[key];
+        }
+      });
+    }
 
     // Log errors
     this.logger.error(flattenedException, 'ExceptionFilter');
