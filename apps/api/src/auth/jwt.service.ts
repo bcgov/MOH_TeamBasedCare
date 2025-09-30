@@ -11,7 +11,7 @@ export class JwtService {
   extractToken = (headers: { [key: string]: string }): string | undefined => {
     const getHeader = (name: string) => {
       return headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()];
-    }
+    };
     const authorization = getHeader('Authorization');
     if (authorization) {
       const auth = authorization.split(' ');
@@ -22,7 +22,7 @@ export class JwtService {
       return auth[1];
     } else {
       const apiKey = getHeader('x-api-key');
-      if (apiKey){
+      if (apiKey) {
         return apiKey;
       }
     }
