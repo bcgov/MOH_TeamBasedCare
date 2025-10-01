@@ -14,6 +14,13 @@ type AppStorageType = Record<string, any>;
 
 export class AppStorage {
   private static getStorage() {
+    if (typeof window === 'undefined' || !localStorage) {
+      // Failed to get storage
+      // eslint-disable-next-line no-console
+      console.error('Unable to fetch local storage: window is undefined');
+      return;
+    }
+
     const value = localStorage.getItem(APP_STORAGE_KEY);
 
     if (!value) return {};
