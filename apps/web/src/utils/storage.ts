@@ -9,15 +9,15 @@ export enum StorageKeys {
 }
 
 const APP_STORAGE_KEY = 'tbcm';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type AppStorageType = Record<string, any>;
 
 export class AppStorage {
   private static getStorage() {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !localStorage) {
       // Failed to get storage
       // eslint-disable-next-line no-console
-      console.log('Unable to fetch local storage: window is undefined');
+      console.error('Unable to fetch local storage: window is undefined');
       return;
     }
 
@@ -34,7 +34,7 @@ export class AppStorage {
     if (typeof window === 'undefined') {
       // Failed to update storage
       // eslint-disable-next-line no-console
-      console.log('Unable to fetch local storage: window is undefined');
+      console.error('Unable to fetch local storage: window is undefined');
       return;
     }
 
@@ -45,16 +45,13 @@ export class AppStorage {
     this.updateStorage({});
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static setItem(key: string, value: any) {
-    // eslint-disable-next-line no-console
-    console.log('Setting [' + key + '] in local storage to value:' + value);
     if (!key || value === null || value === undefined) return;
 
     const storage = this.getStorage();
     if (!storage) {
       // eslint-disable-next-line no-console
-      console.log('Unable to fetch local storage: storage is nil');
+      console.error('Unable to fetch local storage: storage is nil');
       return; // failed to get the storage
     }
 
@@ -64,18 +61,14 @@ export class AppStorage {
   }
 
   static getItem(key: string) {
-    // eslint-disable-next-line no-console
-    console.log('Fetching value [' + key + '] from local storage');
     if (!key) return;
 
     const storage = this.getStorage();
     if (!storage) {
       // eslint-disable-next-line no-console
-      console.log('Unable to fetch local storage: storage is nil');
+      console.error('Unable to fetch local storage: storage is nil');
       return; // failed to get the storage
     }
-    // eslint-disable-next-line no-console
-    console.log('Value found: ' + storage[key]);
     return storage[key];
   }
 
