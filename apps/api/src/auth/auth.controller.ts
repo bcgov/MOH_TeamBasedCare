@@ -39,7 +39,9 @@ export class AuthController {
   @ApiOkResponse({ description: 'Get access token payload with credentials' })
   @ApiResponse({ status: HttpStatus.OK, type: EmptyResponse })
   async getAccessToken(@Body('code') code: string) {
-    if (!code) return;
+    if (!code) {
+      throw new HttpException('Authorization code is required', HttpStatus.BAD_REQUEST);
+    }
 
     return this.authService.getAccessToken(code);
   }
