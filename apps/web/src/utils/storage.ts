@@ -9,13 +9,14 @@ export enum StorageKeys {
 }
 
 const APP_STORAGE_KEY = 'tbcm';
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AppStorageType = Record<string, any>;
 
 export class AppStorage {
   private static getStorage() {
     if (typeof window === 'undefined') {
       // Failed to get storage
+      console.log('Unable to fetch local storage: window is undefined');
       return;
     }
 
@@ -31,6 +32,7 @@ export class AppStorage {
   private static updateStorage(value: AppStorageType) {
     if (typeof window === 'undefined') {
       // Failed to update storage
+      console.log('Unable to fetch local storage: window is undefined');
       return;
     }
 
@@ -41,11 +43,16 @@ export class AppStorage {
     this.updateStorage({});
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static setItem(key: string, value: any) {
+    console.log('Setting [' + key + '] in local storage to value:' + value);
     if (!key || value === null || value === undefined) return;
 
     const storage = this.getStorage();
-    if (!storage) return; // failed to get the storage
+    if (!storage) {
+      console.log('Unable to fetch local storage: storage is nil');
+      return; // failed to get the storage
+    }
 
     Object.assign(storage, { [key]: value });
 
@@ -53,11 +60,15 @@ export class AppStorage {
   }
 
   static getItem(key: string) {
+    console.log('Fetching value [' + key + '] from local storage');
     if (!key) return;
 
     const storage = this.getStorage();
-    if (!storage) return; // failed to get the storage
-
+    if (!storage) {
+      console.log('Unable to fetch local storage: storage is nil');
+      return; // failed to get the storage
+    }
+    console.log('Value found: ' + storage[key]);
     return storage[key];
   }
 
