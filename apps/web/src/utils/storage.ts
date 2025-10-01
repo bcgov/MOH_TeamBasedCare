@@ -16,6 +16,7 @@ export class AppStorage {
   private static getStorage() {
     if (typeof window === 'undefined') {
       // Failed to get storage
+      // eslint-disable-next-line no-console
       console.log('Unable to fetch local storage: window is undefined');
       return;
     }
@@ -32,6 +33,7 @@ export class AppStorage {
   private static updateStorage(value: AppStorageType) {
     if (typeof window === 'undefined') {
       // Failed to update storage
+      // eslint-disable-next-line no-console
       console.log('Unable to fetch local storage: window is undefined');
       return;
     }
@@ -45,11 +47,13 @@ export class AppStorage {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static setItem(key: string, value: any) {
+    // eslint-disable-next-line no-console
     console.log('Setting [' + key + '] in local storage to value:' + value);
     if (!key || value === null || value === undefined) return;
 
     const storage = this.getStorage();
     if (!storage) {
+      // eslint-disable-next-line no-console
       console.log('Unable to fetch local storage: storage is nil');
       return; // failed to get the storage
     }
@@ -60,14 +64,17 @@ export class AppStorage {
   }
 
   static getItem(key: string) {
+    // eslint-disable-next-line no-console
     console.log('Fetching value [' + key + '] from local storage');
     if (!key) return;
 
     const storage = this.getStorage();
     if (!storage) {
+      // eslint-disable-next-line no-console
       console.log('Unable to fetch local storage: storage is nil');
       return; // failed to get the storage
     }
+    // eslint-disable-next-line no-console
     console.log('Value found: ' + storage[key]);
     return storage[key];
   }
