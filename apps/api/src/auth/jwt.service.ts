@@ -15,10 +15,8 @@ export class JwtService {
     const getHeader = (name: string) => {
       return headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()];
     };
-    this.logger.log(`Headers: ${JSON.stringify(headers)}`);
     const authorization = getHeader('Authorization');
     if (authorization) {
-      this.logger.log(`Found Authorization Header: ${authorization}`);
       const auth = authorization.split(' ');
       const type = auth[0].toLowerCase();
       if (type !== 'bearer') {
@@ -26,7 +24,6 @@ export class JwtService {
       }
       return auth[1];
     } else {
-      this.logger.log(`No Authorization Header found`);
       const apiKey = getHeader('x-api-key');
       if (apiKey) {
         return apiKey;
