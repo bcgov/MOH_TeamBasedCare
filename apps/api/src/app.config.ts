@@ -14,6 +14,8 @@ import { ErrorExceptionFilter } from './common/error-exception.filter';
 import { TrimPipe } from './common/trim.pipe';
 import { API_PREFIX } from './config';
 import { Documentation } from './common/documentation';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
+import { RequestTransformInterceptor } from './common/interceptors/request-transform.interceptor';
 
 interface ValidationErrorMessage {
   property: string;
@@ -73,6 +75,10 @@ export async function createNestApp(): Promise<{
 
   // Enabling Documentation
   Documentation(app);
+
+  // Interceptors
+  app.useGlobalInterceptors(new RequestLoggingInterceptor());
+  app.useGlobalInterceptors(new RequestTransformInterceptor());
 
   // Validation pipe
   app.useGlobalPipes(new TrimPipe(), new ValidationPipe(validationPipeConfig));
