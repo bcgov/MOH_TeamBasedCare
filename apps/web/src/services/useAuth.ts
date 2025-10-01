@@ -43,17 +43,60 @@ export const useAuth = () => {
         method: REQUEST_METHOD.POST,
         data: { code },
       };
+
+      // Debug logging for AWS environment
+      const isAWS =
+        typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+
+      if (isAWS) {
+        // eslint-disable-next-line no-console
+        console.log('🔑 Fetching auth token from callback:', {
+          endpoint: config.endpoint,
+          codeLength: code?.length || 0,
+          codePreview: code?.substring(0, 20) + '...',
+        });
+      }
+
       // fetch token from code
       sendApiRequest(
         config,
         (result: KeycloakToken) => {
+          if (isAWS) {
+            // eslint-disable-next-line no-console
+            console.log('📥 Auth callback response:', {
+              hasResult: !!result,
+              resultType: typeof result,
+              hasAccessToken: !!result?.access_token,
+              hasRefreshToken: !!result?.refresh_token,
+              accessTokenLength: result?.access_token?.length || 0,
+              refreshTokenLength: result?.refresh_token?.length || 0,
+              expiresIn: result?.expires_in,
+              fullResult: result,
+            });
+          }
+
+          if (!result || !result.access_token) {
+            if (isAWS) {
+              // eslint-disable-next-line no-console
+              console.error('❌ Invalid auth callback response - no access token found');
+            }
+            errorHandler();
+            return;
+          }
+
           // update tokens to storage
           storeAuthTokens(result);
 
           // call success handler
           handler();
         },
-        errorHandler,
+        () => {
+          if (isAWS) {
+            // eslint-disable-next-line no-console
+            console.error('❌ Auth callback request failed');
+          }
+          errorHandler();
+        },
         errorToastMessage,
       );
     },
