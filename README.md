@@ -32,6 +32,22 @@ The codebase is being roughed out, but finer details are likely to change.
 | packages/common        | Shared library                |         |
 | packages/accessibility | **Accessibility** Test        |  |
 
+## Common issues and solutions
+
+### AWS and Local environment differences with Buffer types
+
+On AWS, the app encountered an issue with request body coming in as Buffer instead of JSON. This was resolved by adding an interceptor to parse the body back to JSON if it is found to be a Buffer at [apps/api/src/app.config.ts](apps/api/src/app.config.ts). The interceptor can be found in [apps/api/src/common/interceptors/request-transform.interceptor.ts](apps/api/src/common/interceptors/request-transform.interceptor.ts).
+
+### ```error This project's package.json defines "packageManager": "yarn@3.2.3". However the current global version of Yarn is 1.22.22.```
+
+This can be fixed by installing the correct version of yarn.
+
+```bash
+yarn set version latest
+```
+
+Or if this does not work, you can disable the ```"packageManager"``` check by removing the line from ```package.json```.
+
 ## How to run the apps
 
 ### Run as docker containers
