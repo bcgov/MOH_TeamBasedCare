@@ -414,7 +414,5 @@ open-db-tunnel:
 	@echo "DB HOST URL: $(DB_HOST)\n"
 	# Checking you have the SSM plugin for the AWS cli installed
 	session-manager-plugin
-	rm ssh-keypair ssh-keypair.pub || true
-	ssh-keygen -t rsa -f ssh-keypair -N ''
-	aws ec2-instance-connect send-ssh-public-key --instance-id $(BASTION_INSTANCE_ID) --availability-zone ca-central-1a --instance-os-user ssm-user --ssh-public-key file://ssh-keypair.pub
-	ssh -i ssh-keypair ssm-user@$(BASTION_INSTANCE_ID) -L 5454:$(DB_HOST):5432 -o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+	@echo "Starting port forwarding session..."
+	aws ssm start-session --target $(BASTION_INSTANCE_ID) --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters "{\"host\":[\"$(DB_HOST)\"],\"portNumber\":[\"5432\"],\"localPortNumber\":[\"5454\"]}"
