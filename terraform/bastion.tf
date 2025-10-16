@@ -82,8 +82,8 @@ resource "aws_instance" "bastion_instance" {
   user_data                   = file("scripts/user-data.sh")
 
   root_block_device {
-    delete_on_termination = "true"
-    encrypted             = "true"
+    delete_on_termination = true
+    encrypted             = true
     volume_size           = var.root_block_device.size
     volume_type           = var.root_block_device.type
   }

@@ -25,6 +25,7 @@ resource "aws_rds_cluster" "pgsql" {
   master_password     = data.aws_ssm_parameter.postgres_password.value
   storage_encrypted   = true
   deletion_protection = true
+  iam_database_authentication_enabled = true
 
   db_subnet_group_name   = aws_db_subnet_group.pgsql.name
   vpc_security_group_ids = [aws_security_group.data.id]
