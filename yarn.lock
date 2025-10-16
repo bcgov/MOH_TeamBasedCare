@@ -3765,7 +3765,7 @@ __metadata:
     "@types/supertest": "npm:2.0.11"
     "@types/zen-observable": "npm:0.8.3"
     "@vendia/serverless-express": "npm:4.3.11"
-    axios: "npm:1.6.8"
+    axios: "npm:1.12.0"
     class-transformer: "npm:0.5.1"
     csv-parser: "npm:3.0.0"
     csv-stringify: "npm:6.0.4"
@@ -3838,7 +3838,7 @@ __metadata:
     "@types/lodash": "npm:4.14.182"
     "@types/react": "npm:19.1.12"
     autoprefixer: "npm:10.4.21"
-    axios: "npm:1.6.8"
+    axios: "npm:1.12.0"
     babel-jest: "npm:29.7.0"
     classnames: "npm:2.3.1"
     cookie: "npm:0.4.2"
@@ -5890,14 +5890,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.6.8":
-  version: 1.6.8
-  resolution: "axios@npm:1.6.8"
+"axios@npm:1.12.0":
+  version: 1.12.0
+  resolution: "axios@npm:1.12.0"
   dependencies:
     follow-redirects: "npm:^1.15.6"
-    form-data: "npm:^4.0.0"
+    form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10/3f9a79eaf1d159544fca9576261ff867cbbff64ed30017848e4210e49f3b01e97cf416390150e6fdf6633f336cd43dc1151f890bbd09c3c01ad60bb0891eee63
+  checksum: 10/6c45e294b6ee72f832dbee94cb3fe7331bf2961874fa6b656d909a93b3574c59281f0c62eb92baf7b3e4f39be71936c9f1fcbbe494c90f7ff4d7cc2d7932f06d
   languageName: node
   linkType: hard
 
