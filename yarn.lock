@@ -3858,8 +3858,8 @@ __metadata:
     lodash: "npm:4.17.21"
     next: "npm:15.5.7"
     postcss: "npm:8.4.38"
-    react: "npm:19.1.1"
-    react-dom: "npm:19.1.1"
+    react: "npm:19.1.2"
+    react-dom: "npm:19.1.2"
     react-test-renderer: "npm:19.1.1"
     react-toastify: "npm:11.0.5"
     tailwindcss: "npm:3.4.17"
@@ -13868,14 +13868,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:19.1.1":
-  version: 19.1.1
-  resolution: "react-dom@npm:19.1.1"
+"react-dom@npm:19.1.2":
+  version: 19.1.2
+  resolution: "react-dom@npm:19.1.2"
   dependencies:
     scheduler: "npm:^0.26.0"
   peerDependencies:
-    react: ^19.1.1
-  checksum: 10/9005415d2175b1f1eb4a544ad04afb29691bb7b6dd43bbdaa09932146b310b73bd4552bc772ad78fa481f409eada1560cf887606c83c1a53a922c1e30f1b3a34
+    react: ^19.1.2
+  checksum: 10/778e29e4ec05a437fbf520a58769236985379088e566d741aa82dc8542cec06e14673c11f5f193b46ffcd24e036359ebd48bd695e5ce783291e1af0f387c9b13
   languageName: node
   linkType: hard
 
@@ -13951,10 +13951,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:19.1.1":
-  version: 19.1.1
-  resolution: "react@npm:19.1.1"
-  checksum: 10/9801530fdc939e1a7a499422e930515b2400809cb39c2872984e99f832d233f61659a693871183dac3155c2f9b2c9dcf4440a56bd18983277ae92860e38c3a61
+"react@npm:19.1.2":
+  version: 19.1.2
+  resolution: "react@npm:19.1.2"
+  checksum: 10/aeab5f109eaf65a93935d2e94d8983ab7f7c96b8d447128774edafd2dcada1238d05dc28f8a06c4c848b200166976b62099392045d41d09cf53e23292bf9a2ab
   languageName: node
   linkType: hard
 

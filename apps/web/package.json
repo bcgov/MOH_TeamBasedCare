@@ -28,8 +28,8 @@
     "formik": "2.4.5",
     "lodash": "4.17.21",
     "next": "15.5.7",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
+    "react": "19.1.2",
+    "react-dom": "19.1.2",
     "react-toastify": "11.0.5",
     "use-http": "1.0.28",
     "xlsx-js-style": "1.2.0"
