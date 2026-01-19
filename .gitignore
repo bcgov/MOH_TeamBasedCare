@@ -30,3 +30,6 @@ yarn.build.json
 ssh-keypair*
 
 /database
+
+# Personal working folder
+.Amir
