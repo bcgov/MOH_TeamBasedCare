@@ -235,7 +235,7 @@ export class PlanningSessionService {
     // adding manual sorting after values are fetched as nested sorts are only part of typeorm 0.3.0 onwards
     // https://github.com/typeorm/typeorm/issues/2620
     // adding infinity as default display order, giving last position to the occupations whose display order is undefined
-    const headers: ActivityGapHeader[] = [{ title: 'Activities Bundle', description: '' }].concat(
+    const headers: ActivityGapHeader[] = [{ title: 'Care Competencies and Corresponding Activities', description: '' }].concat(
       occupations
         .sort((a, b) => (a.displayOrder || Infinity) - (b.displayOrder || Infinity))
         .map(e => ({ title: e.displayName, description: e.description || '' })),

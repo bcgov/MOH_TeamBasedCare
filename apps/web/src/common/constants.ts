@@ -84,7 +84,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
 
 export const PlanningSteps = [
   'Profile',
-  'Care Activity Bundles',
+  'Care Competencies',
   'Occupations/Roles',
   'Gaps, Optimizations and Suggestions',
 ];

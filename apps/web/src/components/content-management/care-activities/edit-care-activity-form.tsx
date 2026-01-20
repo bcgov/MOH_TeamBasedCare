@@ -128,7 +128,7 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
               <div>
                 <BasicSelect<string>
                   id='bundleId'
-                  label='Care activity bundle'
+                  label='Care competencies'
                   value={values.bundleId ?? ''}
                   onChange={value => setFieldValue('bundleId', value)}
                   options={bundles?.map(bundle => ({ label: bundle.name, value: bundle.id })) ?? []}

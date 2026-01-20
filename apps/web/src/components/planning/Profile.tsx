@@ -221,7 +221,7 @@ const ConfirmDraftRemove = ({
           <p>{lastDraft?.careSetting.name}</p>
         </div>
         <div className='pt-2'>
-          <p className='font-bold'>Care activity bundles:</p>
+          <p className='font-bold'>Care competencies:</p>
           <p>{lastDraft?.bundles.map(bundle => bundle.name).join(', ')}</p>
         </div>
         <div className='pt-2'>

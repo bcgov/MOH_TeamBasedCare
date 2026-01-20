@@ -48,7 +48,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
     <div className='flex flex-1 flex-col min-h-0 w-1/3 mt-4 border-2 border-gray-200 p-4'>
       <div className='justify-between w-full items-center mb-4 border-b-2 border-gray-200 pb-4'>
         <h3 className='text-xl leading-none '>{title}</h3>
-        <p className='text-sm text-gray-400'>{items && items.count} Activities</p>
+        <p className='text-sm text-gray-400'>{items && items.count} Care Competencies</p>
       </div>
 
       <SearchBar handleChange={handleSearch} />
@@ -79,7 +79,7 @@ export const LeftSideBarActivites: React.FC<LeftSideBarActivitesProps> = ({ titl
           ) : isLoading ? (
             <Spinner show={isLoading} />
           ) : (
-            <p className='text-center text-sm mt-4'>No available Care Activity Bundles.</p>
+            <p className='text-center text-sm mt-4'>No available care competencies</p>
           )}
         </div>
       </div>
