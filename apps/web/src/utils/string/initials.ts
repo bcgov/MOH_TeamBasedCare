@@ -1,7 +1,7 @@
 // convert 'King Charles" -> "KC"
-export const getInitials = (fullName = '') => {
+export const getInitials = (fullName?: string | null) => {
   // find initials of all words
-  const initialsArray = fullName.split(' ').map((n: string) => n[0]);
+  const initialsArray = (fullName ?? '').split(' ').map((n: string) => n[0]);
 
   // if less than or equal to 2, return all letters
   if (initialsArray.length <= 2) return initialsArray.join('').toUpperCase();
