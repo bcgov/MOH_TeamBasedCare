@@ -107,7 +107,9 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
           // header row
           if (rowNumber === 1) {
             row.eachCell({ includeEmpty: false }, (cell: any) => {
-              careActivitiesHeaders.push(cell.value);
+              // Trim whitespace from headers to handle trailing/leading spaces
+              const headerValue = typeof cell.value === 'string' ? cell.value.trim() : cell.value;
+              careActivitiesHeaders.push(headerValue);
             });
             return;
           }
@@ -142,9 +144,13 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
       }
 
       // if all other columns - id, care unit, activities, bundle, etc are available in the sheet
-      if (!UploadSheetColumns.every(c => (careActivitiesHeaders || []).includes(c.header))) {
+      const missingHeaders = UploadSheetColumns.filter(
+        c => !(careActivitiesHeaders || []).includes(c.header),
+      ).map(c => c.header);
+
+      if (missingHeaders.length > 0) {
         throw new Error(
-          'Some of the headers are missing. The excel is possibly renamed / tampered',
+          `The following required column headers are missing from the Excel file: ${missingHeaders.join(', ')}. Please ensure your file contains all required columns: ${UploadSheetColumns.map(c => c.header).join(', ')}.`,
         );
       }
 
