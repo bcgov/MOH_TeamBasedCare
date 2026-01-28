@@ -9,6 +9,7 @@ import {
   faBook,
   faUsersCog,
   faSuitcase,
+  faCog,
 } from '@fortawesome/free-solid-svg-icons';
 import { TooltipIconProps } from './interfaces';
 import { BULK_UPLOAD_COLUMNS, Role } from '@tbcm/common';
@@ -20,6 +21,8 @@ export enum AllowedPath {
   OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
   CARE_TERMINOLOGIES = '/care-terminologies',
   CARE_TERMINOLOGIES_ID = '/care-terminologies/:id',
+  CARE_SETTINGS = '/care-settings',
+  CARE_SETTINGS_EDIT = '/care-settings/:id/edit',
   USER_MANAGEMENT = '/user-management',
   CONTENT_MANAGEMENT = '/content-management',
   CONTENT_MANAGEMENT_CARE_ACTIVITY = '/content-management/care-activity/:id',
@@ -44,6 +47,16 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     path: AllowedPath.OCCUPATIONAL_SCOPE,
     hidden: false,
     roles: [Role.USER],
+  },
+  {
+    id: '007',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Care Settings',
+    active: false,
+    faIcon: faCog,
+    path: AllowedPath.CARE_SETTINGS,
+    hidden: false,
+    roles: [Role.USER, Role.ADMIN, Role.CONTENT_ADMIN],
   },
   {
     id: '003',
@@ -88,6 +101,8 @@ export const PlanningSteps = [
   'Occupations/Roles',
   'Gaps, Optimizations and Suggestions',
 ];
+
+export const CareSettingsSteps = ['Select template', 'Select Care Competencies', 'Finalize'];
 
 export enum TagVariants {
   BASE = 'tag',

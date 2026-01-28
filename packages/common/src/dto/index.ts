@@ -1,5 +1,6 @@
 export * from './app-tokens.dto';
 export * from './care-activity-bulk.dto';
+export * from './care-setting-template.dto';
 export * from './create-feedback.dto';
 export * from './create-user-invite.dto';
 export * from './edit-care-activity.dto';

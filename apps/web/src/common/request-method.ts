@@ -1,6 +1,7 @@
 import {
   CareActivitiesCMSFindSortKeys,
   CareActivitiesFindSortKeys,
+  CareSettingsCMSFindSortKeys,
   OccupationalScopeOfPracticeSortKeys,
   OccupationsFindSortKeys,
   Permissions,
@@ -84,4 +85,14 @@ export const API_ENDPOINT = {
   CARE_ACTIVITY_CMS_BULK_VALIDATE: '/care-activity/cms/bulk/validate',
   CARE_ACTIVITY_CMS_BULK_UPLOAD: '/care-activity/cms/bulk/upload',
   CARE_ACTIVITY_DOWNLOAD: '/care-activity/cms/download',
+
+  // Care Settings
+  findCareSettings: (params: EndpointQueryParams<CareSettingsCMSFindSortKeys>) =>
+    appendQueryParams('/care-settings/cms/find', params),
+  getCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+  getCareSettingBundles: (id: string) => `/care-settings/${id}/bundles`,
+  getCareSettingOccupations: (id: string) => `/care-settings/${id}/occupations`,
+  copyCareSettingTemplate: (id: string) => `/care-settings/${id}/copy`,
+  updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+  deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
 };

@@ -3,6 +3,7 @@ import { BeforeInsert, BeforeUpdate, Column, Entity, Index, ManyToMany, OneToMan
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { CareActivity } from 'src/care-activity/entity/care-activity.entity';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
+import { CareSettingTemplate } from './care-setting-template.entity';
 
 @Entity()
 export class Unit extends CustomBaseEntity {
@@ -18,6 +19,9 @@ export class Unit extends CustomBaseEntity {
 
   @OneToMany(() => AllowedActivity, a => a.unit)
   allowedActivities: AllowedActivity[];
+
+  @OneToMany(() => CareSettingTemplate, template => template.unit)
+  templates: CareSettingTemplate[];
 
   @BeforeInsert()
   @BeforeUpdate()
