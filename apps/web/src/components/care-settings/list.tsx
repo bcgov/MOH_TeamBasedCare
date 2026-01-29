@@ -56,12 +56,14 @@ interface TableBodyProps {
   careSettings?: CareSettingTemplateRO[];
   onEditClick: (template: CareSettingTemplateRO) => void;
   onCopyClick: (template: CareSettingTemplateRO) => void;
+  onDeleteClick: (template: CareSettingTemplateRO) => void;
 }
 
 const TableBody: React.FC<TableBodyProps> = ({
   careSettings = [],
   onEditClick,
   onCopyClick,
+  onDeleteClick,
 }) => {
   const tdStyles = 'table-td px-6 py-4 text-left';
 
@@ -89,9 +91,14 @@ const TableBody: React.FC<TableBodyProps> = ({
           <td className={`${tdStyles}`}>
             <div className='flex justify-end gap-4'>
               {!template.isMaster && (
-                <Button variant='link' onClick={() => onEditClick(template)}>
-                  Edit
-                </Button>
+                <>
+                  <Button variant='link' onClick={() => onEditClick(template)}>
+                    Edit
+                  </Button>
+                  <Button variant='link' onClick={() => onDeleteClick(template)} classes='text-red-600 hover:text-red-800'>
+                    Delete
+                  </Button>
+                </>
               )}
               <Button variant='link' onClick={() => onCopyClick(template)}>
                 Create Copy
@@ -144,6 +151,7 @@ interface CareSettingsListProps {
   isLoading?: boolean;
   onEditClick: (template: CareSettingTemplateRO) => void;
   onCopyClick: (template: CareSettingTemplateRO) => void;
+  onDeleteClick: (template: CareSettingTemplateRO) => void;
 }
 
 export const CareSettingsList: React.FC<CareSettingsListProps> = ({
@@ -158,6 +166,7 @@ export const CareSettingsList: React.FC<CareSettingsListProps> = ({
   isLoading,
   onEditClick,
   onCopyClick,
+  onDeleteClick,
 }) => {
   if (isLoading) {
     return <Spinner show={isLoading} />;
@@ -171,6 +180,7 @@ export const CareSettingsList: React.FC<CareSettingsListProps> = ({
           careSettings={careSettings}
           onEditClick={onEditClick}
           onCopyClick={onCopyClick}
+          onDeleteClick={onDeleteClick}
         />
         <TableFooter
           pageIndex={pageIndex}

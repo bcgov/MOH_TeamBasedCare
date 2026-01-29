@@ -1,20 +1,21 @@
 /**
- * Care Settings Edit Wrapper Component
+ * Care Settings Copy Wrapper Component
  *
- * Main container for the care settings edit wizard. Orchestrates the multi-step
- * flow for editing an existing (non-master) care setting template.
+ * Main container for the care settings copy wizard. Creates a new care setting
+ * template based on an existing source template.
  *
- * For creating copies, use CareSettingsCopyWrapper instead.
+ * Key difference from edit-wrapper: The copy is NOT created in the database
+ * until the user completes the wizard and confirms. This prevents orphan records
+ * and duplicate name issues.
  *
  * Steps:
  * 1. Select Care Competencies - Choose bundles and activities
  * 2. Finalize - Set occupation permissions for each activity
  *
  * Features:
- * - Loads template data, bundles, and occupations
+ * - Loads SOURCE template data for reference
  * - Tracks unsaved changes with confirmation dialog
- * - Error handling with user-friendly messages
- * - Stepper navigation with Previous/Next/Save buttons
+ * - Creates copy only on final confirmation
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
@@ -22,41 +23,42 @@ import { Stepper, Button } from '@components';
 import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsContext';
 import { SelectCompetencies } from './select-competencies';
 import { Finalize } from './finalize';
-import { SaveConfirmModal } from './save-confirm-modal';
+import { SaveNameModal } from './save-name-modal';
 import { useCareSettingTemplate } from 'src/services/useCareSettingTemplate';
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
-import { useCareSettingTemplateUpdate } from 'src/services/useCareSettingTemplateUpdate';
+import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateCopy';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
 import { Permissions } from '@tbcm/common';
 import { CareSettingsSteps } from 'src/common/constants';
 
-const EditContent: React.FC = () => {
+const CopyContent: React.FC = () => {
   const router = useRouter();
-  const { id } = router.query as { id: string };
+  const { sourceId } = router.query as { sourceId: string };
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
-  const { template, isLoading: isLoadingTemplate, error: templateError } = useCareSettingTemplate(id);
-  const { bundles, isLoading: isLoadingBundles, error: bundlesError } = useCareSettingBundles(id);
-  const { occupations, isLoading: isLoadingOccupations, error: occupationsError } = useCareSettingOccupations(id);
-  const { handleUpdate, isLoading: isUpdating } = useCareSettingTemplateUpdate();
+  // Load SOURCE template data (we're copying FROM this, not editing it)
+  const { template: sourceTemplate, isLoading: isLoadingTemplate, error: templateError } = useCareSettingTemplate(sourceId);
+  const { bundles, isLoading: isLoadingBundles, error: bundlesError } = useCareSettingBundles(sourceId);
+  const { occupations, isLoading: isLoadingOccupations, error: occupationsError } = useCareSettingOccupations(sourceId);
+  const { handleCopyWithData, isLoading: isCreating } = useCareSettingTemplateCopy();
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize state when data loads
+  // Initialize state from SOURCE template when data loads
   useEffect(() => {
-    if (template && bundles.length > 0 && occupations.length > 0 && !isInitialized) {
-      const selectedBundleIds = new Set(template.selectedBundles?.map(b => b.bundleId) || []);
+    if (sourceTemplate && bundles.length > 0 && occupations.length > 0 && !isInitialized) {
+      const selectedBundleIds = new Set(sourceTemplate.selectedBundles?.map(b => b.bundleId) || []);
       const selectedActivityIds = new Set<string>();
-      template.selectedBundles?.forEach(b => {
+      sourceTemplate.selectedBundles?.forEach(b => {
         b.selectedActivityIds?.forEach(id => selectedActivityIds.add(id));
       });
 
       const permissions = new Map<string, Permissions>();
-      template.permissions?.forEach(p => {
+      sourceTemplate.permissions?.forEach(p => {
         // Using :: as separator because UUIDs contain dashes
         permissions.set(`${p.activityId}::${p.occupationId}`, p.permission);
       });
@@ -64,8 +66,8 @@ const EditContent: React.FC = () => {
       dispatch({
         type: 'INITIALIZE_STATE',
         payload: {
-          templateId: id,
-          templateName: template.name,
+          templateId: '', // No template ID yet - copy not created
+          templateName: sourceTemplate.name, // Source name for reference
           selectedBundleIds,
           selectedActivityIds,
           permissions,
@@ -76,7 +78,7 @@ const EditContent: React.FC = () => {
       });
       setIsInitialized(true);
     }
-  }, [template, bundles, occupations, id, dispatch, isInitialized]);
+  }, [sourceTemplate, bundles, occupations, dispatch, isInitialized]);
 
   // Track changes to mark form as dirty
   useEffect(() => {
@@ -124,28 +126,25 @@ const EditContent: React.FC = () => {
   }, [state.currentStep, isDirty, router, dispatch]);
 
   const handleSaveClick = () => {
-    setShowConfirmModal(true);
+    setShowSaveModal(true);
   };
 
-  const handleSaveConfirm = async () => {
-    const updateData = {
+  const handleSaveConfirm = async (name: string) => {
+    const copyData = {
+      name,
       selectedBundleIds: Array.from(state.selectedBundleIds),
       selectedActivityIds: Array.from(state.selectedActivityIds),
       permissions: getPermissionsArray(),
     };
 
-    await handleUpdate(
-      id,
-      updateData,
-      () => {
-        setShowConfirmModal(false);
-        setIsDirty(false);
-        router.push('/care-settings');
-      },
-      () => {
-        // Error callback - keep modal open so user can retry
-      },
-    );
+    const result = await handleCopyWithData(sourceId, copyData);
+
+    if (result) {
+      setShowSaveModal(false);
+      setIsDirty(false);
+      router.push('/care-settings');
+    }
+    // If failed, keep modal open - error toast is shown by the service
   };
 
   const isLoading = isLoadingTemplate || isLoadingBundles || isLoadingOccupations;
@@ -159,7 +158,7 @@ const EditContent: React.FC = () => {
     return (
       <Card bgWhite>
         <div className='text-center py-8'>
-          <p className='text-red-600 font-semibold mb-2'>Failed to load care setting data</p>
+          <p className='text-red-600 font-semibold mb-2'>Failed to load source template data</p>
           <p className='text-gray-500 mb-4'>Please try again or contact support if the problem persists.</p>
           <Button variant='outline' onClick={() => router.push('/care-settings')}>
             Back to Care Settings
@@ -169,13 +168,15 @@ const EditContent: React.FC = () => {
     );
   }
 
-  if (!template) {
+  if (!sourceTemplate) {
     return (
       <Card bgWhite>
-        <div className='text-center py-8'>Template not found</div>
+        <div className='text-center py-8'>Source template not found</div>
       </Card>
     );
   }
+
+  const sourceName = sourceTemplate.name;
 
   return (
     <div className='flex flex-1 flex-col gap-3 mt-5'>
@@ -216,9 +217,9 @@ const EditContent: React.FC = () => {
 
       {/* Title and subtitle */}
       <Card bgWhite>
-        <h1 className='text-2xl font-bold text-bcBluePrimary'>Edit Care Setting</h1>
+        <h1 className='text-2xl font-bold text-bcBluePrimary'>Create Copy</h1>
         <p className='text-base text-gray-600 mt-1'>
-          Edit from: <span className='font-semibold'>{state.templateName}</span>
+          Copy created from: <span className='font-semibold'>{sourceName}</span>
         </p>
         <p className='text-base text-gray-500 mt-2'>
           {state.currentStep === 1
@@ -232,23 +233,23 @@ const EditContent: React.FC = () => {
         {state.currentStep === 2 && <Finalize />}
       </div>
 
-      {showConfirmModal && (
-        <SaveConfirmModal
-          isOpen={showConfirmModal}
-          setIsOpen={setShowConfirmModal}
-          templateName={state.templateName}
+      {showSaveModal && (
+        <SaveNameModal
+          isOpen={showSaveModal}
+          setIsOpen={setShowSaveModal}
+          currentName=''
           onConfirm={handleSaveConfirm}
-          isLoading={isUpdating}
+          isLoading={isCreating}
         />
       )}
     </div>
   );
 };
 
-export const CareSettingsEditWrapper: React.FC = () => {
+export const CareSettingsCopyWrapper: React.FC = () => {
   return (
     <CareSettingsProvider>
-      <EditContent />
+      <CopyContent />
     </CareSettingsProvider>
   );
 };

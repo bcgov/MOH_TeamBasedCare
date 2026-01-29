@@ -34,6 +34,7 @@ import {
   CareSettingTemplateRO,
   CareSettingTemplateDetailRO,
   CreateCareSettingTemplateCopyDTO,
+  CreateCareSettingTemplateCopyFullDTO,
   OccupationRO,
   PaginationRO,
   Role,
@@ -102,6 +103,19 @@ export class CareSettingTemplateController {
     @Body() dto: CreateCareSettingTemplateCopyDTO,
   ): Promise<CareSettingTemplateRO> {
     return this.templateService.copyTemplate(id, dto);
+  }
+
+  /**
+   * Create a copy of an existing template with full customization data
+   * Use this for deferred copy creation where user customizes before saving
+   */
+  @Post(':id/copy-full')
+  @HttpCode(HttpStatus.CREATED)
+  async copyTemplateWithData(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateCareSettingTemplateCopyFullDTO,
+  ): Promise<CareSettingTemplateRO> {
+    return this.templateService.copyTemplateWithData(id, dto);
   }
 
   /**

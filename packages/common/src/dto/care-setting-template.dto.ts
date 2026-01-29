@@ -55,3 +55,23 @@ export class UpdateCareSettingTemplateDTO {
   @Type(() => TemplatePermissionDTO)
   permissions!: TemplatePermissionDTO[];
 }
+
+/** DTO for creating a copy with full customization data (deferred copy creation) */
+export class CreateCareSettingTemplateCopyFullDTO {
+  @IsString()
+  @MinLength(1, { message: 'Name is required' })
+  name!: string;
+
+  @IsArray()
+  @IsUUID('all', { each: true })
+  selectedBundleIds!: string[];
+
+  @IsArray()
+  @IsUUID('all', { each: true })
+  selectedActivityIds!: string[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TemplatePermissionDTO)
+  permissions!: TemplatePermissionDTO[];
+}

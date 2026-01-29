@@ -31,6 +31,7 @@ import {
   BundleSelectionRO,
   TemplatePermissionRO,
   CreateCareSettingTemplateCopyDTO,
+  CreateCareSettingTemplateCopyFullDTO,
   UpdateCareSettingTemplateDTO,
   SortOrder,
   BundleRO,
@@ -308,6 +309,88 @@ export class CareSettingTemplateService {
 
     if (newPermissions.length > 0) {
       await this.permissionRepo.save(newPermissions);
+    }
+
+    // Reload with relations
+    const result = await this.templateRepo.findOne({
+      where: { id: saved.id },
+      relations: ['unit', 'parent'],
+    });
+
+    return new CareSettingTemplateRO(result);
+  }
+
+  /**
+   * Create a copy of an existing template with full customization data
+   * Unlike copyTemplate, this allows specifying custom bundles, activities, and permissions
+   * instead of copying them from the source template.
+   *
+   * Use this for deferred copy creation where user customizes before saving.
+   */
+  async copyTemplateWithData(
+    sourceId: string,
+    dto: CreateCareSettingTemplateCopyFullDTO,
+  ): Promise<CareSettingTemplateRO> {
+    const source = await this.templateRepo.findOne({
+      where: { id: sourceId },
+      relations: ['unit'],
+    });
+
+    if (!source) {
+      throw new NotFoundException('Source template not found');
+    }
+
+    // Check for duplicate name
+    await this.checkDuplicateName(dto.name, source.unit.id);
+
+    // Get selected bundles
+    const selectedBundles = await this.bundleRepo.find({
+      where: { id: In(dto.selectedBundleIds) },
+    });
+
+    // Get selected activities
+    const selectedActivities = await this.careActivityRepo.find({
+      where: { id: In(dto.selectedActivityIds) },
+    });
+
+    // Create new template with provided data
+    const newTemplate = this.templateRepo.create({
+      name: dto.name,
+      isMaster: false,
+      unit: source.unit,
+      parent: source,
+      selectedBundles,
+      selectedActivities,
+    });
+
+    const saved = await this.templateRepo.save(newTemplate);
+
+    // Create permissions
+    if (dto.permissions && dto.permissions.length > 0) {
+      const activities = await this.careActivityRepo.find({
+        where: { id: In(dto.permissions.map(p => p.activityId)) },
+      });
+      const activityMap = new Map(activities.map(a => [a.id, a]));
+
+      const occupations = await this.occupationRepo.find({
+        where: { id: In(dto.permissions.map(p => p.occupationId)) },
+      });
+      const occupationMap = new Map(occupations.map(o => [o.id, o]));
+
+      const newPermissions = dto.permissions
+        .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
+        .map(p =>
+          this.permissionRepo.create({
+            template: saved,
+            careActivity: activityMap.get(p.activityId)!,
+            occupation: occupationMap.get(p.occupationId)!,
+            permission: p.permission,
+          }),
+        );
+
+      if (newPermissions.length > 0) {
+        await this.permissionRepo.save(newPermissions);
+      }
     }
 
     // Reload with relations

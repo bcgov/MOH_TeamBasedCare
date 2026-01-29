@@ -6,8 +6,10 @@
  *
  * Actions:
  * - Edit: Opens edit wizard for non-master templates
- * - Create Copy: Creates a new template from any existing template
+ * - Create Copy: Opens copy wizard for any template (copy created on save)
+ * - Delete: Removes non-master templates after confirmation
  */
+import { useState } from 'react';
 import { Stepper } from '@components';
 import { CareSettingTemplateRO } from '@tbcm/common';
 import { NextPage } from 'next';
@@ -16,8 +18,9 @@ import AppLayout from 'src/components/AppLayout';
 import { CareSettingsList } from 'src/components/care-settings';
 import { Card } from 'src/components/generic/Card';
 import { SearchBar } from 'src/components/generic/SearchBar';
+import { ModalWrapper } from 'src/components/Modal';
 import { useCareSettingsFind } from 'src/services/useCareSettingsFind';
-import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateCopy';
+import { useCareSettingTemplateDelete } from 'src/services/useCareSettingTemplateDelete';
 import { CareSettingsSteps } from 'src/common/constants';
 
 const CareSettingsPage: NextPage = () => {
@@ -33,21 +36,31 @@ const CareSettingsPage: NextPage = () => {
     onSortChange,
     onSearchTextChange,
     isLoading,
+    onRefreshList,
   } = useCareSettingsFind();
 
-  const { handleCopy } = useCareSettingTemplateCopy();
+  const { handleDelete, isLoading: isDeleting } = useCareSettingTemplateDelete();
+  const [templateToDelete, setTemplateToDelete] = useState<CareSettingTemplateRO | null>(null);
 
   const onEditClick = (template: CareSettingTemplateRO) => {
     router.push(`/care-settings/${template.id}/edit`);
   };
 
-  const onCopyClick = async (template: CareSettingTemplateRO) => {
-    // Create copy with temporary name and navigate to edit wizard in copy mode
-    const newTemplate = await handleCopy(template.id, {
-      name: `${template.name} - Copy`,
-    });
-    if (newTemplate) {
-      router.push(`/care-settings/${newTemplate.id}/edit?mode=copy`);
+  const onCopyClick = (template: CareSettingTemplateRO) => {
+    // Navigate to copy wizard - copy is created only when user saves
+    router.push(`/care-settings/copy?sourceId=${template.id}`);
+  };
+
+  const onDeleteClick = (template: CareSettingTemplateRO) => {
+    setTemplateToDelete(template);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (templateToDelete) {
+      await handleDelete(templateToDelete, () => {
+        setTemplateToDelete(null);
+        onRefreshList();
+      });
     }
   };
 
@@ -84,11 +97,33 @@ const CareSettingsPage: NextPage = () => {
               isLoading={isLoading}
               onEditClick={onEditClick}
               onCopyClick={onCopyClick}
+              onDeleteClick={onDeleteClick}
             />
           </div>
         </Card>
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {templateToDelete && (
+        <ModalWrapper
+          isOpen={!!templateToDelete}
+          setIsOpen={() => setTemplateToDelete(null)}
+          title='Delete Care Setting'
+          description={
+            <p>
+              Are you sure you want to delete <strong>{templateToDelete.name}</strong>?
+              This action cannot be undone.
+            </p>
+          }
+          closeButton={{ title: 'Cancel' }}
+          actionButton={{
+            title: 'Delete',
+            onClick: handleDeleteConfirm,
+            isLoading: isDeleting,
+            isError: true,
+          }}
+        />
+      )}
     </AppLayout>
   );
 };

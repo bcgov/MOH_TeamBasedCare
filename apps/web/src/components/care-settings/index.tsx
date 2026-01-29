@@ -8,6 +8,7 @@
 export * from './list';
 export * from './CareSettingsContext';
 export * from './edit-wrapper';
+export * from './copy-wrapper';
 export * from './select-competencies';
 export * from './finalize';
 export * from './save-name-modal';

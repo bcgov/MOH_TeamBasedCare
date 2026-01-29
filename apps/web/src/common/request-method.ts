@@ -93,6 +93,7 @@ export const API_ENDPOINT = {
   getCareSettingBundles: (id: string) => `/care-settings/${id}/bundles`,
   getCareSettingOccupations: (id: string) => `/care-settings/${id}/occupations`,
   copyCareSettingTemplate: (id: string) => `/care-settings/${id}/copy`,
+  copyCareSettingTemplateFull: (sourceId: string) => `/care-settings/${sourceId}/copy-full`,
   updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
   deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
 };
