@@ -42,12 +42,12 @@ const CareSettingsPage: NextPage = () => {
   };
 
   const onCopyClick = async (template: CareSettingTemplateRO) => {
-    // Create copy with temporary name and navigate to edit wizard
+    // Create copy with temporary name and navigate to edit wizard in copy mode
     const newTemplate = await handleCopy(template.id, {
       name: `${template.name} - Copy`,
     });
     if (newTemplate) {
-      router.push(`/care-settings/${newTemplate.id}/edit`);
+      router.push(`/care-settings/${newTemplate.id}/edit?mode=copy`);
     }
   };
 

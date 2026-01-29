@@ -14,13 +14,13 @@
 import { Permissions } from '@tbcm/common';
 import { Column, Entity, ManyToOne, Unique } from 'typeorm';
 import { CareActivity } from '../../care-activity/entity/care-activity.entity';
-import { CustomBaseEntity } from '../../common/custom-base.entity';
+import { BaseEntity } from '../../common/base.entity';
 import { Occupation } from '../../occupation/entity/occupation.entity';
 import { CareSettingTemplate } from './care-setting-template.entity';
 
 @Entity()
 @Unique('template_activity_occupation', ['template', 'careActivity', 'occupation'])
-export class CareSettingTemplatePermission extends CustomBaseEntity {
+export class CareSettingTemplatePermission extends BaseEntity {
   /** The permission level: Y (can perform) or LC (limits & conditions) */
   @Column({ type: 'enum', enum: Permissions, nullable: false })
   permission: Permissions;

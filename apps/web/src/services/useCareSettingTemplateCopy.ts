@@ -33,7 +33,6 @@ export const useCareSettingTemplateCopy = () => {
         toast.info('Care setting copy created successfully.');
       },
       () => void 0,
-      'Failed to create care setting copy.',
     );
 
     return result;

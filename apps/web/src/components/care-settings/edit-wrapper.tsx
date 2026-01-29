@@ -21,6 +21,7 @@ import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsCont
 import { SelectCompetencies } from './select-competencies';
 import { Finalize } from './finalize';
 import { SaveNameModal } from './save-name-modal';
+import { SaveConfirmModal } from './save-confirm-modal';
 import { useCareSettingTemplate } from 'src/services/useCareSettingTemplate';
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
@@ -32,7 +33,8 @@ import { CareSettingsSteps } from 'src/common/constants';
 
 const EditContent: React.FC = () => {
   const router = useRouter();
-  const { id } = router.query as { id: string };
+  const { id, mode } = router.query as { id: string; mode?: string };
+  const isCopyMode = mode === 'copy';
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
   const { template, isLoading: isLoadingTemplate, error: templateError } = useCareSettingTemplate(id);
@@ -41,6 +43,7 @@ const EditContent: React.FC = () => {
   const { handleUpdate, isLoading: isUpdating } = useCareSettingTemplateUpdate();
 
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -122,7 +125,11 @@ const EditContent: React.FC = () => {
   }, [state.currentStep, isDirty, router, dispatch]);
 
   const handleSaveClick = () => {
-    setShowSaveModal(true);
+    if (isCopyMode) {
+      setShowSaveModal(true);  // Name input modal for copy mode
+    } else {
+      setShowConfirmModal(true);  // Simple confirmation for edit mode
+    }
   };
 
   const handleSaveConfirm = async (name: string) => {
@@ -152,6 +159,27 @@ const EditContent: React.FC = () => {
     if (!success) {
       // Keep modal open on failure
     }
+  };
+
+  const handleSaveConfirmEdit = async () => {
+    const updateData = {
+      selectedBundleIds: Array.from(state.selectedBundleIds),
+      selectedActivityIds: Array.from(state.selectedActivityIds),
+      permissions: getPermissionsArray(),
+    };
+
+    await handleUpdate(
+      id,
+      updateData,
+      () => {
+        setShowConfirmModal(false);
+        setIsDirty(false);
+        router.push('/care-settings');
+      },
+      () => {
+        // Error callback - keep modal open so user can retry
+      },
+    );
   };
 
   const isLoading = isLoadingTemplate || isLoadingBundles || isLoadingOccupations;
@@ -225,9 +253,14 @@ const EditContent: React.FC = () => {
 
       {/* Title and subtitle */}
       <Card bgWhite>
-        <h1 className='text-2xl font-bold text-bcBluePrimary'>Create Copy</h1>
+        <h1 className='text-2xl font-bold text-bcBluePrimary'>
+          {isCopyMode ? 'Create Copy' : 'Edit Care Setting'}
+        </h1>
         <p className='text-base text-gray-600 mt-1'>
-          Copy created from: <span className='font-semibold'>{parentName}</span>
+          {isCopyMode
+            ? <>Copy created from: <span className='font-semibold'>{parentName}</span></>
+            : <>Edit from: <span className='font-semibold'>{state.templateName}</span></>
+          }
         </p>
         <p className='text-base text-gray-500 mt-2'>
           {state.currentStep === 1
@@ -247,6 +280,16 @@ const EditContent: React.FC = () => {
           setIsOpen={setShowSaveModal}
           currentName={state.templateName}
           onConfirm={handleSaveConfirm}
+          isLoading={isUpdating}
+        />
+      )}
+
+      {showConfirmModal && (
+        <SaveConfirmModal
+          isOpen={showConfirmModal}
+          setIsOpen={setShowConfirmModal}
+          templateName={state.templateName}
+          onConfirm={handleSaveConfirmEdit}
           isLoading={isUpdating}
         />
       )}

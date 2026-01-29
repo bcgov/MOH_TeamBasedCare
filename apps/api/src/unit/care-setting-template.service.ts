@@ -55,6 +55,33 @@ export class CareSettingTemplateService {
   ) {}
 
   /**
+   * Check if a template name already exists within a unit
+   * @param name - The name to check
+   * @param unitId - The unit to check within
+   * @param excludeId - Optional template ID to exclude (for updates)
+   * @throws BadRequestException if a duplicate name exists
+   */
+  private async checkDuplicateName(
+    name: string,
+    unitId: string,
+    excludeId?: string,
+  ): Promise<void> {
+    const queryBuilder = this.templateRepo
+      .createQueryBuilder('t')
+      .where('LOWER(t.name) = LOWER(:name)', { name: name.trim() })
+      .andWhere('t.unit.id = :unitId', { unitId });
+
+    if (excludeId) {
+      queryBuilder.andWhere('t.id != :excludeId', { excludeId });
+    }
+
+    const existing = await queryBuilder.getOne();
+    if (existing) {
+      throw new BadRequestException('A care setting with this name already exists.');
+    }
+  }
+
+  /**
    * Find templates with pagination, search, and sorting
    * @returns Tuple of [templates, total count]
    */
@@ -254,6 +281,9 @@ export class CareSettingTemplateService {
       throw new NotFoundException({ message: 'Source template not found' });
     }
 
+    // Check for duplicate name before creating copy
+    await this.checkDuplicateName(dto.name, source.unit.id);
+
     // Create new template (createdBy/updatedBy auto-set by AuditSubscriber)
     const newTemplate = this.templateRepo.create({
       name: dto.name,
@@ -310,13 +340,12 @@ export class CareSettingTemplateService {
     }
 
     if (template.isMaster) {
-      throw new BadRequestException({
-        message: 'Cannot edit master templates. Create a copy instead.',
-      });
+      throw new BadRequestException('Cannot edit master templates. Create a copy instead.');
     }
 
-    // Update name if provided
-    if (dto.name) {
+    // Update name if provided, checking for duplicates
+    if (dto.name && dto.name !== template.name) {
+      await this.checkDuplicateName(dto.name, template.unit.id, id);
       template.name = dto.name;
     }
 
@@ -381,9 +410,7 @@ export class CareSettingTemplateService {
     }
 
     if (template.isMaster) {
-      throw new BadRequestException({
-        message: 'Cannot delete master templates.',
-      });
+      throw new BadRequestException('Cannot delete master templates.');
     }
 
     // Delete permissions first (cascade should handle this, but being explicit)

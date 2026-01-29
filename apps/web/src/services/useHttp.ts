@@ -21,7 +21,8 @@ export const useHttp = () => {
           clearStorageAndRedirectToLandingPage();
           break;
         case 400:
-          toast.error('Kindly verify the input');
+          const errorMsg = err?.response?.data?.message || 'Kindly verify the input';
+          toast.error(errorMsg);
           break;
         case 409:
           toast.error(err.response.data.errorMessage);

@@ -125,7 +125,7 @@ export const SelectCompetencies: React.FC = () => {
                   <div className='flex-1 min-w-0'>
                     <p className='truncate'>{getName(bundle)}</p>
                     <p className='text-[10px] font-bold text-gray-500'>
-                      {counts.selected} / {counts.total} selection
+                      {counts.selected}/{counts.total} selection
                     </p>
                   </div>
                 </div>

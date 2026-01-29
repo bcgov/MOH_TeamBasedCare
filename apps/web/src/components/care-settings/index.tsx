@@ -11,3 +11,4 @@ export * from './edit-wrapper';
 export * from './select-competencies';
 export * from './finalize';
 export * from './save-name-modal';
+export * from './save-confirm-modal';
