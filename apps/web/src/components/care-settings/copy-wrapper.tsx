@@ -57,6 +57,7 @@ const CopyContent: React.FC = () => {
         b.selectedActivityIds?.forEach(id => selectedActivityIds.add(id));
       });
 
+      // Copy permissions from source template
       const permissions = new Map<string, Permissions>();
       sourceTemplate.permissions?.forEach(p => {
         // Using :: as separator because UUIDs contain dashes

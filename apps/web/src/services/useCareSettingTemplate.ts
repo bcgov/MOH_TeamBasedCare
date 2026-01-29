@@ -23,7 +23,7 @@ export const useCareSettingTemplate = (id?: string) => {
   } = useSWR<CareSettingTemplateDetailRO>(
     id ? API_ENDPOINT.getCareSettingTemplate(id) : null,
     id ? (url: string) => AxiosPublic(url).then(res => res.data) : null,
-    { revalidateOnFocus: false },
+    { revalidateOnFocus: false, revalidateOnMount: true },
   );
 
   return { template, isLoading, error, mutate };

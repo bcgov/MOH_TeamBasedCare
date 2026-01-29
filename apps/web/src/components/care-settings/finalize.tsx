@@ -29,28 +29,26 @@ const getName = (item: { name?: string; displayName?: string }): string => {
 };
 
 const PermissionSelect: React.FC<{
-  value: Permissions | undefined;
-  onChange: (value: Permissions | 'REMOVE' | undefined) => void;
+  value: Permissions;
+  onChange: (value: Permissions) => void;
 }> = ({ value, onChange }) => {
   return (
     <select
-      value={value || ''}
+      value={value}
       onChange={e => {
         const val = e.target.value;
-        if (val === 'N') {
-          // N means "no permission" - remove the entry
-          onChange('REMOVE');
-        } else if (val === Permissions.PERFORM || val === Permissions.LIMITS) {
-          onChange(val);
-        } else {
-          onChange(undefined);
+        if (val === Permissions.PERFORM) {
+          onChange(Permissions.PERFORM);
+        } else if (val === Permissions.NO) {
+          onChange(Permissions.NO);
+        } else if (val === Permissions.LIMITS) {
+          onChange(Permissions.LIMITS);
         }
       }}
       className='border border-gray-300 rounded px-2 py-1 text-sm w-full bg-white h-10'
     >
-      <option value=''>-</option>
       <option value={Permissions.PERFORM}>Y</option>
-      <option value='N'>N</option>
+      <option value={Permissions.NO}>N</option>
       <option value={Permissions.LIMITS}>LC</option>
     </select>
   );
@@ -62,19 +60,11 @@ const ActivityOccupationGrid: React.FC<{
 }> = ({ activityId, activityName }) => {
   const { state, dispatch, getPermission } = useCareSettingsContext();
 
-  const handlePermissionChange = (occupationId: string, permission: Permissions | 'REMOVE' | undefined) => {
-    if (permission === 'REMOVE') {
-      // Remove the permission entry (N = no permission)
-      dispatch({
-        type: 'REMOVE_PERMISSION',
-        payload: { activityId, occupationId },
-      });
-    } else if (permission) {
-      dispatch({
-        type: 'SET_PERMISSION',
-        payload: { activityId, occupationId, permission },
-      });
-    }
+  const handlePermissionChange = (occupationId: string, permission: Permissions) => {
+    dispatch({
+      type: 'SET_PERMISSION',
+      payload: { activityId, occupationId, permission },
+    });
   };
 
   return (
@@ -88,7 +78,7 @@ const ActivityOccupationGrid: React.FC<{
                 {getName(occupation)}
               </label>
               <PermissionSelect
-                value={getPermission(activityId, occupation.id)}
+                value={getPermission(activityId, occupation.id) || Permissions.PERFORM}
                 onChange={value => handlePermissionChange(occupation.id, value)}
               />
             </div>
@@ -168,16 +158,12 @@ const LegendModal: React.FC<{
       description={
         <div className='space-y-3'>
           <div className='flex items-center gap-3'>
-            <span className='font-bold w-12'>-</span>
-            <span>Not set - No permission defined</span>
-          </div>
-          <div className='flex items-center gap-3'>
             <span className='font-bold w-12'>Y</span>
             <span>Yes - Occupation can perform this activity</span>
           </div>
           <div className='flex items-center gap-3'>
             <span className='font-bold w-12'>N</span>
-            <span>No - Removes permission (clears to not set)</span>
+            <span>No - Occupation cannot perform this activity</span>
           </div>
           <div className='flex items-center gap-3'>
             <span className='font-bold w-12'>LC</span>

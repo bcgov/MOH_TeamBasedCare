@@ -37,7 +37,7 @@ const EditContent: React.FC = () => {
   const { id } = router.query as { id: string };
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
-  const { template, isLoading: isLoadingTemplate, error: templateError } = useCareSettingTemplate(id);
+  const { template, isLoading: isLoadingTemplate, error: templateError, mutate: mutateTemplate } = useCareSettingTemplate(id);
   const { bundles, isLoading: isLoadingBundles, error: bundlesError } = useCareSettingBundles(id);
   const { occupations, isLoading: isLoadingOccupations, error: occupationsError } = useCareSettingOccupations(id);
   const { handleUpdate, isLoading: isUpdating } = useCareSettingTemplateUpdate();
@@ -140,6 +140,8 @@ const EditContent: React.FC = () => {
       () => {
         setShowConfirmModal(false);
         setIsDirty(false);
+        // Invalidate cache so next edit loads fresh data
+        mutateTemplate();
         router.push('/care-settings');
       },
       () => {
