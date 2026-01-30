@@ -26,6 +26,7 @@ export enum AllowedPath {
   USER_MANAGEMENT = '/user-management',
   CONTENT_MANAGEMENT = '/content-management',
   CONTENT_MANAGEMENT_CARE_ACTIVITY = '/content-management/care-activity/:id',
+  CONTENT_MANAGEMENT_OCCUPATION = '/content-management/occupation/:id',
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [

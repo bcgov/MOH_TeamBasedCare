@@ -1,4 +1,11 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+} from 'typeorm';
 import { cleanText } from '../../common/utils';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
@@ -13,6 +20,8 @@ import { OccupationRelatedResource } from '../dto/occupation-related-resource.dt
   },
 })
 export class Occupation extends CustomBaseEntity {
+  @DeleteDateColumn()
+  deletedAt?: Date;
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   name: string;
 

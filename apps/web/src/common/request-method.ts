@@ -3,6 +3,7 @@ import {
   CareActivitiesFindSortKeys,
   CareSettingsCMSFindSortKeys,
   OccupationalScopeOfPracticeSortKeys,
+  OccupationsCMSFindSortKeys,
   OccupationsFindSortKeys,
   Permissions,
   SortOrder,
@@ -96,4 +97,12 @@ export const API_ENDPOINT = {
   copyCareSettingTemplateFull: (sourceId: string) => `/care-settings/${sourceId}/copy-full`,
   updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
   deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+
+  // Occupation CMS
+  findOccupationsCMS: (params: EndpointQueryParams<OccupationsCMSFindSortKeys>) =>
+    appendQueryParams('/occupations/cms/find', params),
+  getOccupationCMS: (id: string) => `/occupations/cms/${id}`,
+  createOccupation: '/occupations/cms',
+  updateOccupationCMS: (id: string) => `/occupations/cms/${id}`,
+  deleteOccupation: (id: string) => `/occupations/cms/${id}`,
 };

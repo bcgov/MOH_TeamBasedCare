@@ -1,17 +1,45 @@
+/**
+ * Occupation Service
+ *
+ * Handles all occupation-related business logic including:
+ * - CRUD operations for occupations
+ * - CMS-specific queries with pagination and search
+ * - Scope permissions management (via AllowedActivity repository)
+ *
+ * @module occupation/occupation.service
+ */
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
+import { FindOccupationsCMSDto } from './dto/find-occupations-cms.dto';
 import { EditOccupationDTO } from './dto/edit-occupation.dto';
-import { OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
+import {
+  CreateOccupationDTO,
+  EditOccupationCMSDTO,
+  OccupationsCMSFindSortKeys,
+  OccupationsFindSortKeys,
+  SortOrder,
+} from '@tbcm/common';
 import { cleanText, reverseSortOrder } from 'src/common/utils';
+import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
 
+/**
+ * Service for managing occupations and their scope permissions.
+ */
 @Injectable()
 export class OccupationService {
   constructor(
     @InjectRepository(Occupation)
     private occupationRepository: Repository<Occupation>,
+    @InjectRepository(AllowedActivity)
+    private allowedActivityRepository: Repository<AllowedActivity>,
   ) {}
 
   async getAllOccupations(): Promise<Occupation[]> {
@@ -95,5 +123,216 @@ export class OccupationService {
           isRegulated: true,
         })),
     );
+  }
+
+  /**
+   * Find occupations for CMS with pagination, search, and sort.
+   * Includes the updatedBy relation for displaying last editor info.
+   *
+   * @param query - Query parameters (search, pagination, sort)
+   * @returns Tuple of [occupations array, total count]
+   */
+  async findOccupationsCMS(
+    query: FindOccupationsCMSDto,
+  ): Promise<[Occupation[], number]> {
+    const queryBuilder = this.occupationRepository
+      .createQueryBuilder('o')
+      .leftJoinAndSelect('o.updatedBy', 'updatedBy');
+
+    // Search by name or description
+    if (query.searchText) {
+      queryBuilder.where(
+        '(o.displayName ILIKE :search OR o.description ILIKE :search)',
+        { search: `%${query.searchText}%` },
+      );
+    }
+
+    // Sort logic
+    let sortOrder = query.sortOrder;
+
+    if (query.sortBy === OccupationsCMSFindSortKeys.IS_REGULATED && sortOrder) {
+      // Reverse sort order for boolean field (see findOccupations for explanation)
+      sortOrder = reverseSortOrder(query.sortOrder as SortOrder);
+    }
+
+    if (query.sortBy) {
+      queryBuilder.orderBy(`o.${query.sortBy}`, sortOrder as SortOrder);
+    } else {
+      // Default sort by displayName
+      queryBuilder.orderBy('o.displayName', 'ASC');
+    }
+
+    return queryBuilder
+      .skip((query.page - 1) * query.pageSize)
+      .take(query.pageSize)
+      .getManyAndCount();
+  }
+
+  /**
+   * Get occupation with all details for the CMS edit form.
+   * Loads all related entities needed to display scope permissions:
+   * - allowedActivities with careActivity, bundle, and unit relations
+   *
+   * @param id - Occupation UUID
+   * @returns Occupation with relations or null if not found
+   */
+  async getOccupationDetailById(id: string): Promise<Occupation | null> {
+    return this.occupationRepository.findOne({
+      where: { id },
+      relations: [
+        'updatedBy',
+        'allowedActivities',
+        'allowedActivities.careActivity',
+        'allowedActivities.careActivity.bundle',
+        'allowedActivities.unit',
+      ],
+    });
+  }
+
+  /**
+   * Create a new occupation with optional scope permissions.
+   *
+   * Steps:
+   * 1. Validate name uniqueness (case-insensitive)
+   * 2. Create the occupation entity
+   * 3. Create AllowedActivity records for scope permissions
+   *
+   * @param data - Create occupation DTO with optional scope permissions
+   * @returns The created occupation
+   * @throws BadRequestException if name already exists
+   */
+  async createOccupation(data: CreateOccupationDTO): Promise<Occupation> {
+    // Check uniqueness of name (case-insensitive)
+    const cleanedName = cleanText(data.name);
+    const existing = await this.occupationRepository.findOne({
+      where: { name: cleanedName },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        'An occupation with this name already exists.',
+      );
+    }
+
+    // Create occupation
+    const occupation = this.occupationRepository.create({
+      name: data.name,
+      description: data.description,
+      isRegulated: data.isRegulated,
+      relatedResources: data.relatedResources,
+    });
+
+    const saved = await this.occupationRepository.save(occupation);
+
+    // Create scope permissions if provided
+    if (data.scopePermissions?.length) {
+      const entities = data.scopePermissions.map(sp =>
+        this.allowedActivityRepository.create({
+          occupation: { id: saved.id },
+          careActivity: { id: sp.careActivityId },
+          permission: sp.permission,
+        }),
+      );
+      await this.allowedActivityRepository.save(entities);
+    }
+
+    return saved;
+  }
+
+  /**
+   * Update occupation with scope permissions for CMS.
+   *
+   * Steps:
+   * 1. Validate occupation exists
+   * 2. Validate name uniqueness if name is being changed
+   * 3. Update occupation fields (partial update)
+   * 4. Upsert scope permissions (AllowedActivity records)
+   *
+   * @param id - Occupation UUID
+   * @param data - Edit occupation DTO (all fields optional)
+   * @throws NotFoundException if occupation not found
+   * @throws BadRequestException if new name already exists
+   */
+  async updateOccupationWithScope(
+    id: string,
+    data: EditOccupationCMSDTO,
+  ): Promise<void> {
+    const occupation = await this.findOccupationById(id);
+
+    if (!occupation) {
+      throw new NotFoundException({
+        message: 'Occupation not found',
+        data: { id },
+      });
+    }
+
+    // Check name uniqueness if name is being changed
+    if (data.name && data.name !== occupation.displayName) {
+      const cleanedName = cleanText(data.name);
+      const existing = await this.occupationRepository.findOne({
+        where: { name: cleanedName },
+      });
+
+      if (existing && existing.id !== id) {
+        throw new BadRequestException(
+          'An occupation with this name already exists.',
+        );
+      }
+    }
+
+    // Update occupation fields
+    Object.assign(occupation, {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.isRegulated !== undefined && { isRegulated: data.isRegulated }),
+      ...(data.relatedResources !== undefined && {
+        relatedResources: data.relatedResources,
+      }),
+    });
+
+    await this.occupationRepository.save(occupation);
+
+    // Update scope permissions if provided
+    // Delete existing permissions first, then insert new ones
+    // This ensures removed permissions are deleted from the database
+    if (data.scopePermissions !== undefined) {
+      await this.allowedActivityRepository.delete({
+        occupation: { id },
+      });
+
+      if (data.scopePermissions.length > 0) {
+        const entities = data.scopePermissions.map(sp =>
+          this.allowedActivityRepository.create({
+            occupation: { id },
+            careActivity: { id: sp.careActivityId },
+            permission: sp.permission,
+          }),
+        );
+        await this.allowedActivityRepository.save(entities);
+      }
+    }
+  }
+
+  /**
+   * Delete an occupation (soft delete).
+   *
+   * Sets the deletedAt timestamp rather than permanently removing the record.
+   * AllowedActivities remain in the database but the occupation won't appear
+   * in queries due to TypeORM's automatic soft delete filtering.
+   *
+   * @param id - Occupation UUID
+   * @throws NotFoundException if occupation not found
+   */
+  async deleteOccupation(id: string): Promise<void> {
+    const occupation = await this.findOccupationById(id);
+
+    if (!occupation) {
+      throw new NotFoundException({
+        message: 'Occupation not found',
+        data: { id },
+      });
+    }
+
+    await this.occupationRepository.softDelete(id);
   }
 }
