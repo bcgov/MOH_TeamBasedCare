@@ -1,5 +1,6 @@
 import { SidebarButtonProps, SidebarButtonKind } from '../components/interface';
 import {
+  faChartBar,
   faClipboardList,
   faCheckCircle,
   faTimesCircle,
@@ -16,6 +17,7 @@ import { BULK_UPLOAD_COLUMNS, Role } from '@tbcm/common';
 
 export enum AllowedPath {
   LANDING = '/',
+  DASHBOARD = '/dashboard',
   PLANNING = '/planning',
   OCCUPATIONAL_SCOPE = '/occupational-scope',
   OCCUPATIONAL_SCOPE_ID = '/occupational-scope/:id',
@@ -30,6 +32,15 @@ export enum AllowedPath {
 }
 
 export const sidebarNavItems: SidebarButtonProps[] = [
+  {
+    id: '000',
+    kind: SidebarButtonKind.REGULAR,
+    text: 'Dashboard',
+    active: false,
+    faIcon: faChartBar,
+    path: AllowedPath.DASHBOARD,
+    roles: [Role.ADMIN, Role.CONTENT_ADMIN],
+  },
   {
     id: '001',
     kind: SidebarButtonKind.REGULAR,

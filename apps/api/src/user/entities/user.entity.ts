@@ -40,6 +40,9 @@ export class User extends BaseEntity {
   @Column({ type: 'timestamp', nullable: true })
   revokedAt?: Date | null;
 
+  @Column({ type: 'timestamp', nullable: true })
+  lastLoginAt?: Date | null;
+
   @OneToOne(() => UserPreference)
   @JoinColumn()
   userPreference?: UserPreference;

@@ -7,6 +7,7 @@ export * from './create-user-invite.dto';
 export * from './edit-care-activity.dto';
 export * from './edit-occupation-cms.dto';
 export * from './edit-user.dto';
+export * from './kpi-filter.dto';
 export * from './save-care-activity.dto';
 export * from './save-occupation.dto';
 export * from './save-profile.dto';

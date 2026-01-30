@@ -6,6 +6,7 @@ export * from './useCareActivityEdit';
 export * from './useCareActivityById';
 export * from './useCareLocations';
 export * from './useHttp';
+export * from './useKPIs';
 export * from './useMe';
 export * from './useOccupationCMSById';
 export * from './useOccupationCMSCreate';
