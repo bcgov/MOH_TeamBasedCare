@@ -15,7 +15,7 @@ export const ContentManagementTabs: React.FC<ContentManagementTabsProps> = ({
   return (
     <TabGroup selectedIndex={selectedIndex} onChange={onChange}>
       <TabList className='flex space-x-1 border-b border-gray-200'>
-        {tabs.map((tab, index) => (
+        {tabs.map(tab => (
           <Tab
             key={tab}
             className={({ selected }) =>

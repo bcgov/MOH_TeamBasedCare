@@ -18,6 +18,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { toast } from 'react-toastify';
 import { Stepper, Button } from '@components';
 import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsContext';
 import { SelectCompetencies } from './select-competencies';
@@ -27,6 +28,7 @@ import { useCareSettingTemplate } from 'src/services/useCareSettingTemplate';
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
 import { useCareSettingTemplateUpdate } from 'src/services/useCareSettingTemplateUpdate';
+import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
 import { Permissions } from '@tbcm/common';
@@ -37,6 +39,7 @@ const EditContent: React.FC = () => {
   const { id } = router.query as { id: string };
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
+  const { me } = useMe();
   const { template, isLoading: isLoadingTemplate, error: templateError, mutate: mutateTemplate } = useCareSettingTemplate(id);
   const { bundles, isLoading: isLoadingBundles, error: bundlesError } = useCareSettingBundles(id);
   const { occupations, isLoading: isLoadingOccupations, error: occupationsError } = useCareSettingOccupations(id);
@@ -45,6 +48,27 @@ const EditContent: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Check authorization when template loads
+  useEffect(() => {
+    if (template && me) {
+      // Check if user can modify this template
+      const canModify =
+        template.healthAuthority === 'GLOBAL' ||
+        template.healthAuthority === me.organization;
+
+      if (template.isMaster) {
+        toast.error('Master templates cannot be edited.');
+        router.push('/care-settings');
+        return;
+      }
+
+      if (!canModify) {
+        toast.error('You can only edit care settings belonging to your health authority.');
+        router.push('/care-settings');
+      }
+    }
+  }, [template, me, router]);
 
   // Initialize state when data loads
   useEffect(() => {

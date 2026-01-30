@@ -15,6 +15,9 @@ export class CareSettingTemplateRO extends BaseRO {
   isMaster!: boolean;
 
   @Expose()
+  healthAuthority?: string;
+
+  @Expose()
   parentId?: string;
 
   @Expose()
@@ -33,6 +36,7 @@ export class CareSettingTemplateRO extends BaseRO {
     super(data);
     this.name = data.name ?? this.name;
     this.displayName = data.name ?? this.displayName;
+    this.healthAuthority = data.healthAuthority;
     this.parentId = data.parent?.id ?? this.parentId;
     this.parentName = data.parent?.name ?? (data.isMaster ? 'Master' : this.parentName);
     this.unitId = data.unit?.id ?? this.unitId;
