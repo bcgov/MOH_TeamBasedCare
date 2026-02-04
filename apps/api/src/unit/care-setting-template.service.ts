@@ -122,10 +122,10 @@ export class CareSettingTemplateService {
 
     // Filter by health authority - show user's HA templates + GLOBAL masters
     if (healthAuthority) {
-      queryBuilder.where(
-        '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
-        { healthAuthority, global: 'GLOBAL' },
-      );
+      queryBuilder.where('(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)', {
+        healthAuthority,
+        global: 'GLOBAL',
+      });
     } else {
       // Users without org only see GLOBAL templates
       queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
@@ -211,9 +211,7 @@ export class CareSettingTemplateService {
   /**
    * Build bundle selection data showing which activities are selected per bundle
    */
-  private async buildBundleSelections(
-    template: CareSettingTemplate,
-  ): Promise<BundleSelectionRO[]> {
+  private async buildBundleSelections(template: CareSettingTemplate): Promise<BundleSelectionRO[]> {
     // Get all bundles with their activities for the unit
     const bundles = await this.bundleRepo
       .createQueryBuilder('b')
@@ -225,9 +223,7 @@ export class CareSettingTemplateService {
       .getMany();
 
     const selectedBundleIds = new Set(template.selectedBundles.map(b => b.id));
-    const selectedActivityIds = new Set(
-      template.selectedActivities.map(a => a.id),
-    );
+    const selectedActivityIds = new Set(template.selectedActivities.map(a => a.id));
 
     return bundles
       .filter(b => selectedBundleIds.has(b.id))

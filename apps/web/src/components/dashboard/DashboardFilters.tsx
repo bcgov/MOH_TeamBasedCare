@@ -20,12 +20,7 @@ interface FilterDropdownProps {
   onChange: (value: string) => void;
 }
 
-const FilterDropdown: React.FC<FilterDropdownProps> = ({
-  label,
-  options,
-  value,
-  onChange,
-}) => {
+const FilterDropdown: React.FC<FilterDropdownProps> = ({ label, options, value, onChange }) => {
   const selectedLabel = options.find(o => o.value === value)?.label || 'All';
 
   return (

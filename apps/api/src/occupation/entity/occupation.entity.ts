@@ -1,11 +1,4 @@
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  DeleteDateColumn,
-  Entity,
-  OneToMany,
-} from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, DeleteDateColumn, Entity, OneToMany } from 'typeorm';
 import { cleanText } from '../../common/utils';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { CustomBaseEntity } from '../../common/custom-base.entity';

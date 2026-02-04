@@ -15,13 +15,8 @@ import {
 import { HeadlessListOptions } from 'src/components/HeadlessList';
 
 const Dashboard: NextPage = () => {
-  const {
-    overview,
-    isLoading,
-    filters,
-    setHealthAuthorityFilter,
-    setCareSettingFilter,
-  } = useKPIs();
+  const { overview, isLoading, filters, setHealthAuthorityFilter, setCareSettingFilter } =
+    useKPIs();
 
   const { careSettings } = useKPICareSettings();
 

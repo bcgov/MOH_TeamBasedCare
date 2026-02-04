@@ -40,9 +40,10 @@ export const SelectCompetencies: React.FC = () => {
 
   const selectedBundle = state.bundles.find(b => b.id === state.selectedBundleId);
 
-  const filteredActivities = selectedBundle?.careActivities?.filter(activity =>
-    getName(activity).toLowerCase().includes(activitySearch.toLowerCase()),
-  ) || [];
+  const filteredActivities =
+    selectedBundle?.careActivities?.filter(activity =>
+      getName(activity).toLowerCase().includes(activitySearch.toLowerCase()),
+    ) || [];
 
   const handleBundleToggle = (bundleId: string) => {
     dispatch({ type: 'TOGGLE_BUNDLE', payload: bundleId });
@@ -89,9 +90,7 @@ export const SelectCompetencies: React.FC = () => {
         <div className='w-1/3 border-r pr-4'>
           <div className='mb-4'>
             <h3 className='text-base font-semibold text-bcBluePrimary mb-2'>Care Competencies</h3>
-            <p className='text-[13px] text-gray-500 mb-3'>
-              {totalActivityCount} Activities
-            </p>
+            <p className='text-[13px] text-gray-500 mb-3'>{totalActivityCount} Activities</p>
             <SearchBar
               handleChange={e => setBundleSearch(e.target.value)}
               placeholderText='Search'
@@ -133,9 +132,7 @@ export const SelectCompetencies: React.FC = () => {
             })}
 
             {filteredBundles.length === 0 && (
-              <p className='text-center text-sm text-gray-500 mt-4'>
-                No care competencies found
-              </p>
+              <p className='text-center text-sm text-gray-500 mt-4'>No care competencies found</p>
             )}
           </div>
         </div>
@@ -186,13 +183,17 @@ export const SelectCompetencies: React.FC = () => {
                       {activity.activityType && (
                         <Tag
                           text={activity.activityType}
-                          tagStyle={pickTagStyle(activity.activityType as unknown as ActivityTagVariants)}
+                          tagStyle={pickTagStyle(
+                            activity.activityType as unknown as ActivityTagVariants,
+                          )}
                         />
                       )}
                       {activity.clinicalType && (
                         <Tag
                           text={activity.clinicalType}
-                          tagStyle={pickTagStyle(activity.clinicalType as unknown as ActivityTagVariants)}
+                          tagStyle={pickTagStyle(
+                            activity.clinicalType as unknown as ActivityTagVariants,
+                          )}
                         />
                       )}
                     </div>
@@ -200,9 +201,7 @@ export const SelectCompetencies: React.FC = () => {
                 ))}
 
                 {filteredActivities.length === 0 && (
-                  <p className='text-center text-sm text-gray-500 mt-4'>
-                    No activities found
-                  </p>
+                  <p className='text-center text-sm text-gray-500 mt-4'>No activities found</p>
                 )}
               </div>
             </>

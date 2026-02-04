@@ -17,15 +17,7 @@
  * - Has many selected activities (subset of bundle activities)
  * - Has many permissions (activity-occupation permission mappings)
  */
-import {
-  Column,
-  Entity,
-  Index,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Unit } from './unit.entity';
 import { Bundle } from '../../care-activity/entity/bundle.entity';
@@ -72,10 +64,8 @@ export class CareSettingTemplate extends CustomBaseEntity {
   selectedActivities: CareActivity[];
 
   /** Permission mappings for activity-occupation combinations */
-  @OneToMany(
-    () => CareSettingTemplatePermission,
-    permission => permission.template,
-    { cascade: true },
-  )
+  @OneToMany(() => CareSettingTemplatePermission, permission => permission.template, {
+    cascade: true,
+  })
   permissions: CareSettingTemplatePermission[];
 }

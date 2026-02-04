@@ -4,12 +4,7 @@ import { Repository, IsNull } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { PlanningSession } from 'src/planning-session/entity/planning-session.entity';
 import { Unit } from 'src/unit/entity/unit.entity';
-import {
-  GeneralKPIsRO,
-  CarePlansBySettingRO,
-  KPIsOverviewRO,
-  KPIFilterDTO,
-} from '@tbcm/common';
+import { GeneralKPIsRO, CarePlansBySettingRO, KPIsOverviewRO, KPIFilterDTO } from '@tbcm/common';
 
 @Injectable()
 export class KpiService {
@@ -49,9 +44,7 @@ export class KpiService {
     });
   }
 
-  async getCarePlansBySetting(
-    filter: KPIFilterDTO,
-  ): Promise<CarePlansBySettingRO[]> {
+  async getCarePlansBySetting(filter: KPIFilterDTO): Promise<CarePlansBySettingRO[]> {
     const queryBuilder = this.planningSessionRepo
       .createQueryBuilder('ps')
       .innerJoin('ps.careLocation', 'u')

@@ -28,7 +28,7 @@ export const useKPIs = () => {
     (url: string) => AxiosPublic(url).then(res => res.data),
     {
       revalidateOnFocus: false,
-    }
+    },
   );
 
   const setHealthAuthorityFilter = useCallback((value: string) => {
@@ -56,7 +56,7 @@ export const useKPICareSettings = () => {
     (url: string) => AxiosPublic(url).then(res => res.data),
     {
       revalidateOnFocus: false,
-    }
+    },
   );
 
   return {

@@ -159,7 +159,10 @@ describe('KpiService', () => {
       expect(result[0].healthAuthority).toBe('Fraser Health');
       expect(result[0].count).toBe(10);
 
-      expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith('ps.careLocation', 'u');
+      expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith(
+        'ps.careLocation',
+        'u',
+      );
       expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith('ps.createdBy', 'usr');
       expect(mockPlanningSessionQueryBuilder.groupBy).toHaveBeenCalledWith('u.id');
     });

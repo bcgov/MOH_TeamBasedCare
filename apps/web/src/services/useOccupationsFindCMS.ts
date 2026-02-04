@@ -23,12 +23,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { API_ENDPOINT } from '../common';
 import { useHttp } from './useHttp';
 import { PageOptions } from 'src/components/Pagination';
-import {
-  PaginationRO,
-  SortOrder,
-  OccupationCMSRO,
-  OccupationsCMSFindSortKeys,
-} from '@tbcm/common';
+import { PaginationRO, SortOrder, OccupationCMSRO, OccupationsCMSFindSortKeys } from '@tbcm/common';
 
 const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_PAGE_INDEX = 1;
@@ -39,7 +34,9 @@ export const useOccupationsFindCMS = () => {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
   const [total, setTotal] = useState(0);
-  const [sortKey, setSortKey] = useState<OccupationsCMSFindSortKeys>(OccupationsCMSFindSortKeys.UPDATED_AT);
+  const [sortKey, setSortKey] = useState<OccupationsCMSFindSortKeys>(
+    OccupationsCMSFindSortKeys.UPDATED_AT,
+  );
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
   const [searchText, setSearchText] = useState('');
 

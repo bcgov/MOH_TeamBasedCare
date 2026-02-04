@@ -5,9 +5,7 @@ export class AddLastLoginAtToUser1769900000000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add last_login_at column (nullable)
-    await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN "last_login_at" TIMESTAMP`,
-    );
+    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN "last_login_at" TIMESTAMP`);
 
     // Backfill: set lastLoginAt to updatedAt for users with keycloakId (have logged in before)
     await queryRunner.query(`

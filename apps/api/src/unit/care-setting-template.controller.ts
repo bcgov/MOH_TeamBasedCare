@@ -145,7 +145,9 @@ export class CareSettingTemplateController {
   ): Promise<CareSettingTemplateRO> {
     const healthAuthority = req.user.organization;
     if (!healthAuthority) {
-      throw new BadRequestException('User must have a health authority assigned to create care settings.');
+      throw new BadRequestException(
+        'User must have a health authority assigned to create care settings.',
+      );
     }
     return this.templateService.copyTemplate(id, dto, healthAuthority);
   }
@@ -165,7 +167,9 @@ export class CareSettingTemplateController {
   ): Promise<CareSettingTemplateRO> {
     const healthAuthority = req.user.organization;
     if (!healthAuthority) {
-      throw new BadRequestException('User must have a health authority assigned to create care settings.');
+      throw new BadRequestException(
+        'User must have a health authority assigned to create care settings.',
+      );
     }
     return this.templateService.copyTemplateWithData(id, dto, healthAuthority);
   }

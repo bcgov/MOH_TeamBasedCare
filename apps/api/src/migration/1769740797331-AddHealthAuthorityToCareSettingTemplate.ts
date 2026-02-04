@@ -45,13 +45,9 @@ export class AddHealthAuthorityToCareSettingTemplate1769740797331 implements Mig
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop index
-    await queryRunner.query(
-      `DROP INDEX IF EXISTS "idx_care_setting_template_health_authority"`,
-    );
+    await queryRunner.query(`DROP INDEX IF EXISTS "idx_care_setting_template_health_authority"`);
 
     // Drop column
-    await queryRunner.query(
-      `ALTER TABLE "care_setting_template" DROP COLUMN "health_authority"`,
-    );
+    await queryRunner.query(`ALTER TABLE "care_setting_template" DROP COLUMN "health_authority"`);
   }
 }

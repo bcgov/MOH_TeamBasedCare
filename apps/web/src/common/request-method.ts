@@ -111,7 +111,8 @@ export const API_ENDPOINT = {
   getKPIOverview: (params?: { healthAuthority?: string; careSettingId?: string }) => {
     let endpoint = '/kpi/overview';
     const queryParams: string[] = [];
-    if (params?.healthAuthority) queryParams.push(`healthAuthority=${encodeURIComponent(params.healthAuthority)}`);
+    if (params?.healthAuthority)
+      queryParams.push(`healthAuthority=${encodeURIComponent(params.healthAuthority)}`);
     if (params?.careSettingId) queryParams.push(`careSettingId=${params.careSettingId}`);
     if (queryParams.length > 0) endpoint += `?${queryParams.join('&')}`;
     return endpoint;

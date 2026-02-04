@@ -134,8 +134,8 @@ const CareSettingsPage: NextPage = () => {
           title='Delete Care Setting'
           description={
             <p>
-              Are you sure you want to delete <strong>{templateToDelete.name}</strong>?
-              This action cannot be undone.
+              Are you sure you want to delete <strong>{templateToDelete.name}</strong>? This action
+              cannot be undone.
             </p>
           }
           closeButton={{ title: 'Cancel' }}

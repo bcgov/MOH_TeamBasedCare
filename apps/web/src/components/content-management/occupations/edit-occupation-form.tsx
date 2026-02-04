@@ -17,11 +17,7 @@ import { Field, Textarea } from '@components';
 import { BasicSelect } from 'src/components/Select';
 import { SearchBar } from 'src/components/generic/SearchBar';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  useBundlesWithActivities,
-  useOccupationCMSCreate,
-  useOccupationCMSEdit,
-} from '@services';
+import { useBundlesWithActivities, useOccupationCMSCreate, useOccupationCMSEdit } from '@services';
 import { AllowedPath, TagVariants } from 'src/common';
 import { Pagination, PageOptions } from 'src/components/Pagination';
 
@@ -124,9 +120,7 @@ const toCreateDTO = (values: FormValues): CreateOccupationDTO => ({
   description: values.description,
   isRegulated: values.isRegulated === 'true',
   // Only include resources where both label AND link are provided and link is valid URL
-  relatedResources: values.relatedResources.filter(
-    r => r.label && r.link && isValidUrl(r.link),
-  ),
+  relatedResources: values.relatedResources.filter(r => r.label && r.link && isValidUrl(r.link)),
   // Filter out "No" permissions - only send Y and LC (absence of record means No)
   scopePermissions: Array.from(values.scopePermissions.values())
     .filter(sp => sp.permission && sp.permission !== Permissions.NO)
@@ -141,9 +135,7 @@ const toEditDTO = (values: FormValues): EditOccupationCMSDTO => ({
   description: values.description,
   isRegulated: values.isRegulated === 'true',
   // Only include resources where both label AND link are provided and link is valid URL
-  relatedResources: values.relatedResources.filter(
-    r => r.label && r.link && isValidUrl(r.link),
-  ),
+  relatedResources: values.relatedResources.filter(r => r.label && r.link && isValidUrl(r.link)),
   // Filter out "No" permissions - only send Y and LC (absence of record means No)
   scopePermissions: Array.from(values.scopePermissions.values())
     .filter(sp => sp.permission && sp.permission !== Permissions.NO)
@@ -232,7 +224,8 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
 
   // Group paginated activities by bundle for display
   const groupedActivities = useMemo(() => {
-    const groups: { bundleId: string; bundleName?: string; activities: ActivityWithBundle[] }[] = [];
+    const groups: { bundleId: string; bundleName?: string; activities: ActivityWithBundle[] }[] =
+      [];
     let currentBundleId = '';
 
     paginatedActivities.forEach(activity => {
@@ -256,10 +249,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
     setScopePageSize(options.pageSize);
   };
 
-  const submit = async (
-    values: FormValues,
-    { setFieldError }: FormikHelpers<FormValues>,
-  ) => {
+  const submit = async (values: FormValues, { setFieldError }: FormikHelpers<FormValues>) => {
     const handleError = (errorMessage: string) => {
       if (errorMessage.toLowerCase().includes('name already exists')) {
         setFieldError('name', errorMessage);
@@ -299,13 +289,16 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
 
     values.relatedResources.forEach((resource, index) => {
       if (resource.label && !resource.link) {
-        errors[`relatedResources.${index}.link`] = 'Link address is required when link name is provided';
+        errors[`relatedResources.${index}.link`] =
+          'Link address is required when link name is provided';
       }
       if (resource.link && !resource.label) {
-        errors[`relatedResources.${index}.label`] = 'Link name is required when link address is provided';
+        errors[`relatedResources.${index}.label`] =
+          'Link name is required when link address is provided';
       }
       if (resource.link && !isValidUrl(resource.link)) {
-        errors[`relatedResources.${index}.link`] = 'Must be a valid URL (e.g., https://example.com)';
+        errors[`relatedResources.${index}.link`] =
+          'Must be a valid URL (e.g., https://example.com)';
       }
     });
 
@@ -318,7 +311,15 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
       onSubmit={submit}
       validate={validate}
     >
-      {({ values, setFieldValue, handleSubmit, isSubmitting, isValid, errors, setFieldTouched }) => (
+      {({
+        values,
+        setFieldValue,
+        handleSubmit,
+        isSubmitting,
+        isValid,
+        errors,
+        setFieldTouched,
+      }) => (
         <div className='mt-4 w-full'>
           <BackButtonLink />
           <div className='flex justify-between w-full'>
@@ -376,7 +377,8 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
           <Card bgWhite className='mt-4 p-6'>
             <div className='text-left text-bcBluePrimary font-bold mb-2'>Scope of Practice</div>
             <div className='text-sm text-gray-600 mb-4'>
-              Understand what activities that can/can not be performed by this occupation by search a topic.
+              Understand what activities that can/can not be performed by this occupation by search
+              a topic.
             </div>
 
             <div className='mb-4 max-w-md'>
@@ -407,7 +409,8 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
                       {groupedActivities.map(group =>
                         group.activities.map((activity, activityIndex) => {
                           const key = activity.id;
-                          const currentPermission = values.scopePermissions.get(key)?.permission || Permissions.NO;
+                          const currentPermission =
+                            values.scopePermissions.get(key)?.permission || Permissions.NO;
 
                           return (
                             <tr
@@ -472,7 +475,9 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
 
             {!isLoadingBundles && filteredActivities.length === 0 && (
               <div className='text-center py-8 text-gray-500'>
-                {activitySearchText ? 'No activities match your search.' : 'No care activities found.'}
+                {activitySearchText
+                  ? 'No activities match your search.'
+                  : 'No care activities found.'}
               </div>
             )}
           </Card>
@@ -500,9 +505,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
                             }`}
                           />
                           <div className='h-5'>
-                            {labelError && (
-                              <p className='text-red-600 text-sm'>{labelError}</p>
-                            )}
+                            {labelError && <p className='text-red-600 text-sm'>{labelError}</p>}
                           </div>
                         </div>
                         <div className='flex-1'>
@@ -516,17 +519,11 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
                             }`}
                           />
                           <div className='h-5'>
-                            {linkError && (
-                              <p className='text-red-600 text-sm'>{linkError}</p>
-                            )}
+                            {linkError && <p className='text-red-600 text-sm'>{linkError}</p>}
                           </div>
                         </div>
                         <div className='pt-7'>
-                          <Button
-                            variant='outline'
-                            type='button'
-                            onClick={() => remove(index)}
-                          >
+                          <Button variant='outline' type='button' onClick={() => remove(index)}>
                             Remove Link
                           </Button>
                         </div>

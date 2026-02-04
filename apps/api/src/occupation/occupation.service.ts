@@ -12,11 +12,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Occupation } from './entity/occupation.entity';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { FindOccupationsDto } from './dto/find-occupations.dto';
 import { FindOccupationsCMSDto } from './dto/find-occupations-cms.dto';
 import { EditOccupationDTO } from './dto/edit-occupation.dto';
@@ -132,19 +128,16 @@ export class OccupationService {
    * @param query - Query parameters (search, pagination, sort)
    * @returns Tuple of [occupations array, total count]
    */
-  async findOccupationsCMS(
-    query: FindOccupationsCMSDto,
-  ): Promise<[Occupation[], number]> {
+  async findOccupationsCMS(query: FindOccupationsCMSDto): Promise<[Occupation[], number]> {
     const queryBuilder = this.occupationRepository
       .createQueryBuilder('o')
       .leftJoinAndSelect('o.updatedBy', 'updatedBy');
 
     // Search by name or description
     if (query.searchText) {
-      queryBuilder.where(
-        '(o.displayName ILIKE :search OR o.description ILIKE :search)',
-        { search: `%${query.searchText}%` },
-      );
+      queryBuilder.where('(o.displayName ILIKE :search OR o.description ILIKE :search)', {
+        search: `%${query.searchText}%`,
+      });
     }
 
     // Sort logic
@@ -209,9 +202,7 @@ export class OccupationService {
     });
 
     if (existing) {
-      throw new BadRequestException(
-        'An occupation with this name already exists.',
-      );
+      throw new BadRequestException('An occupation with this name already exists.');
     }
 
     // Create occupation
@@ -253,10 +244,7 @@ export class OccupationService {
    * @throws NotFoundException if occupation not found
    * @throws BadRequestException if new name already exists
    */
-  async updateOccupationWithScope(
-    id: string,
-    data: EditOccupationCMSDTO,
-  ): Promise<void> {
+  async updateOccupationWithScope(id: string, data: EditOccupationCMSDTO): Promise<void> {
     const occupation = await this.findOccupationById(id);
 
     if (!occupation) {
@@ -274,9 +262,7 @@ export class OccupationService {
       });
 
       if (existing && existing.id !== id) {
-        throw new BadRequestException(
-          'An occupation with this name already exists.',
-        );
+        throw new BadRequestException('An occupation with this name already exists.');
       }
     }
 

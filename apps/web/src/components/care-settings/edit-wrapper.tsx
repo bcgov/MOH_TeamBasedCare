@@ -40,9 +40,18 @@ const EditContent: React.FC = () => {
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
   const { me } = useMe();
-  const { template, isLoading: isLoadingTemplate, error: templateError, mutate: mutateTemplate } = useCareSettingTemplate(id);
+  const {
+    template,
+    isLoading: isLoadingTemplate,
+    error: templateError,
+    mutate: mutateTemplate,
+  } = useCareSettingTemplate(id);
   const { bundles, isLoading: isLoadingBundles, error: bundlesError } = useCareSettingBundles(id);
-  const { occupations, isLoading: isLoadingOccupations, error: occupationsError } = useCareSettingOccupations(id);
+  const {
+    occupations,
+    isLoading: isLoadingOccupations,
+    error: occupationsError,
+  } = useCareSettingOccupations(id);
   const { handleUpdate, isLoading: isUpdating } = useCareSettingTemplateUpdate();
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -54,8 +63,7 @@ const EditContent: React.FC = () => {
     if (template && me) {
       // Check if user can modify this template
       const canModify =
-        template.healthAuthority === 'GLOBAL' ||
-        template.healthAuthority === me.organization;
+        template.healthAuthority === 'GLOBAL' || template.healthAuthority === me.organization;
 
       if (template.isMaster) {
         toast.error('Master templates cannot be edited.');
@@ -186,7 +194,9 @@ const EditContent: React.FC = () => {
       <Card bgWhite>
         <div className='text-center py-8'>
           <p className='text-red-600 font-semibold mb-2'>Failed to load care setting data</p>
-          <p className='text-gray-500 mb-4'>Please try again or contact support if the problem persists.</p>
+          <p className='text-gray-500 mb-4'>
+            Please try again or contact support if the problem persists.
+          </p>
           <Button variant='outline' onClick={() => router.push('/care-settings')}>
             Back to Care Settings
           </Button>
@@ -209,31 +219,16 @@ const EditContent: React.FC = () => {
       <div className='w-full overflow-x-auto flex items-center justify-between rounded border-2 bg-white p-4'>
         <Stepper steps={CareSettingsSteps} currentStep={visualStep} />
         <div className='flex'>
-          <Button
-            variant='outline'
-            type='button'
-            classes='ml-2'
-            onClick={handlePrevious}
-          >
+          <Button variant='outline' type='button' classes='ml-2' onClick={handlePrevious}>
             Previous
           </Button>
 
           {state.currentStep >= 2 ? (
-            <Button
-              variant='primary'
-              type='button'
-              classes='ml-2'
-              onClick={handleSaveClick}
-            >
+            <Button variant='primary' type='button' classes='ml-2' onClick={handleSaveClick}>
               Save & Close
             </Button>
           ) : (
-            <Button
-              variant='primary'
-              type='button'
-              classes='ml-2'
-              onClick={handleNext}
-            >
+            <Button variant='primary' type='button' classes='ml-2' onClick={handleNext}>
               Next
             </Button>
           )}

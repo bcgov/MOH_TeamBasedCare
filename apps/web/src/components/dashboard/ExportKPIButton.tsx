@@ -64,7 +64,7 @@ export const ExportKPIButton: React.FC<ExportKPIButtonProps> = ({ data, isLoadin
     FileDownload.download(
       buffer as Buffer,
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      fileName
+      fileName,
     );
   };
 

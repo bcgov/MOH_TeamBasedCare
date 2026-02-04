@@ -95,7 +95,11 @@ const TableBody: React.FC<TableBodyProps> = ({
                   <Button variant='link' onClick={() => onEditClick(template)}>
                     Edit
                   </Button>
-                  <Button variant='link' onClick={() => onDeleteClick(template)} classes='text-red-600 hover:text-red-800'>
+                  <Button
+                    variant='link'
+                    onClick={() => onDeleteClick(template)}
+                    classes='text-red-600 hover:text-red-800'
+                  >
                     Delete
                   </Button>
                 </>
