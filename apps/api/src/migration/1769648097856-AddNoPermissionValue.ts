@@ -8,6 +8,7 @@ export class AddNoPermissionValue1769648097856 implements MigrationInterface {
     `);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async down(queryRunner: QueryRunner): Promise<void> {
     // PostgreSQL doesn't support removing enum values directly
     // This would require recreating the enum type, which is complex
