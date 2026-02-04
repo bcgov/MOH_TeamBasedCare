@@ -14,7 +14,7 @@ export const PlanningContent: React.FC<PlanningContentProps> = ({ step, formTitl
     switch (formTitle) {
       case 'Profile':
         return <Profile title={formTitle} step={step} />;
-      case 'Care Activity Bundles':
+      case 'Care Competencies':
         return <CareActivitiesBundle title={formTitle} step={step} />;
       case 'Occupations/Roles':
         return <Occupation title={formTitle} step={step} />;
