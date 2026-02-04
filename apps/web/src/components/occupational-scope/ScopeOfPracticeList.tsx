@@ -18,7 +18,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 
   const headers = [
     { label: 'Care setting', name: OccupationalScopeOfPracticeSortKeys.CARE_SETTING_NAME },
-    { label: 'Care activities bundles', name: OccupationalScopeOfPracticeSortKeys.BUNDLE_NAME },
+    { label: 'Care Competencies', name: OccupationalScopeOfPracticeSortKeys.BUNDLE_NAME },
     { label: 'Care activities', name: OccupationalScopeOfPracticeSortKeys.CARE_ACTIVITY_NAME },
     { label: 'Training/certification required' },
   ];

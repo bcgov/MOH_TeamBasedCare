@@ -45,6 +45,17 @@ export const HeadlessList = <T extends OptionValueType>({
     [getOption],
   );
 
+  const displaySingle = useCallback(
+    (value: T) => {
+      const option = getOption(value);
+      if (option?.tagVariant) {
+        return <Tag tagStyle={option.tagVariant} text={displayText(value)} />;
+      }
+      return displayText(value);
+    },
+    [getOption, displayText],
+  );
+
   const displayMulti = useCallback(
     (selectedValues: T[]) => {
       return (
@@ -56,17 +67,13 @@ export const HeadlessList = <T extends OptionValueType>({
             )
             .map(value => getOption(value))
             .map((option, i) => {
-              return (
-                <>
-                  {option && (
-                    <Tag
-                      tagStyle={option.tagVariant || TagVariants.GRAY}
-                      text={displayText(option.value)}
-                      key={i}
-                    />
-                  )}
-                </>
-              );
+              return option ? (
+                <Tag
+                  key={i}
+                  tagStyle={option.tagVariant || TagVariants.GRAY}
+                  text={displayText(option.value)}
+                />
+              ) : null;
             })}
         </div>
       );
@@ -100,10 +107,10 @@ export const HeadlessList = <T extends OptionValueType>({
         <div className='relative'>
           <Listbox.Button
             id={id}
-            className={`relative border w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm ${buttonClassName}`}
+            className={`relative border border-gray-300 w-full cursor-default rounded bg-white py-2 pl-3 pr-10 text-left focus:outline-none focus:border-bcBluePrimary focus:ring-1 focus:ring-bcBluePrimary sm:text-sm ${buttonClassName}`}
           >
             <span className='block truncate'>
-              {isMulti ? displayMulti(selected as T[]) : displayText(selected as T)}
+              {isMulti ? displayMulti(selected as T[]) : displaySingle(selected as T)}
             </span>
             <span className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2'>
               <FontAwesomeIcon

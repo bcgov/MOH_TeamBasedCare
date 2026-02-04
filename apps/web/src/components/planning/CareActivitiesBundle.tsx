@@ -31,7 +31,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
   const { handleSubmit, initialValues } = usePlanningCareActivities();
 
   const description =
-    'Based on the care setting selected, these are the associated care activity bundles. Please select or deselect based on your needs.';
+    'Based on the care setting selected, these are the associated care competencies. Please select or deselect based on your needs.';
 
   return (
     <>

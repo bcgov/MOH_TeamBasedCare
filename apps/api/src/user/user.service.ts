@@ -89,8 +89,21 @@ export class UserService {
       }
     }
 
+    // update last login timestamp (fire and forget - don't await to avoid latency)
+    this.updateLastLoginAt(user.id);
+
     // return user
     return user;
+  }
+
+  async updateLastLoginAt(userId: string) {
+    try {
+      await this.userRepo.update(userId, { lastLoginAt: new Date() });
+    } catch (e) {
+      // Log but don't throw - this is non-critical
+      this.logger.error('user.service.ts :: updateLastLoginAt');
+      this.logger.error(e);
+    }
   }
 
   _getOrganization(email?: string): Authority | undefined {

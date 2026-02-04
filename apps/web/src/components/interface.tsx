@@ -1,4 +1,3 @@
-import { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { Role } from '@tbcm/common';
 import { Dispatch, SetStateAction } from 'react';
 import { AllowedPath } from 'src/common';
@@ -16,7 +15,7 @@ export interface SidebarButtonProps {
   active?: boolean;
   path?: AllowedPath;
   text?: string;
-  faIcon?: IconDefinition;
+  icon?: React.ReactNode;
   setButtons?: Dispatch<SetStateAction<SidebarButtonProps[]>>;
   options?: SidebarButtonProps[];
   hidden?: boolean;

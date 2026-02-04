@@ -45,8 +45,8 @@ export const ExportButton = ({ sessionId }: ExportButtonProps) => {
 
 const convertActivityGapTableToXLSX = (data: ActivityGap, user?: UserRO) => {
   const columns = data.headers.map(({ title }: { title: string }) => {
-    if (title === 'Activities Bundle')
-      return { header: 'Activities Bundle', key: 'name', width: 50 };
+    if (title === 'Care Competencies and Corresponding Activities')
+      return { header: 'Care Competencies and Corresponding Activities', key: 'name', width: 50 };
     return { header: title, key: title, width: 13 };
   });
 

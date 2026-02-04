@@ -25,3 +25,15 @@ export enum UserManagementSortKeys {
   EMAIL = 'email',
   ORGANIZATION = 'organization',
 }
+
+export enum CareSettingsCMSFindSortKeys {
+  NAME = 'name',
+  PARENT_NAME = 'parentName',
+  UPDATED_AT = 'updatedAt',
+}
+
+export enum OccupationsCMSFindSortKeys {
+  DISPLAY_NAME = 'displayName',
+  IS_REGULATED = 'isRegulated',
+  UPDATED_AT = 'updatedAt',
+}

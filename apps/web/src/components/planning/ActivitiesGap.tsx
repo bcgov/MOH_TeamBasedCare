@@ -39,7 +39,7 @@ const TableHeader: React.FC = () => {
                 key={`th${index}`}
                 className={tdStyles}
                 onClick={() => {
-                  if (index === 0) return; // no description modal to be shown for the first column header - Activities Bundle
+                  if (index === 0) return; // no description modal to be shown for the first column header - Care Competencies
                   setSelectedOccupation({ title, description });
                   setShowModal(true);
                 }}
@@ -155,7 +155,7 @@ const TableBody: React.FC = () => {
               </td>
               {initialValues.headers.map(({ title }: { title: string }, index: number) => {
                 return (
-                  title != 'Activities Bundle' && (
+                  title != 'Care Competencies and Corresponding Activities' && (
                     <td key={`rowTd${index}`} className={`table-row-td-bg ${tdStyles}`}>
                       <SwitchTooltip
                         item={row[title] as string}

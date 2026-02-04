@@ -1,7 +1,9 @@
 import {
   CareActivitiesCMSFindSortKeys,
   CareActivitiesFindSortKeys,
+  CareSettingsCMSFindSortKeys,
   OccupationalScopeOfPracticeSortKeys,
+  OccupationsCMSFindSortKeys,
   OccupationsFindSortKeys,
   Permissions,
   SortOrder,
@@ -84,4 +86,36 @@ export const API_ENDPOINT = {
   CARE_ACTIVITY_CMS_BULK_VALIDATE: '/care-activity/cms/bulk/validate',
   CARE_ACTIVITY_CMS_BULK_UPLOAD: '/care-activity/cms/bulk/upload',
   CARE_ACTIVITY_DOWNLOAD: '/care-activity/cms/download',
+
+  // Care Settings
+  findCareSettings: (params: EndpointQueryParams<CareSettingsCMSFindSortKeys>) =>
+    appendQueryParams('/care-settings/cms/find', params),
+  getCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+  getCareSettingBundles: (id: string) => `/care-settings/${id}/bundles`,
+  getCareSettingOccupations: (id: string) => `/care-settings/${id}/occupations`,
+  copyCareSettingTemplate: (id: string) => `/care-settings/${id}/copy`,
+  copyCareSettingTemplateFull: (sourceId: string) => `/care-settings/${sourceId}/copy-full`,
+  updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+  deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+
+  // Occupation CMS
+  findOccupationsCMS: (params: EndpointQueryParams<OccupationsCMSFindSortKeys>) =>
+    appendQueryParams('/occupations/cms/find', params),
+  getOccupationCMS: (id: string) => `/occupations/cms/${id}`,
+  createOccupation: '/occupations/cms',
+  updateOccupationCMS: (id: string) => `/occupations/cms/${id}`,
+  deleteOccupation: (id: string) => `/occupations/cms/${id}`,
+
+  // KPI Dashboard
+  KPI_OVERVIEW: '/kpi/overview',
+  getKPIOverview: (params?: { healthAuthority?: string; careSettingId?: string }) => {
+    let endpoint = '/kpi/overview';
+    const queryParams: string[] = [];
+    if (params?.healthAuthority)
+      queryParams.push(`healthAuthority=${encodeURIComponent(params.healthAuthority)}`);
+    if (params?.careSettingId) queryParams.push(`careSettingId=${params.careSettingId}`);
+    if (queryParams.length > 0) endpoint += `?${queryParams.join('&')}`;
+    return endpoint;
+  },
+  KPI_CARE_SETTINGS: '/kpi/care-settings',
 };

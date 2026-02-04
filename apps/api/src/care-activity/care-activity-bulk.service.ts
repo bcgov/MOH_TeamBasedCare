@@ -98,24 +98,27 @@ export class CareActivityBulkService {
     /** validate data content */
 
     // ** ensure all fields are non-empty
-    const missingFieldRows = new Set<number>();
+    const missingFieldsByColumn: Record<string, number[]> = {};
 
     const headerWithoutID = headers.slice(1);
     data.forEach(({ rowData, rowNumber }) => {
       headerWithoutID.forEach(header => {
         if (!rowData?.[header]) {
-          missingFieldRows.add(rowNumber);
-          return;
+          if (!missingFieldsByColumn[header]) {
+            missingFieldsByColumn[header] = [];
+          }
+          missingFieldsByColumn[header].push(rowNumber);
         }
       });
     });
 
-    if (missingFieldRows.size > 0) {
+    // Create separate error entries for each column with missing values
+    Object.entries(missingFieldsByColumn).forEach(([columnName, rowNumbers]) => {
       errors.push({
-        message: 'Missing inputs',
-        rowNumber: Array.from(missingFieldRows),
+        message: `Missing value in column "${columnName}"`,
+        rowNumber: rowNumbers,
       });
-    }
+    });
 
     // return if missing fields
     if (errors.length > 0) {

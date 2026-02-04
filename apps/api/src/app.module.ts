@@ -18,6 +18,7 @@ import { AllowedActivityModule } from './allowed-activity/allowed-activity.modul
 import { FeedbackModule } from './feedback/feedback.module';
 import { UserGuideModule } from './user-guide/user-guide.module';
 import { UserModule } from './user/user.module';
+import { KpiModule } from './kpi/kpi.module';
 import { AuthGuard } from './auth/auth.guard';
 import { RequestContextService } from './common/request-context.service';
 
@@ -39,6 +40,7 @@ import { RequestContextService } from './common/request-context.service';
     FeedbackModule,
     UserGuideModule,
     UserModule,
+    KpiModule,
   ],
   controllers: [AppController],
   providers: [

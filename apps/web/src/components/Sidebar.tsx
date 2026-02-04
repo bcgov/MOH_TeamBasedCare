@@ -1,7 +1,6 @@
 import React from 'react';
 import logo from '@assets/img/bc_logo.png';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars } from '@fortawesome/free-solid-svg-icons';
+import { MenuIcon } from './icons';
 import { SidebarButton } from './SidebarButton';
 import { SidebarCollapsible } from './SidebarCollapsible';
 import { SidebarButtonKind } from './interface';
@@ -28,7 +27,7 @@ export const Sidebar: React.FC = () => {
             height='45px'
           />
           <button className='p-1 text-white' onClick={() => toggleSidebarOpen()}>
-            <FontAwesomeIcon className='w-6 h-6 text-gray-100' icon={faBars} />
+            <MenuIcon className='w-6 h-6 text-gray-100' />
           </button>
         </div>
       </div>

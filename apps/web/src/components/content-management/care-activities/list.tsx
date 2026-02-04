@@ -18,7 +18,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
   const headers = [
     { label: 'Care activities', name: CareActivitiesCMSFindSortKeys.DISPLAY_NAME },
     { label: 'Care Setting', name: CareActivitiesCMSFindSortKeys.CARE_SETTING_NAME },
-    { label: 'Bundle', name: CareActivitiesCMSFindSortKeys.BUNDLE_NAME },
+    { label: 'Care Competencies', name: CareActivitiesCMSFindSortKeys.BUNDLE_NAME },
     { label: 'Last updated by', name: CareActivitiesCMSFindSortKeys.UPDATED_BY },
     { label: '' },
   ];
