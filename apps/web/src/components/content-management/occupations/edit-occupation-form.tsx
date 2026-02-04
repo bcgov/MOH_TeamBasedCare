@@ -419,7 +419,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
                             >
                               <td className='p-2' style={{ height: '1px' }}>
                                 <div className='border border-gray-300 rounded px-3 py-3 bg-white min-h-[70px] h-full'>
-                                  {activityIndex === 0 ? group.bundleName : ''}
+                                  {group.bundleName}
                                 </div>
                               </td>
                               <td className='p-2'>
