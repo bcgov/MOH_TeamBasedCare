@@ -11,7 +11,7 @@ export class FindCareSettingTemplatesDto {
   })
   @IsString()
   @IsOptional()
-  @Length(0, 100)
+  @Length(0, 256)
   @Transform(({ value }) => value?.trim())
   readonly searchText?: string = '';
 
