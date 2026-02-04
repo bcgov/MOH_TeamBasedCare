@@ -23,7 +23,7 @@ export const Authorities: Record<string, Authority> = {
   PHC: {
     id: 'PHC',
     name: 'Providence Health Care Society',
-    domains: ['providencehealth.bc.ca'],
+    domains: ['providencehealth.bc.ca', 'phc.ca'],
   },
   PHSA: {
     id: 'PHSA',
@@ -55,6 +55,17 @@ export const Authorities: Record<string, Authority> = {
     name: 'Vancouver Coastal Health Authority',
     domains: ['vch.ca'],
   },
+  // Development/Testing Authorities
+  TEST_EY: {
+    id: 'TEST_EY',
+    name: 'EY Consulting (Development)',
+    domains: ['ca.ey.com'],
+  },
+  TEST_GMAIL: {
+    id: 'TEST_GMAIL',
+    name: 'General Testing',
+    domains: ['gmail.com'],
+  },
 };
 
 export const RegionalHealthAuthorities: Authority[] = [
@@ -70,4 +81,7 @@ export const HealthAuthorities = [
   Authorities.FNHA,
   Authorities.PHC,
   Authorities.PHSA,
+  // Test authorities for QA
+  Authorities.TEST_EY,
+  Authorities.TEST_GMAIL,
 ];

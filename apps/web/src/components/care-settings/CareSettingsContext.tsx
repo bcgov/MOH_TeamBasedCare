@@ -68,7 +68,10 @@ type Action =
   | { type: 'TOGGLE_ACTIVITY'; payload: string }
   | { type: 'SELECT_ALL_ACTIVITIES'; payload: string[] }
   | { type: 'DESELECT_ALL_ACTIVITIES'; payload: string[] }
-  | { type: 'SET_PERMISSION'; payload: { activityId: string; occupationId: string; permission: Permissions } }
+  | {
+      type: 'SET_PERMISSION';
+      payload: { activityId: string; occupationId: string; permission: Permissions };
+    }
   | { type: 'REMOVE_PERMISSION'; payload: { activityId: string; occupationId: string } }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_SELECTED_BUNDLE_ID'; payload: string | null }
@@ -97,7 +100,11 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
         if (bundle) {
           const newSelectedActivityIds = new Set(state.selectedActivityIds);
           bundle.careActivities?.forEach(a => newSelectedActivityIds.delete(a.id));
-          return { ...state, selectedBundleIds: newSelectedBundleIds, selectedActivityIds: newSelectedActivityIds };
+          return {
+            ...state,
+            selectedBundleIds: newSelectedBundleIds,
+            selectedActivityIds: newSelectedActivityIds,
+          };
         }
       } else {
         newSelectedBundleIds.add(action.payload);

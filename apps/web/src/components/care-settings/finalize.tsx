@@ -74,7 +74,10 @@ const ActivityOccupationGrid: React.FC<{
         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 min-w-[400px]'>
           {state.occupations.map(occupation => (
             <div key={occupation.id} className='flex flex-col min-w-[150px]'>
-              <label className='text-[15px] text-gray-600 mb-1 truncate' title={getName(occupation)}>
+              <label
+                className='text-[15px] text-gray-600 mb-1 truncate'
+                title={getName(occupation)}
+              >
                 {getName(occupation)}
               </label>
               <PermissionSelect
@@ -122,7 +125,8 @@ const BundleAccordion: React.FC<{
         </div>
         <div className='flex items-center gap-3'>
           <span className='text-sm text-bcBlueLink'>
-            {careCount} care & {restrictedCount > 0 ? `${restrictedCount} restricted` : '0 restricted'} activities
+            {careCount} care &{' '}
+            {restrictedCount > 0 ? `${restrictedCount} restricted` : '0 restricted'} activities
           </span>
           <FontAwesomeIcon
             icon={isOpen ? faChevronDown : faChevronRight}
@@ -201,11 +205,7 @@ export const Finalize: React.FC = () => {
           </div>
         ) : (
           selectedBundles.map(bundle => (
-            <BundleAccordion
-              key={bundle.id}
-              bundleId={bundle.id}
-              bundleName={getName(bundle)}
-            />
+            <BundleAccordion key={bundle.id} bundleId={bundle.id} bundleName={getName(bundle)} />
           ))
         )}
       </div>

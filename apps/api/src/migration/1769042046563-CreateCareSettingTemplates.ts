@@ -1,4 +1,11 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex, TableUnique } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+  TableIndex,
+  TableUnique,
+} from 'typeorm';
 
 export class CreateCareSettingTemplates1769042046563 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -284,7 +291,10 @@ export class CreateCareSettingTemplates1769042046563 implements MigrationInterfa
     );
     await queryRunner.createIndex(
       'care_setting_template_permission',
-      new TableIndex({ name: 'idx_care_setting_template_permission_template_id', columnNames: ['template_id'] }),
+      new TableIndex({
+        name: 'idx_care_setting_template_permission_template_id',
+        columnNames: ['template_id'],
+      }),
     );
 
     // Seed master templates for existing units

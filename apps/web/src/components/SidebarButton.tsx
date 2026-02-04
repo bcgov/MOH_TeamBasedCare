@@ -1,9 +1,8 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SidebarButtonProps } from './interface';
 import { useAppContext } from './AppContext';
 
-export const SidebarButton = ({ id, open, path, text, faIcon, active }: SidebarButtonProps) => {
+export const SidebarButton = ({ id, open, path, text, icon, active }: SidebarButtonProps) => {
   const { state, updateActivePath, updateSidebarButtons } = useAppContext();
 
   const handleClick = () => {
@@ -34,32 +33,43 @@ export const SidebarButton = ({ id, open, path, text, faIcon, active }: SidebarB
 
     path && updateActivePath(path);
   };
+
+  // Collapsed state: 40x40 icon container with rounded corners
+  if (!open) {
+    return (
+      <li
+        className={`${
+          active ? 'bg-bcBluePrimary/50' : 'hover:bg-bcBlueBorder'
+        } w-10 h-10 flex items-center justify-center rounded-[5px] cursor-pointer`}
+        onClick={handleClick}
+        title={text}
+      >
+        {icon && (
+          <span className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}>{icon}</span>
+        )}
+      </li>
+    );
+  }
+
+  // Expanded state
   return (
     <li
       className={`${
         active ? 'bg-bcBluePrimary' : 'hover:bg-bcBlueBorder'
-      } left-0 flex items-center py-4 rounded-md`}
+      } left-0 flex items-center py-4 rounded-md cursor-pointer`}
       onClick={handleClick}
       title={text}
     >
       <a
         href='#'
-        className={`${
-          !open ? 'justify-center' : 'justify-left px-2'
-        } flex items-center p-1 space-x-3 rounded-md`}
+        className='justify-left px-2 flex items-center p-1 space-x-3 rounded-md'
+        onClick={e => e.preventDefault()}
       >
-        {faIcon ? (
-          <FontAwesomeIcon
-            className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}
-            icon={faIcon}
-          />
-        ) : (
-          ''
+        {icon && (
+          <span className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}>{icon}</span>
         )}
 
-        <span className={`${!open ? 'hidden' : ''} ${active ? 'text-gray-100' : 'text-gray-400'} `}>
-          {text}
-        </span>
+        <span className={`${active ? 'text-gray-100' : 'text-gray-400'}`}>{text}</span>
       </a>
     </li>
   );

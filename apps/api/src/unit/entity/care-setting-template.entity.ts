@@ -1,29 +1,23 @@
 /**
  * Care Setting Template Entity
  *
- * Represents a customizable care setting configuration for a health authority unit.
+ * Represents a customizable care setting configuration.
  * Templates define which care competencies (bundles) and activities are available,
  * along with occupation-specific permissions.
  *
  * Two types of templates:
- * - Master templates (isMaster=true): Auto-created per unit, cannot be edited/deleted
- * - User templates (isMaster=false): Copies that users can customize
+ * - Master templates (isMaster=true, healthAuthority='GLOBAL'): Read-only defaults visible to all
+ * - User templates (isMaster=false): Copies that users can customize, scoped to their health authority
  *
  * Relationships:
- * - Belongs to one Unit (health authority)
+ * - Belongs to one Unit (care setting type like "Emergency Department")
+ * - Belongs to one Health Authority (via healthAuthority string)
  * - Can have a parent template (for tracking copy lineage)
  * - Has many selected bundles (care competencies)
  * - Has many selected activities (subset of bundle activities)
  * - Has many permissions (activity-occupation permission mappings)
  */
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Unit } from './unit.entity';
 import { Bundle } from '../../care-activity/entity/bundle.entity';
@@ -40,7 +34,12 @@ export class CareSettingTemplate extends CustomBaseEntity {
   @Column({ type: 'boolean', default: false })
   isMaster: boolean;
 
-  /** The health authority unit this template belongs to */
+  /** Health authority this template belongs to. 'GLOBAL' for master templates visible to all HAs. */
+  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Index()
+  healthAuthority: string;
+
+  /** The care setting type (unit) this template belongs to */
   @ManyToOne(() => Unit, unit => unit.templates, { nullable: false })
   unit: Unit;
 
@@ -65,10 +64,8 @@ export class CareSettingTemplate extends CustomBaseEntity {
   selectedActivities: CareActivity[];
 
   /** Permission mappings for activity-occupation combinations */
-  @OneToMany(
-    () => CareSettingTemplatePermission,
-    permission => permission.template,
-    { cascade: true },
-  )
+  @OneToMany(() => CareSettingTemplatePermission, permission => permission.template, {
+    cascade: true,
+  })
   permissions: CareSettingTemplatePermission[];
 }

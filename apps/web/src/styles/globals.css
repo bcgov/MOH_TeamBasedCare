@@ -38,7 +38,7 @@ body,
 }
 
 .tag {
-  @apply flex justify-center items-center px-2  border rounded font-bold text-xs mr-1;
+  @apply flex justify-center items-center px-2 h-7 min-w-[62px] border rounded font-bold text-xs mr-1;
 }
 
 .tag-gray {

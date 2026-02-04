@@ -27,9 +27,7 @@ export const SaveConfirmModal: React.FC<SaveConfirmModalProps> = ({
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       title='Save Changes'
-      description={
-        <p>Are you sure you want to save changes to &quot;{templateName}&quot;?</p>
-      }
+      description={<p>Are you sure you want to save changes to &quot;{templateName}&quot;?</p>}
       closeButton={{ title: 'Cancel' }}
       actionButton={{
         isLoading,

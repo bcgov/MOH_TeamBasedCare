@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class RequestTransformInterceptor implements NestInterceptor {
   private readonly logger = new Logger(RequestTransformInterceptor.name);
-   
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
     const { body } = request;

@@ -31,3 +31,9 @@ export enum CareSettingsCMSFindSortKeys {
   PARENT_NAME = 'parentName',
   UPDATED_AT = 'updatedAt',
 }
+
+export enum OccupationsCMSFindSortKeys {
+  DISPLAY_NAME = 'displayName',
+  IS_REGULATED = 'isRegulated',
+  UPDATED_AT = 'updatedAt',
+}

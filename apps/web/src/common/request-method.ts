@@ -3,6 +3,7 @@ import {
   CareActivitiesFindSortKeys,
   CareSettingsCMSFindSortKeys,
   OccupationalScopeOfPracticeSortKeys,
+  OccupationsCMSFindSortKeys,
   OccupationsFindSortKeys,
   Permissions,
   SortOrder,
@@ -96,4 +97,25 @@ export const API_ENDPOINT = {
   copyCareSettingTemplateFull: (sourceId: string) => `/care-settings/${sourceId}/copy-full`,
   updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
   deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+
+  // Occupation CMS
+  findOccupationsCMS: (params: EndpointQueryParams<OccupationsCMSFindSortKeys>) =>
+    appendQueryParams('/occupations/cms/find', params),
+  getOccupationCMS: (id: string) => `/occupations/cms/${id}`,
+  createOccupation: '/occupations/cms',
+  updateOccupationCMS: (id: string) => `/occupations/cms/${id}`,
+  deleteOccupation: (id: string) => `/occupations/cms/${id}`,
+
+  // KPI Dashboard
+  KPI_OVERVIEW: '/kpi/overview',
+  getKPIOverview: (params?: { healthAuthority?: string; careSettingId?: string }) => {
+    let endpoint = '/kpi/overview';
+    const queryParams: string[] = [];
+    if (params?.healthAuthority)
+      queryParams.push(`healthAuthority=${encodeURIComponent(params.healthAuthority)}`);
+    if (params?.careSettingId) queryParams.push(`careSettingId=${params.careSettingId}`);
+    if (queryParams.length > 0) endpoint += `?${queryParams.join('&')}`;
+    return endpoint;
+  },
+  KPI_CARE_SETTINGS: '/kpi/care-settings',
 };

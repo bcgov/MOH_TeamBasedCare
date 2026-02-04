@@ -21,14 +21,26 @@ export const useHttp = () => {
           clearStorageAndRedirectToLandingPage();
           break;
         case 400:
-          const errorMsg = err?.response?.data?.message || 'Kindly verify the input';
+          const errorMsg =
+            err?.response?.data?.errorMessage ||
+            err?.response?.data?.message ||
+            'Kindly verify the input';
           toast.error(errorMsg);
+          break;
+        case 403:
+          const forbiddenMsg =
+            err?.response?.data?.errorMessage || err?.response?.data?.message || 'Access denied';
+          toast.error(forbiddenMsg);
           break;
         case 409:
           toast.error(err.response.data.errorMessage);
           break;
         default:
-          toast.error(err?.response?.data?.message ?? 'Error fetching data');
+          toast.error(
+            err?.response?.data?.errorMessage ||
+              err?.response?.data?.message ||
+              'Error fetching data',
+          );
       }
     }
   };

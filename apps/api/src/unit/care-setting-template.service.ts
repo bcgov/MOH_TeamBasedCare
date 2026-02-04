@@ -12,6 +12,7 @@
  */
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -56,21 +57,42 @@ export class CareSettingTemplateService {
   ) {}
 
   /**
-   * Check if a template name already exists within a unit
+   * Get basic template info for authorization checks
+   * @throws NotFoundException if template doesn't exist
+   */
+  async getTemplateBasic(id: string): Promise<{ id: string; healthAuthority: string }> {
+    const template = await this.templateRepo.findOne({
+      where: { id },
+      select: ['id', 'healthAuthority'],
+    });
+
+    if (!template) {
+      throw new NotFoundException({ message: 'Care Setting Template not found' });
+    }
+
+    return template;
+  }
+
+  /**
+   * Check if a template name already exists within a unit for a health authority
+   * Names must be unique within the combination of unit + health authority
    * @param name - The name to check
    * @param unitId - The unit to check within
+   * @param healthAuthority - The health authority to scope the check
    * @param excludeId - Optional template ID to exclude (for updates)
    * @throws BadRequestException if a duplicate name exists
    */
   private async checkDuplicateName(
     name: string,
     unitId: string,
+    healthAuthority: string,
     excludeId?: string,
   ): Promise<void> {
     const queryBuilder = this.templateRepo
       .createQueryBuilder('t')
       .where('LOWER(t.name) = LOWER(:name)', { name: name.trim() })
-      .andWhere('t.unit.id = :unitId', { unitId });
+      .andWhere('t.unit.id = :unitId', { unitId })
+      .andWhere('t.healthAuthority = :healthAuthority', { healthAuthority });
 
     if (excludeId) {
       queryBuilder.andWhere('t.id != :excludeId', { excludeId });
@@ -84,19 +106,34 @@ export class CareSettingTemplateService {
 
   /**
    * Find templates with pagination, search, and sorting
+   * Filters by health authority - returns templates belonging to user's HA plus GLOBAL masters
+   * @param query - Search/pagination options
+   * @param healthAuthority - User's health authority to filter by
    * @returns Tuple of [templates, total count]
    */
   async findTemplates(
     query: FindCareSettingTemplatesDto,
+    healthAuthority: string,
   ): Promise<[CareSettingTemplateRO[], number]> {
     const queryBuilder = this.templateRepo
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.unit', 't_unit')
       .leftJoinAndSelect('t.parent', 't_parent');
 
+    // Filter by health authority - show user's HA templates + GLOBAL masters
+    if (healthAuthority) {
+      queryBuilder.where('(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)', {
+        healthAuthority,
+        global: 'GLOBAL',
+      });
+    } else {
+      // Users without org only see GLOBAL templates
+      queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+    }
+
     // Search by name
     if (query.searchText) {
-      queryBuilder.where('t.name ILIKE :name', {
+      queryBuilder.andWhere('t.name ILIKE :name', {
         name: `%${query.searchText}%`,
       });
     }
@@ -174,9 +211,7 @@ export class CareSettingTemplateService {
   /**
    * Build bundle selection data showing which activities are selected per bundle
    */
-  private async buildBundleSelections(
-    template: CareSettingTemplate,
-  ): Promise<BundleSelectionRO[]> {
+  private async buildBundleSelections(template: CareSettingTemplate): Promise<BundleSelectionRO[]> {
     // Get all bundles with their activities for the unit
     const bundles = await this.bundleRepo
       .createQueryBuilder('b')
@@ -188,9 +223,7 @@ export class CareSettingTemplateService {
       .getMany();
 
     const selectedBundleIds = new Set(template.selectedBundles.map(b => b.id));
-    const selectedActivityIds = new Set(
-      template.selectedActivities.map(a => a.id),
-    );
+    const selectedActivityIds = new Set(template.selectedActivities.map(a => a.id));
 
     return bundles
       .filter(b => selectedBundleIds.has(b.id))
@@ -261,10 +294,14 @@ export class CareSettingTemplateService {
    * Create a copy of an existing template
    * Copies all selected bundles, activities, and permissions
    * The new template is always non-master and references the source as parent
+   * @param sourceId - ID of template to copy
+   * @param dto - Copy configuration (name)
+   * @param healthAuthority - Health authority for the new template (from user's organization)
    */
   async copyTemplate(
     sourceId: string,
     dto: CreateCareSettingTemplateCopyDTO,
+    healthAuthority: string,
   ): Promise<CareSettingTemplateRO> {
     const source = await this.templateRepo.findOne({
       where: { id: sourceId },
@@ -282,13 +319,14 @@ export class CareSettingTemplateService {
       throw new NotFoundException({ message: 'Source template not found' });
     }
 
-    // Check for duplicate name before creating copy
-    await this.checkDuplicateName(dto.name, source.unit.id);
+    // Check for duplicate name before creating copy (scoped to HA)
+    await this.checkDuplicateName(dto.name, source.unit.id, healthAuthority);
 
     // Create new template (createdBy/updatedBy auto-set by AuditSubscriber)
     const newTemplate = this.templateRepo.create({
       name: dto.name,
       isMaster: false,
+      healthAuthority,
       unit: source.unit,
       parent: source,
       selectedBundles: source.selectedBundles,
@@ -326,10 +364,14 @@ export class CareSettingTemplateService {
    * instead of copying them from the source template.
    *
    * Use this for deferred copy creation where user customizes before saving.
+   * @param sourceId - ID of template to copy
+   * @param dto - Full customization data (name, bundles, activities, permissions)
+   * @param healthAuthority - Health authority for the new template (from user's organization)
    */
   async copyTemplateWithData(
     sourceId: string,
     dto: CreateCareSettingTemplateCopyFullDTO,
+    healthAuthority: string,
   ): Promise<CareSettingTemplateRO> {
     const source = await this.templateRepo.findOne({
       where: { id: sourceId },
@@ -337,11 +379,11 @@ export class CareSettingTemplateService {
     });
 
     if (!source) {
-      throw new NotFoundException('Source template not found');
+      throw new NotFoundException({ message: 'Source template not found' });
     }
 
-    // Check for duplicate name
-    await this.checkDuplicateName(dto.name, source.unit.id);
+    // Check for duplicate name (scoped to HA)
+    await this.checkDuplicateName(dto.name, source.unit.id, healthAuthority);
 
     // Get selected bundles
     const selectedBundles = await this.bundleRepo.find({
@@ -357,6 +399,7 @@ export class CareSettingTemplateService {
     const newTemplate = this.templateRepo.create({
       name: dto.name,
       isMaster: false,
+      healthAuthority,
       unit: source.unit,
       parent: source,
       selectedBundles,
@@ -405,6 +448,7 @@ export class CareSettingTemplateService {
   /**
    * Update a template's name, selected bundles/activities, and permissions
    * @throws BadRequestException if attempting to edit a master template
+   * @throws ForbiddenException if user's HA doesn't match template's HA
    * @throws NotFoundException if template doesn't exist
    *
    * Note: Permissions are replaced entirely (delete all, then recreate)
@@ -412,6 +456,7 @@ export class CareSettingTemplateService {
   async updateTemplate(
     id: string,
     dto: UpdateCareSettingTemplateDTO,
+    healthAuthority?: string,
   ): Promise<void> {
     const template = await this.templateRepo.findOne({
       where: { id },
@@ -426,9 +471,14 @@ export class CareSettingTemplateService {
       throw new BadRequestException('Cannot edit master templates. Create a copy instead.');
     }
 
-    // Update name if provided, checking for duplicates
+    // Validate user has access to this template's health authority
+    if (healthAuthority && template.healthAuthority !== healthAuthority) {
+      throw new ForbiddenException('Cannot modify templates belonging to another health authority');
+    }
+
+    // Update name if provided, checking for duplicates (scoped to same HA)
     if (dto.name && dto.name !== template.name) {
-      await this.checkDuplicateName(dto.name, template.unit.id, id);
+      await this.checkDuplicateName(dto.name, template.unit.id, template.healthAuthority, id);
       template.name = dto.name;
     }
 
@@ -481,9 +531,10 @@ export class CareSettingTemplateService {
   /**
    * Delete a template and all associated permissions
    * @throws BadRequestException if attempting to delete a master template
+   * @throws ForbiddenException if user's HA doesn't match template's HA
    * @throws NotFoundException if template doesn't exist
    */
-  async deleteTemplate(id: string): Promise<void> {
+  async deleteTemplate(id: string, healthAuthority?: string): Promise<void> {
     const template = await this.templateRepo.findOne({
       where: { id },
     });
@@ -494,6 +545,11 @@ export class CareSettingTemplateService {
 
     if (template.isMaster) {
       throw new BadRequestException('Cannot delete master templates.');
+    }
+
+    // Validate user has access to this template's health authority
+    if (healthAuthority && template.healthAuthority !== healthAuthority) {
+      throw new ForbiddenException('Cannot delete templates belonging to another health authority');
     }
 
     // Delete permissions first (cascade should handle this, but being explicit)

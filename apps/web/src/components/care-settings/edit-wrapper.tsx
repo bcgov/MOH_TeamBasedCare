@@ -18,6 +18,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { toast } from 'react-toastify';
 import { Stepper, Button } from '@components';
 import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsContext';
 import { SelectCompetencies } from './select-competencies';
@@ -27,6 +28,7 @@ import { useCareSettingTemplate } from 'src/services/useCareSettingTemplate';
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
 import { useCareSettingTemplateUpdate } from 'src/services/useCareSettingTemplateUpdate';
+import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
 import { Permissions } from '@tbcm/common';
@@ -37,14 +39,44 @@ const EditContent: React.FC = () => {
   const { id } = router.query as { id: string };
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
-  const { template, isLoading: isLoadingTemplate, error: templateError, mutate: mutateTemplate } = useCareSettingTemplate(id);
+  const { me } = useMe();
+  const {
+    template,
+    isLoading: isLoadingTemplate,
+    error: templateError,
+    mutate: mutateTemplate,
+  } = useCareSettingTemplate(id);
   const { bundles, isLoading: isLoadingBundles, error: bundlesError } = useCareSettingBundles(id);
-  const { occupations, isLoading: isLoadingOccupations, error: occupationsError } = useCareSettingOccupations(id);
+  const {
+    occupations,
+    isLoading: isLoadingOccupations,
+    error: occupationsError,
+  } = useCareSettingOccupations(id);
   const { handleUpdate, isLoading: isUpdating } = useCareSettingTemplateUpdate();
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Check authorization when template loads
+  useEffect(() => {
+    if (template && me) {
+      // Check if user can modify this template
+      const canModify =
+        template.healthAuthority === 'GLOBAL' || template.healthAuthority === me.organization;
+
+      if (template.isMaster) {
+        toast.error('Master templates cannot be edited.');
+        router.push('/care-settings');
+        return;
+      }
+
+      if (!canModify) {
+        toast.error('You can only edit care settings belonging to your health authority.');
+        router.push('/care-settings');
+      }
+    }
+  }, [template, me, router]);
 
   // Initialize state when data loads
   useEffect(() => {
@@ -162,7 +194,9 @@ const EditContent: React.FC = () => {
       <Card bgWhite>
         <div className='text-center py-8'>
           <p className='text-red-600 font-semibold mb-2'>Failed to load care setting data</p>
-          <p className='text-gray-500 mb-4'>Please try again or contact support if the problem persists.</p>
+          <p className='text-gray-500 mb-4'>
+            Please try again or contact support if the problem persists.
+          </p>
           <Button variant='outline' onClick={() => router.push('/care-settings')}>
             Back to Care Settings
           </Button>
@@ -185,31 +219,16 @@ const EditContent: React.FC = () => {
       <div className='w-full overflow-x-auto flex items-center justify-between rounded border-2 bg-white p-4'>
         <Stepper steps={CareSettingsSteps} currentStep={visualStep} />
         <div className='flex'>
-          <Button
-            variant='outline'
-            type='button'
-            classes='ml-2'
-            onClick={handlePrevious}
-          >
+          <Button variant='outline' type='button' classes='ml-2' onClick={handlePrevious}>
             Previous
           </Button>
 
           {state.currentStep >= 2 ? (
-            <Button
-              variant='primary'
-              type='button'
-              classes='ml-2'
-              onClick={handleSaveClick}
-            >
+            <Button variant='primary' type='button' classes='ml-2' onClick={handleSaveClick}>
               Save & Close
             </Button>
           ) : (
-            <Button
-              variant='primary'
-              type='button'
-              classes='ml-2'
-              onClick={handleNext}
-            >
+            <Button variant='primary' type='button' classes='ml-2' onClick={handleNext}>
               Next
             </Button>
           )}

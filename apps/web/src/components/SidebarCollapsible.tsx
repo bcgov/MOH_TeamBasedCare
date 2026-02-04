@@ -4,26 +4,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
 import { SidebarButtonProps } from './interface';
 
-export const SidebarCollapsible = ({ active, open, faIcon, options, text }: SidebarButtonProps) => {
+export const SidebarCollapsible = ({ active, open, icon, options, text }: SidebarButtonProps) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   return (
     <li className={`left-0 flex flex-wrap items-center py-4 rounded-sm`}>
       <button
         type='button'
-        className={`${open ? 'justify-center' : 'justify-left w-full text-clip overflow-hidden'} 
-        ${active ? 'bg-bcBluePrimary' : 'hover:bg-bcBlueBorder'} 
+        className={`${open ? 'justify-center' : 'justify-left w-full text-clip overflow-hidden'}
+        ${active ? 'bg-bcBluePrimary' : 'hover:bg-bcBlueBorder'}
         flex  p-1 space-x-3 rounded-md py-4 rounded-md`}
         onClick={() => {
           setDropdownOpen(!dropdownOpen);
         }}
       >
-        {faIcon ? (
-          <FontAwesomeIcon
-            className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}
-            icon={faIcon}
-          />
-        ) : null}
+        {icon && (
+          <span className={`${active ? 'text-gray-100' : 'text-gray-400'} w-6 h-6`}>{icon}</span>
+        )}
 
         <span className={`${open ? 'hidden' : ''} ${active ? 'text-gray-100' : 'text-gray-400'}`}>
           {text}

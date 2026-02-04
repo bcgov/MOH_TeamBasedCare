@@ -105,6 +105,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/../test/setup.js"
+    ],
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
     },
