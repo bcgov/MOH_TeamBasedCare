@@ -407,7 +407,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
                     </thead>
                     <tbody>
                       {groupedActivities.map(group =>
-                        group.activities.map((activity, activityIndex) => {
+                        group.activities.map(activity => {
                           const key = activity.id;
                           const currentPermission =
                             values.scopePermissions.get(key)?.permission || Permissions.NO;
