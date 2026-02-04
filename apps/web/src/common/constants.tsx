@@ -1,17 +1,18 @@
 import { SidebarButtonProps, SidebarButtonKind } from '../components/interface';
 import {
-  faChartBar,
-  faClipboardList,
   faCheckCircle,
   faTimesCircle,
   faQuestionCircle,
   faExclamationCircle,
-  faUsers,
-  faBook,
-  faUsersCog,
-  faSuitcase,
-  faCog,
 } from '@fortawesome/free-solid-svg-icons';
+import {
+  DashboardIcon,
+  PlanningIcon,
+  OccupationalScopeIcon,
+  CareSettingsIcon,
+  UserManagementIcon,
+  ContentManagementIcon,
+} from '../components/icons';
 import { TooltipIconProps } from './interfaces';
 import { BULK_UPLOAD_COLUMNS, Role } from '@tbcm/common';
 
@@ -37,7 +38,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'Dashboard',
     active: false,
-    faIcon: faChartBar,
+    icon: <DashboardIcon />,
     path: AllowedPath.DASHBOARD,
     roles: [Role.ADMIN, Role.CONTENT_ADMIN],
   },
@@ -46,7 +47,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'Planning',
     active: false,
-    faIcon: faClipboardList,
+    icon: <PlanningIcon />,
     path: AllowedPath.PLANNING,
     roles: [Role.USER],
   },
@@ -55,7 +56,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'Occupational scope',
     active: false,
-    faIcon: faUsers,
+    icon: <OccupationalScopeIcon />,
     path: AllowedPath.OCCUPATIONAL_SCOPE,
     hidden: false,
     roles: [Role.USER],
@@ -65,7 +66,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'Care Settings',
     active: false,
-    faIcon: faCog,
+    icon: <CareSettingsIcon />,
     path: AllowedPath.CARE_SETTINGS,
     hidden: false,
     roles: [Role.USER, Role.ADMIN, Role.CONTENT_ADMIN],
@@ -75,7 +76,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'Modal of Care Terminologies',
     active: false,
-    faIcon: faBook,
+    icon: <PlanningIcon />,
     path: AllowedPath.CARE_TERMINOLOGIES,
     hidden: true,
     roles: [Role.USER],
@@ -90,7 +91,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'User management',
     active: false,
-    faIcon: faUsersCog,
+    icon: <UserManagementIcon />,
     path: AllowedPath.USER_MANAGEMENT,
     hidden: false,
     roles: [Role.ADMIN],
@@ -100,7 +101,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     kind: SidebarButtonKind.REGULAR,
     text: 'Content management',
     active: false,
-    faIcon: faSuitcase,
+    icon: <ContentManagementIcon />,
     path: AllowedPath.CONTENT_MANAGEMENT,
     hidden: false,
     roles: [Role.CONTENT_ADMIN],
@@ -180,7 +181,7 @@ export const ActivityTagDefinitions: Partial<{ [key in ActivityTagVariants]: { t
     text: `Restricted activities are a narrowly defined list of invasive, higher risk activities and are written in health profession specific regulations.`,
   },
   [ActivityTagVariants.TASK]: {
-    text: `Tasks are lower risk care activities which are not a ‘restricted activity’ or an ‘aspect of practice.’`,
+    text: `Tasks are lower risk care activities which are not a 'restricted activity' or an 'aspect of practice.'`,
   },
 };
 

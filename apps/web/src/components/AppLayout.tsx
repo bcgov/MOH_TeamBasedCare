@@ -86,7 +86,7 @@ const AppLayout: React.FC<PropsWithChildren> = ({ children }) => {
       <div className='flex flex-1 flex-col w-full p-3 overflow-auto'>
         <Header
           title={activeSidebarButton.current?.text}
-          icon={activeSidebarButton.current?.faIcon}
+          icon={activeSidebarButton.current?.icon}
         />
         {!accessError && children}
         {accessError && (

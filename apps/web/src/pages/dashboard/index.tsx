@@ -3,7 +3,7 @@ import AppLayout from 'src/components/AppLayout';
 import { Card } from 'src/components/generic/Card';
 import { useKPIs, useKPICareSettings } from '@services';
 import { HealthAuthorities } from '@tbcm/common';
-import { faUsers, faFile } from '@fortawesome/free-solid-svg-icons';
+import { UsersIcon, ClipboardIcon } from 'src/components/icons';
 import {
   KPICard,
   KPICardSkeleton,
@@ -67,19 +67,19 @@ const Dashboard: NextPage = () => {
                 title='Total Users'
                 value={overview?.general?.totalUsers ?? 0}
                 subtitle='Tracking total number of users within the system.'
-                icon={faUsers}
+                icon={<UsersIcon />}
               />
               <KPICard
                 title='Active Users'
                 value={overview?.general?.activeUsers ?? 0}
                 subtitle='Monitoring the current month user engagement.'
-                icon={faUsers}
+                icon={<UsersIcon />}
               />
               <KPICard
                 title='Total Care Plans'
                 value={overview?.general?.totalCarePlans ?? 0}
                 subtitle='Total Care Plans created.'
-                icon={faFile}
+                icon={<ClipboardIcon />}
               />
             </div>
           )}
