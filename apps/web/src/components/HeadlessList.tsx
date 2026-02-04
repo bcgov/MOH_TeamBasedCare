@@ -67,17 +67,13 @@ export const HeadlessList = <T extends OptionValueType>({
             )
             .map(value => getOption(value))
             .map((option, i) => {
-              return (
-                <>
-                  {option && (
-                    <Tag
-                      tagStyle={option.tagVariant || TagVariants.GRAY}
-                      text={displayText(option.value)}
-                      key={i}
-                    />
-                  )}
-                </>
-              );
+              return option ? (
+                <Tag
+                  key={i}
+                  tagStyle={option.tagVariant || TagVariants.GRAY}
+                  text={displayText(option.value)}
+                />
+              ) : null;
             })}
         </div>
       );
