@@ -1,6 +1,7 @@
 import { Radio, Checkbox } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
-import { useCareLocations, usePlanningContent, usePlanningContext, useMe } from '../../services';
+import { usePlanningContent, usePlanningContext, useMe } from '../../services';
+import { useCareSettingTemplatesForPlanning } from '../../services/useCareSettingTemplatesForPlanning';
 import {
   PlanningSessionRO,
   ProfileOptions,
@@ -34,7 +35,7 @@ const ProfileForm = ({
   isLoading: boolean;
 }) => {
   const { values, initialValues, setValues } = useFormikContext<ProfileFormProps>();
-  const { careLocations, isValidating: isLoadingCareLocations } = useCareLocations();
+  const { careLocations, isValidating: isLoadingCareLocations } = useCareSettingTemplatesForPlanning();
   const [showModal, setShowModal] = useState(false);
   const { updateSessionId } = usePlanningContext();
   const [lastDraftUpdatedFromNow, setLastDraftUpdatedFromNow] = useState('');

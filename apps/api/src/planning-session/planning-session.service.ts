@@ -20,9 +20,8 @@ import { OccupationService } from '../occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { ActivitiesActionType } from '../common/constants';
-import { UnitService } from 'src/unit/unit.service';
 import { UserService } from 'src/user/user.service';
-import { Unit } from 'src/unit/entity/unit.entity';
+import { CareSettingTemplateService } from 'src/unit/care-setting-template.service';
 import { User } from 'src/user/entities/user.entity';
 import { AppLogger } from 'src/common/logger.service';
 
@@ -34,8 +33,8 @@ export class PlanningSessionService {
     private planningSessionRepo: Repository<PlanningSession>,
     private careActivityService: CareActivityService,
     private occupationService: OccupationService,
-    private unitService: UnitService,
     private userService: UserService,
+    private careSettingTemplateService: CareSettingTemplateService,
   ) {}
 
   // find planning session from id
@@ -57,7 +56,7 @@ export class PlanningSessionService {
       order: {
         createdAt: -1,
       },
-      relations: ['careLocation', 'careActivity', 'careActivity.bundle'],
+      relations: ['careLocation', 'careSettingTemplate', 'careActivity', 'careActivity.bundle'],
     });
 
     return planningSession;
@@ -65,9 +64,15 @@ export class PlanningSessionService {
 
   // create a new planning session
   async createPlanningSession(saveProfileDto: SaveProfileDTO): Promise<PlanningSession> {
+    const template = await this.careSettingTemplateService.getTemplateForPlanning(
+      saveProfileDto.careLocation, // Frontend sends template UUID in this field
+    );
+
     const session: Partial<PlanningSession> = {
       profileOption: saveProfileDto.profileOption,
-      careLocation: (await this.unitService.getById(saveProfileDto.careLocation)) as Unit,
+      careSettingTemplate: template,
+      careLocation: template.unit, // ALWAYS set unit too
+      careActivity: template.selectedActivities, // Pre-populate for flexible Step 2
     };
 
     const planningSession = this.planningSessionRepo.create(session);
@@ -90,7 +95,7 @@ export class PlanningSessionService {
     // get existing profile
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['careLocation', 'careActivity'],
+      relations: ['careLocation', 'careSettingTemplate', 'careActivity'],
     });
 
     // if planning session not found, throw
@@ -98,20 +103,16 @@ export class PlanningSessionService {
       throw new NotFoundException('Planning session not found');
     }
 
-    // handle care Location update,
+    // handle care Location / template update
     if (saveProfileDto.careLocation) {
-      // if updated care location not same as existing? clear care activities for the session
-      if (
-        planningSession.careLocation?.id &&
-        planningSession.careLocation?.id !== saveProfileDto.careLocation
-      ) {
-        planningSession.careActivity = [];
+      const newTemplateId = saveProfileDto.careLocation;
+      if (planningSession.careSettingTemplateId !== newTemplateId) {
+        const newTemplate =
+          await this.careSettingTemplateService.getTemplateForPlanning(newTemplateId);
+        planningSession.careSettingTemplate = newTemplate;
+        planningSession.careLocation = newTemplate.unit;
+        planningSession.careActivity = newTemplate.selectedActivities;
       }
-
-      // handle care location update
-      planningSession.careLocation = (await this.unitService.getById(
-        saveProfileDto.careLocation,
-      )) as Unit;
     }
 
     // handle profile option update
@@ -125,11 +126,14 @@ export class PlanningSessionService {
   async getProfileSelection(sessionId: string): Promise<IProfileSelection> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['careLocation'],
+      relations: ['careLocation', 'careSettingTemplate'],
     });
     return {
       profileOption: planningSession?.profileOption || null,
-      careLocation: planningSession?.careLocation?.id || null,
+      careLocation:
+        planningSession?.careSettingTemplateId // Prefer template ID for dropdown match
+        ?? planningSession?.careLocationId // Fallback for legacy sessions
+        ?? null,
     };
   }
 
@@ -216,7 +220,7 @@ export class PlanningSessionService {
   async getPlanningActivityGap(sessionId: string): Promise<ActivityGap | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['careActivity', 'careActivity.bundle', 'occupation', 'careLocation'],
+      relations: ['careActivity', 'careActivity.bundle', 'occupation', 'careLocation', 'careSettingTemplate'],
     });
     if (!planningSession || !planningSession.occupation || !planningSession.careActivity) {
       return;
@@ -243,18 +247,31 @@ export class PlanningSessionService {
         .map(e => ({ title: e.displayName, description: e.description || '' })),
     );
 
-    const query = await this.planningSessionRepo
-      .createQueryBuilder('ps')
-      .select('aa.permission, aa.care_activity_id, aa.occupation_id')
-      .innerJoin('ps.careActivity', 'ca')
-      .innerJoin('ps.occupation', 'o')
-      .innerJoin(
-        AllowedActivity,
-        'aa',
-        'aa.careActivity = ca.id and aa.occupation = o.id and ps.careLocation.id = aa.unit_id',
-      )
-      .where('ps.id = :sessionId', { sessionId })
-      .getRawMany();
+    let query;
+    if (planningSession.careSettingTemplateId) {
+      // Template-based: read from care_setting_template_permission
+      const activityIds = planningSession.careActivity.map(ca => ca.id);
+      const occupationIds = planningSession.occupation.map(o => o.id);
+      query = await this.careSettingTemplateService.getPermissionsForGap(
+        planningSession.careSettingTemplateId,
+        activityIds,
+        occupationIds,
+      );
+    } else {
+      // Legacy: read from allowed_activity
+      query = await this.planningSessionRepo
+        .createQueryBuilder('ps')
+        .select('aa.permission, aa.care_activity_id, aa.occupation_id')
+        .innerJoin('ps.careActivity', 'ca')
+        .innerJoin('ps.occupation', 'o')
+        .innerJoin(
+          AllowedActivity,
+          'aa',
+          'aa.careActivity = ca.id and aa.occupation = o.id and ps.careLocation.id = aa.unit_id',
+        )
+        .where('ps.id = :sessionId', { sessionId })
+        .getRawMany();
+    }
 
     const groupedMappingActions: { [bundleId: string]: { [careActivityId: string]: string } } = {};
 

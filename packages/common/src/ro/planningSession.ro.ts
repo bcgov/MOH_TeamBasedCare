@@ -63,8 +63,10 @@ export class PlanningSessionRO {
       'name',
     );
 
-    /** care setting */
-
-    this.careSetting = new PlanningSessionCareSettingRO(data.careLocation);
+    /** care setting — use template ID when available so dropdown can match */
+    const careSettingSource = data.careSettingTemplate
+      ? { ...data.careLocation, id: data.careSettingTemplate.id }
+      : data.careLocation;
+    this.careSetting = new PlanningSessionCareSettingRO(careSettingSource);
   }
 }
