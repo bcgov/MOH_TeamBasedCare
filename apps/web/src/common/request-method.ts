@@ -55,6 +55,7 @@ export const API_ENDPOINT = {
   CARE_ACTIVITIES: '/care-activity/by-bundles',
   CARE_ACTIVITY_COMMON_SEARCH_TERMS: 'care-activity/common-search-terms',
   SESSIONS: '/sessions',
+  PLANNING_CARE_SETTING_TEMPLATES: '/sessions/care-setting-templates',
   LAST_DRAFT_SESSION: '/sessions/last_draft',
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
   OCCUPATIONS: '/occupations',
@@ -91,6 +92,7 @@ export const API_ENDPOINT = {
   findCareSettings: (params: EndpointQueryParams<CareSettingsCMSFindSortKeys>) =>
     appendQueryParams('/care-settings/cms/find', params),
   getCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+  getCareSettingTemplateForCopy: (id: string) => `/care-settings/${id}/copy-data`,
   getCareSettingBundles: (id: string) => `/care-settings/${id}/bundles`,
   getCareSettingOccupations: (id: string) => `/care-settings/${id}/occupations`,
   copyCareSettingTemplate: (id: string) => `/care-settings/${id}/copy`,

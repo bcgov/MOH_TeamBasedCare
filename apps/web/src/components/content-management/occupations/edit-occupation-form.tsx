@@ -302,6 +302,15 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
       }
     });
 
+    // Check that at least one activity has Y or LC permission
+    const hasAtLeastOnePermission = Array.from(values.scopePermissions.values()).some(
+      sp => sp.permission === Permissions.PERFORM || sp.permission === Permissions.LIMITS,
+    );
+    if (!hasAtLeastOnePermission) {
+      errors.scopePermissions =
+        'At least one activity must have "Yes" or "Limits & Conditions" scope';
+    }
+
     return errors;
   };
 
@@ -319,6 +328,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
         isValid,
         errors,
         setFieldTouched,
+        submitCount,
       }) => (
         <div className='mt-4 w-full'>
           <BackButtonLink />
@@ -381,6 +391,12 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
               a topic.
             </div>
 
+            {submitCount > 0 && errors.scopePermissions && (
+              <div className='text-bcRedError text-sm mb-4'>
+                {errors.scopePermissions as string}
+              </div>
+            )}
+
             <div className='mb-4 max-w-md'>
               <SearchBar
                 handleChange={e => setActivitySearchText(e.target.value)}
@@ -390,7 +406,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
 
             {!isLoadingBundles && filteredActivities.length > 0 && (
               <>
-                <div className='overflow-hidden'>
+                <div className='overflow-visible'>
                   <table className='table-auto w-full'>
                     <thead className='bg-[#FAF9F8]'>
                       <tr className='border-b-2 border-bcYellowPrimary'>

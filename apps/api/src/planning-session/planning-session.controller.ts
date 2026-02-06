@@ -22,6 +22,7 @@ import { IRequest } from 'src/common/app-request';
 import { SessionGuard } from 'src/planning-session/guards/session.guard';
 import { SUCCESS_RESPONSE } from '../common/constants';
 import { PlanningSessionService } from './planning-session.service';
+import { CareSettingTemplateService } from 'src/unit/care-setting-template.service';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 
 @ApiTags('session')
@@ -29,7 +30,16 @@ import { AllowRoles } from 'src/auth/allow-roles.decorator';
 @AllowRoles({ roles: [Role.USER] })
 @UseInterceptors(ClassSerializerInterceptor)
 export class PlanningSessionController {
-  constructor(private planningSessionService: PlanningSessionService) {}
+  constructor(
+    private planningSessionService: PlanningSessionService,
+    private careSettingTemplateService: CareSettingTemplateService,
+  ) {}
+
+  @Get('/care-setting-templates')
+  async getCareSettingTemplatesForPlanning(@Req() req: IRequest) {
+    const healthAuthority = req.user?.organization ?? '';
+    return this.careSettingTemplateService.findAllForPlanning(healthAuthority);
+  }
 
   @Get('/last_draft')
   async getDraftPlanningSession(@Req() req: IRequest) {

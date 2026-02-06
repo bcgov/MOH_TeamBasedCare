@@ -24,10 +24,11 @@ import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsCont
 import { SelectCompetencies } from './select-competencies';
 import { Finalize } from './finalize';
 import { SaveNameModal } from './save-name-modal';
-import { useCareSettingTemplate } from 'src/services/useCareSettingTemplate';
+import { useCareSettingTemplateForCopy } from 'src/services/useCareSettingTemplateForCopy';
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
 import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateCopy';
+import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
 import { Permissions } from '@tbcm/common';
@@ -36,14 +37,16 @@ import { CareSettingsSteps } from 'src/common/constants';
 const CopyContent: React.FC = () => {
   const router = useRouter();
   const { sourceId } = router.query as { sourceId: string };
+  const { me } = useMe();
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
   // Load SOURCE template data (we're copying FROM this, not editing it)
+  // Using lightweight endpoint that returns IDs only (avoids timeout on master templates)
   const {
     template: sourceTemplate,
     isLoading: isLoadingTemplate,
     error: templateError,
-  } = useCareSettingTemplate(sourceId);
+  } = useCareSettingTemplateForCopy(sourceId);
   const {
     bundles,
     isLoading: isLoadingBundles,
@@ -63,17 +66,15 @@ const CopyContent: React.FC = () => {
   // Initialize state from SOURCE template when data loads
   useEffect(() => {
     if (sourceTemplate && bundles.length > 0 && occupations.length > 0 && !isInitialized) {
-      const selectedBundleIds = new Set(sourceTemplate.selectedBundles?.map(b => b.bundleId) || []);
-      const selectedActivityIds = new Set<string>();
-      sourceTemplate.selectedBundles?.forEach(b => {
-        b.selectedActivityIds?.forEach(id => selectedActivityIds.add(id));
-      });
+      // New lightweight hook returns IDs directly as arrays
+      const selectedBundleIds = new Set(sourceTemplate.selectedBundleIds || []);
+      const selectedActivityIds = new Set(sourceTemplate.selectedActivityIds || []);
 
       // Copy permissions from source template
       const permissions = new Map<string, Permissions>();
       sourceTemplate.permissions?.forEach(p => {
         // Using :: as separator because UUIDs contain dashes
-        permissions.set(`${p.activityId}::${p.occupationId}`, p.permission);
+        permissions.set(`${p.activityId}::${p.occupationId}`, p.permission as Permissions);
       });
 
       dispatch({
@@ -162,6 +163,24 @@ const CopyContent: React.FC = () => {
 
   const isLoading = isLoadingTemplate || isLoadingBundles || isLoadingOccupations;
   const hasError = templateError || bundlesError || occupationsError;
+
+  // Check if user has required organization for creating copies
+  if (me && !me.organization) {
+    return (
+      <Card bgWhite>
+        <div className='text-center py-8'>
+          <p className='text-red-600 font-semibold mb-2'>Health Authority Required</p>
+          <p className='text-gray-500 mb-4'>
+            You need a health authority assignment to create care setting copies. Please contact
+            your administrator.
+          </p>
+          <Button variant='outline' onClick={() => router.push('/care-settings')}>
+            Back to Care Settings
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return <Spinner show={true} fullScreen />;

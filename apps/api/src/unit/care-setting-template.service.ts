@@ -209,6 +209,48 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Lightweight template fetch for copy wizard - returns IDs only
+   * Avoids loading full permission entities which can timeout on master templates
+   */
+  async getTemplateForCopy(id: string): Promise<{
+    id: string;
+    name: string;
+    unitId: string;
+    selectedBundleIds: string[];
+    selectedActivityIds: string[];
+    permissions: { activityId: string; occupationId: string; permission: string }[];
+  }> {
+    const template = await this.templateRepo.findOne({
+      where: { id },
+      relations: ['unit', 'selectedBundles', 'selectedActivities'],
+    });
+
+    if (!template) {
+      throw new NotFoundException({ message: 'Care Setting Template not found' });
+    }
+
+    // Load permissions as flat data (no entity relations)
+    const permissions = await this.permissionRepo
+      .createQueryBuilder('p')
+      .select(['p.careActivityId', 'p.occupationId', 'p.permission'])
+      .where('p.templateId = :templateId', { templateId: id })
+      .getRawMany();
+
+    return {
+      id: template.id,
+      name: template.name,
+      unitId: template.unit.id,
+      selectedBundleIds: template.selectedBundles.map(b => b.id),
+      selectedActivityIds: template.selectedActivities.map(a => a.id),
+      permissions: permissions.map(p => ({
+        activityId: p.p_careActivityId || p.p_care_activity_id,
+        occupationId: p.p_occupationId || p.p_occupation_id,
+        permission: p.p_permission,
+      })),
+    };
+  }
+
+  /**
    * Build bundle selection data showing which activities are selected per bundle
    */
   private async buildBundleSelections(template: CareSettingTemplate): Promise<BundleSelectionRO[]> {
@@ -529,8 +571,65 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Load template with unit and selectedActivities for planning session creation
+   * @throws NotFoundException if template doesn't exist
+   */
+  async getTemplateForPlanning(id: string): Promise<CareSettingTemplate> {
+    const template = await this.templateRepo.findOne({
+      where: { id },
+      relations: ['unit', 'selectedActivities'],
+    });
+    if (!template) {
+      throw new NotFoundException('Care Setting Template not found');
+    }
+    return template;
+  }
+
+  /**
+   * Get raw permission data for activity gap calculation
+   * Returns rows matching the shape expected by getPlanningActivityGap
+   */
+  async getPermissionsForGap(
+    templateId: string,
+    careActivityIds: string[],
+    occupationIds: string[],
+  ): Promise<{ permission: string; care_activity_id: string; occupation_id: string }[]> {
+    if (careActivityIds.length === 0 || occupationIds.length === 0) {
+      return [];
+    }
+    return this.permissionRepo
+      .createQueryBuilder('cstp')
+      .select('cstp.permission', 'permission')
+      .addSelect('cstp.careActivity', 'care_activity_id')
+      .addSelect('cstp.occupation', 'occupation_id')
+      .where('cstp.template = :templateId', { templateId })
+      .andWhere('cstp.careActivity IN (:...activityIds)', { activityIds: careActivityIds })
+      .andWhere('cstp.occupation IN (:...occupationIds)', { occupationIds: occupationIds })
+      .getRawMany();
+  }
+
+  /**
+   * Get flat list of templates for planning dropdown
+   * Returns templates for the user's health authority plus GLOBAL masters
+   */
+  async findAllForPlanning(healthAuthority: string): Promise<CareSettingTemplateRO[]> {
+    const templates = await this.templateRepo
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.unit', 't_unit')
+      .leftJoinAndSelect('t.parent', 't_parent')
+      .where('(t.healthAuthority = :ha OR t.healthAuthority = :global)', {
+        ha: healthAuthority,
+        global: 'GLOBAL',
+      })
+      .orderBy('t.name', 'ASC')
+      .getMany();
+    return templates.map(t => new CareSettingTemplateRO(t));
+  }
+
+  /**
    * Delete a template and all associated permissions
    * @throws BadRequestException if attempting to delete a master template
+   * @throws BadRequestException if template is referenced by draft planning sessions
    * @throws ForbiddenException if user's HA doesn't match template's HA
    * @throws NotFoundException if template doesn't exist
    */
@@ -550,6 +649,21 @@ export class CareSettingTemplateService {
     // Validate user has access to this template's health authority
     if (healthAuthority && template.healthAuthority !== healthAuthority) {
       throw new ForbiddenException('Cannot delete templates belonging to another health authority');
+    }
+
+    // Check if any draft sessions reference this template (raw query to avoid module coupling)
+    const result = await this.templateRepo.manager
+      .createQueryBuilder()
+      .select('COUNT(*)', 'count')
+      .from('planning_session', 'ps')
+      .where('ps.care_setting_template_id = :id', { id })
+      .andWhere('ps.status = :status', { status: 'DRAFT' })
+      .getRawOne();
+
+    if (parseInt(result.count) > 0) {
+      throw new BadRequestException(
+        `Cannot delete template: it is referenced by ${result.count} draft care plan(s).`,
+      );
     }
 
     // Delete permissions first (cascade should handle this, but being explicit)

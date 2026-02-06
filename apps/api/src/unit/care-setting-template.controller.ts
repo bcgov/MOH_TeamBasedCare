@@ -89,6 +89,27 @@ export class CareSettingTemplateController {
   }
 
   /**
+   * Get lightweight template data for copy wizard - returns IDs only
+   * Avoids loading full permission entities which can timeout on master templates
+   */
+  @Get(':id/copy-data')
+  async getTemplateForCopy(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: IRequest,
+  ): Promise<{
+    id: string;
+    name: string;
+    unitId: string;
+    selectedBundleIds: string[];
+    selectedActivityIds: string[];
+    permissions: { activityId: string; occupationId: string; permission: string }[];
+  }> {
+    const template = await this.templateService.getTemplateBasic(id);
+    this.validateTemplateAccess(template, req.user.organization);
+    return this.templateService.getTemplateForCopy(id);
+  }
+
+  /**
    * Get detailed template by ID including selected bundles, activities, and permissions
    * Only returns templates belonging to user's health authority or GLOBAL templates
    */

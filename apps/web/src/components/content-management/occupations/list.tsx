@@ -63,7 +63,8 @@ const TableBody: React.FC<TableBodyProps> = ({
           <td className={tdStyles}>
             <Tag
               text={occupation.isRegulated ? 'Regulated' : 'Unregulated'}
-              tagStyle={occupation.isRegulated ? TagVariants.BLUE : TagVariants.GRAY}
+              tagStyle={occupation.isRegulated ? TagVariants.BLUE : TagVariants.GREEN}
+              className='max-w-10 h-8'
             />
           </td>
           <td className={`${tdStyles}`}>
