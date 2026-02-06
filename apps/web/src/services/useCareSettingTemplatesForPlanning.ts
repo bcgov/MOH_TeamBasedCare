@@ -13,7 +13,7 @@ export const useCareSettingTemplatesForPlanning = () => {
   const careLocations: OptionType[] =
     response.data?.map(t => ({
       value: t.id,
-      label: t.isMaster ? t.unitName : t.name,
+      label: (t.isMaster ? t.unitName : t.name) || '',
     })) ?? [];
 
   return { careLocations, ...response };

@@ -131,9 +131,9 @@ export class PlanningSessionService {
     return {
       profileOption: planningSession?.profileOption || null,
       careLocation:
-        planningSession?.careSettingTemplateId // Prefer template ID for dropdown match
-        ?? planningSession?.careLocationId // Fallback for legacy sessions
-        ?? null,
+        planningSession?.careSettingTemplateId ?? // Prefer template ID for dropdown match
+        planningSession?.careLocationId ?? // Fallback for legacy sessions
+        null,
     };
   }
 
@@ -220,7 +220,13 @@ export class PlanningSessionService {
   async getPlanningActivityGap(sessionId: string): Promise<ActivityGap | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['careActivity', 'careActivity.bundle', 'occupation', 'careLocation', 'careSettingTemplate'],
+      relations: [
+        'careActivity',
+        'careActivity.bundle',
+        'occupation',
+        'careLocation',
+        'careSettingTemplate',
+      ],
     });
     if (!planningSession || !planningSession.occupation || !planningSession.careActivity) {
       return;
