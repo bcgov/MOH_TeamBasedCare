@@ -13,6 +13,10 @@ import {
   ActivityGapHeader,
   ActivityGapCareActivity,
   BundleRO,
+  SuggestionResponseRO,
+  OccupationSuggestionRO,
+  SuggestionCompetencyRO,
+  CareActivityType,
 } from '@tbcm/common';
 import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
@@ -356,6 +360,276 @@ export class PlanningSessionService {
       data: _.sortBy(result, 'name'),
       overview,
       careSetting: planningSession.careLocation?.displayName,
+    };
+  }
+
+  /**
+   * Get occupation suggestions for the planning session
+   * Calculates scores based on uncovered activities using the scoring algorithm:
+   * - Restricted Activity: Y=+4, LC=+3
+   * - Aspect of Practice: Y=+3, LC=+2
+   * - Task: Y=+2, LC=+1
+   */
+  async getSuggestions(
+    sessionId: string,
+    tempSelectedIds: string[] = [],
+    page = 1,
+    pageSize = 10,
+  ): Promise<SuggestionResponseRO> {
+    // 1. Load session with required relations
+    const session = await this.findOne({
+      where: { id: sessionId },
+      relations: [
+        'careActivity',
+        'careActivity.bundle',
+        'occupation',
+        'careSettingTemplate',
+        'careLocation',
+      ],
+    });
+
+    if (!session) {
+      throw new NotFoundException('Planning session not found');
+    }
+
+    // 2. Get excluded occupation IDs (already in session + temp selections)
+    const sessionOccupations = session.occupation || [];
+    const excludedOccupationIds = new Set([
+      ...sessionOccupations.map(o => o.id),
+      ...tempSelectedIds,
+    ]);
+
+    // 3. Get all activities for session
+    const activities = session.careActivity || [];
+    if (activities.length === 0) {
+      return {
+        suggestions: [],
+        totalUncoveredActivities: 0,
+        total: 0,
+        page,
+        pageSize,
+        message: 'No care activities selected',
+      };
+    }
+
+    const activityIds = activities.map(a => a.id);
+
+    // Build activity lookup map
+    const activityMap = new Map(
+      activities.map(a => [
+        a.id,
+        {
+          name: a.name,
+          activityType: a.activityType as CareActivityType,
+          bundleId: a.bundle.id,
+          bundleName: a.bundle.name,
+        },
+      ]),
+    );
+
+    // 4. Get permissions (template or legacy path)
+    let permissions: {
+      permission: string;
+      care_activity_id: string;
+      occupation_id: string;
+      occupation_name: string;
+    }[];
+
+    if (session.careSettingTemplate?.id) {
+      permissions = await this.careSettingTemplateService.getPermissionsForSuggestions(
+        session.careSettingTemplate.id,
+        activityIds,
+      );
+    } else if (session.careLocation?.id) {
+      // Legacy path: use inline join like getPlanningActivityGap
+      permissions = await this.planningSessionRepo
+        .createQueryBuilder('ps')
+        .select('aa.permission', 'permission')
+        .addSelect('aa.care_activity_id', 'care_activity_id')
+        .addSelect('aa.occupation_id', 'occupation_id')
+        .addSelect('o.displayName', 'occupation_name')
+        .innerJoin('ps.careActivity', 'ca')
+        .innerJoin(AllowedActivity, 'aa', 'aa.careActivity = ca.id AND aa.unit = ps.careLocation')
+        .innerJoin('aa.occupation', 'o')
+        .where('ps.id = :sessionId', { sessionId })
+        .andWhere('aa.permission IN (:...perms)', { perms: ['Y', 'LC'] })
+        .getRawMany();
+    } else {
+      return {
+        suggestions: [],
+        totalUncoveredActivities: 0,
+        total: 0,
+        page,
+        pageSize,
+        message: 'No care setting selected',
+      };
+    }
+
+    if (permissions.length === 0) {
+      return {
+        suggestions: [],
+        totalUncoveredActivities: activities.length,
+        total: 0,
+        page,
+        pageSize,
+        message: 'No permission data available',
+      };
+    }
+
+    // 5. Find covered activities (by excluded occupations)
+    const coveredActivityIds = new Set<string>();
+    permissions.forEach(p => {
+      if (excludedOccupationIds.has(p.occupation_id)) {
+        coveredActivityIds.add(p.care_activity_id);
+      }
+    });
+
+    const uncoveredActivityIds = activityIds.filter(id => !coveredActivityIds.has(id));
+    const totalUncoveredActivities = uncoveredActivityIds.length;
+
+    // 6. Group permissions by occupation
+    const occupationPermissions = new Map<
+      string,
+      { name: string; permissions: Map<string, string> }
+    >();
+    permissions.forEach(p => {
+      if (!excludedOccupationIds.has(p.occupation_id)) {
+        if (!occupationPermissions.has(p.occupation_id)) {
+          occupationPermissions.set(p.occupation_id, {
+            name: p.occupation_name,
+            permissions: new Map(),
+          });
+        }
+        occupationPermissions
+          .get(p.occupation_id)!
+          .permissions.set(p.care_activity_id, p.permission);
+      }
+    });
+
+    // 7. Calculate scores for each occupation
+    const occupationScores: {
+      occupationId: string;
+      occupationName: string;
+      score: number;
+      activitiesY: Map<string, { activityId: string; bundleId: string }>;
+      activitiesLC: Map<string, { activityId: string; bundleId: string }>;
+    }[] = [];
+
+    occupationPermissions.forEach((data, occupationId) => {
+      let score = 0;
+      const activitiesY = new Map<string, { activityId: string; bundleId: string }>();
+      const activitiesLC = new Map<string, { activityId: string; bundleId: string }>();
+
+      uncoveredActivityIds.forEach(activityId => {
+        const permission = data.permissions.get(activityId);
+        if (!permission) return;
+
+        const activity = activityMap.get(activityId);
+        if (!activity) return;
+
+        // Calculate base value by activity type
+        let baseValue = 0;
+        switch (activity.activityType) {
+          case CareActivityType.RESTRICTED_ACTIVITY:
+            baseValue = 4;
+            break;
+          case CareActivityType.ASPECT_OF_PRACTICE:
+            baseValue = 3;
+            break;
+          case CareActivityType.TASK:
+            baseValue = 2;
+            break;
+        }
+
+        if (permission === 'Y') {
+          score += baseValue;
+          activitiesY.set(activityId, { activityId, bundleId: activity.bundleId });
+        } else if (permission === 'LC') {
+          score += baseValue - 1;
+          activitiesLC.set(activityId, { activityId, bundleId: activity.bundleId });
+        }
+      });
+
+      if (score > 0) {
+        occupationScores.push({
+          occupationId,
+          occupationName: data.name,
+          score,
+          activitiesY,
+          activitiesLC,
+        });
+      }
+    });
+
+    // 8. Sort by score DESC, then displayName ASC
+    occupationScores.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.occupationName.localeCompare(b.occupationName);
+    });
+
+    const total = occupationScores.length;
+
+    // 9. Paginate
+    const startIndex = (page - 1) * pageSize;
+    const paginatedScores = occupationScores.slice(startIndex, startIndex + pageSize);
+
+    // 10. Build response with competencies grouped
+    const suggestions: OccupationSuggestionRO[] = paginatedScores.map(os => {
+      // Group by bundle
+      const competencyMap = new Map<string, SuggestionCompetencyRO>();
+
+      // Add Y activities
+      os.activitiesY.forEach((data, activityId) => {
+        const activity = activityMap.get(activityId)!;
+        if (!competencyMap.has(data.bundleId)) {
+          competencyMap.set(data.bundleId, {
+            bundleId: data.bundleId,
+            bundleName: activity.bundleName,
+            activitiesY: [],
+            activitiesLC: [],
+          });
+        }
+        competencyMap.get(data.bundleId)!.activitiesY.push({
+          activityId,
+          activityName: activity.name,
+          activityType: activity.activityType,
+        });
+      });
+
+      // Add LC activities
+      os.activitiesLC.forEach((data, activityId) => {
+        const activity = activityMap.get(activityId)!;
+        if (!competencyMap.has(data.bundleId)) {
+          competencyMap.set(data.bundleId, {
+            bundleId: data.bundleId,
+            bundleName: activity.bundleName,
+            activitiesY: [],
+            activitiesLC: [],
+          });
+        }
+        competencyMap.get(data.bundleId)!.activitiesLC.push({
+          activityId,
+          activityName: activity.name,
+          activityType: activity.activityType,
+        });
+      });
+
+      return {
+        occupationId: os.occupationId,
+        occupationName: os.occupationName,
+        score: os.score,
+        competencies: Array.from(competencyMap.values()).sort((a, b) =>
+          a.bundleName.localeCompare(b.bundleName),
+        ),
+      };
+    });
+
+    return {
+      suggestions,
+      totalUncoveredActivities,
+      total,
+      page,
+      pageSize,
     };
   }
 }

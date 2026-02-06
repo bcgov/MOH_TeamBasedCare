@@ -672,4 +672,36 @@ export class CareSettingTemplateService {
     // Delete the template
     await this.templateRepo.delete({ id });
   }
+
+  /**
+   * Get all permissions for suggestion engine
+   * Returns permissions for ALL occupations (not just selected ones) with occupation names
+   * Used to calculate suggestion scores for occupations not yet in the session
+   */
+  async getPermissionsForSuggestions(
+    templateId: string,
+    careActivityIds: string[],
+  ): Promise<
+    {
+      permission: string;
+      care_activity_id: string;
+      occupation_id: string;
+      occupation_name: string;
+    }[]
+  > {
+    if (careActivityIds.length === 0) {
+      return [];
+    }
+    return this.permissionRepo
+      .createQueryBuilder('cstp')
+      .select('cstp.permission', 'permission')
+      .addSelect('cstp.careActivity', 'care_activity_id')
+      .addSelect('cstp.occupation', 'occupation_id')
+      .innerJoin('cstp.occupation', 'o')
+      .addSelect('o.displayName', 'occupation_name')
+      .where('cstp.template = :templateId', { templateId })
+      .andWhere('cstp.careActivity IN (:...activityIds)', { activityIds: careActivityIds })
+      .andWhere('cstp.permission IN (:...perms)', { perms: ['Y', 'LC'] })
+      .getRawMany();
+  }
 }

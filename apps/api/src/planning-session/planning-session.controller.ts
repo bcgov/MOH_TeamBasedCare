@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import {
+  GetSuggestionsDTO,
   PlanningSessionRO,
   Role,
   SaveCareActivityDTO,
@@ -119,5 +120,17 @@ export class PlanningSessionController {
   @Get('/:sessionId/activities-gap')
   getPlanningActivityGap(@Param('sessionId') sessionId: string) {
     return this.planningSessionService.getPlanningActivityGap(sessionId);
+  }
+
+  @UseGuards(SessionGuard)
+  @Post('/:sessionId/suggestions')
+  @ApiBody({ type: GetSuggestionsDTO })
+  getSuggestions(@Param('sessionId') sessionId: string, @Body() dto: GetSuggestionsDTO) {
+    return this.planningSessionService.getSuggestions(
+      sessionId,
+      dto.tempSelectedIds || [],
+      dto.page || 1,
+      dto.pageSize || 10,
+    );
   }
 }
