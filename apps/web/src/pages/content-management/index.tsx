@@ -1,5 +1,5 @@
 import { Button, PageTitle } from '@components';
-import { useCareLocations, useHttp } from '@services';
+import { useCareSettingTemplatesForCMS, useHttp } from '@services';
 import { CareActivityCMSRO, OccupationCMSRO } from '@tbcm/common';
 import dayjs from 'dayjs';
 import { NextPage } from 'next';
@@ -67,7 +67,8 @@ const ContentManagement: NextPage = () => {
 
   const { fetchData } = useHttp();
   const { updateActivePath } = useAppContext();
-  const { careLocations: careSettings, isValidating: isLoadingCareLocations } = useCareLocations();
+  const { careSettingTemplates, isValidating: isLoadingCareSettings } =
+    useCareSettingTemplatesForCMS();
 
   const [showModal, setShowModal] = useState(false);
   const [currentModal, setCurrentModal] = useState<
@@ -165,8 +166,8 @@ const ContentManagement: NextPage = () => {
 
                   <div>
                     <CareSettingsFilter
-                      isLoading={isLoadingCareLocations}
-                      options={careSettings}
+                      isLoading={isLoadingCareSettings}
+                      options={careSettingTemplates}
                       careSetting={careSetting}
                       onCareSettingChange={onCareSettingChange}
                     />

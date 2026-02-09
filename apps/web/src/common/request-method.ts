@@ -90,6 +90,7 @@ export const API_ENDPOINT = {
   CARE_ACTIVITY_DOWNLOAD: '/care-activity/cms/download',
 
   // Care Settings
+  CMS_CARE_SETTING_TEMPLATES_FILTER: '/care-settings/cms/templates-for-filter',
   findCareSettings: (params: EndpointQueryParams<CareSettingsCMSFindSortKeys>) =>
     appendQueryParams('/care-settings/cms/find', params),
   getCareSettingTemplate: (id: string) => `/care-settings/${id}`,

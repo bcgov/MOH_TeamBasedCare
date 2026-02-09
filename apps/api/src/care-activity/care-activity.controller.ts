@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -28,6 +29,7 @@ import { FindCareActivitiesDto } from './dto/find-care-activities.dto';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { FindCareActivitiesCMSDto } from './dto/find-care-activities-cms.dto';
 import { CareActivityBulkService } from './care-activity-bulk.service';
+import { IRequest } from 'src/common/app-request';
 
 @ApiTags('care-activity')
 @Controller('care-activity')
@@ -72,11 +74,19 @@ export class CareActivityController {
   }
 
   @Get('cms/find')
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
   async findCareActivitiesCMS(
     @Query() query: FindCareActivitiesCMSDto,
+    @Req() req: IRequest,
   ): Promise<PaginationRO<CareActivityCMSRO[]>> {
-    const [careActivities, total] = await this.careActivityService.findCareActivitiesCMS(query);
+    // Admins (ADMIN or CONTENT_ADMIN) see all templates; others see their HA + GLOBAL
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN || r === Role.CONTENT_ADMIN);
+    const healthAuthority = isAdmin ? null : (req.user.organization ?? '');
+
+    const [careActivities, total] = await this.careActivityService.findCareActivitiesCMS(
+      query,
+      healthAuthority,
+    );
     return new PaginationRO([
       careActivities.map(careActivity => new CareActivityCMSRO(careActivity)),
       total,

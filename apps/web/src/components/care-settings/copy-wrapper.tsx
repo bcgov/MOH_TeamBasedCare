@@ -31,13 +31,13 @@ import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateC
 import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
-import { Permissions } from '@tbcm/common';
+import { Permissions, Role } from '@tbcm/common';
 import { CareSettingsSteps } from 'src/common/constants';
 
 const CopyContent: React.FC = () => {
   const router = useRouter();
   const { sourceId } = router.query as { sourceId: string };
-  const { me } = useMe();
+  const { me, hasUserRole } = useMe();
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
   // Load SOURCE template data (we're copying FROM this, not editing it)
@@ -165,7 +165,9 @@ const CopyContent: React.FC = () => {
   const hasError = templateError || bundlesError || occupationsError;
 
   // Check if user has required organization for creating copies
-  if (me && !me.organization) {
+  // Admins can create GLOBAL templates without an organization
+  const isAdmin = hasUserRole([Role.ADMIN, Role.CONTENT_ADMIN]);
+  if (me && !me.organization && !isAdmin) {
     return (
       <Card bgWhite>
         <div className='text-center py-8'>

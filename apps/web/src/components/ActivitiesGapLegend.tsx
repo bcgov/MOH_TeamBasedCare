@@ -2,15 +2,17 @@ import { faList, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TooltipIconProps } from 'src/common/interfaces';
 import { tooltipIcons } from '../common';
-import { Button } from './Button';
+import { Button, buttonBase, buttonColor } from './Button';
 import { Popover, PopoverPosition } from './generic/Popover';
 
 export const ActivitiesGapLegend: React.FC = () => {
+  // Using styled span instead of Button to avoid nested <button> elements
+  // (PopoverUI.Button already renders as a button)
   const title = (
-    <Button variant='secondary' type='button'>
+    <span className={`${buttonBase} ${buttonColor.secondary}`}>
       Table legend
       <FontAwesomeIcon title='Close' icon={faList} className='h-4 ml-2 mr-1' />
-    </Button>
+    </span>
   );
   return (
     <Popover title={title} position={PopoverPosition.BOTTOM_LEFT}>

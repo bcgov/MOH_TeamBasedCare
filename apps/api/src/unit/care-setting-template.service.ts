@@ -113,23 +113,28 @@ export class CareSettingTemplateService {
    */
   async findTemplates(
     query: FindCareSettingTemplatesDto,
-    healthAuthority: string,
+    healthAuthority: string | null,
   ): Promise<[CareSettingTemplateRO[], number]> {
     const queryBuilder = this.templateRepo
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.unit', 't_unit')
       .leftJoinAndSelect('t.parent', 't_parent');
 
-    // Filter by health authority - show user's HA templates + GLOBAL masters
-    if (healthAuthority) {
-      queryBuilder.where('(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)', {
-        healthAuthority,
-        global: 'GLOBAL',
-      });
-    } else {
-      // Users without org only see GLOBAL templates
-      queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+    // Filter by health authority
+    // null = admin, show all templates
+    // string = user's HA, show HA + GLOBAL (or just GLOBAL if empty string)
+    if (healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.where('(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)', {
+          healthAuthority,
+          global: 'GLOBAL',
+        });
+      } else {
+        // Users without org only see GLOBAL templates
+        queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+      }
     }
+    // If null (admin), no filter - show all templates
 
     // Search by name
     if (query.searchText) {
@@ -230,10 +235,13 @@ export class CareSettingTemplateService {
     }
 
     // Load permissions as flat data (no entity relations)
+    // Use snake_case column names for raw query
     const permissions = await this.permissionRepo
       .createQueryBuilder('p')
-      .select(['p.careActivityId', 'p.occupationId', 'p.permission'])
-      .where('p.templateId = :templateId', { templateId: id })
+      .select('p.care_activity_id', 'care_activity_id')
+      .addSelect('p.occupation_id', 'occupation_id')
+      .addSelect('p.permission', 'permission')
+      .where('p.template_id = :templateId', { templateId: id })
       .getRawMany();
 
     return {
@@ -243,9 +251,9 @@ export class CareSettingTemplateService {
       selectedBundleIds: template.selectedBundles.map(b => b.id),
       selectedActivityIds: template.selectedActivities.map(a => a.id),
       permissions: permissions.map(p => ({
-        activityId: p.p_careActivityId || p.p_care_activity_id,
-        occupationId: p.p_occupationId || p.p_occupation_id,
-        permission: p.p_permission,
+        activityId: p.care_activity_id,
+        occupationId: p.occupation_id,
+        permission: p.permission,
       })),
     };
   }
@@ -624,6 +632,20 @@ export class CareSettingTemplateService {
       .orderBy('t.name', 'ASC')
       .getMany();
     return templates.map(t => new CareSettingTemplateRO(t));
+  }
+
+  /**
+   * Get templates for CMS filter dropdown
+   * Reuses findTemplates with no pagination to avoid duplicate HA filtering logic
+   * @param healthAuthority - User's HA, or null to return ALL templates (for admins)
+   */
+  async findAllForCMSFilter(healthAuthority: string | null): Promise<CareSettingTemplateRO[]> {
+    // Reuse findTemplates with large page size to get all results
+    const [templates] = await this.findTemplates(
+      { page: 1, pageSize: 10000 },
+      healthAuthority,
+    );
+    return templates;
   }
 
   /**
