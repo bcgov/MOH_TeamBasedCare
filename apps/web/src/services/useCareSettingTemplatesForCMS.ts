@@ -18,7 +18,7 @@ export const useCareSettingTemplatesForCMS = () => {
   const careSettingTemplates: OptionType[] =
     response.data?.map(t => ({
       value: t.id,
-      label: t.name.replace(new RegExp(`${MASTER_TEMPLATE_SUFFIX}$`), ''),
+      label: (t.name ?? '').replace(new RegExp(`${MASTER_TEMPLATE_SUFFIX}$`), ''),
     })) ?? [];
 
   return { careSettingTemplates, ...response };
