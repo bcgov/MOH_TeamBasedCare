@@ -146,7 +146,7 @@ export class CareSettingTemplateService {
       });
     }
 
-    // Sort
+    // Sort - always put masters first, then by requested sort
     const sortOrder = query.sortOrder || SortOrder.ASC;
 
     if (query.sortBy) {
@@ -156,10 +156,10 @@ export class CareSettingTemplateService {
         orderBy = 't_parent.name';
       }
 
-      queryBuilder.orderBy(orderBy, sortOrder as SortOrder);
+      queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy(orderBy, sortOrder as SortOrder);
     } else {
-      // Default sort by name
-      queryBuilder.orderBy('t.name', 'ASC');
+      // Default: masters first, then by name
+      queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy('t.name', 'ASC');
     }
 
     // Pagination

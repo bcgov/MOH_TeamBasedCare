@@ -74,12 +74,12 @@ export class CareSettingTemplateController {
 
   /**
    * Determine health authority for template copy based on user role
-   * - Admins create GLOBAL templates visible to all health authorities
-   * - Users create templates scoped to their own health authority
+   * - ADMIN creates GLOBAL templates visible to all health authorities
+   * - CONTENT_ADMIN and other users create templates scoped to their own health authority
    * @throws BadRequestException if non-admin user has no organization
    */
   private getHealthAuthorityForCopy(req: IRequest): string {
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN || r === Role.CONTENT_ADMIN);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
 
     if (isAdmin) {
       return 'GLOBAL';
@@ -223,7 +223,8 @@ export class CareSettingTemplateController {
   /**
    * Update a template's name, selected bundles/activities, and permissions
    * Note: Master templates cannot be updated
-   * Only templates belonging to user's health authority can be modified
+   * - ADMIN can modify any template regardless of health authority
+   * - CONTENT_ADMIN can only modify templates belonging to their health authority
    */
   @Patch(':id')
   @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
@@ -233,14 +234,16 @@ export class CareSettingTemplateController {
     @Body() dto: UpdateCareSettingTemplateDTO,
     @Req() req: IRequest,
   ): Promise<void> {
-    const healthAuthority = req.user.organization;
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isAdmin ? undefined : req.user.organization;
     await this.templateService.updateTemplate(id, dto, healthAuthority);
   }
 
   /**
    * Delete a template and all its associated permissions
    * Note: Master templates cannot be deleted
-   * Only templates belonging to user's health authority can be deleted
+   * - ADMIN can delete any template regardless of health authority
+   * - CONTENT_ADMIN can only delete templates belonging to their health authority
    */
   @Delete(':id')
   @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
@@ -249,7 +252,8 @@ export class CareSettingTemplateController {
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: IRequest,
   ): Promise<void> {
-    const healthAuthority = req.user.organization;
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isAdmin ? undefined : req.user.organization;
     await this.templateService.deleteTemplate(id, healthAuthority);
   }
 }

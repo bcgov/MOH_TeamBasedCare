@@ -131,14 +131,14 @@ describe('CareSettingTemplateController', () => {
       );
     });
 
-    it('should use GLOBAL for CONTENT_ADMIN users', async () => {
-      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN] });
+    it('should use user organization for CONTENT_ADMIN users', async () => {
+      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN], organization: 'Fraser Health' });
       await controller.copyTemplate('tmpl-1', { name: 'Copy' } as any, req);
 
       expect(mockTemplateService.copyTemplate).toHaveBeenCalledWith(
         'tmpl-1',
         { name: 'Copy' },
-        'GLOBAL',
+        'Fraser Health',
       );
     });
 
@@ -259,9 +259,18 @@ describe('CareSettingTemplateController', () => {
 
   // ─── updateTemplate ────────────────────────────────────────────────
   describe('updateTemplate', () => {
-    it('should pass user organization to service', async () => {
+    it('should pass undefined HA for ADMIN (can edit any template)', async () => {
       mockTemplateService.updateTemplate.mockResolvedValue(undefined);
-      const req = createMockRequest({ organization: 'Fraser Health' });
+      const req = createMockRequest({ roles: [Role.ADMIN], organization: 'Fraser Health' });
+
+      await controller.updateTemplate('tmpl-1', {} as any, req);
+
+      expect(mockTemplateService.updateTemplate).toHaveBeenCalledWith('tmpl-1', {}, undefined);
+    });
+
+    it('should pass user organization for CONTENT_ADMIN', async () => {
+      mockTemplateService.updateTemplate.mockResolvedValue(undefined);
+      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN], organization: 'Fraser Health' });
 
       await controller.updateTemplate('tmpl-1', {} as any, req);
 
@@ -275,9 +284,18 @@ describe('CareSettingTemplateController', () => {
 
   // ─── deleteTemplate ────────────────────────────────────────────────
   describe('deleteTemplate', () => {
-    it('should pass user organization to service', async () => {
+    it('should pass undefined HA for ADMIN (can delete any template)', async () => {
       mockTemplateService.deleteTemplate.mockResolvedValue(undefined);
-      const req = createMockRequest({ organization: 'Fraser Health' });
+      const req = createMockRequest({ roles: [Role.ADMIN], organization: 'Fraser Health' });
+
+      await controller.deleteTemplate('tmpl-1', req);
+
+      expect(mockTemplateService.deleteTemplate).toHaveBeenCalledWith('tmpl-1', undefined);
+    });
+
+    it('should pass user organization for CONTENT_ADMIN', async () => {
+      mockTemplateService.deleteTemplate.mockResolvedValue(undefined);
+      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN], organization: 'Fraser Health' });
 
       await controller.deleteTemplate('tmpl-1', req);
 

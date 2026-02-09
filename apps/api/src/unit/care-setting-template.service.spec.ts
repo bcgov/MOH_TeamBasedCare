@@ -191,7 +191,7 @@ describe('CareSettingTemplateService', () => {
       });
     });
 
-    it('should sort by PARENT_NAME', async () => {
+    it('should sort by isMaster DESC then PARENT_NAME', async () => {
       await service.findTemplates(
         {
           page: 1,
@@ -202,10 +202,11 @@ describe('CareSettingTemplateService', () => {
         null,
       );
 
-      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t_parent.name', 'ASC');
+      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
+      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t_parent.name', 'ASC');
     });
 
-    it('should sort by custom field', async () => {
+    it('should sort by isMaster DESC then custom field', async () => {
       await service.findTemplates(
         {
           page: 1,
@@ -216,13 +217,15 @@ describe('CareSettingTemplateService', () => {
         null,
       );
 
-      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.name', 'DESC');
+      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
+      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.name', 'DESC');
     });
 
-    it('should default sort by name ASC when no sortBy', async () => {
+    it('should default sort by isMaster DESC then name ASC', async () => {
       await service.findTemplates({ page: 1, pageSize: 10 } as any, null);
 
-      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.name', 'ASC');
+      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
+      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.name', 'ASC');
     });
 
     it('should calculate correct skip for page 3', async () => {
