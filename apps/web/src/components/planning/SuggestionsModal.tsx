@@ -259,7 +259,13 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
 
   return (
     <Transition.Root show={isOpen} as={React.Fragment}>
-      <Dialog as='div' className='fixed z-10 inset-0 overflow-y-auto' onClose={handleClose}>
+      <Dialog
+        as='div'
+        static
+        className='fixed z-10 inset-0 overflow-y-auto'
+        open={isOpen}
+        onClose={handleClose}
+      >
         <div className='flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0'>
           <Transition.Child
             as={React.Fragment}
@@ -286,7 +292,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
             leaveFrom='opacity-100 translate-y-0 sm:scale-100'
             leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
           >
-            <div className='inline-block align-bottom bg-white rounded-lg text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full max-h-[85vh] flex flex-col'>
+            <div className='relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full'>
               <div className='flex items-center justify-between border-b border-[#eaeaef] bg-[#f6f6f9] px-6 py-4 rounded-t-lg'>
                 <Dialog.Title as='h3' className='text-lg font-semibold text-[#32324d]'>
                   Occupations suggestions
@@ -299,7 +305,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                 </button>
               </div>
 
-              <div className='px-6 pt-4 shrink-0'>
+              <div className='px-6 pt-4'>
                 <p className='text-base text-black mb-4'>
                   System suggestions to increase the coverage of care competencies/care activities
                   within the scope of practice.
@@ -317,7 +323,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                 </div>
               </div>
 
-              <div className='p-6 overflow-y-auto flex-1'>{renderContent()}</div>
+              <div className='p-6 overflow-y-auto max-h-[60vh]'>{renderContent()}</div>
             </div>
           </Transition.Child>
         </div>
