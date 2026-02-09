@@ -1,10 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CareSettingTemplateService } from './care-setting-template.service';
 import { CareSettingTemplate } from './entity/care-setting-template.entity';
 import { CareSettingTemplatePermission } from './entity/care-setting-template-permission.entity';
@@ -104,7 +100,10 @@ describe('CareSettingTemplateService', () => {
       providers: [
         CareSettingTemplateService,
         { provide: getRepositoryToken(CareSettingTemplate), useValue: mockTemplateRepo },
-        { provide: getRepositoryToken(CareSettingTemplatePermission), useValue: mockPermissionRepo },
+        {
+          provide: getRepositoryToken(CareSettingTemplatePermission),
+          useValue: mockPermissionRepo,
+        },
         { provide: getRepositoryToken(Unit), useValue: mockUnitRepo },
         { provide: getRepositoryToken(Bundle), useValue: mockBundleRepo },
         { provide: getRepositoryToken(CareActivity), useValue: mockCareActivityRepo },
@@ -122,7 +121,10 @@ describe('CareSettingTemplateService', () => {
   // ─── getTemplateBasic ──────────────────────────────────────────────
   describe('getTemplateBasic', () => {
     it('should return template id and healthAuthority', async () => {
-      mockTemplateRepo.findOne.mockResolvedValue({ id: 'tmpl-1', healthAuthority: 'Fraser Health' });
+      mockTemplateRepo.findOne.mockResolvedValue({
+        id: 'tmpl-1',
+        healthAuthority: 'Fraser Health',
+      });
 
       const result = await service.getTemplateBasic('tmpl-1');
 
@@ -147,7 +149,10 @@ describe('CareSettingTemplateService', () => {
     });
 
     it('should return paginated results with defaults', async () => {
-      const [results, count] = await service.findTemplates({ page: 1, pageSize: 10 } as any, 'Fraser Health');
+      const [results, count] = await service.findTemplates(
+        { page: 1, pageSize: 10 } as any,
+        'Fraser Health',
+      );
 
       expect(count).toBe(1);
       expect(results).toHaveLength(1);
@@ -167,10 +172,9 @@ describe('CareSettingTemplateService', () => {
     it('should filter GLOBAL only for empty HA string', async () => {
       await service.findTemplates({ page: 1, pageSize: 10 } as any, '');
 
-      expect(mockTemplateQB.where).toHaveBeenCalledWith(
-        't.healthAuthority = :global',
-        { global: 'GLOBAL' },
-      );
+      expect(mockTemplateQB.where).toHaveBeenCalledWith('t.healthAuthority = :global', {
+        global: 'GLOBAL',
+      });
     });
 
     it('should show all templates when HA is null (admin)', async () => {
@@ -182,30 +186,35 @@ describe('CareSettingTemplateService', () => {
     it('should apply search text ILIKE filter', async () => {
       await service.findTemplates({ page: 1, pageSize: 10, searchText: 'acute' } as any, null);
 
-      expect(mockTemplateQB.andWhere).toHaveBeenCalledWith(
-        't.name ILIKE :name',
-        { name: '%acute%' },
-      );
+      expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.name ILIKE :name', {
+        name: '%acute%',
+      });
     });
 
     it('should sort by PARENT_NAME', async () => {
-      await service.findTemplates({
-        page: 1,
-        pageSize: 10,
-        sortBy: CareSettingsCMSFindSortKeys.PARENT_NAME,
-        sortOrder: SortOrder.ASC,
-      } as any, null);
+      await service.findTemplates(
+        {
+          page: 1,
+          pageSize: 10,
+          sortBy: CareSettingsCMSFindSortKeys.PARENT_NAME,
+          sortOrder: SortOrder.ASC,
+        } as any,
+        null,
+      );
 
       expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t_parent.name', 'ASC');
     });
 
     it('should sort by custom field', async () => {
-      await service.findTemplates({
-        page: 1,
-        pageSize: 10,
-        sortBy: CareSettingsCMSFindSortKeys.NAME,
-        sortOrder: SortOrder.DESC,
-      } as any, null);
+      await service.findTemplates(
+        {
+          page: 1,
+          pageSize: 10,
+          sortBy: CareSettingsCMSFindSortKeys.NAME,
+          sortOrder: SortOrder.DESC,
+        } as any,
+        null,
+      );
 
       expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.name', 'DESC');
     });
@@ -236,9 +245,7 @@ describe('CareSettingTemplateService', () => {
     it('should return template detail with bundles and permissions', async () => {
       const templateWithPerms = {
         ...mockTemplate,
-        permissions: [
-          { careActivity: { id: 'a-1' }, occupation: { id: 'o-1' }, permission: 'Y' },
-        ],
+        permissions: [{ careActivity: { id: 'a-1' }, occupation: { id: 'o-1' }, permission: 'Y' }],
       };
       mockTemplateRepo.findOne.mockResolvedValue(templateWithPerms);
       mockBundleQB.getMany.mockResolvedValue([]);
@@ -287,8 +294,13 @@ describe('CareSettingTemplateService', () => {
 
       await service.getTemplateForCopy('tmpl-1');
 
-      expect(mockPermissionQB.select).toHaveBeenCalledWith('p.care_activity_id', 'care_activity_id');
-      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', { templateId: 'tmpl-1' });
+      expect(mockPermissionQB.select).toHaveBeenCalledWith(
+        'p.care_activity_id',
+        'care_activity_id',
+      );
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'tmpl-1',
+      });
     });
   });
 
@@ -309,7 +321,9 @@ describe('CareSettingTemplateService', () => {
     it('should throw NotFoundException when not found', async () => {
       mockTemplateRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getTemplateForPlanning('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.getTemplateForPlanning('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -349,7 +363,9 @@ describe('CareSettingTemplateService', () => {
     it('should throw NotFoundException when template not found', async () => {
       mockTemplateRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getOccupationsForTemplate('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.getOccupationsForTemplate('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -358,9 +374,7 @@ describe('CareSettingTemplateService', () => {
     const sourceWithPerms = {
       ...mockTemplate,
       id: 'source-1',
-      permissions: [
-        { careActivity: { id: 'a-1' }, occupation: { id: 'o-1' }, permission: 'Y' },
-      ],
+      permissions: [{ careActivity: { id: 'a-1' }, occupation: { id: 'o-1' }, permission: 'Y' }],
     };
 
     beforeEach(() => {
@@ -377,7 +391,11 @@ describe('CareSettingTemplateService', () => {
       mockPermissionRepo.create.mockReturnValue({});
       mockPermissionRepo.save.mockResolvedValue([]);
 
-      const result = await service.copyTemplate('source-1', { name: 'Copy' } as any, 'Fraser Health');
+      const result = await service.copyTemplate(
+        'source-1',
+        { name: 'Copy' } as any,
+        'Fraser Health',
+      );
 
       expect(result).toBeDefined();
       expect(mockTemplateRepo.create).toHaveBeenCalledWith(
@@ -593,11 +611,14 @@ describe('CareSettingTemplateService', () => {
     });
 
     it('should throw ForbiddenException when HA mismatch', async () => {
-      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, healthAuthority: 'Fraser Health' });
+      mockTemplateRepo.findOne.mockResolvedValue({
+        ...mockTemplate,
+        healthAuthority: 'Fraser Health',
+      });
 
-      await expect(
-        service.updateTemplate('tmpl-1', {} as any, 'Interior Health'),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.updateTemplate('tmpl-1', {} as any, 'Interior Health')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should check duplicate name only when name changes', async () => {
@@ -686,7 +707,10 @@ describe('CareSettingTemplateService', () => {
     });
 
     it('should throw ForbiddenException when HA mismatch', async () => {
-      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, healthAuthority: 'Fraser Health' });
+      mockTemplateRepo.findOne.mockResolvedValue({
+        ...mockTemplate,
+        healthAuthority: 'Fraser Health',
+      });
 
       await expect(service.deleteTemplate('tmpl-1', 'Interior Health')).rejects.toThrow(
         ForbiddenException,
@@ -759,18 +783,15 @@ describe('CareSettingTemplateService', () => {
   // ─── getPermissionsForGap ──────────────────────────────────────────
   describe('getPermissionsForGap', () => {
     it('should return permissions for given activity and occupation IDs', async () => {
-      const mockPerms = [
-        { permission: 'Y', care_activity_id: 'a-1', occupation_id: 'o-1' },
-      ];
+      const mockPerms = [{ permission: 'Y', care_activity_id: 'a-1', occupation_id: 'o-1' }];
       mockPermissionQB.getRawMany.mockResolvedValue(mockPerms);
 
       const result = await service.getPermissionsForGap('tmpl-1', ['a-1'], ['o-1']);
 
       expect(result).toEqual(mockPerms);
-      expect(mockPermissionQB.where).toHaveBeenCalledWith(
-        'cstp.template = :templateId',
-        { templateId: 'tmpl-1' },
-      );
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('cstp.template = :templateId', {
+        templateId: 'tmpl-1',
+      });
     });
 
     it('should return empty array when careActivityIds is empty', async () => {
@@ -792,17 +813,21 @@ describe('CareSettingTemplateService', () => {
   describe('getPermissionsForSuggestions', () => {
     it('should return Y/LC permissions with occupation names', async () => {
       const mockPerms = [
-        { permission: 'Y', care_activity_id: 'a-1', occupation_id: 'o-1', occupation_name: 'Nurse' },
+        {
+          permission: 'Y',
+          care_activity_id: 'a-1',
+          occupation_id: 'o-1',
+          occupation_name: 'Nurse',
+        },
       ];
       mockPermissionQB.getRawMany.mockResolvedValue(mockPerms);
 
       const result = await service.getPermissionsForSuggestions('tmpl-1', ['a-1']);
 
       expect(result).toEqual(mockPerms);
-      expect(mockPermissionQB.andWhere).toHaveBeenCalledWith(
-        'cstp.permission IN (:...perms)',
-        { perms: ['Y', 'LC'] },
-      );
+      expect(mockPermissionQB.andWhere).toHaveBeenCalledWith('cstp.permission IN (:...perms)', {
+        perms: ['Y', 'LC'],
+      });
     });
 
     it('should return empty array when careActivityIds is empty', async () => {

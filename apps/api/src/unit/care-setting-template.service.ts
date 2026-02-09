@@ -125,10 +125,13 @@ export class CareSettingTemplateService {
     // string = user's HA, show HA + GLOBAL (or just GLOBAL if empty string)
     if (healthAuthority !== null) {
       if (healthAuthority) {
-        queryBuilder.where('(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)', {
-          healthAuthority,
-          global: 'GLOBAL',
-        });
+        queryBuilder.where(
+          '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
+          {
+            healthAuthority,
+            global: 'GLOBAL',
+          },
+        );
       } else {
         // Users without org only see GLOBAL templates
         queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
@@ -641,10 +644,7 @@ export class CareSettingTemplateService {
    */
   async findAllForCMSFilter(healthAuthority: string | null): Promise<CareSettingTemplateRO[]> {
     // Reuse findTemplates with large page size to get all results
-    const [templates] = await this.findTemplates(
-      { page: 1, pageSize: 10000 },
-      healthAuthority,
-    );
+    const [templates] = await this.findTemplates({ page: 1, pageSize: 10000 }, healthAuthority);
     return templates;
   }
 

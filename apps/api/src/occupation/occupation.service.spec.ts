@@ -4,11 +4,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { OccupationService } from './occupation.service';
 import { Occupation } from './entity/occupation.entity';
 import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
-import {
-  OccupationsCMSFindSortKeys,
-  OccupationsFindSortKeys,
-  SortOrder,
-} from '@tbcm/common';
+import { OccupationsCMSFindSortKeys, OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
 
 describe('OccupationService', () => {
   let service: OccupationService;
@@ -142,14 +138,12 @@ describe('OccupationService', () => {
 
       expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith('o.allowedActivities', 'o_aa');
       expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith('o_aa.careActivity', 'o_aa_ca');
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'o_aa_ca.displayName ILIKE :name',
-        { name: '%nurse%' },
-      );
-      expect(mockQueryBuilder.orWhere).toHaveBeenCalledWith(
-        'o.displayName ILIKE :name',
-        { name: '%nurse%' },
-      );
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('o_aa_ca.displayName ILIKE :name', {
+        name: '%nurse%',
+      });
+      expect(mockQueryBuilder.orWhere).toHaveBeenCalledWith('o.displayName ILIKE :name', {
+        name: '%nurse%',
+      });
     });
 
     it('should sort by provided sortBy field', async () => {
@@ -369,9 +363,9 @@ describe('OccupationService', () => {
     it('should throw NotFoundException when occupation not found', async () => {
       mockOccupationRepo.findOneBy.mockResolvedValue(null);
 
-      await expect(
-        service.updateOccupationWithScope('nonexistent', {} as any),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateOccupationWithScope('nonexistent', {} as any)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException on duplicate name when renaming', async () => {

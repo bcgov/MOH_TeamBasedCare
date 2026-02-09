@@ -149,9 +149,7 @@ describe('OccupationController', () => {
     it('should throw NotFoundException when not found', async () => {
       mockOccupationService.findOccupationById.mockResolvedValue(null);
 
-      await expect(controller.getOccupationsById('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(controller.getOccupationsById('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 

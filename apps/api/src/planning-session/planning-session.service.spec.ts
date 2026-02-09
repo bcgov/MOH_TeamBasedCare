@@ -502,9 +502,7 @@ describe('PlanningSessionService', () => {
           bundle: { id: 'b-1', displayName: 'Bundle A' },
         },
       ],
-      occupation: [
-        { id: 'occ-1', displayName: 'Nurse', description: 'RN', displayOrder: 1 },
-      ],
+      occupation: [{ id: 'occ-1', displayName: 'Nurse', description: 'RN', displayOrder: 1 }],
       careLocation: { id: 'unit-1', displayName: 'ACUTE Care' },
       careSettingTemplate: { id: 'tmpl-1' },
       careSettingTemplateId: 'tmpl-1',
@@ -522,9 +520,7 @@ describe('PlanningSessionService', () => {
       });
 
       it('should return undefined when no occupations', async () => {
-        mockPlanningSessionRepo.findOne.mockResolvedValue(
-          makeGapSession({ occupation: null }),
-        );
+        mockPlanningSessionRepo.findOne.mockResolvedValue(makeGapSession({ occupation: null }));
 
         const result = await service.getPlanningActivityGap('session-1');
 
@@ -532,9 +528,7 @@ describe('PlanningSessionService', () => {
       });
 
       it('should return undefined when no careActivity', async () => {
-        mockPlanningSessionRepo.findOne.mockResolvedValue(
-          makeGapSession({ careActivity: null }),
-        );
+        mockPlanningSessionRepo.findOne.mockResolvedValue(makeGapSession({ careActivity: null }));
 
         const result = await service.getPlanningActivityGap('session-1');
 
@@ -593,9 +587,7 @@ describe('PlanningSessionService', () => {
 
         const result = await service.getPlanningActivityGap('session-1');
 
-        expect(result!.headers[0].title).toBe(
-          'Care Competencies and Corresponding Activities',
-        );
+        expect(result!.headers[0].title).toBe('Care Competencies and Corresponding Activities');
         expect(result!.headers[1].title).toBe('Nurse');
         expect(result!.headers[2].title).toBe('Pharmacist');
         expect(result!.headers[3].title).toBe('Aide'); // undefined displayOrder → Infinity → last
@@ -663,8 +655,16 @@ describe('PlanningSessionService', () => {
       it('should use single value when all cells are the same permission', async () => {
         const session = makeGapSession({
           careActivity: [
-            { id: 'ca-1', displayName: 'Activity 1', bundle: { id: 'b-1', displayName: 'Bundle A' } },
-            { id: 'ca-2', displayName: 'Activity 2', bundle: { id: 'b-1', displayName: 'Bundle A' } },
+            {
+              id: 'ca-1',
+              displayName: 'Activity 1',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+            {
+              id: 'ca-2',
+              displayName: 'Activity 2',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
           ],
         });
         mockPlanningSessionRepo.findOne.mockResolvedValue(session);
@@ -681,8 +681,16 @@ describe('PlanningSessionService', () => {
       it('should use GREY when permissions are mixed', async () => {
         const session = makeGapSession({
           careActivity: [
-            { id: 'ca-1', displayName: 'Activity 1', bundle: { id: 'b-1', displayName: 'Bundle A' } },
-            { id: 'ca-2', displayName: 'Activity 2', bundle: { id: 'b-1', displayName: 'Bundle A' } },
+            {
+              id: 'ca-1',
+              displayName: 'Activity 1',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+            {
+              id: 'ca-2',
+              displayName: 'Activity 2',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
           ],
         });
         mockPlanningSessionRepo.findOne.mockResolvedValue(session);
@@ -702,8 +710,16 @@ describe('PlanningSessionService', () => {
       it('should calculate correct inScope/limits/outOfScope percentages', async () => {
         const session = makeGapSession({
           careActivity: [
-            { id: 'ca-1', displayName: 'Activity 1', bundle: { id: 'b-1', displayName: 'Bundle A' } },
-            { id: 'ca-2', displayName: 'Activity 2', bundle: { id: 'b-1', displayName: 'Bundle A' } },
+            {
+              id: 'ca-1',
+              displayName: 'Activity 1',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+            {
+              id: 'ca-2',
+              displayName: 'Activity 2',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
           ],
           occupation: [
             { id: 'occ-1', displayName: 'Nurse', description: '', displayOrder: 1 },
@@ -757,8 +773,16 @@ describe('PlanningSessionService', () => {
       it('should group activities by bundle name into separate data entries', async () => {
         const session = makeGapSession({
           careActivity: [
-            { id: 'ca-1', displayName: 'Activity 1', bundle: { id: 'b-1', displayName: 'Bundle A' } },
-            { id: 'ca-2', displayName: 'Activity 2', bundle: { id: 'b-2', displayName: 'Bundle B' } },
+            {
+              id: 'ca-1',
+              displayName: 'Activity 1',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+            {
+              id: 'ca-2',
+              displayName: 'Activity 2',
+              bundle: { id: 'b-2', displayName: 'Bundle B' },
+            },
           ],
         });
         mockPlanningSessionRepo.findOne.mockResolvedValue(session);
@@ -842,9 +866,7 @@ describe('PlanningSessionService', () => {
       });
 
       it('should return empty with message when no activities selected', async () => {
-        mockPlanningSessionRepo.findOne.mockResolvedValue(
-          makeSession({ careActivity: [] }),
-        );
+        mockPlanningSessionRepo.findOne.mockResolvedValue(makeSession({ careActivity: [] }));
 
         const result = await service.getSuggestions('session-1');
 
@@ -856,7 +878,9 @@ describe('PlanningSessionService', () => {
       it('should return empty with message when no care setting selected', async () => {
         mockPlanningSessionRepo.findOne.mockResolvedValue(
           makeSession({
-            careActivity: [makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1')],
+            careActivity: [
+              makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+            ],
             careSettingTemplate: null,
             careLocation: null,
           }),
@@ -871,7 +895,9 @@ describe('PlanningSessionService', () => {
       it('should return empty with message when no permissions found', async () => {
         mockPlanningSessionRepo.findOne.mockResolvedValue(
           makeSession({
-            careActivity: [makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1')],
+            careActivity: [
+              makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+            ],
           }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([]);
@@ -897,7 +923,12 @@ describe('PlanningSessionService', () => {
           }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         await service.getSuggestions('session-1');
@@ -921,29 +952,28 @@ describe('PlanningSessionService', () => {
           }),
         );
         mockQueryBuilder.getRawMany.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         await service.getSuggestions('session-1');
 
         expect(mockPlanningSessionRepo.createQueryBuilder).toHaveBeenCalledWith('ps');
-        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-          'aa.permission IN (:...perms)',
-          { perms: ['Y', 'LC'] },
-        );
+        expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('aa.permission IN (:...perms)', {
+          perms: ['Y', 'LC'],
+        });
         expect(mockCareSettingTemplateService.getPermissionsForSuggestions).not.toHaveBeenCalled();
       });
     });
 
     // ─── Scoring algorithm ─────────────────────────────────────────
     describe('scoring algorithm', () => {
-      const setupScoringTest = (
-        activityType: CareActivityType,
-        permission: string,
-      ) => {
-        const activities = [
-          makeActivity('ca-1', 'Activity 1', activityType, 'b-1', 'Bundle 1'),
-        ];
+      const setupScoringTest = (activityType: CareActivityType, permission: string) => {
+        const activities = [makeActivity('ca-1', 'Activity 1', activityType, 'b-1', 'Bundle 1')];
         mockPlanningSessionRepo.findOne.mockResolvedValue(
           makeSession({
             careActivity: activities,
@@ -1026,9 +1056,19 @@ describe('PlanningSessionService', () => {
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
           // occ-1 (excluded) covers ca-1 only
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
           // occ-2 covers ca-2 (uncovered), so it can score
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1047,9 +1087,19 @@ describe('PlanningSessionService', () => {
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
           // occ-1 (temp-excluded) covers ca-1
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
           // occ-2 covers ca-2 (uncovered)
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1', ['occ-1']);
@@ -1072,11 +1122,26 @@ describe('PlanningSessionService', () => {
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
           // occ-1 (session-excluded) covers ca-1
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
           // occ-2 (temp-excluded) covers ca-2
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
           // occ-3 covers ca-3 (uncovered by either exclusion)
-          { permission: 'Y', care_activity_id: 'ca-3', occupation_id: 'occ-3', occupation_name: 'Doctor' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-3',
+            occupation_id: 'occ-3',
+            occupation_name: 'Doctor',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1', ['occ-2']);
@@ -1103,9 +1168,24 @@ describe('PlanningSessionService', () => {
         );
         // occ-1 (excluded) covers ca-1; occ-2 has permissions for both
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1127,9 +1207,24 @@ describe('PlanningSessionService', () => {
         );
         // occ-1 covers ca-1; occ-2 has Y for both ca-1 and ca-2
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-2', occupation_name: 'Pharmacist' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1144,15 +1239,31 @@ describe('PlanningSessionService', () => {
     describe('aggregation and sorting', () => {
       it('should sum scores across multiple activities per occupation', async () => {
         const activities = [
-          makeActivity('ca-1', 'Activity 1', CareActivityType.RESTRICTED_ACTIVITY, 'b-1', 'Bundle 1'),
+          makeActivity(
+            'ca-1',
+            'Activity 1',
+            CareActivityType.RESTRICTED_ACTIVITY,
+            'b-1',
+            'Bundle 1',
+          ),
           makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
         ];
         mockPlanningSessionRepo.findOne.mockResolvedValue(
           makeSession({ careActivity: activities, occupation: [] }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1164,18 +1275,39 @@ describe('PlanningSessionService', () => {
       it('should sort by score DESC then name ASC', async () => {
         const activities = [
           makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
-          makeActivity('ca-2', 'Activity 2', CareActivityType.RESTRICTED_ACTIVITY, 'b-1', 'Bundle 1'),
+          makeActivity(
+            'ca-2',
+            'Activity 2',
+            CareActivityType.RESTRICTED_ACTIVITY,
+            'b-1',
+            'Bundle 1',
+          ),
         ];
         mockPlanningSessionRepo.findOne.mockResolvedValue(
           makeSession({ careActivity: activities, occupation: [] }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
           // occ-1 (Nurse): Task+Y=2
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
           // occ-2 (Doctor): Restricted+Y=4
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-2', occupation_name: 'Doctor' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
           // occ-3 (Aide): Task+Y=2 (same score as Nurse, but "Aide" < "Nurse" alphabetically)
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-3', occupation_name: 'Aide' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-3',
+            occupation_name: 'Aide',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1194,7 +1326,12 @@ describe('PlanningSessionService', () => {
         );
         // occ-1 has Y for ca-1, occ-2 has no permission for ca-1 (not in results)
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1215,9 +1352,24 @@ describe('PlanningSessionService', () => {
         );
         // Create 3 occupations
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Alpha' },
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-2', occupation_name: 'Beta' },
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-3', occupation_name: 'Charlie' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Alpha',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Beta',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-3',
+            occupation_name: 'Charlie',
+          },
         ]);
       };
 
@@ -1260,8 +1412,18 @@ describe('PlanningSessionService', () => {
           makeSession({ careActivity: activities, occupation: [] }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1281,8 +1443,18 @@ describe('PlanningSessionService', () => {
           makeSession({ careActivity: activities, occupation: [] }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
-          { permission: 'LC', care_activity_id: 'ca-2', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'LC',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');
@@ -1303,8 +1475,18 @@ describe('PlanningSessionService', () => {
           makeSession({ careActivity: activities, occupation: [] }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1', occupation_name: 'Nurse' },
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-1', occupation_name: 'Nurse' },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
         ]);
 
         const result = await service.getSuggestions('session-1');

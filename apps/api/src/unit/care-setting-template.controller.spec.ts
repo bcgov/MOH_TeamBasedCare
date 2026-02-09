@@ -156,9 +156,9 @@ describe('CareSettingTemplateController', () => {
     it('should throw BadRequestException when non-admin has no organization', async () => {
       const req = createMockRequest({ roles: [Role.USER], organization: undefined });
 
-      await expect(
-        controller.copyTemplate('tmpl-1', { name: 'Copy' } as any, req),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.copyTemplate('tmpl-1', { name: 'Copy' } as any, req)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -169,11 +169,7 @@ describe('CareSettingTemplateController', () => {
 
       await controller.copyTemplateWithData('tmpl-1', {} as any, req);
 
-      expect(mockTemplateService.copyTemplateWithData).toHaveBeenCalledWith(
-        'tmpl-1',
-        {},
-        'GLOBAL',
-      );
+      expect(mockTemplateService.copyTemplateWithData).toHaveBeenCalledWith('tmpl-1', {}, 'GLOBAL');
     });
   });
 

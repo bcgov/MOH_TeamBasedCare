@@ -132,11 +132,7 @@ export class CareActivityService {
     // This shows which templates have selected each activity
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .leftJoin(
-        'care_setting_template_activities',
-        'csta',
-        'csta.care_activity_id = ca.id',
-      )
+      .leftJoin('care_setting_template_activities', 'csta', 'csta.care_activity_id = ca.id')
       .leftJoin('care_setting_template', 'cst', 'cst.id = csta.care_setting_template_id')
       .leftJoin('ca.bundle', 'ca_b')
       .leftJoin('ca.updatedBy', 'ca_up')
@@ -160,10 +156,9 @@ export class CareActivityService {
     // Apply HA filtering to templates (only show activities in visible templates)
     if (healthAuthority !== null) {
       if (healthAuthority) {
-        queryBuilder.andWhere(
-          "(cst.health_authority = :ha OR cst.health_authority = 'GLOBAL')",
-          { ha: healthAuthority },
-        );
+        queryBuilder.andWhere("(cst.health_authority = :ha OR cst.health_authority = 'GLOBAL')", {
+          ha: healthAuthority,
+        });
       } else {
         // Users without org only see activities in GLOBAL templates
         queryBuilder.andWhere("cst.health_authority = 'GLOBAL'");

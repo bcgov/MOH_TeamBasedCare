@@ -106,7 +106,7 @@ export class CareSettingTemplateController {
     @Req() req: IRequest,
   ): Promise<PaginationRO<CareSettingTemplateRO[]>> {
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN || r === Role.CONTENT_ADMIN);
-    const healthAuthority = isAdmin ? null : (req.user.organization ?? '');
+    const healthAuthority = isAdmin ? null : req.user.organization ?? '';
     const [templates, total] = await this.templateService.findTemplates(query, healthAuthority);
     return new PaginationRO([templates, total]);
   }
@@ -119,7 +119,7 @@ export class CareSettingTemplateController {
   @Get('cms/templates-for-filter')
   async getTemplatesForCMSFilter(@Req() req: IRequest): Promise<CareSettingTemplateRO[]> {
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN || r === Role.CONTENT_ADMIN);
-    const healthAuthority = isAdmin ? null : (req.user.organization ?? '');
+    const healthAuthority = isAdmin ? null : req.user.organization ?? '';
     return this.templateService.findAllForCMSFilter(healthAuthority);
   }
 
