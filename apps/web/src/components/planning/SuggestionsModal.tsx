@@ -6,26 +6,11 @@ import { CareActivityType, OccupationSuggestionRO, SuggestionResponseRO } from '
 import { usePlanningContext } from '../../services/usePlanningContext';
 import { useSuggestions } from '../../services/useSuggestions';
 import { Pagination, PageOptions } from '../Pagination';
-import { Tag } from '../generic/Tag';
-import { TagVariants } from '../../common/constants';
 
 interface SuggestionsModalProps {
   isOpen: boolean;
   onClose: (selectedIds: string[]) => void;
 }
-
-const getActivityTypeStyle = (activityType: CareActivityType): string => {
-  switch (activityType) {
-    case CareActivityType.RESTRICTED_ACTIVITY:
-      return 'bg-[#013366] text-white';
-    case CareActivityType.ASPECT_OF_PRACTICE:
-      return TagVariants.YELLOW;
-    case CareActivityType.TASK:
-      return TagVariants.GREEN;
-    default:
-      return TagVariants.BASE;
-  }
-};
 
 export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose }) => {
   const {
@@ -117,41 +102,35 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     return [...selectedOccupations, ...apiSuggestions];
   }, [suggestions, tempSelected, tempSelectedData]);
 
-  const renderActivityTags = (
+  // Render activities as comma-separated text per Figma design
+  const renderActivities = (
     activities: { activityId: string; activityName: string; activityType: CareActivityType }[],
+    isLCColumn: boolean = false,
   ) => {
     if (activities.length === 0) return <span className='text-gray-400'>-</span>;
 
-    return (
-      <div className='flex flex-wrap gap-1 break-all'>
-        {activities.map(activity => {
-          const style = getActivityTypeStyle(activity.activityType);
-          const isCustomStyle = style.startsWith('bg-');
+    const text = activities.map(a => a.activityName).join(', ');
+    // Y column: blue text, L&C column: gray text
+    const colorClass = isLCColumn ? 'text-[#313132]' : 'text-[#013366]';
 
-          if (isCustomStyle) {
-            return (
-              <span
-                key={activity.activityId}
-                className={`tag ${style} px-2 py-1 text-xs rounded`}
-                title={activity.activityType}
-              >
-                {activity.activityName}
-              </span>
-            );
-          }
-
-          return (
-            <Tag
-              key={activity.activityId}
-              text={activity.activityName}
-              tagStyle={style as TagVariants}
-              className='text-xs'
-            />
-          );
-        })}
-      </div>
-    );
+    return <span className={`text-sm leading-6 ${colorClass}`}>{text}</span>;
   };
+
+  // Render the action button for an occupation
+  const renderActionButton = (occupation: OccupationSuggestionRO, isSelected: boolean) => (
+    <button
+      onClick={() => handleAddToTeam(occupation)}
+      disabled={isLoading}
+      className={`inline-flex items-center gap-1 px-4 py-1.5 text-sm font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
+        isSelected
+          ? 'bg-[#003366] text-white'
+          : 'bg-white border border-[#606060] text-[#606060] hover:bg-gray-50'
+      }`}
+    >
+      {isSelected ? 'Added' : 'Add to team'}
+      <FontAwesomeIcon icon={isSelected ? faCheck : faPlus} className='h-4 w-4' />
+    </button>
+  );
 
   const renderContent = () => {
     if (isLoading && !suggestions) {
@@ -187,54 +166,47 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
         )}
 
         <div className='overflow-x-auto'>
-          <table className='min-w-full divide-y divide-gray-200 table-fixed'>
-            <thead className='bg-gray-50'>
-              <tr>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/6'>
+          <table className='min-w-full'>
+            <thead className='bg-white'>
+              <tr className='border-b border-gray-200'>
+                <th className='px-3 py-3 text-left text-sm font-bold text-[#272833] w-[150px]'>
                   Suggested Occupations
                 </th>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/6'>
+                <th className='px-3 py-3 text-left text-sm font-bold text-[#272833] w-[180px]'>
                   Competencies Covered
                 </th>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/3'>
+                <th className='px-3 py-3 text-left text-sm font-bold text-[#272833]'>
                   Care Activities Covered
                 </th>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/3'>
+                <th className='px-3 py-3 text-left text-sm font-bold text-[#272833]'>
                   Care Activities Covered With L&C
                 </th>
+                <th className='px-3 py-3 w-[130px]'></th>
               </tr>
             </thead>
-            <tbody className='bg-white divide-y divide-gray-200'>
-              {mergedSuggestions.map(occupation => {
+            <tbody className='bg-white'>
+              {mergedSuggestions.map((occupation, occIndex) => {
                 const isSelected = tempSelected.has(occupation.occupationId);
                 const competencies = occupation.competencies || [];
+                const isFirstOccupation = occIndex === 0;
 
                 if (competencies.length === 0) {
                   return (
-                    <tr key={occupation.occupationId} className='hover:bg-gray-50'>
-                      <td className='px-4 py-4'>
-                        <div className='flex flex-col gap-2'>
-                          <span className='font-medium text-sm'>{occupation.occupationName}</span>
-                          <button
-                            onClick={() => handleAddToTeam(occupation)}
-                            disabled={isLoading}
-                            className={`inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                              isSelected
-                                ? 'bg-bcBluePrimary text-white'
-                                : 'border-2 border-bcBluePrimary text-bcBluePrimary hover:bg-gray-100'
-                            }`}
-                          >
-                            <FontAwesomeIcon
-                              icon={isSelected ? faCheck : faPlus}
-                              className='h-3 w-3'
-                            />
-                            {isSelected ? 'Added' : 'Add to team'}
-                          </button>
-                        </div>
+                    <tr
+                      key={occupation.occupationId}
+                      className={`${!isFirstOccupation ? 'border-t border-gray-300' : ''}`}
+                    >
+                      <td className='px-3 py-3 align-top'>
+                        <span className='font-bold text-sm text-[#272833]'>
+                          {occupation.occupationName}
+                        </span>
                       </td>
-                      <td className='px-4 py-4 text-sm text-gray-400'>-</td>
-                      <td className='px-4 py-4 text-sm text-gray-400'>-</td>
-                      <td className='px-4 py-4 text-sm text-gray-400'>-</td>
+                      <td className='px-3 py-3 text-sm text-gray-400'>-</td>
+                      <td className='px-3 py-3 text-sm text-gray-400'>-</td>
+                      <td className='px-3 py-3 text-sm text-gray-400'>-</td>
+                      <td className='px-3 py-3 text-right align-top'>
+                        {renderActionButton(occupation, isSelected)}
+                      </td>
                     </tr>
                   );
                 }
@@ -242,37 +214,31 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                 return competencies.map((competency, compIndex) => (
                   <tr
                     key={`${occupation.occupationId}-${competency.bundleId}`}
-                    className='hover:bg-gray-50'
+                    className={`${compIndex > 0 ? 'border-t border-gray-200' : ''} ${
+                      compIndex === 0 && !isFirstOccupation ? 'border-t border-gray-300' : ''
+                    }`}
                   >
                     {compIndex === 0 && (
-                      <td className='px-4 py-4' rowSpan={competencies.length}>
-                        <div className='flex flex-col gap-2'>
-                          <span className='font-medium text-sm'>{occupation.occupationName}</span>
-                          <button
-                            onClick={() => handleAddToTeam(occupation)}
-                            disabled={isLoading}
-                            className={`inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                              isSelected
-                                ? 'bg-bcBluePrimary text-white'
-                                : 'border-2 border-bcBluePrimary text-bcBluePrimary hover:bg-gray-100'
-                            }`}
-                          >
-                            <FontAwesomeIcon
-                              icon={isSelected ? faCheck : faPlus}
-                              className='h-3 w-3'
-                            />
-                            {isSelected ? 'Added' : 'Add to team'}
-                          </button>
-                        </div>
+                      <td className='px-3 py-3 align-top' rowSpan={competencies.length}>
+                        <span className='font-bold text-sm text-[#272833]'>
+                          {occupation.occupationName}
+                        </span>
                       </td>
                     )}
-                    <td className='px-4 py-4 text-sm font-medium'>{competency.bundleName}</td>
-                    <td className='px-4 py-4 overflow-hidden'>
-                      {renderActivityTags(competency.activitiesY)}
+                    <td className='px-3 py-3 text-sm text-[#313132] align-top'>
+                      {competency.bundleName}
                     </td>
-                    <td className='px-4 py-4 overflow-hidden'>
-                      {renderActivityTags(competency.activitiesLC)}
+                    <td className='px-3 py-3 align-top'>
+                      {renderActivities(competency.activitiesY, false)}
                     </td>
+                    <td className='px-3 py-3 align-top'>
+                      {renderActivities(competency.activitiesLC, true)}
+                    </td>
+                    {compIndex === 0 && (
+                      <td className='px-3 py-3 text-right align-top' rowSpan={competencies.length}>
+                        {renderActionButton(occupation, isSelected)}
+                      </td>
+                    )}
                   </tr>
                 ));
               })}
@@ -320,32 +286,38 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
             leaveFrom='opacity-100 translate-y-0 sm:scale-100'
             leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
           >
-            <div className='inline-block align-bottom bg-white rounded-lg text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full'>
-              <div className='flex items-center justify-between border-b px-6 py-4'>
-                <Dialog.Title as='h3' className='text-lg font-semibold text-bcBluePrimary'>
-                  Suggestions
+            <div className='inline-block align-bottom bg-white rounded-lg text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full max-h-[85vh] flex flex-col'>
+              <div className='flex items-center justify-between border-b border-[#eaeaef] bg-[#f6f6f9] px-6 py-4 rounded-t-lg'>
+                <Dialog.Title as='h3' className='text-lg font-semibold text-[#32324d]'>
+                  Occupations suggestions
                 </Dialog.Title>
                 <button
                   onClick={handleClose}
-                  className='text-gray-400 hover:text-gray-600 text-2xl font-light'
+                  className='w-8 h-8 flex items-center justify-center border border-[#dcdce4] rounded bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 >
                   &times;
                 </button>
               </div>
 
-              <div className='bg-blue-50 border-l-4 border-bcBluePrimary px-4 py-3 mx-6 mt-4'>
-                <div className='flex items-start'>
-                  <FontAwesomeIcon
-                    icon={faInfoCircle}
-                    className='h-5 w-5 text-bcBluePrimary mr-2 mt-0.5'
-                  />
-                  <p className='text-sm text-bcBluePrimary'>
-                    Please confirm scope of practice in the occupations regulations.
-                  </p>
+              <div className='px-6 pt-4 shrink-0'>
+                <p className='text-base text-black mb-4'>
+                  System suggestions to increase the coverage of care competencies/care activities
+                  within the scope of practice.
+                </p>
+                <div className='bg-[#d9eaf7] border-2 border-[#d9eaf7] rounded px-4 py-3'>
+                  <div className='flex items-start'>
+                    <FontAwesomeIcon
+                      icon={faInfoCircle}
+                      className='h-6 w-6 text-[#1a5a96] mr-3 mt-0.5 shrink-0'
+                    />
+                    <p className='text-[17px] text-[#1a5a96] leading-6'>
+                      Please confirm scope of practice in the occupations regulations.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className='p-6'>{renderContent()}</div>
+              <div className='p-6 overflow-y-auto flex-1'>{renderContent()}</div>
             </div>
           </Transition.Child>
         </div>
