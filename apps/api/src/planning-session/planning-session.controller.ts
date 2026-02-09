@@ -122,6 +122,10 @@ export class PlanningSessionController {
     return this.planningSessionService.getPlanningActivityGap(sessionId);
   }
 
+  /**
+   * Get occupation suggestions for a planning session.
+   * Auth: class-level @AllowRoles(Role.USER) + SessionGuard (session ownership).
+   */
   @UseGuards(SessionGuard)
   @Post('/:sessionId/suggestions')
   @ApiBody({ type: GetSuggestionsDTO })

@@ -15,8 +15,9 @@ export class CareActivityCMSRO extends CareActivityRO {
   @Expose()
   unitName!: string;
 
+  /** @deprecated Always empty since migration to template-based care settings. */
   @Expose()
-  unitId!: string;
+  unitId?: string;
 
   constructor(data: any) {
     super(data);

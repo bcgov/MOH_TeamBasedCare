@@ -238,6 +238,9 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
         () => {
           updateRefetchActivityGap(true);
         },
+        () => {
+          // Error toast is shown automatically by useHttp errorHandler
+        },
       );
     }
   };

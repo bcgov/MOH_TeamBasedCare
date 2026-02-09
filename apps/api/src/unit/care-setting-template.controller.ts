@@ -79,9 +79,9 @@ export class CareSettingTemplateController {
    * @throws BadRequestException if non-admin user has no organization
    */
   private getHealthAuthorityForCopy(req: IRequest): string {
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
 
-    if (isAdmin) {
+    if (isSuperAdmin) {
       return 'GLOBAL';
     }
 
@@ -105,8 +105,10 @@ export class CareSettingTemplateController {
     @Query() query: FindCareSettingTemplatesDto,
     @Req() req: IRequest,
   ): Promise<PaginationRO<CareSettingTemplateRO[]>> {
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN || r === Role.CONTENT_ADMIN);
-    const healthAuthority = isAdmin ? null : req.user.organization ?? '';
+    const hasFullVisibility = req.user.roles?.some(
+      r => r === Role.ADMIN || r === Role.CONTENT_ADMIN,
+    );
+    const healthAuthority = hasFullVisibility ? null : req.user.organization ?? '';
     const [templates, total] = await this.templateService.findTemplates(query, healthAuthority);
     return new PaginationRO([templates, total]);
   }
@@ -115,11 +117,16 @@ export class CareSettingTemplateController {
    * Get templates for CMS dropdown filter
    * - Admins (ADMIN, CONTENT_ADMIN): see ALL templates across all health authorities
    * - Users with HA: see GLOBAL + their health authority's templates
+   *
+   * Auth: Uses class-level @AllowRoles (USER, ADMIN, CONTENT_ADMIN) intentionally,
+   * consistent with other read endpoints (findTemplates, getTemplateById, etc.).
    */
   @Get('cms/templates-for-filter')
   async getTemplatesForCMSFilter(@Req() req: IRequest): Promise<CareSettingTemplateRO[]> {
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN || r === Role.CONTENT_ADMIN);
-    const healthAuthority = isAdmin ? null : req.user.organization ?? '';
+    const hasFullVisibility = req.user.roles?.some(
+      r => r === Role.ADMIN || r === Role.CONTENT_ADMIN,
+    );
+    const healthAuthority = hasFullVisibility ? null : req.user.organization ?? '';
     return this.templateService.findAllForCMSFilter(healthAuthority);
   }
 
@@ -234,8 +241,8 @@ export class CareSettingTemplateController {
     @Body() dto: UpdateCareSettingTemplateDTO,
     @Req() req: IRequest,
   ): Promise<void> {
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
-    const healthAuthority = isAdmin ? undefined : req.user.organization;
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isSuperAdmin ? undefined : req.user.organization;
     await this.templateService.updateTemplate(id, dto, healthAuthority);
   }
 
@@ -252,8 +259,8 @@ export class CareSettingTemplateController {
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: IRequest,
   ): Promise<void> {
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
-    const healthAuthority = isAdmin ? undefined : req.user.organization;
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isSuperAdmin ? undefined : req.user.organization;
     await this.templateService.deleteTemplate(id, healthAuthority);
   }
 }

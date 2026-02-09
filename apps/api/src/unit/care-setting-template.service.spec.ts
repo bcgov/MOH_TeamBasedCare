@@ -764,17 +764,40 @@ describe('CareSettingTemplateService', () => {
 
   // ─── findAllForCMSFilter ───────────────────────────────────────────
   describe('findAllForCMSFilter', () => {
-    it('should delegate to findTemplates with large pageSize', async () => {
-      mockTemplateQB.getManyAndCount.mockResolvedValue([[mockTemplate], 1]);
+    it('should return all templates without pagination', async () => {
+      mockTemplateQB.getMany.mockResolvedValue([mockTemplate]);
 
       const result = await service.findAllForCMSFilter('Fraser Health');
 
       expect(result).toHaveLength(1);
-      expect(mockTemplateQB.take).toHaveBeenCalledWith(10000);
+      expect(mockTemplateQB.getMany).toHaveBeenCalled();
+      expect(mockTemplateQB.skip).not.toHaveBeenCalled();
+      expect(mockTemplateQB.take).not.toHaveBeenCalled();
     });
 
-    it('should pass null HA for content admins', async () => {
-      mockTemplateQB.getManyAndCount.mockResolvedValue([[], 0]);
+    it('should filter by HA + GLOBAL for non-admin users', async () => {
+      mockTemplateQB.getMany.mockResolvedValue([]);
+
+      await service.findAllForCMSFilter('Fraser Health');
+
+      expect(mockTemplateQB.where).toHaveBeenCalledWith(
+        '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
+        { healthAuthority: 'Fraser Health', global: 'GLOBAL' },
+      );
+    });
+
+    it('should show only GLOBAL templates when HA is empty string', async () => {
+      mockTemplateQB.getMany.mockResolvedValue([]);
+
+      await service.findAllForCMSFilter('');
+
+      expect(mockTemplateQB.where).toHaveBeenCalledWith('t.healthAuthority = :global', {
+        global: 'GLOBAL',
+      });
+    });
+
+    it('should show all templates when HA is null (admin)', async () => {
+      mockTemplateQB.getMany.mockResolvedValue([]);
 
       await service.findAllForCMSFilter(null);
 

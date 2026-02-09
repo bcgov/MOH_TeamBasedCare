@@ -638,14 +638,32 @@ export class CareSettingTemplateService {
   }
 
   /**
-   * Get templates for CMS filter dropdown
-   * Reuses findTemplates with no pagination to avoid duplicate HA filtering logic
+   * Get all templates for CMS filter dropdown (no pagination)
+   * Applies same HA filtering and sorting as findTemplates but without skip/take overhead
    * @param healthAuthority - User's HA, or null to return ALL templates (for admins)
    */
   async findAllForCMSFilter(healthAuthority: string | null): Promise<CareSettingTemplateRO[]> {
-    // Reuse findTemplates with large page size to get all results
-    const [templates] = await this.findTemplates({ page: 1, pageSize: 10000 }, healthAuthority);
-    return templates;
+    const queryBuilder = this.templateRepo
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.unit', 't_unit')
+      .leftJoinAndSelect('t.parent', 't_parent');
+
+    if (healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.where(
+          '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
+          { healthAuthority, global: 'GLOBAL' },
+        );
+      } else {
+        // Users without org only see GLOBAL templates
+        queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+      }
+    }
+
+    queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy('t.name', 'ASC');
+
+    const results = await queryBuilder.getMany();
+    return results.map(t => new CareSettingTemplateRO(t));
   }
 
   /**

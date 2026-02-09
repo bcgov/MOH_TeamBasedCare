@@ -123,7 +123,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     if (activities.length === 0) return <span className='text-gray-400'>-</span>;
 
     return (
-      <div className='flex flex-wrap gap-1'>
+      <div className='flex flex-wrap gap-1 break-all'>
         {activities.map(activity => {
           const style = getActivityTypeStyle(activity.activityType);
           const isCustomStyle = style.startsWith('bg-');
@@ -187,19 +187,19 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
         )}
 
         <div className='overflow-x-auto'>
-          <table className='min-w-full divide-y divide-gray-200'>
+          <table className='min-w-full divide-y divide-gray-200 table-fixed'>
             <thead className='bg-gray-50'>
               <tr>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-48'>
+                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/6'>
                   Suggested Occupations
                 </th>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-40'>
+                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/6'>
                   Competencies Covered
                 </th>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider'>
+                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/3'>
                   Care Activities Covered
                 </th>
-                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider'>
+                <th className='px-4 py-3 text-left text-xs font-semibold text-bcBluePrimary uppercase tracking-wider w-1/3'>
                   Care Activities Covered With L&C
                 </th>
               </tr>
@@ -267,8 +267,12 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                       </td>
                     )}
                     <td className='px-4 py-4 text-sm font-medium'>{competency.bundleName}</td>
-                    <td className='px-4 py-4'>{renderActivityTags(competency.activitiesY)}</td>
-                    <td className='px-4 py-4'>{renderActivityTags(competency.activitiesLC)}</td>
+                    <td className='px-4 py-4 overflow-hidden'>
+                      {renderActivityTags(competency.activitiesY)}
+                    </td>
+                    <td className='px-4 py-4 overflow-hidden'>
+                      {renderActivityTags(competency.activitiesLC)}
+                    </td>
                   </tr>
                 ));
               })}

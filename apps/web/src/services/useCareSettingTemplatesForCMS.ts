@@ -1,11 +1,8 @@
 import { API_ENDPOINT } from '../common';
-import { CareSettingTemplateRO } from '@tbcm/common';
+import { CareSettingTemplateRO, MASTER_TEMPLATE_SUFFIX } from '@tbcm/common';
 import { OptionType } from 'src/components/generic/RenderSelect';
 import { AxiosPublic } from 'src/utils';
 import useSWR from 'swr';
-
-/** Suffix appended to master template names - stripped for display */
-const MASTER_TEMPLATE_SUFFIX = ' - Master';
 
 export const useCareSettingTemplatesForCMS = () => {
   const response = useSWR<CareSettingTemplateRO[]>(

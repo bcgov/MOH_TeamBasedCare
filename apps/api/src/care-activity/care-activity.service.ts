@@ -11,6 +11,7 @@ import {
   CareActivityDetailRO,
   CareActivityRO,
   EditCareActivityDTO,
+  MASTER_TEMPLATE_SUFFIX,
   SortOrder,
 } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
@@ -20,9 +21,6 @@ import { cleanText } from 'src/common/utils';
 import { OccupationService } from 'src/occupation/occupation.service';
 import _ from 'lodash';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
-
-/** Suffix appended to master template names - stripped for display */
-const MASTER_TEMPLATE_SUFFIX = ' - Master';
 
 @Injectable()
 export class CareActivityService {
