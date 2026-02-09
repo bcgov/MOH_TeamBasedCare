@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faCheck, faSpinner, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
@@ -50,12 +50,16 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
       setTempSelected(new Set());
       setTempSelectedData(new Map());
       setSuggestions(null);
-      setPageOptions(prev => ({ ...prev, pageIndex: 1, total: 0 }));
+      setPageOptions({ pageIndex: 1, pageSize: 10, total: 0 });
     }
   }, [isOpen]);
 
+  const requestIdRef = useRef(0);
+
   const fetchSuggestions = useCallback(() => {
     if (!sessionId) return;
+
+    const currentRequestId = ++requestIdRef.current;
 
     getSuggestions(
       {
@@ -65,6 +69,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
         pageSize: pageOptions.pageSize,
       },
       (data: SuggestionResponseRO) => {
+        if (currentRequestId !== requestIdRef.current) return;
         setSuggestions(data);
         setPageOptions(prev => ({ ...prev, total: data.total }));
       },

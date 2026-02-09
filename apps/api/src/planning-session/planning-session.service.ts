@@ -419,10 +419,10 @@ export class PlanningSessionService {
       activities.map(a => [
         a.id,
         {
-          name: a.name,
+          name: a.displayName,
           activityType: a.activityType as CareActivityType,
           bundleId: a.bundle.id,
-          bundleName: a.bundle.name,
+          bundleName: a.bundle.displayName,
         },
       ]),
     );

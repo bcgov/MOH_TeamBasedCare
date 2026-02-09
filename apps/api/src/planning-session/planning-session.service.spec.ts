@@ -1495,6 +1495,35 @@ describe('PlanningSessionService', () => {
         expect(competencies[0].bundleName).toBe('Alpha Bundle');
         expect(competencies[1].bundleName).toBe('Zebra Bundle');
       });
+
+      it('should use displayName not cleaned name for activities and bundles', async () => {
+        const activities = [
+          {
+            id: 'ca-1',
+            name: 'cleanedname',
+            displayName: 'Proper Display Name',
+            activityType: CareActivityType.TASK,
+            bundle: { id: 'b-1', name: 'cleanedbundle', displayName: 'Proper Bundle Name' },
+          },
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({ careActivity: activities, occupation: [] }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        const competency = result.suggestions[0].competencies[0];
+        expect(competency.activitiesY[0].activityName).toBe('Proper Display Name');
+        expect(competency.bundleName).toBe('Proper Bundle Name');
+      });
     });
   });
 });
