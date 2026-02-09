@@ -103,15 +103,22 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
   }, [suggestions, tempSelected, tempSelectedData]);
 
   // Render activities as comma-separated text per Figma design
+  // Colors depend on selection state:
+  // - Not selected: both columns gray (#313132)
+  // - Selected: Y column blue (#013366), L&C column yellow/gold (#664b07)
   const renderActivities = (
     activities: { activityId: string; activityName: string; activityType: CareActivityType }[],
     isLCColumn: boolean = false,
+    isSelected: boolean = false,
   ) => {
     if (activities.length === 0) return <span className='text-gray-400'>-</span>;
 
     const text = activities.map(a => a.activityName).join(', ');
-    // Y column: blue text, L&C column: gray text
-    const colorClass = isLCColumn ? 'text-[#313132]' : 'text-[#013366]';
+
+    let colorClass = 'text-[#313132]'; // default gray for not selected
+    if (isSelected) {
+      colorClass = isLCColumn ? 'text-[#664b07]' : 'text-[#013366]';
+    }
 
     return <span className={`text-sm leading-6 ${colorClass}`}>{text}</span>;
   };
@@ -229,10 +236,10 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                       {competency.bundleName}
                     </td>
                     <td className='px-3 py-3 align-top'>
-                      {renderActivities(competency.activitiesY, false)}
+                      {renderActivities(competency.activitiesY, false, isSelected)}
                     </td>
                     <td className='px-3 py-3 align-top'>
-                      {renderActivities(competency.activitiesLC, true)}
+                      {renderActivities(competency.activitiesLC, true, isSelected)}
                     </td>
                     {compIndex === 0 && (
                       <td className='px-3 py-3 text-right align-top' rowSpan={competencies.length}>
