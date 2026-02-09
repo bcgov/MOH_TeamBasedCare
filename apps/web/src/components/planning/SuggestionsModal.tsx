@@ -194,7 +194,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                   return (
                     <tr
                       key={occupation.occupationId}
-                      className={`${!isFirstOccupation ? 'border-t border-gray-300' : ''}`}
+                      className={`${!isFirstOccupation ? 'border-t border-gray-300' : ''} ${isSelected ? 'bg-[#fffbf0]' : ''}`}
                     >
                       <td className='px-3 py-3 align-top'>
                         <span className='font-bold text-sm text-[#272833]'>
@@ -216,7 +216,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                     key={`${occupation.occupationId}-${competency.bundleId}`}
                     className={`${compIndex > 0 ? 'border-t border-gray-200' : ''} ${
                       compIndex === 0 && !isFirstOccupation ? 'border-t border-gray-300' : ''
-                    }`}
+                    } ${isSelected ? 'bg-[#fffbf0]' : ''}`}
                   >
                     {compIndex === 0 && (
                       <td className='px-3 py-3 align-top' rowSpan={competencies.length}>
