@@ -25,7 +25,7 @@ import { ModalWrapper } from '../Modal';
 import { Button } from '../Button';
 
 const getName = (item: { name?: string; displayName?: string }): string => {
-  return item.name || item.displayName || '';
+  return item.displayName || item.name || '';
 };
 
 const PermissionSelect: React.FC<{
@@ -33,24 +33,31 @@ const PermissionSelect: React.FC<{
   onChange: (value: Permissions) => void;
 }> = ({ value, onChange }) => {
   return (
-    <select
-      value={value}
-      onChange={e => {
-        const val = e.target.value;
-        if (val === Permissions.PERFORM) {
-          onChange(Permissions.PERFORM);
-        } else if (val === Permissions.NO) {
-          onChange(Permissions.NO);
-        } else if (val === Permissions.LIMITS) {
-          onChange(Permissions.LIMITS);
-        }
-      }}
-      className='border border-gray-300 rounded px-2 py-1 text-sm w-full bg-white h-10'
-    >
-      <option value={Permissions.PERFORM}>Y</option>
-      <option value={Permissions.NO}>N</option>
-      <option value={Permissions.LIMITS}>LC</option>
-    </select>
+    <div className='relative'>
+      <select
+        value={value}
+        onChange={e => {
+          const val = e.target.value;
+          if (val === Permissions.PERFORM) {
+            onChange(Permissions.PERFORM);
+          } else if (val === Permissions.NO) {
+            onChange(Permissions.NO);
+          } else if (val === Permissions.LIMITS) {
+            onChange(Permissions.LIMITS);
+          }
+        }}
+        className='appearance-none border border-gray-300 rounded px-3 py-2 pr-8 text-sm w-full bg-white cursor-pointer'
+      >
+        <option value={Permissions.PERFORM}>Y</option>
+        <option value={Permissions.NO}>N</option>
+        <option value={Permissions.LIMITS}>LC</option>
+      </select>
+      <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500'>
+        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      </div>
+    </div>
   );
 };
 
@@ -103,40 +110,28 @@ const BundleAccordion: React.FC<{
   const selectedActivities =
     bundle?.careActivities?.filter(a => state.selectedActivityIds.has(a.id)) || [];
 
-  // Count restricted activities
-  const restrictedCount = selectedActivities.filter(
-    a => a.activityType === 'Restricted Activity',
-  ).length;
-  const careCount = selectedActivities.length - restrictedCount;
-
   if (selectedActivities.length === 0) {
     return null;
   }
 
   return (
-    <div className='border-b'>
+    <div className='border-b border-l-4 border-l-[#FCBA19]'>
       <button
         type='button'
-        className='w-full flex items-center justify-between py-4 hover:bg-gray-50'
+        className='w-full flex items-center justify-between py-4 px-4 hover:bg-gray-50'
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className='flex items-center gap-2'>
-          <span className='font-semibold text-bcBluePrimary'>{bundleName}</span>
-        </div>
-        <div className='flex items-center gap-3'>
+        <div className='flex flex-col items-start'>
+          <span className='font-bold text-bcBluePrimary'>{bundleName}</span>
           <span className='text-sm text-bcBlueLink'>
-            {careCount} care &{' '}
-            {restrictedCount > 0 ? `${restrictedCount} restricted` : '0 restricted'} activities
+            {selectedActivities.length} care & restricted activities
           </span>
-          <FontAwesomeIcon
-            icon={isOpen ? faChevronDown : faChevronRight}
-            className='text-gray-500'
-          />
         </div>
+        <FontAwesomeIcon icon={isOpen ? faChevronDown : faChevronRight} className='text-gray-500' />
       </button>
 
       {isOpen && (
-        <div className='pb-4'>
+        <div className='pb-4 px-4'>
           {selectedActivities.map(activity => (
             <ActivityOccupationGrid
               key={activity.id}

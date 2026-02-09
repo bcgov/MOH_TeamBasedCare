@@ -5,6 +5,8 @@ export * from './useCareActivities';
 export * from './useCareActivityEdit';
 export * from './useCareActivityById';
 export * from './useCareLocations';
+export * from './useCareSettingTemplateForCopy';
+export * from './useCareSettingTemplatesForPlanning';
 export * from './useHttp';
 export * from './useKPIs';
 export * from './useMe';
