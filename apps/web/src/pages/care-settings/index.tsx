@@ -12,7 +12,7 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Stepper } from '@components';
-import { CareSettingTemplateRO } from '@tbcm/common';
+import { CareSettingTemplateRO, Role } from '@tbcm/common';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import AppLayout from 'src/components/AppLayout';
@@ -26,20 +26,30 @@ import { useMe } from 'src/services/useMe';
 import { CareSettingsSteps } from 'src/common/constants';
 
 /**
- * Check if user can edit/delete a template based on health authority
- * - GLOBAL templates can be edited by anyone (master check handled separately)
- * - Templates belonging to user's HA can be edited
- * - Templates from other HAs cannot be edited
+ * Check if user can edit/delete a template based on role and health authority
+ * - ADMIN can edit any template (master check handled separately)
+ * - GLOBAL templates can be edited by CONTENT_ADMIN
+ * - CONTENT_ADMIN can edit templates belonging to their HA
  */
-const canModifyTemplate = (template: CareSettingTemplateRO, userOrganization?: string): boolean => {
+const canModifyTemplate = (
+  template: CareSettingTemplateRO,
+  userOrganization?: string,
+  isAdmin?: boolean,
+): boolean => {
+  // ADMIN can modify any template
+  if (isAdmin) return true;
+  // GLOBAL templates can be edited by CONTENT_ADMIN
   if (template.healthAuthority === 'GLOBAL') return true;
+  // Must have an organization to edit non-GLOBAL templates
   if (!userOrganization) return false;
+  // CONTENT_ADMIN can edit templates belonging to their HA
   return template.healthAuthority === userOrganization;
 };
 
 const CareSettingsPage: NextPage = () => {
   const router = useRouter();
-  const { me } = useMe();
+  const { me, hasUserRole } = useMe();
+  const isAdmin = hasUserRole([Role.ADMIN]);
   const {
     careSettings,
     pageIndex,
@@ -58,7 +68,7 @@ const CareSettingsPage: NextPage = () => {
   const [templateToDelete, setTemplateToDelete] = useState<CareSettingTemplateRO | null>(null);
 
   const onEditClick = (template: CareSettingTemplateRO) => {
-    if (!canModifyTemplate(template, me?.organization)) {
+    if (!canModifyTemplate(template, me?.organization, isAdmin)) {
       toast.error('You can only edit care settings belonging to your health authority.');
       return;
     }
@@ -71,7 +81,7 @@ const CareSettingsPage: NextPage = () => {
   };
 
   const onDeleteClick = (template: CareSettingTemplateRO) => {
-    if (!canModifyTemplate(template, me?.organization)) {
+    if (!canModifyTemplate(template, me?.organization, isAdmin)) {
       toast.error('You can only delete care settings belonging to your health authority.');
       return;
     }
