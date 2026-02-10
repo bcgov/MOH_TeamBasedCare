@@ -28,8 +28,7 @@ import { CareSettingsSteps } from 'src/common/constants';
 /**
  * Check if user can edit/delete a template based on role and health authority
  * - ADMIN can edit any template (master check handled separately)
- * - GLOBAL templates can be edited by CONTENT_ADMIN
- * - CONTENT_ADMIN can edit templates belonging to their HA
+ * - CONTENT_ADMIN can edit templates belonging to their HA only
  */
 const canModifyTemplate = (
   template: CareSettingTemplateRO,
@@ -38,11 +37,9 @@ const canModifyTemplate = (
 ): boolean => {
   // ADMIN can modify any template
   if (isAdmin) return true;
-  // GLOBAL templates can be edited by CONTENT_ADMIN
-  if (template.healthAuthority === 'GLOBAL') return true;
-  // Must have an organization to edit non-GLOBAL templates
+  // Must have an organization to edit templates
   if (!userOrganization) return false;
-  // CONTENT_ADMIN can edit templates belonging to their HA
+  // CONTENT_ADMIN can edit templates belonging to their HA only
   return template.healthAuthority === userOrganization;
 };
 

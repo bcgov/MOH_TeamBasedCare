@@ -95,6 +95,7 @@ const SwitchTooltip: React.FC<any> = props => {
           occupation={occupation}
         />
       );
+    case 'N': // Handle legacy "N" values in DB (should be empty, but render as red X)
     case '':
       return (
         <TooltipIcon

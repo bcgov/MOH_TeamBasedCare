@@ -31,7 +31,7 @@ import { useCareSettingTemplateUpdate } from 'src/services/useCareSettingTemplat
 import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
-import { Permissions } from '@tbcm/common';
+import { Permissions, Role } from '@tbcm/common';
 import { CareSettingsSteps } from 'src/common/constants';
 
 const EditContent: React.FC = () => {
@@ -39,7 +39,7 @@ const EditContent: React.FC = () => {
   const { id } = router.query as { id: string };
 
   const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
-  const { me } = useMe();
+  const { me, hasUserRole } = useMe();
   const {
     template,
     isLoading: isLoadingTemplate,
@@ -62,8 +62,8 @@ const EditContent: React.FC = () => {
   useEffect(() => {
     if (template && me) {
       // Check if user can modify this template
-      const canModify =
-        template.healthAuthority === 'GLOBAL' || template.healthAuthority === me.organization;
+      const isAdmin = hasUserRole([Role.ADMIN]);
+      const canModify = isAdmin || template.healthAuthority === me.organization;
 
       if (template.isMaster) {
         toast.error('Master templates cannot be edited.');
