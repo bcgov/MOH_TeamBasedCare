@@ -38,7 +38,9 @@ export class PlanningSessionController {
 
   @Get('/care-setting-templates')
   async getCareSettingTemplatesForPlanning(@Req() req: IRequest) {
-    const healthAuthority = req.user?.organization ?? '';
+    // Admin users see all care settings, HA users see their HA + GLOBAL
+    const isAdmin = req.user?.roles?.includes(Role.ADMIN);
+    const healthAuthority = isAdmin ? null : req.user?.organization ?? '';
     return this.careSettingTemplateService.findAllForPlanning(healthAuthority);
   }
 

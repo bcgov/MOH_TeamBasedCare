@@ -69,7 +69,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     icon: <CareSettingsIcon />,
     path: AllowedPath.CARE_SETTINGS,
     hidden: false,
-    roles: [Role.USER, Role.ADMIN, Role.CONTENT_ADMIN],
+    roles: [Role.ADMIN, Role.CONTENT_ADMIN],
   },
   {
     id: '003',

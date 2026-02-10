@@ -93,10 +93,11 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
 
     case 'TOGGLE_BUNDLE': {
       const newSelectedBundleIds = new Set(state.selectedBundleIds);
+      const bundle = state.bundles.find(b => b.id === action.payload);
+
       if (newSelectedBundleIds.has(action.payload)) {
+        // Deselecting bundle: also remove all activities from this bundle
         newSelectedBundleIds.delete(action.payload);
-        // Also remove all activities from this bundle
-        const bundle = state.bundles.find(b => b.id === action.payload);
         if (bundle) {
           const newSelectedActivityIds = new Set(state.selectedActivityIds);
           bundle.careActivities?.forEach(a => newSelectedActivityIds.delete(a.id));
@@ -107,7 +108,17 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
           };
         }
       } else {
+        // Selecting bundle: also add all activities from this bundle
         newSelectedBundleIds.add(action.payload);
+        if (bundle) {
+          const newSelectedActivityIds = new Set(state.selectedActivityIds);
+          bundle.careActivities?.forEach(a => newSelectedActivityIds.add(a.id));
+          return {
+            ...state,
+            selectedBundleIds: newSelectedBundleIds,
+            selectedActivityIds: newSelectedActivityIds,
+          };
+        }
       }
       return { ...state, selectedBundleIds: newSelectedBundleIds };
     }
@@ -115,9 +126,24 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
     case 'TOGGLE_ACTIVITY': {
       const newSelectedActivityIds = new Set(state.selectedActivityIds);
       if (newSelectedActivityIds.has(action.payload)) {
+        // Deselecting activity
         newSelectedActivityIds.delete(action.payload);
       } else {
+        // Selecting activity: also ensure parent bundle is selected
         newSelectedActivityIds.add(action.payload);
+        // Find the bundle containing this activity and auto-select it
+        const parentBundle = state.bundles.find(b =>
+          b.careActivities?.some(a => a.id === action.payload),
+        );
+        if (parentBundle && !state.selectedBundleIds.has(parentBundle.id)) {
+          const newSelectedBundleIds = new Set(state.selectedBundleIds);
+          newSelectedBundleIds.add(parentBundle.id);
+          return {
+            ...state,
+            selectedBundleIds: newSelectedBundleIds,
+            selectedActivityIds: newSelectedActivityIds,
+          };
+        }
       }
       return { ...state, selectedActivityIds: newSelectedActivityIds };
     }

@@ -144,16 +144,26 @@ export class PlanningSessionService {
   async getBundlesForSelectedCareLocation(sessionId: string): Promise<BundleRO[]> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['careLocation'],
+      relations: ['careLocation', 'careSettingTemplate', 'careSettingTemplate.selectedBundles'],
     });
 
     if (!planningSession?.careLocation?.id) {
       throw new NotFoundException({ message: 'Care Location Not found' });
     }
 
-    return this.careActivityService.getCareActivitiesByBundlesForCareLocation(
+    // Get all bundles available for the care location
+    const allBundles = await this.careActivityService.getCareActivitiesByBundlesForCareLocation(
       planningSession.careLocation.id,
     );
+
+    // If template has selected bundles, filter to only show those
+    const selectedBundleIds = planningSession.careSettingTemplate?.selectedBundles?.map(b => b.id);
+    if (selectedBundleIds && selectedBundleIds.length > 0) {
+      return allBundles.filter(bundle => selectedBundleIds.includes(bundle.id));
+    }
+
+    // Fallback: return all bundles (for legacy sessions or templates without bundle selection)
+    return allBundles;
   }
 
   async saveCareActivity(sessionId: string, careActivityDto: SaveCareActivityDTO): Promise<void> {

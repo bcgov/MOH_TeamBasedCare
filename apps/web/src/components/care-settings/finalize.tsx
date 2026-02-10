@@ -127,7 +127,10 @@ const BundleAccordion: React.FC<{
             {selectedActivities.length} care & restricted activities
           </span>
         </div>
-        <FontAwesomeIcon icon={isOpen ? faChevronDown : faChevronRight} className='text-gray-500' />
+        <FontAwesomeIcon
+          icon={isOpen ? faChevronDown : faChevronRight}
+          className='h-4 w-4 text-gray-500'
+        />
       </button>
 
       {isOpen && (
