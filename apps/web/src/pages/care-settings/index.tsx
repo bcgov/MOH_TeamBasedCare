@@ -128,6 +128,7 @@ const CareSettingsPage: NextPage = () => {
               onEditClick={onEditClick}
               onCopyClick={onCopyClick}
               onDeleteClick={onDeleteClick}
+              canModify={template => canModifyTemplate(template, me?.organization, isAdmin)}
             />
           </div>
         </Card>

@@ -178,7 +178,7 @@ export class PlanningSessionService {
           bundle.careActivities =
             bundle.careActivities?.filter(a => selectedActivityIds.has(a.id)) || [];
         });
-        return filteredBundles.filter(bundle => bundle.careActivities.length > 0);
+        return filteredBundles.filter(bundle => (bundle.careActivities?.length ?? 0) > 0);
       }
 
       return filteredBundles;

@@ -57,6 +57,7 @@ interface TableBodyProps {
   onEditClick: (template: CareSettingTemplateRO) => void;
   onCopyClick: (template: CareSettingTemplateRO) => void;
   onDeleteClick: (template: CareSettingTemplateRO) => void;
+  canModify?: (template: CareSettingTemplateRO) => boolean;
 }
 
 const TableBody: React.FC<TableBodyProps> = ({
@@ -64,6 +65,7 @@ const TableBody: React.FC<TableBodyProps> = ({
   onEditClick,
   onCopyClick,
   onDeleteClick,
+  canModify,
 }) => {
   const tdStyles = 'table-td px-6 py-4 text-left';
 
@@ -90,7 +92,7 @@ const TableBody: React.FC<TableBodyProps> = ({
           </td>
           <td className={`${tdStyles}`}>
             <div className='flex justify-end gap-4'>
-              {!template.isMaster && (
+              {!template.isMaster && canModify?.(template) && (
                 <>
                   <Button variant='link' onClick={() => onEditClick(template)}>
                     Edit
@@ -156,6 +158,7 @@ interface CareSettingsListProps {
   onEditClick: (template: CareSettingTemplateRO) => void;
   onCopyClick: (template: CareSettingTemplateRO) => void;
   onDeleteClick: (template: CareSettingTemplateRO) => void;
+  canModify?: (template: CareSettingTemplateRO) => boolean;
 }
 
 export const CareSettingsList: React.FC<CareSettingsListProps> = ({
@@ -171,6 +174,7 @@ export const CareSettingsList: React.FC<CareSettingsListProps> = ({
   onEditClick,
   onCopyClick,
   onDeleteClick,
+  canModify,
 }) => {
   if (isLoading) {
     return <Spinner show={isLoading} />;
@@ -185,6 +189,7 @@ export const CareSettingsList: React.FC<CareSettingsListProps> = ({
           onEditClick={onEditClick}
           onCopyClick={onCopyClick}
           onDeleteClick={onDeleteClick}
+          canModify={canModify}
         />
         <TableFooter
           pageIndex={pageIndex}
