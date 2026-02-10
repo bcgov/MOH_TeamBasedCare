@@ -129,6 +129,26 @@ describe('KpiService', () => {
       expect(result.activeUsers).toBe(0);
       expect(result.totalCarePlans).toBe(0);
     });
+
+    it('should set startOfMonth to first day of current month at midnight', async () => {
+      mockUserRepo.count.mockResolvedValue(0);
+      mockUserQueryBuilder.getCount.mockResolvedValue(0);
+      mockPlanningSessionRepo.count.mockResolvedValue(0);
+
+      await service.getGeneralKPIs();
+
+      const passedDate = mockUserQueryBuilder.where.mock.calls[0][1].startOfMonth;
+      expect(passedDate.getDate()).toBe(1);
+      expect(passedDate.getHours()).toBe(0);
+      expect(passedDate.getMinutes()).toBe(0);
+      expect(passedDate.getSeconds()).toBe(0);
+    });
+
+    it('should propagate repository errors', async () => {
+      mockUserRepo.count.mockRejectedValue(new Error('DB connection lost'));
+
+      await expect(service.getGeneralKPIs()).rejects.toThrow('DB connection lost');
+    });
   });
 
   describe('getCarePlansBySetting', () => {
@@ -230,6 +250,31 @@ describe('KpiService', () => {
       expect(result[0].healthAuthority).toBe('Unknown');
     });
 
+    it('should not apply healthAuthority filter when undefined', async () => {
+      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+
+      await service.getCarePlansBySetting({ careSettingId: 'unit-1' });
+
+      // andWhere should only be called once (for careSettingId), not for healthAuthority
+      const andWhereCalls = mockPlanningSessionQueryBuilder.andWhere.mock.calls;
+      const haFilterCalls = andWhereCalls.filter(
+        (call: any[]) => typeof call[0] === 'string' && call[0].includes('organization'),
+      );
+      expect(haFilterCalls).toHaveLength(0);
+    });
+
+    it('should not apply careSettingId filter when undefined', async () => {
+      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+
+      await service.getCarePlansBySetting({ healthAuthority: 'Fraser Health' });
+
+      const andWhereCalls = mockPlanningSessionQueryBuilder.andWhere.mock.calls;
+      const csFilterCalls = andWhereCalls.filter(
+        (call: any[]) => typeof call[0] === 'string' && call[0].includes('careSettingId'),
+      );
+      expect(csFilterCalls).toHaveLength(0);
+    });
+
     it('should parse count as integer', async () => {
       mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([
         {
@@ -271,6 +316,18 @@ describe('KpiService', () => {
       expect(result.general.totalUsers).toBe(100);
       expect(result.carePlansBySetting).toBeDefined();
       expect(result.carePlansBySetting).toHaveLength(1);
+    });
+
+    it('should return empty carePlansBySetting with populated general', async () => {
+      mockUserRepo.count.mockResolvedValue(100);
+      mockUserQueryBuilder.getCount.mockResolvedValue(50);
+      mockPlanningSessionRepo.count.mockResolvedValue(200);
+      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+
+      const result = await service.getKPIsOverview({});
+
+      expect(result.general.totalUsers).toBe(100);
+      expect(result.carePlansBySetting).toEqual([]);
     });
 
     it('should pass filter to getCarePlansBySetting', async () => {
@@ -321,6 +378,18 @@ describe('KpiService', () => {
       const result = await service.getCareSettings();
 
       expect(result).toEqual([]);
+    });
+
+    it('should map units to plain objects stripping extra fields', async () => {
+      const mockUnits = [
+        { id: 'unit-1', displayName: 'ACUTE Care', name: 'acute', extraField: true },
+      ];
+      mockUnitRepo.find.mockResolvedValue(mockUnits);
+
+      const result = await service.getCareSettings();
+
+      expect(result[0]).toEqual({ id: 'unit-1', displayName: 'ACUTE Care' });
+      expect(result[0]).not.toHaveProperty('extraField');
     });
   });
 });

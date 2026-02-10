@@ -113,23 +113,31 @@ export class CareSettingTemplateService {
    */
   async findTemplates(
     query: FindCareSettingTemplatesDto,
-    healthAuthority: string,
+    healthAuthority: string | null,
   ): Promise<[CareSettingTemplateRO[], number]> {
     const queryBuilder = this.templateRepo
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.unit', 't_unit')
       .leftJoinAndSelect('t.parent', 't_parent');
 
-    // Filter by health authority - show user's HA templates + GLOBAL masters
-    if (healthAuthority) {
-      queryBuilder.where('(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)', {
-        healthAuthority,
-        global: 'GLOBAL',
-      });
-    } else {
-      // Users without org only see GLOBAL templates
-      queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+    // Filter by health authority
+    // null = admin, show all templates
+    // string = user's HA, show HA + GLOBAL (or just GLOBAL if empty string)
+    if (healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.where(
+          '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
+          {
+            healthAuthority,
+            global: 'GLOBAL',
+          },
+        );
+      } else {
+        // Users without org only see GLOBAL templates
+        queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+      }
     }
+    // If null (admin), no filter - show all templates
 
     // Search by name
     if (query.searchText) {
@@ -138,7 +146,7 @@ export class CareSettingTemplateService {
       });
     }
 
-    // Sort
+    // Sort - always put masters first, then by requested sort
     const sortOrder = query.sortOrder || SortOrder.ASC;
 
     if (query.sortBy) {
@@ -148,10 +156,10 @@ export class CareSettingTemplateService {
         orderBy = 't_parent.name';
       }
 
-      queryBuilder.orderBy(orderBy, sortOrder as SortOrder);
+      queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy(orderBy, sortOrder as SortOrder);
     } else {
-      // Default sort by name
-      queryBuilder.orderBy('t.name', 'ASC');
+      // Default: masters first, then by name
+      queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy('t.name', 'ASC');
     }
 
     // Pagination
@@ -230,10 +238,13 @@ export class CareSettingTemplateService {
     }
 
     // Load permissions as flat data (no entity relations)
+    // Use snake_case column names for raw query
     const permissions = await this.permissionRepo
       .createQueryBuilder('p')
-      .select(['p.careActivityId', 'p.occupationId', 'p.permission'])
-      .where('p.templateId = :templateId', { templateId: id })
+      .select('p.care_activity_id', 'care_activity_id')
+      .addSelect('p.occupation_id', 'occupation_id')
+      .addSelect('p.permission', 'permission')
+      .where('p.template_id = :templateId', { templateId: id })
       .getRawMany();
 
     return {
@@ -243,9 +254,9 @@ export class CareSettingTemplateService {
       selectedBundleIds: template.selectedBundles.map(b => b.id),
       selectedActivityIds: template.selectedActivities.map(a => a.id),
       permissions: permissions.map(p => ({
-        activityId: p.p_careActivityId || p.p_care_activity_id,
-        occupationId: p.p_occupationId || p.p_occupation_id,
-        permission: p.p_permission,
+        activityId: p.care_activity_id,
+        occupationId: p.occupation_id,
+        permission: p.permission,
       })),
     };
   }
@@ -627,6 +638,35 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Get all templates for CMS filter dropdown (no pagination)
+   * Applies same HA filtering and sorting as findTemplates but without skip/take overhead
+   * @param healthAuthority - User's HA, or null to return ALL templates (for admins)
+   */
+  async findAllForCMSFilter(healthAuthority: string | null): Promise<CareSettingTemplateRO[]> {
+    const queryBuilder = this.templateRepo
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.unit', 't_unit')
+      .leftJoinAndSelect('t.parent', 't_parent');
+
+    if (healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.where(
+          '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
+          { healthAuthority, global: 'GLOBAL' },
+        );
+      } else {
+        // Users without org only see GLOBAL templates
+        queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+      }
+    }
+
+    queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy('t.name', 'ASC');
+
+    const results = await queryBuilder.getMany();
+    return results.map(t => new CareSettingTemplateRO(t));
+  }
+
+  /**
    * Delete a template and all associated permissions
    * @throws BadRequestException if attempting to delete a master template
    * @throws BadRequestException if template is referenced by draft planning sessions
@@ -671,5 +711,37 @@ export class CareSettingTemplateService {
 
     // Delete the template
     await this.templateRepo.delete({ id });
+  }
+
+  /**
+   * Get all permissions for suggestion engine
+   * Returns permissions for ALL occupations (not just selected ones) with occupation names
+   * Used to calculate suggestion scores for occupations not yet in the session
+   */
+  async getPermissionsForSuggestions(
+    templateId: string,
+    careActivityIds: string[],
+  ): Promise<
+    {
+      permission: string;
+      care_activity_id: string;
+      occupation_id: string;
+      occupation_name: string;
+    }[]
+  > {
+    if (careActivityIds.length === 0) {
+      return [];
+    }
+    return this.permissionRepo
+      .createQueryBuilder('cstp')
+      .select('cstp.permission', 'permission')
+      .addSelect('cstp.careActivity', 'care_activity_id')
+      .addSelect('cstp.occupation', 'occupation_id')
+      .innerJoin('cstp.occupation', 'o')
+      .addSelect('o.displayName', 'occupation_name')
+      .where('cstp.template = :templateId', { templateId })
+      .andWhere('cstp.careActivity IN (:...activityIds)', { activityIds: careActivityIds })
+      .andWhere('cstp.permission IN (:...perms)', { perms: ['Y', 'LC'] })
+      .getRawMany();
   }
 }

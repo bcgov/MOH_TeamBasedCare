@@ -11,6 +11,7 @@ import {
   CareActivityDetailRO,
   CareActivityRO,
   EditCareActivityDTO,
+  MASTER_TEMPLATE_SUFFIX,
   SortOrder,
 } from '@tbcm/common';
 import { CareActivitySearchTerm } from './entity/care-activity-search-term.entity';
@@ -111,47 +112,86 @@ export class CareActivityService {
       .getManyAndCount();
   }
 
+  /**
+   * Find care activities for CMS with template-based filtering
+   *
+   * NOTE: Only shows activities that are selected in at least one visible template.
+   * Activities not selected by any template will not appear in results.
+   * This is intentional - CMS displays activities "in use" by care setting templates.
+   *
+   * @param query - Pagination and filter options
+   * @param healthAuthority - User's HA, or null to show ALL templates (for admins)
+   */
   async findCareActivitiesCMS(
     query: FindCareActivitiesCMSDto,
+    healthAuthority: string | null,
   ): Promise<[CareActivityRO[], number]> {
+    // Join templates via junction table instead of careLocations
+    // This shows which templates have selected each activity
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
-      .innerJoinAndSelect('ca.careLocations', 'ca_cl')
-      .leftJoinAndSelect('ca.bundle', 'ca_b')
-      .leftJoinAndSelect('ca.updatedBy', 'ca_up');
+      .leftJoin('care_setting_template_activities', 'csta', 'csta.care_activity_id = ca.id')
+      .leftJoin('care_setting_template', 'cst', 'cst.id = csta.care_setting_template_id')
+      .leftJoin('ca.bundle', 'ca_b')
+      .leftJoin('ca.updatedBy', 'ca_up')
+      .select('ca.id', 'ca_id')
+      .addSelect('ca.display_name', 'ca_display_name')
+      .addSelect('ca.activity_type', 'ca_activity_type')
+      .addSelect('ca.clinical_type', 'ca_clinical_type')
+      .addSelect('ca_b.display_name', 'ca_b_display_name')
+      .addSelect('ca_up.display_name', 'ca_up_display_name')
+      .addSelect(
+        `STRING_AGG(DISTINCT REPLACE(cst.name, '${MASTER_TEMPLATE_SUFFIX}', ''), ', ' ORDER BY REPLACE(cst.name, '${MASTER_TEMPLATE_SUFFIX}', ''))`,
+        'template_names',
+      )
+      .groupBy('ca.id')
+      .addGroupBy('ca.display_name')
+      .addGroupBy('ca.activity_type')
+      .addGroupBy('ca.clinical_type')
+      .addGroupBy('ca_b.display_name')
+      .addGroupBy('ca_up.display_name');
 
-    // Search logic below
+    // Apply HA filtering to templates (only show activities in visible templates)
+    if (healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.andWhere("(cst.health_authority = :ha OR cst.health_authority = 'GLOBAL')", {
+          ha: healthAuthority,
+        });
+      } else {
+        // Users without org only see activities in GLOBAL templates
+        queryBuilder.andWhere("cst.health_authority = 'GLOBAL'");
+      }
+    }
+    // If null (admin), no HA filter - show all templates
+
+    // Search filter
     if (query.searchText) {
-      // add where clause to the query
-      queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+      queryBuilder.andWhere('ca.display_name ILIKE :name', { name: `%${query.searchText}%` });
     }
 
-    // filter by care setting
-    // default empty string = no filtering
+    // Filter by specific template
     if (query.careSetting) {
-      queryBuilder.andWhere('ca_cl.id = :careSetting', {
-        careSetting: query.careSetting,
-      });
+      queryBuilder.andWhere('cst.id = :templateId', { templateId: query.careSetting });
     }
 
-    // Sort logic below
+    // Sort logic
     const sortOrder = query.sortOrder;
 
     if (query.sortBy) {
       let orderBy = `ca.${query.sortBy}`;
 
       if (query.sortBy === CareActivitiesCMSFindSortKeys.BUNDLE_NAME) {
-        orderBy = 'ca_b.displayName';
+        orderBy = 'ca_b.display_name';
       }
 
       if (query.sortBy === CareActivitiesCMSFindSortKeys.UPDATED_BY) {
-        orderBy = 'ca_up.displayName';
+        orderBy = 'ca_up.display_name';
       }
       if (query.sortBy === CareActivitiesCMSFindSortKeys.CARE_SETTING_NAME) {
-        orderBy = 'ca_cl.displayName';
+        orderBy = 'template_names';
       }
 
-      queryBuilder.orderBy(orderBy, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
+      queryBuilder.orderBy(orderBy, sortOrder as SortOrder);
     }
 
     const all = await queryBuilder.getRawMany();
@@ -164,8 +204,8 @@ export class CareActivityService {
       clinicalType: raw.ca_clinical_type,
       bundleName: raw.ca_b_display_name,
       updatedBy: raw.ca_up_display_name,
-      unitName: raw.ca_cl_display_name,
-      unitId: raw.ca_cl_id,
+      unitName: raw.template_names || '', // Contains template names (not unit names)
+      unitId: '', // Deprecated: kept for RO type compatibility, always empty
     }));
     return [result, count];
   }

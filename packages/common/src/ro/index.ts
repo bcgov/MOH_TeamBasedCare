@@ -16,3 +16,4 @@ export * from './unit.ro';
 export * from './user-preference.ro';
 export * from './user.ro';
 export * from './userGuide';
+export * from './suggestion.ro';

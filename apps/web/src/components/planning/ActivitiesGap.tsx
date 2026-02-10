@@ -1,14 +1,20 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faCaretUp } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faCaretUp, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
-import { tooltipIcons, TooltipIconTypes } from '../../common';
+import { tooltipIcons, TooltipIconTypes, API_ENDPOINT, REQUEST_METHOD } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
-import { usePlanningActivitiesGap } from '../../services';
+import {
+  usePlanningActivitiesGap,
+  usePlanningContext,
+  usePlanningOccupations,
+} from '../../services';
+import { useHttp } from '../../services/useHttp';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
 import { OccupationListDropdown } from '../OccupationListDropdown';
+import { SuggestionsModal } from './SuggestionsModal';
 import { ActivityGapCareActivity } from '@tbcm/common';
 
 export interface ActivitiesGapProps {
@@ -209,6 +215,36 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
   const description =
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const { initialValues: occupationData } = usePlanningOccupations({});
+  const { sendApiRequest } = useHttp();
+  const {
+    state: { sessionId },
+    updateRefetchActivityGap,
+  } = usePlanningContext();
+
+  const handleSuggestionsClose = async (selectedIds: string[]) => {
+    setShowSuggestionsModal(false);
+
+    if (selectedIds.length > 0 && sessionId) {
+      const mergedOccupations = Array.from(new Set([...occupationData.occupation, ...selectedIds]));
+
+      sendApiRequest(
+        {
+          method: REQUEST_METHOD.PATCH,
+          data: { occupation: mergedOccupations },
+          endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+        },
+        () => {
+          updateRefetchActivityGap(true);
+        },
+        () => {
+          // Error toast is shown automatically by useHttp errorHandler
+        },
+      );
+    }
+  };
+
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
@@ -219,6 +255,10 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
 
           <div className='flex flex-row flex-1 lg:flex-none flex-wrap space-y-2 lg:space-y-0 space-x-1 items-center justify-end'>
             <ActivitiesGapLegend />
+            <Button variant='secondary' onClick={() => setShowSuggestionsModal(true)}>
+              <FontAwesomeIcon icon={faLightbulb} className='mr-2' />
+              Suggestions
+            </Button>
             <OccupationListDropdown />
           </div>
         </div>
@@ -231,6 +271,8 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
           <ActivityGapTable />
         </div>
       </div>
+
+      <SuggestionsModal isOpen={showSuggestionsModal} onClose={handleSuggestionsClose} />
     </div>
   );
 };

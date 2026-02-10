@@ -73,19 +73,61 @@ export class CareSettingTemplateController {
   }
 
   /**
+   * Determine health authority for template copy based on user role
+   * - ADMIN creates GLOBAL templates visible to all health authorities
+   * - CONTENT_ADMIN and other users create templates scoped to their own health authority
+   * @throws BadRequestException if non-admin user has no organization
+   */
+  private getHealthAuthorityForCopy(req: IRequest): string {
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+
+    if (isSuperAdmin) {
+      return 'GLOBAL';
+    }
+
+    if (!req.user.organization) {
+      throw new BadRequestException(
+        'User must have a health authority assigned to create care settings.',
+      );
+    }
+
+    return req.user.organization;
+  }
+
+  /**
    * List all care setting templates with pagination and search
-   * Filters by user's health authority (plus GLOBAL master templates)
-   * Users without an organization only see GLOBAL templates
+   * - Admins (ADMIN, CONTENT_ADMIN): see ALL templates
+   * - Users with HA: see their HA templates + GLOBAL masters
+   * - Users without HA: see only GLOBAL templates
    */
   @Get('cms/find')
   async findTemplates(
     @Query() query: FindCareSettingTemplatesDto,
     @Req() req: IRequest,
   ): Promise<PaginationRO<CareSettingTemplateRO[]>> {
-    // Users without org only see GLOBAL templates (matches no HA-specific templates)
-    const healthAuthority = req.user.organization ?? '';
+    const hasFullVisibility = req.user.roles?.some(
+      r => r === Role.ADMIN || r === Role.CONTENT_ADMIN,
+    );
+    const healthAuthority = hasFullVisibility ? null : req.user.organization ?? '';
     const [templates, total] = await this.templateService.findTemplates(query, healthAuthority);
     return new PaginationRO([templates, total]);
+  }
+
+  /**
+   * Get templates for CMS dropdown filter
+   * - Admins (ADMIN, CONTENT_ADMIN): see ALL templates across all health authorities
+   * - Users with HA: see GLOBAL + their health authority's templates
+   *
+   * Auth: Uses class-level @AllowRoles (USER, ADMIN, CONTENT_ADMIN) intentionally,
+   * consistent with other read endpoints (findTemplates, getTemplateById, etc.).
+   */
+  @Get('cms/templates-for-filter')
+  async getTemplatesForCMSFilter(@Req() req: IRequest): Promise<CareSettingTemplateRO[]> {
+    const hasFullVisibility = req.user.roles?.some(
+      r => r === Role.ADMIN || r === Role.CONTENT_ADMIN,
+    );
+    const healthAuthority = hasFullVisibility ? null : req.user.organization ?? '';
+    return this.templateService.findAllForCMSFilter(healthAuthority);
   }
 
   /**
@@ -164,12 +206,7 @@ export class CareSettingTemplateController {
     @Body() dto: CreateCareSettingTemplateCopyDTO,
     @Req() req: IRequest,
   ): Promise<CareSettingTemplateRO> {
-    const healthAuthority = req.user.organization;
-    if (!healthAuthority) {
-      throw new BadRequestException(
-        'User must have a health authority assigned to create care settings.',
-      );
-    }
+    const healthAuthority = this.getHealthAuthorityForCopy(req);
     return this.templateService.copyTemplate(id, dto, healthAuthority);
   }
 
@@ -186,19 +223,15 @@ export class CareSettingTemplateController {
     @Body() dto: CreateCareSettingTemplateCopyFullDTO,
     @Req() req: IRequest,
   ): Promise<CareSettingTemplateRO> {
-    const healthAuthority = req.user.organization;
-    if (!healthAuthority) {
-      throw new BadRequestException(
-        'User must have a health authority assigned to create care settings.',
-      );
-    }
+    const healthAuthority = this.getHealthAuthorityForCopy(req);
     return this.templateService.copyTemplateWithData(id, dto, healthAuthority);
   }
 
   /**
    * Update a template's name, selected bundles/activities, and permissions
    * Note: Master templates cannot be updated
-   * Only templates belonging to user's health authority can be modified
+   * - ADMIN can modify any template regardless of health authority
+   * - CONTENT_ADMIN can only modify templates belonging to their health authority
    */
   @Patch(':id')
   @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
@@ -208,14 +241,16 @@ export class CareSettingTemplateController {
     @Body() dto: UpdateCareSettingTemplateDTO,
     @Req() req: IRequest,
   ): Promise<void> {
-    const healthAuthority = req.user.organization;
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isSuperAdmin ? undefined : req.user.organization;
     await this.templateService.updateTemplate(id, dto, healthAuthority);
   }
 
   /**
    * Delete a template and all its associated permissions
    * Note: Master templates cannot be deleted
-   * Only templates belonging to user's health authority can be deleted
+   * - ADMIN can delete any template regardless of health authority
+   * - CONTENT_ADMIN can only delete templates belonging to their health authority
    */
   @Delete(':id')
   @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
@@ -224,7 +259,8 @@ export class CareSettingTemplateController {
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: IRequest,
   ): Promise<void> {
-    const healthAuthority = req.user.organization;
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isSuperAdmin ? undefined : req.user.organization;
     await this.templateService.deleteTemplate(id, healthAuthority);
   }
 }

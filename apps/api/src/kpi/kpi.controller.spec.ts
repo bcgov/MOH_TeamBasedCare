@@ -101,5 +101,30 @@ describe('KpiController', () => {
 
       expect(result).toEqual([]);
     });
+
+    it('should propagate service errors', async () => {
+      mockKpiService.getCareSettings.mockRejectedValue(new Error('DB error'));
+
+      await expect(controller.getCareSettings()).rejects.toThrow('DB error');
+    });
+  });
+
+  describe('getOverview - careSettingId filter', () => {
+    it('should pass careSettingId filter to service', async () => {
+      const mockOverview = new KPIsOverviewRO({
+        general: new GeneralKPIsRO({
+          totalUsers: 10,
+          activeUsers: 5,
+          totalCarePlans: 20,
+        }),
+        carePlansBySetting: [],
+      });
+      mockKpiService.getKPIsOverview.mockResolvedValue(mockOverview);
+
+      const filter = { careSettingId: 'unit-1' };
+      await controller.getOverview(filter);
+
+      expect(mockKpiService.getKPIsOverview).toHaveBeenCalledWith({ careSettingId: 'unit-1' });
+    });
   });
 });

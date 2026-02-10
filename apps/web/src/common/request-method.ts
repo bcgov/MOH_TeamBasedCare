@@ -66,6 +66,7 @@ export const API_ENDPOINT = {
   getPlanningOccupation: (sessionId: string) => `/sessions/${sessionId}/occupation`,
   getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
   getPlanningActivityGap: (sessionId: string) => `/sessions/${sessionId}/activities-gap`,
+  getSuggestions: (sessionId: string) => `/sessions/${sessionId}/suggestions`,
   getActivitiesAllowedByOccupation: (
     occupationId: string,
     params: EndpointQueryParams<OccupationalScopeOfPracticeSortKeys>,
@@ -89,6 +90,7 @@ export const API_ENDPOINT = {
   CARE_ACTIVITY_DOWNLOAD: '/care-activity/cms/download',
 
   // Care Settings
+  CMS_CARE_SETTING_TEMPLATES_FILTER: '/care-settings/cms/templates-for-filter',
   findCareSettings: (params: EndpointQueryParams<CareSettingsCMSFindSortKeys>) =>
     appendQueryParams('/care-settings/cms/find', params),
   getCareSettingTemplate: (id: string) => `/care-settings/${id}`,
