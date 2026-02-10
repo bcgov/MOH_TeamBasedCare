@@ -144,7 +144,12 @@ export class PlanningSessionService {
   async getBundlesForSelectedCareLocation(sessionId: string): Promise<BundleRO[]> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
-      relations: ['careLocation', 'careSettingTemplate', 'careSettingTemplate.selectedBundles'],
+      relations: [
+        'careLocation',
+        'careSettingTemplate',
+        'careSettingTemplate.selectedBundles',
+        'careSettingTemplate.selectedActivities',
+      ],
     });
 
     if (!planningSession?.careLocation?.id) {
@@ -156,10 +161,27 @@ export class PlanningSessionService {
       planningSession.careLocation.id,
     );
 
-    // If template has selected bundles, filter to only show those
+    // If template has selected bundles, filter bundles AND activities
     const selectedBundleIds = planningSession.careSettingTemplate?.selectedBundles?.map(b => b.id);
+    const selectedActivityIds = new Set(
+      planningSession.careSettingTemplate?.selectedActivities?.map(a => a.id) || [],
+    );
+
     if (selectedBundleIds && selectedBundleIds.length > 0) {
-      return allBundles.filter(bundle => selectedBundleIds.includes(bundle.id));
+      // Filter bundles and mutate careActivities in place (avoids BundleRO class prototype loss)
+      const filteredBundles = allBundles.filter(bundle => selectedBundleIds.includes(bundle.id));
+
+      // Only filter activities if template has explicit activity selection
+      // (empty selectedActivityIds = show all activities within selected bundles)
+      if (selectedActivityIds.size > 0) {
+        filteredBundles.forEach(bundle => {
+          bundle.careActivities =
+            bundle.careActivities?.filter(a => selectedActivityIds.has(a.id)) || [];
+        });
+        return filteredBundles.filter(bundle => (bundle.careActivities?.length ?? 0) > 0);
+      }
+
+      return filteredBundles;
     }
 
     // Fallback: return all bundles (for legacy sessions or templates without bundle selection)

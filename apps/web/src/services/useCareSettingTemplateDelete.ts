@@ -27,7 +27,7 @@ export const useCareSettingTemplateDelete = () => {
         toast.info('Care setting deleted successfully.');
       },
       () => void 0,
-      'Failed to delete care setting.',
+      // Let useHttp extract backend error message (e.g., "Cannot delete template: it is referenced by X draft care plan(s).")
     );
   };
 
