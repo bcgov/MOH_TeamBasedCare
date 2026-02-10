@@ -186,9 +186,7 @@ export class CareSettingTemplateService {
         'parent',
         'selectedBundles',
         'selectedActivities',
-        'permissions',
-        'permissions.careActivity',
-        'permissions.occupation',
+        // Note: permissions loaded via raw query below to avoid loading full entities
       ],
     });
 
@@ -199,12 +197,21 @@ export class CareSettingTemplateService {
     // Build bundle selections with activity counts
     const selectedBundles = await this.buildBundleSelections(template);
 
-    // Build permissions
-    const permissions = template.permissions.map(
+    // Load permissions as flat data (no entity relations) - major performance improvement
+    // Use snake_case column names for raw query
+    const rawPermissions = await this.permissionRepo
+      .createQueryBuilder('p')
+      .select('p.care_activity_id', 'care_activity_id')
+      .addSelect('p.occupation_id', 'occupation_id')
+      .addSelect('p.permission', 'permission')
+      .where('p.template_id = :templateId', { templateId: id })
+      .getRawMany();
+
+    const permissions = rawPermissions.map(
       p =>
         new TemplatePermissionRO({
-          activityId: p.careActivity.id,
-          occupationId: p.occupation.id,
+          activityId: p.care_activity_id,
+          occupationId: p.occupation_id,
           permission: p.permission,
         }),
     );
