@@ -622,18 +622,28 @@ export class CareSettingTemplateService {
   /**
    * Get flat list of templates for planning dropdown
    * Returns templates for the user's health authority plus GLOBAL masters
+   * @param healthAuthority - User's HA, or null to return ALL templates (for admins)
    */
-  async findAllForPlanning(healthAuthority: string): Promise<CareSettingTemplateRO[]> {
-    const templates = await this.templateRepo
+  async findAllForPlanning(healthAuthority: string | null): Promise<CareSettingTemplateRO[]> {
+    const queryBuilder = this.templateRepo
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.unit', 't_unit')
-      .leftJoinAndSelect('t.parent', 't_parent')
-      .where('(t.healthAuthority = :ha OR t.healthAuthority = :global)', {
-        ha: healthAuthority,
-        global: 'GLOBAL',
-      })
-      .orderBy('t.name', 'ASC')
-      .getMany();
+      .leftJoinAndSelect('t.parent', 't_parent');
+
+    // Admin (null) sees all templates, HA users see their HA + GLOBAL
+    if (healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.where('(t.healthAuthority = :ha OR t.healthAuthority = :global)', {
+          ha: healthAuthority,
+          global: 'GLOBAL',
+        });
+      } else {
+        // Users without org only see GLOBAL templates
+        queryBuilder.where('t.healthAuthority = :global', { global: 'GLOBAL' });
+      }
+    }
+
+    const templates = await queryBuilder.orderBy('t.name', 'ASC').getMany();
     return templates.map(t => new CareSettingTemplateRO(t));
   }
 

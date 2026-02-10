@@ -10,7 +10,7 @@
  *
  * Authorization:
  * - GET endpoints: All authenticated users (USER, ADMIN, CONTENT_ADMIN)
- * - POST (copy): All authenticated users
+ * - POST (copy): Admin roles only (ADMIN, CONTENT_ADMIN)
  * - PATCH/DELETE: Admin roles only (ADMIN, CONTENT_ADMIN)
  */
 import {
@@ -197,9 +197,11 @@ export class CareSettingTemplateController {
    * Create a copy of an existing template (including master templates)
    * The copy can then be customized by the user
    * New template is assigned to user's health authority
+   * Only ADMIN and CONTENT_ADMIN can create copies
    * @throws BadRequestException if user has no organization assigned
    */
   @Post(':id/copy')
+  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
   @HttpCode(HttpStatus.CREATED)
   async copyTemplate(
     @Param('id', ParseUUIDPipe) id: string,
@@ -214,9 +216,11 @@ export class CareSettingTemplateController {
    * Create a copy of an existing template with full customization data
    * Use this for deferred copy creation where user customizes before saving
    * New template is assigned to user's health authority
+   * Only ADMIN and CONTENT_ADMIN can create copies
    * @throws BadRequestException if user has no organization assigned
    */
   @Post(':id/copy-full')
+  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
   @HttpCode(HttpStatus.CREATED)
   async copyTemplateWithData(
     @Param('id', ParseUUIDPipe) id: string,
