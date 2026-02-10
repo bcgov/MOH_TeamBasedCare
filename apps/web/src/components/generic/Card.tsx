@@ -1,7 +1,8 @@
-import { faCheck, faExclamation, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faExclamation, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, ReactNode } from 'react';
 import { Heading } from '../Heading';
+import { Popover } from './Popover';
 
 export interface CardProps {
   color?: CardColor;
@@ -10,6 +11,7 @@ export interface CardProps {
   extraSpacing?: boolean;
   bgWhite?: boolean;
   className?: string;
+  tooltip?: ReactNode;
 }
 
 export enum CardColor {
@@ -26,6 +28,7 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = ({
   extraSpacing,
   bgWhite,
   className = '',
+  tooltip,
 }) => {
   let icon = faExclamation;
   switch (color) {
@@ -66,7 +69,25 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = ({
           </div>
         )}
         <div className='flex-1 min-w-0'>
-          <Heading title={title} subTitle={subtitle} />
+          <div className='flex items-center gap-2'>
+            <Heading title={title} subTitle={subtitle} />
+            {tooltip && (
+              <Popover
+                title={
+                  <FontAwesomeIcon
+                    icon={faInfoCircle}
+                    className='text-gray-400 hover:text-gray-600 cursor-pointer w-4 h-4'
+                  />
+                }
+              >
+                {() => (
+                  <div className='bg-white p-4 text-sm max-w-xs shadow-lg rounded-lg border'>
+                    {tooltip}
+                  </div>
+                )}
+              </Popover>
+            )}
+          </div>
           {children}
         </div>
       </div>

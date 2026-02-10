@@ -768,6 +768,88 @@ describe('PlanningSessionService', () => {
       });
     });
 
+    // ─── Coverage stats ───────────────────────────────────────────
+    describe('coverage stats', () => {
+      it('should calculate gaps, fragile, and redundant counts correctly', async () => {
+        const session = makeGapSession({
+          careActivity: [
+            {
+              id: 'ca-1',
+              displayName: 'Activity 1',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+            {
+              id: 'ca-2',
+              displayName: 'Activity 2',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+            {
+              id: 'ca-3',
+              displayName: 'Activity 3',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+          ],
+          occupation: [
+            { id: 'occ-1', displayName: 'Nurse', description: '', displayOrder: 1 },
+            { id: 'occ-2', displayName: 'Doctor', description: '', displayOrder: 2 },
+          ],
+        });
+        mockPlanningSessionRepo.findOne.mockResolvedValue(session);
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+          // Activity 1: 2 occupations can do it (redundant)
+          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1' },
+          { permission: 'LC', care_activity_id: 'ca-1', occupation_id: 'occ-2' },
+          // Activity 2: 1 occupation can do it (fragile)
+          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-1' },
+          // Activity 3: no permissions (gap)
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.overview.coverage).toEqual({
+          totalActivities: 3,
+          gapsCount: 1, // ca-3
+          fragileCount: 1, // ca-2
+          redundantCount: 1, // ca-1
+          coveragePercent: 67, // 2/3 activities have at least 1 coverage
+        });
+      });
+
+      it('should return 100% coverage when all activities have at least one capable occupation', async () => {
+        const session = makeGapSession();
+        mockPlanningSessionRepo.findOne.mockResolvedValue(session);
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1' },
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.overview.coverage).toEqual({
+          totalActivities: 1,
+          gapsCount: 0,
+          fragileCount: 1,
+          redundantCount: 0,
+          coveragePercent: 100,
+        });
+      });
+
+      it('should return 0% coverage when no activities have capable occupations', async () => {
+        const session = makeGapSession();
+        mockPlanningSessionRepo.findOne.mockResolvedValue(session);
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.overview.coverage).toEqual({
+          totalActivities: 1,
+          gapsCount: 1,
+          fragileCount: 0,
+          redundantCount: 0,
+          coveragePercent: 0,
+        });
+      });
+    });
+
     // ─── Bundle grouping ──────────────────────────────────────────
     describe('bundle grouping', () => {
       it('should group activities by bundle name into separate data entries', async () => {
@@ -873,6 +955,12 @@ describe('PlanningSessionService', () => {
         expect(result.suggestions).toEqual([]);
         expect(result.message).toBe('No care activities selected');
         expect(result.totalUncoveredActivities).toBe(0);
+        expect(result.summary).toEqual({
+          gaps: [],
+          fragile: [],
+          redundant: [],
+          coveragePercent: 0,
+        });
       });
 
       it('should return empty with message when no care setting selected', async () => {
@@ -890,6 +978,12 @@ describe('PlanningSessionService', () => {
 
         expect(result.suggestions).toEqual([]);
         expect(result.message).toBe('No care setting selected');
+        expect(result.summary).toEqual({
+          gaps: [],
+          fragile: [],
+          redundant: [],
+          coveragePercent: 0,
+        });
       });
 
       it('should return empty with message when no permissions found', async () => {
@@ -907,6 +1001,12 @@ describe('PlanningSessionService', () => {
         expect(result.suggestions).toEqual([]);
         expect(result.message).toBe('No permission data available');
         expect(result.totalUncoveredActivities).toBe(1);
+        expect(result.summary).toEqual({
+          gaps: [],
+          fragile: [],
+          redundant: [],
+          coveragePercent: 0,
+        });
       });
     });
 
@@ -990,52 +1090,63 @@ describe('PlanningSessionService', () => {
         ]);
       };
 
-      it('should score Restricted Activity + Y as 4', async () => {
+      // V2 scoring for gaps: 100 × criticality × permValue + 1 × permValue (density)
+      // Criticality: RESTRICTED=3, ASPECT=2, TASK=1
+      // permValue: Y=1.0, LC=0.6
+
+      it('should score Restricted Activity + Y (V2: gap=300 + density=1)', async () => {
         setupScoringTest(CareActivityType.RESTRICTED_ACTIVITY, 'Y');
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].score).toBe(4);
+        expect(result.suggestions[0].score).toBe(301); // 100*3*1.0 + 1*1.0
+        expect(result.suggestions[0].tier).toBe(1);
+        expect(result.suggestions[0].gapsFilled).toBe(1);
       });
 
-      it('should score Restricted Activity + LC as 3', async () => {
+      it('should score Restricted Activity + LC (V2: gap=180 + density=0.6)', async () => {
         setupScoringTest(CareActivityType.RESTRICTED_ACTIVITY, 'LC');
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].score).toBe(3);
+        expect(result.suggestions[0].score).toBe(181); // round(100*3*0.6 + 1*0.6)
+        expect(result.suggestions[0].tier).toBe(1);
       });
 
-      it('should score Aspect of Practice + Y as 3', async () => {
+      it('should score Aspect of Practice + Y (V2: gap=200 + density=1)', async () => {
         setupScoringTest(CareActivityType.ASPECT_OF_PRACTICE, 'Y');
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].score).toBe(3);
+        expect(result.suggestions[0].score).toBe(201); // 100*2*1.0 + 1*1.0
+        expect(result.suggestions[0].tier).toBe(1);
       });
 
-      it('should score Aspect of Practice + LC as 2', async () => {
+      it('should score Aspect of Practice + LC (V2: gap=120 + density=0.6)', async () => {
         setupScoringTest(CareActivityType.ASPECT_OF_PRACTICE, 'LC');
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].score).toBe(2);
+        expect(result.suggestions[0].score).toBe(121); // round(100*2*0.6 + 1*0.6)
+        expect(result.suggestions[0].tier).toBe(1);
       });
 
-      it('should score Task + Y as 2', async () => {
+      it('should score Task + Y (V2: gap=100 + density=1)', async () => {
         setupScoringTest(CareActivityType.TASK, 'Y');
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].score).toBe(2);
+        expect(result.suggestions[0].score).toBe(101); // 100*1*1.0 + 1*1.0
+        expect(result.suggestions[0].tier).toBe(1);
       });
 
-      it('should score Task + LC as 1', async () => {
+      it('should score Task + LC (V2: gap=60 + density=0.6)', async () => {
         setupScoringTest(CareActivityType.TASK, 'LC');
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].score).toBe(1);
+        expect(result.suggestions[0].score).toBe(61); // round(100*1*0.6 + 1*0.6)
+        expect(result.suggestions[0].tier).toBe(1);
       });
     });
 
@@ -1194,7 +1305,7 @@ describe('PlanningSessionService', () => {
         expect(result.totalUncoveredActivities).toBe(1);
       });
 
-      it('should only score uncovered activities', async () => {
+      it('should score gaps higher than fragile activities (V2)', async () => {
         const activities = [
           makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
           makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
@@ -1229,15 +1340,20 @@ describe('PlanningSessionService', () => {
 
         const result = await service.getSuggestions('session-1');
 
-        // occ-2 should only score for ca-2 (uncovered), not ca-1 (covered by occ-1)
-        // Task + Y = 2 (only ca-2)
-        expect(result.suggestions[0].score).toBe(2);
+        // V2: occ-2 scores for ca-2 (gap) AND ca-1 (fragile with 1 coverage)
+        // ca-2 (gap): 100*1*1.0 + 1*1.0 = 101
+        // ca-1 (fragile): 10*1*1.0 + 1*1.0 = 11 (fragilityBonus=1.0 since yCount=1)
+        // Total = 112
+        expect(result.suggestions[0].score).toBe(112);
+        expect(result.suggestions[0].tier).toBe(1); // Has gap contribution
+        expect(result.suggestions[0].gapsFilled).toBe(1);
+        expect(result.suggestions[0].redundancyGains).toBe(1);
       });
     });
 
     // ─── Aggregation and sorting ───────────────────────────────────
     describe('aggregation and sorting', () => {
-      it('should sum scores across multiple activities per occupation', async () => {
+      it('should sum scores across multiple activities per occupation (V2)', async () => {
         const activities = [
           makeActivity(
             'ca-1',
@@ -1268,11 +1384,15 @@ describe('PlanningSessionService', () => {
 
         const result = await service.getSuggestions('session-1');
 
-        // Restricted+Y=4 + Task+Y=2 = 6
-        expect(result.suggestions[0].score).toBe(6);
+        // V2: Both activities are gaps (no team occupations)
+        // Restricted+Y: 100*3*1.0 + 1*1.0 = 301
+        // Task+Y: 100*1*1.0 + 1*1.0 = 101
+        // Total = 402
+        expect(result.suggestions[0].score).toBe(402);
+        expect(result.suggestions[0].gapsFilled).toBe(2);
       });
 
-      it('should sort by score DESC then name ASC', async () => {
+      it('should sort by score DESC then name ASC (V2)', async () => {
         const activities = [
           makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
           makeActivity(
@@ -1287,21 +1407,21 @@ describe('PlanningSessionService', () => {
           makeSession({ careActivity: activities, occupation: [] }),
         );
         mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
-          // occ-1 (Nurse): Task+Y=2
+          // occ-1 (Nurse): Task+Y = 101 (V2)
           {
             permission: 'Y',
             care_activity_id: 'ca-1',
             occupation_id: 'occ-1',
             occupation_name: 'Nurse',
           },
-          // occ-2 (Doctor): Restricted+Y=4
+          // occ-2 (Doctor): Restricted+Y = 301 (V2)
           {
             permission: 'Y',
             care_activity_id: 'ca-2',
             occupation_id: 'occ-2',
             occupation_name: 'Doctor',
           },
-          // occ-3 (Aide): Task+Y=2 (same score as Nurse, but "Aide" < "Nurse" alphabetically)
+          // occ-3 (Aide): Task+Y = 101 (V2, same score as Nurse, but "Aide" < "Nurse" alphabetically)
           {
             permission: 'Y',
             care_activity_id: 'ca-1',
@@ -1312,9 +1432,9 @@ describe('PlanningSessionService', () => {
 
         const result = await service.getSuggestions('session-1');
 
-        expect(result.suggestions[0].occupationName).toBe('Doctor'); // score 4
-        expect(result.suggestions[1].occupationName).toBe('Aide'); // score 2, name ASC
-        expect(result.suggestions[2].occupationName).toBe('Nurse'); // score 2, name ASC
+        expect(result.suggestions[0].occupationName).toBe('Doctor'); // score 301
+        expect(result.suggestions[1].occupationName).toBe('Aide'); // score 101, name ASC
+        expect(result.suggestions[2].occupationName).toBe('Nurse'); // score 101, name ASC
       });
 
       it('should exclude zero-score occupations', async () => {
@@ -1523,6 +1643,301 @@ describe('PlanningSessionService', () => {
         const competency = result.suggestions[0].competencies[0];
         expect(competency.activitiesY[0].activityName).toBe('Proper Display Name');
         expect(competency.bundleName).toBe('Proper Bundle Name');
+      });
+    });
+
+    // ─── V2: Tiered scoring and coverage summary ──────────────────────
+    describe('V2: tiered scoring', () => {
+      it('should use Tier 2 weights when no gaps exist', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')], // Team member covers ca-1
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          // occ-1 (team) covers ca-1
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          // occ-2 (candidate) also has Y for ca-1
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        // No gaps, so weights = { gap: 0, fragile: 50, density: 5 }
+        // ca-1 is fragile (1 coverage from occ-1)
+        // occ-2 score: 50*1*1.0 + 5*1.0 = 55 (fragilityBonus=1.0 since occ-1 has Y)
+        expect(result.suggestions[0].score).toBe(55);
+        expect(result.suggestions[0].tier).toBe(2);
+        expect(result.suggestions[0].gapsFilled).toBe(0);
+        expect(result.suggestions[0].redundancyGains).toBe(1);
+      });
+
+      it('should apply LC-only fragility bonus (1.5x) for activities covered only by LC', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')],
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          // occ-1 (team) covers ca-1 with LC only
+          {
+            permission: 'LC',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          // occ-2 (candidate) has Y for ca-1
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        // No gaps, weights = { gap: 0, fragile: 50, density: 5 }
+        // ca-1 is fragile with LC-only (yCount=0), so fragilityBonus=1.5
+        // occ-2 score: 50*1*1.5*1.0 + 5*1.0 = 75 + 5 = 80
+        expect(result.suggestions[0].score).toBe(80);
+        expect(result.suggestions[0].tier).toBe(2);
+      });
+
+      it('should use Tier 3 weights when activities have 2+ coverage', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse'), makeOccupation('occ-2', 'Doctor')], // 2 team members cover ca-1
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+          // occ-3 (candidate) also has Y for ca-1
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-3',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        // No gaps, no fragile (2 coverage = redundant)
+        // weights = { gap: 0, fragile: 50, density: 5 }
+        // occ-3 only gets density: 5*1.0 = 5
+        expect(result.suggestions[0].score).toBe(5);
+        expect(result.suggestions[0].tier).toBe(3);
+        expect(result.suggestions[0].gapsFilled).toBe(0);
+        expect(result.suggestions[0].redundancyGains).toBe(0);
+      });
+
+      it('should handle mixed tier contributions (gap + fragile)', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')], // occ-1 covers ca-1 only
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          // occ-1 (team) covers ca-1
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          // occ-2 (candidate) has Y for both ca-1 and ca-2
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        // ca-1: fragile (1 coverage from occ-1) -> Tier 2
+        // ca-2: gap (0 coverage) -> Tier 1
+        // weights (has gaps): { gap: 100, fragile: 10, density: 1 }
+        // occ-2 score:
+        //   ca-2 (gap): 100*1*1.0 + 1*1.0 = 101
+        //   ca-1 (fragile): 10*1*1.0 + 1*1.0 = 11
+        //   Total = 112
+        expect(result.suggestions[0].score).toBe(112);
+        expect(result.suggestions[0].tier).toBe(1); // Highest tier = 1 (has gap contribution)
+        expect(result.suggestions[0].gapsFilled).toBe(1);
+        expect(result.suggestions[0].redundancyGains).toBe(1);
+      });
+    });
+
+    // ─── V2: Coverage summary ─────────────────────────────────────────
+    describe('V2: coverage summary', () => {
+      it('should include coverage summary in response', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-3', 'Activity 3', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse'), makeOccupation('occ-2', 'Doctor')],
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          // ca-1: 2 coverage (redundant)
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+          // ca-2: 1 coverage (fragile)
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          // ca-3: 0 coverage (gap) - no permissions
+          // Candidate occ-3 can help with all
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-3',
+            occupation_name: 'Pharmacist',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-3',
+            occupation_name: 'Pharmacist',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-3',
+            occupation_id: 'occ-3',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.summary).toBeDefined();
+        expect(result.summary!.gaps).toHaveLength(1);
+        expect(result.summary!.gaps[0].activityId).toBe('ca-3');
+        expect(result.summary!.fragile).toHaveLength(1);
+        expect(result.summary!.fragile[0].activityId).toBe('ca-2');
+        expect(result.summary!.redundant).toHaveLength(1);
+        expect(result.summary!.redundant[0].activityId).toBe('ca-1');
+        expect(result.summary!.coveragePercent).toBe(67); // 2/3 activities covered
+      });
+
+      it('should return 100% coverage when all activities have at least 1 coverage', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')],
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.summary!.gaps).toHaveLength(0);
+        expect(result.summary!.coveragePercent).toBe(100);
+      });
+
+      it('should return 0% coverage when no activities are covered', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [], // No team members
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.summary!.gaps).toHaveLength(1);
+        expect(result.summary!.coveragePercent).toBe(0);
       });
     });
   });
