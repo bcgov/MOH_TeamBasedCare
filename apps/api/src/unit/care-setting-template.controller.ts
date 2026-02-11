@@ -62,7 +62,11 @@ export class CareSettingTemplateController {
   private validateTemplateAccess(
     template: { healthAuthority?: string },
     userHealthAuthority: string | undefined,
+    isAdmin: boolean = false,
   ): void {
+    // ADMIN can access any template
+    if (isAdmin) return;
+
     // GLOBAL templates are visible to all
     if (template.healthAuthority === 'GLOBAL') return;
 
@@ -143,13 +147,14 @@ export class CareSettingTemplateController {
     permissions: { activityId: string; occupationId: string; permission: string }[];
   }> {
     const template = await this.templateService.getTemplateBasic(id);
-    this.validateTemplateAccess(template, req.user.organization);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    this.validateTemplateAccess(template, req.user.organization, isAdmin);
     return this.templateService.getTemplateForCopy(id);
   }
 
   /**
    * Get detailed template by ID including selected bundles, activities, and permissions
-   * Only returns templates belonging to user's health authority or GLOBAL templates
+   * ADMIN can access any template; others can only access their HA or GLOBAL templates
    */
   @Get(':id')
   async getTemplateById(
@@ -157,13 +162,14 @@ export class CareSettingTemplateController {
     @Req() req: IRequest,
   ): Promise<CareSettingTemplateDetailRO> {
     const template = await this.templateService.getTemplateById(id);
-    this.validateTemplateAccess(template, req.user.organization);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    this.validateTemplateAccess(template, req.user.organization, isAdmin);
     return template;
   }
 
   /**
    * Get all available bundles (care competencies) for a template's unit
-   * Only accessible for templates belonging to user's health authority or GLOBAL templates
+   * ADMIN can access any template; others can only access their HA or GLOBAL templates
    */
   @Get(':id/bundles')
   async getBundlesForTemplate(
@@ -171,13 +177,14 @@ export class CareSettingTemplateController {
     @Req() req: IRequest,
   ): Promise<BundleRO[]> {
     const template = await this.templateService.getTemplateBasic(id);
-    this.validateTemplateAccess(template, req.user.organization);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    this.validateTemplateAccess(template, req.user.organization, isAdmin);
     return this.templateService.getBundlesForTemplate(id);
   }
 
   /**
    * Get all occupations available for permission assignment
-   * Only accessible for templates belonging to user's health authority or GLOBAL templates
+   * ADMIN can access any template; others can only access their HA or GLOBAL templates
    */
   @Get(':id/occupations')
   async getOccupationsForTemplate(
@@ -185,7 +192,8 @@ export class CareSettingTemplateController {
     @Req() req: IRequest,
   ): Promise<OccupationRO[]> {
     const template = await this.templateService.getTemplateBasic(id);
-    this.validateTemplateAccess(template, req.user.organization);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    this.validateTemplateAccess(template, req.user.organization, isAdmin);
     return this.templateService.getOccupationsForTemplate(id);
   }
 
