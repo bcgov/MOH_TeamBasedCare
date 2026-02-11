@@ -1339,6 +1339,97 @@ describe('PlanningSessionService', () => {
         expect(result.suggestions).toHaveLength(1);
         expect(result.suggestions[0].occupationId).toBe('occ-1');
       });
+
+      it('should return empty suggestions when selected occupation covers all activities', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        // Session has occ-1 already selected
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')],
+          }),
+        );
+        // occ-1 (selected) covers both ca-1 and ca-2
+        // occ-2 (unselected) also covers both, but since all are already covered, score = 0
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.suggestions).toEqual([]);
+        expect(result.totalUncoveredActivities).toBe(0);
+        expect(result.total).toBe(0);
+      });
+
+      it('should show suggestions for partially covered activities only', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-3', 'Activity 3', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        // Session has occ-1 selected which covers only ca-1
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')],
+          }),
+        );
+        // occ-1 covers ca-1 only; occ-2 covers ca-2 and ca-3
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-3',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        // occ-2 should be suggested (covers 2 uncovered activities)
+        expect(result.suggestions).toHaveLength(1);
+        expect(result.suggestions[0].occupationId).toBe('occ-2');
+        expect(result.totalUncoveredActivities).toBe(2); // ca-2 and ca-3
+      });
     });
 
     // ─── Pagination ────────────────────────────────────────────────
