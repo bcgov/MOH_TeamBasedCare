@@ -619,7 +619,7 @@ export class CareActivityBulkService {
         };
         _.sortBy(occupations, 'displayName').forEach(o => {
           const allowedActivity = a.allowedActivities.find(
-            aa => aa.occupation.id === o.id && aa.unit.id === unit.id,
+            aa => aa.occupation?.id === o.id && aa.unit?.id === unit.id,
           );
           activity[o.displayName] = allowedActivity?.permission ?? 'N';
         });
@@ -641,7 +641,7 @@ export class CareActivityBulkService {
           };
           _.sortBy(occupations, 'displayName').forEach(o => {
             const allowedActivity = a.allowedActivities.find(
-              aa => aa.occupation.id === o.id && aa.unit.id === unit.id,
+              aa => aa.occupation?.id === o.id && aa.unit?.id === unit.id,
             );
             duplicate[o.displayName] = allowedActivity?.permission ?? 'N';
           });
