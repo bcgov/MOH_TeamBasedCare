@@ -64,11 +64,11 @@ describe('CareSettingTemplateController', () => {
       expect(mockTemplateService.findTemplates).toHaveBeenCalledWith({}, null);
     });
 
-    it('should pass null HA for CONTENT_ADMIN users', async () => {
-      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN] });
+    it('should pass user organization for CONTENT_ADMIN users', async () => {
+      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN], organization: 'Fraser Health' });
       await controller.findTemplates({} as any, req);
 
-      expect(mockTemplateService.findTemplates).toHaveBeenCalledWith({}, null);
+      expect(mockTemplateService.findTemplates).toHaveBeenCalledWith({}, 'Fraser Health');
     });
 
     it('should pass user organization for regular users', async () => {
@@ -92,11 +92,11 @@ describe('CareSettingTemplateController', () => {
       mockTemplateService.findAllForCMSFilter.mockResolvedValue([]);
     });
 
-    it('should pass null for CONTENT_ADMIN', async () => {
-      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN] });
+    it('should pass user organization for CONTENT_ADMIN', async () => {
+      const req = createMockRequest({ roles: [Role.CONTENT_ADMIN], organization: 'Fraser Health' });
       await controller.getTemplatesForCMSFilter(req);
 
-      expect(mockTemplateService.findAllForCMSFilter).toHaveBeenCalledWith(null);
+      expect(mockTemplateService.findAllForCMSFilter).toHaveBeenCalledWith('Fraser Health');
     });
 
     it('should pass null for ADMIN', async () => {
