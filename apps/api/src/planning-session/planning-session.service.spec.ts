@@ -707,7 +707,7 @@ describe('PlanningSessionService', () => {
 
     // ─── Overview percentages ─────────────────────────────────────
     describe('overview percentages', () => {
-      it('should calculate correct inScope/limits/outOfScope percentages', async () => {
+      it('should calculate correct inScope/limits/outOfScope percentages based on activity coverage', async () => {
         const session = makeGapSession({
           careActivity: [
             {
@@ -720,6 +720,11 @@ describe('PlanningSessionService', () => {
               displayName: 'Activity 2',
               bundle: { id: 'b-1', displayName: 'Bundle A' },
             },
+            {
+              id: 'ca-3',
+              displayName: 'Activity 3',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
           ],
           occupation: [
             { id: 'occ-1', displayName: 'Nurse', description: '', displayOrder: 1 },
@@ -727,18 +732,46 @@ describe('PlanningSessionService', () => {
           ],
         });
         mockPlanningSessionRepo.findOne.mockResolvedValue(session);
-        // 4 cells total: 2 Y (PERFORM), 1 LC (LIMITS), 1 missing (out of scope)
+        // Activity-based: ca-1 has Y (inScope), ca-2 has LC only (limits), ca-3 has nothing (outOfScope)
         mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
           { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1' },
-          { permission: 'Y', care_activity_id: 'ca-2', occupation_id: 'occ-1' },
+          { permission: 'LC', care_activity_id: 'ca-1', occupation_id: 'occ-2' },
+          { permission: 'LC', care_activity_id: 'ca-2', occupation_id: 'occ-1' },
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.overview.inScope).toBe('33%'); // 1/3 activities have Y
+        expect(result!.overview.limits).toBe('33%'); // 1/3 activities have LC only
+        expect(result!.overview.outOfScope).toBe('34%'); // 1/3 activities have no coverage
+      });
+
+      it('should count activity as inScope when ANY occupation has Y (even if others have LC)', async () => {
+        const session = makeGapSession({
+          careActivity: [
+            {
+              id: 'ca-1',
+              displayName: 'Activity 1',
+              bundle: { id: 'b-1', displayName: 'Bundle A' },
+            },
+          ],
+          occupation: [
+            { id: 'occ-1', displayName: 'Nurse', description: '', displayOrder: 1 },
+            { id: 'occ-2', displayName: 'Doctor', description: '', displayOrder: 2 },
+          ],
+        });
+        mockPlanningSessionRepo.findOne.mockResolvedValue(session);
+        // Activity has both Y and LC - should count as Y (inScope)
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+          { permission: 'Y', care_activity_id: 'ca-1', occupation_id: 'occ-1' },
           { permission: 'LC', care_activity_id: 'ca-1', occupation_id: 'occ-2' },
         ]);
 
         const result = await service.getPlanningActivityGap('session-1');
 
-        expect(result!.overview.inScope).toBe('50%'); // 2/4
-        expect(result!.overview.limits).toBe('25%'); // 1/4
-        expect(result!.overview.outOfScope).toBe('25%'); // 1 - 50 - 25
+        expect(result!.overview.inScope).toBe('100%');
+        expect(result!.overview.limits).toBe('0%');
+        expect(result!.overview.outOfScope).toBe('0%');
       });
 
       it('should return 100%/0%/0% when all permissions are PERFORM', async () => {
@@ -1939,6 +1972,351 @@ describe('PlanningSessionService', () => {
         expect(result.summary!.gaps).toHaveLength(1);
         expect(result.summary!.coveragePercent).toBe(0);
       });
+    });
+
+    // ─── V2: Simulated coverage (what-if) ─────────────────────────────
+    describe('V2: simulated coverage', () => {
+      it('should include simulatedCoverage in each suggestion', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [], // No team members - both activities are gaps
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.suggestions[0].simulatedCoverage).toBeDefined();
+        expect(result.suggestions[0].simulatedCoverage!.gapsRemaining).toBe(1); // ca-2 still uncovered
+        expect(result.suggestions[0].simulatedCoverage!.coveragePercent).toBe(50); // 1/2 covered
+        expect(result.suggestions[0].simulatedCoverage!.marginalBenefit).toBe(50); // 50% improvement from 0%
+      });
+
+      it('should calculate 100% coverage when suggestion fills all gaps', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [], // No team members
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.suggestions[0].simulatedCoverage!.gapsRemaining).toBe(0);
+        expect(result.suggestions[0].simulatedCoverage!.coveragePercent).toBe(100);
+        expect(result.suggestions[0].simulatedCoverage!.marginalBenefit).toBe(100);
+      });
+    });
+
+    // ─── V2: Coverage alerts ──────────────────────────────────────────
+    describe('V2: coverage alerts', () => {
+      it('should generate LOW_MARGINAL_BENEFIT alert when improvement is less than 5%', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')], // Already covered
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.alerts).toBeDefined();
+        expect(result.alerts!.some(a => a.type === 'LOW_MARGINAL_BENEFIT')).toBe(true);
+      });
+
+      it('should generate NO_GAP_COVERAGE alert when gaps exist but suggestion fills none', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+          makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse')], // Covers ca-1 only
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          // occ-1 covers ca-1
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          // occ-2 also only covers ca-1 (not ca-2 which is the gap)
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.alerts).toBeDefined();
+        expect(result.alerts!.some(a => a.type === 'NO_GAP_COVERAGE')).toBe(true);
+      });
+
+      it('should generate REDUNDANT_ONLY alert when suggestion only adds redundancy', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [makeOccupation('occ-1', 'Nurse'), makeOccupation('occ-2', 'Doctor')], // 2 coverage = redundant
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            occupation_name: 'Doctor',
+          },
+          // occ-3 also has Y but activity is already redundant
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-3',
+            occupation_name: 'Pharmacist',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        expect(result.alerts).toBeDefined();
+        expect(result.alerts!.some(a => a.type === 'REDUNDANT_ONLY')).toBe(true);
+      });
+
+      it('should not include alerts array when no alerts are generated', async () => {
+        const activities = [
+          makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        ];
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeSession({
+            careActivity: activities,
+            occupation: [], // No team - gap exists
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            occupation_name: 'Nurse',
+          },
+        ]);
+
+        const result = await service.getSuggestions('session-1');
+
+        // Nurse fills the gap with 100% improvement, so no alerts
+        expect(result.alerts).toBeUndefined();
+      });
+    });
+  });
+
+  // ─── getMinimumTeam ─────────────────────────────────────────────────
+  describe('getMinimumTeam', () => {
+    const makeActivity = (
+      id: string,
+      name: string,
+      activityType: CareActivityType,
+      bundleId: string,
+      bundleName: string,
+    ) => ({
+      id,
+      name,
+      displayName: name,
+      activityType,
+      bundle: { id: bundleId, name: bundleName, displayName: bundleName },
+    });
+
+    const makeSession = (overrides: any = {}) => ({
+      id: 'session-1',
+      careActivity: [],
+      occupation: [],
+      careSettingTemplate: { id: 'tmpl-1' },
+      careLocation: { id: 'unit-1' },
+      ...overrides,
+    });
+
+    it('should throw NotFoundException when session not found', async () => {
+      mockPlanningSessionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getMinimumTeam('nonexistent')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return empty team when no activities selected', async () => {
+      mockPlanningSessionRepo.findOne.mockResolvedValue(makeSession({ careActivity: [] }));
+
+      const result = await service.getMinimumTeam('session-1');
+
+      expect(result.occupationIds).toEqual([]);
+      expect(result.achievedCoverage).toBe(0);
+      expect(result.isFullCoverage).toBe(true);
+    });
+
+    it('should find single occupation when one can cover all activities', async () => {
+      const activities = [
+        makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+      ];
+      mockPlanningSessionRepo.findOne.mockResolvedValue(makeSession({ careActivity: activities }));
+      // Nurse can cover both activities
+      mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-1',
+          occupation_id: 'occ-1',
+          occupation_name: 'Nurse',
+        },
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-2',
+          occupation_id: 'occ-1',
+          occupation_name: 'Nurse',
+        },
+      ]);
+
+      const result = await service.getMinimumTeam('session-1');
+
+      expect(result.occupationIds).toEqual(['occ-1']);
+      expect(result.occupationNames).toEqual(['Nurse']);
+      expect(result.achievedCoverage).toBe(100);
+      expect(result.isFullCoverage).toBe(true);
+      expect(result.uncoveredActivityIds).toEqual([]);
+    });
+
+    it('should use greedy algorithm to find minimum team', async () => {
+      const activities = [
+        makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        makeActivity('ca-3', 'Activity 3', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+      ];
+      mockPlanningSessionRepo.findOne.mockResolvedValue(makeSession({ careActivity: activities }));
+      // Nurse covers ca-1, ca-2; Doctor covers ca-2, ca-3
+      // Greedy should pick Nurse first (2 activities), then Doctor (1 new activity)
+      mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-1',
+          occupation_id: 'occ-1',
+          occupation_name: 'Nurse',
+        },
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-2',
+          occupation_id: 'occ-1',
+          occupation_name: 'Nurse',
+        },
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-2',
+          occupation_id: 'occ-2',
+          occupation_name: 'Doctor',
+        },
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-3',
+          occupation_id: 'occ-2',
+          occupation_name: 'Doctor',
+        },
+      ]);
+
+      const result = await service.getMinimumTeam('session-1');
+
+      expect(result.occupationIds).toHaveLength(2);
+      expect(result.occupationIds[0]).toBe('occ-1'); // Nurse first (covers 2)
+      expect(result.occupationIds[1]).toBe('occ-2'); // Doctor second (covers 1 new)
+      expect(result.achievedCoverage).toBe(100);
+      expect(result.isFullCoverage).toBe(true);
+    });
+
+    it('should report uncovered activities when 100% coverage is not possible', async () => {
+      const activities = [
+        makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+        makeActivity('ca-2', 'Activity 2', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+      ];
+      mockPlanningSessionRepo.findOne.mockResolvedValue(makeSession({ careActivity: activities }));
+      // Only ca-1 can be covered
+      mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([
+        {
+          permission: 'Y',
+          care_activity_id: 'ca-1',
+          occupation_id: 'occ-1',
+          occupation_name: 'Nurse',
+        },
+      ]);
+
+      const result = await service.getMinimumTeam('session-1');
+
+      expect(result.achievedCoverage).toBe(50);
+      expect(result.isFullCoverage).toBe(false);
+      expect(result.uncoveredActivityIds).toEqual(['ca-2']);
+      expect(result.uncoveredActivityNames).toEqual(['Activity 2']);
+    });
+
+    it('should return 0 coverage when no permissions exist', async () => {
+      const activities = [
+        makeActivity('ca-1', 'Activity 1', CareActivityType.TASK, 'b-1', 'Bundle 1'),
+      ];
+      mockPlanningSessionRepo.findOne.mockResolvedValue(makeSession({ careActivity: activities }));
+      mockCareSettingTemplateService.getPermissionsForSuggestions.mockResolvedValue([]);
+
+      const result = await service.getMinimumTeam('session-1');
+
+      expect(result.occupationIds).toEqual([]);
+      expect(result.achievedCoverage).toBe(0);
+      expect(result.isFullCoverage).toBe(false);
+      expect(result.uncoveredActivityIds).toEqual(['ca-1']);
     });
   });
 });

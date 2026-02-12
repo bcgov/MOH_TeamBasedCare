@@ -19,6 +19,9 @@ import {
   CareActivityType,
   ActivityCoverageRO,
   CoverageSummaryRO,
+  SimulatedCoverageRO,
+  SuggestionAlertRO,
+  MinimumTeamResponseRO,
 } from '@tbcm/common';
 import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
@@ -30,6 +33,66 @@ import { UserService } from 'src/user/user.service';
 import { CareSettingTemplateService } from 'src/unit/care-setting-template.service';
 import { User } from 'src/user/entities/user.entity';
 import { AppLogger } from 'src/common/logger.service';
+
+/**
+ * Scoring weights for V2 suggestion algorithm
+ *
+ * Tiered scoring system:
+ * - Tier 1 (Gap Filling): Activities with 0 coverage - highest priority
+ * - Tier 2 (Redundancy): Activities with 1 coverage - build resilience
+ * - Tier 3 (Flexibility): All activities contribute density
+ */
+const SUGGESTION_SCORING = {
+  /** Tier weights when gaps exist (gap filling is priority) */
+  WITH_GAPS: { gap: 100, fragile: 10, density: 1 },
+  /** Tier weights when no gaps (redundancy becomes priority) */
+  NO_GAPS: { gap: 0, fragile: 50, density: 5 },
+  /** Permission value multipliers - LC weighted at 60% to reflect regulatory constraints */
+  PERMISSION_VALUE: { Y: 1.0, LC: 0.6 },
+  /** Criticality multiplier by activity type */
+  CRITICALITY: {
+    RESTRICTED_ACTIVITY: 3,
+    ASPECT_OF_PRACTICE: 2,
+    TASK: 1,
+    DEFAULT: 1,
+  },
+  /** Bonus multiplier for activities with only LC coverage (more fragile) */
+  LC_FRAGILITY_BONUS: 1.5,
+} as const;
+
+/** Internal type for permission data from database */
+interface PermissionRow {
+  permission: string;
+  care_activity_id: string;
+  occupation_id: string;
+  occupation_name: string;
+}
+
+/** Internal type for activity info lookup */
+interface ActivityInfo {
+  name: string;
+  activityType: CareActivityType;
+  bundleId: string;
+  bundleName: string;
+}
+
+/** Internal type for coverage counts per activity */
+interface CoverageCount {
+  yCount: number;
+  lcCount: number;
+}
+
+/** Internal type for occupation score calculation result */
+interface OccupationScoreResult {
+  occupationId: string;
+  occupationName: string;
+  score: number;
+  tier: 1 | 2 | 3;
+  gapsFilled: number;
+  redundancyGains: number;
+  activitiesY: Map<string, { activityId: string; bundleId: string }>;
+  activitiesLC: Map<string, { activityId: string; bundleId: string }>;
+}
 
 @Injectable()
 export class PlanningSessionService {
@@ -349,19 +412,40 @@ export class PlanningSessionService {
 
     /**
      * overview calculations
-     **/
+     *
+     * Calculate activity coverage - what % of activities are covered by at least one occupation.
+     * For each activity, determine its "best" coverage level:
+     * - If ANY occupation has Y → activity is "in scope" (green)
+     * - Else if ANY occupation has LC → activity is "limits only" (yellow)
+     * - Else → activity is "out of scope" (red)
+     */
     const overview: ActivityGapOverview = {};
 
-    const permissionsGroupedCount = _.countBy(query, 'permission');
+    // Group permissions by activity to find best coverage per activity
+    const permissionsByActivity = _.groupBy(query, 'care_activity_id');
 
-    // total occupations selected x total care activities selected
-    const total = (occupations.length || 0) * (careActivities.length || 0);
+    // Count activities by their best coverage level
+    let activitiesWithY = 0; // At least one occupation has Y
+    let activitiesWithLCOnly = 0; // Best coverage is LC (no Y)
 
-    const inScopePercentage =
-      Math.round(((permissionsGroupedCount[Permissions.PERFORM] || 0) / total) * 100) || 0;
-    const limitsPercentage =
-      Math.round(((permissionsGroupedCount[Permissions.LIMITS] || 0) / total) * 100) || 0;
-    const outOfScopePercentage = 100 - (inScopePercentage + limitsPercentage);
+    for (const activity of careActivities) {
+      const perms = permissionsByActivity[activity.id] || [];
+      const hasY = perms.some((p: { permission: string }) => p.permission === Permissions.PERFORM);
+      const hasLC = perms.some((p: { permission: string }) => p.permission === Permissions.LIMITS);
+
+      if (hasY) {
+        activitiesWithY++;
+      } else if (hasLC) {
+        activitiesWithLCOnly++;
+      }
+      // else: no coverage (will be counted in outOfScope)
+    }
+
+    const totalActivities = careActivities.length || 1; // Avoid division by zero
+
+    const inScopePercentage = Math.round((activitiesWithY / totalActivities) * 100);
+    const limitsPercentage = Math.round((activitiesWithLCOnly / totalActivities) * 100);
+    const outOfScopePercentage = 100 - inScopePercentage - limitsPercentage;
 
     overview.inScope = `${inScopePercentage}%`;
     overview.limits = `${limitsPercentage}%`;
@@ -527,8 +611,277 @@ export class PlanningSessionService {
       };
     }
 
-    // 5. Build coverage map (yCount, lcCount per activity) from team occupations
-    const coverageMap = new Map<string, { yCount: number; lcCount: number }>();
+    // 5. Build coverage map from team occupations
+    const coverageMap = this.buildTeamCoverageMap(permissions, teamOccupationIds, activityIds);
+
+    // 6. Categorize activities into gaps/fragile/redundant
+    const { gaps, fragile, redundant } = this.categorizeActivitiesByCoverage(
+      coverageMap,
+      activityMap,
+    );
+
+    // 7. Determine dynamic weights based on current coverage state
+    const hasGaps = gaps.length > 0;
+    const weights = hasGaps ? SUGGESTION_SCORING.WITH_GAPS : SUGGESTION_SCORING.NO_GAPS;
+
+    // 8. Group permissions by candidate occupation (not on team)
+    const occupationPermissions = this.groupPermissionsByOccupation(permissions, teamOccupationIds);
+
+    // 9. Calculate tiered scores for each candidate occupation
+    const occupationScores: OccupationScoreResult[] = [];
+    occupationPermissions.forEach((data, occupationId) => {
+      const scoreResult = this.calculateOccupationScore(
+        occupationId,
+        data.name,
+        data.permissions,
+        activityIds,
+        activityMap,
+        coverageMap,
+        weights,
+      );
+      if (scoreResult) {
+        occupationScores.push(scoreResult);
+      }
+    });
+
+    // 10. Sort by score DESC, then displayName ASC
+    occupationScores.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.occupationName.localeCompare(b.occupationName);
+    });
+
+    const total = occupationScores.length;
+
+    // 11. Paginate
+    const startIndex = (page - 1) * pageSize;
+    const paginatedScores = occupationScores.slice(startIndex, startIndex + pageSize);
+
+    // 12. Calculate current coverage percent (before any additions)
+    const currentCoveragePercent =
+      activityIds.length > 0
+        ? Math.round(((fragile.length + redundant.length) / activityIds.length) * 100)
+        : 0;
+
+    // 13. Build response with competencies grouped and simulated coverage
+    const alerts: SuggestionAlertRO[] = [];
+    const suggestions: OccupationSuggestionRO[] = paginatedScores.map(os =>
+      this.buildSuggestionWithAlerts(
+        os,
+        activityMap,
+        gaps,
+        fragile,
+        redundant,
+        activityIds.length,
+        currentCoveragePercent,
+        alerts,
+      ),
+    );
+
+    // 14. Build coverage summary
+    const summary: CoverageSummaryRO = {
+      gaps,
+      fragile,
+      redundant,
+      coveragePercent: currentCoveragePercent,
+    };
+
+    return {
+      suggestions,
+      totalUncoveredActivities: gaps.length,
+      total,
+      page,
+      pageSize,
+      summary,
+      alerts: alerts.length > 0 ? alerts : undefined,
+    };
+  }
+
+  /**
+   * Calculate the minimum team needed to achieve maximum coverage.
+   * Uses greedy set cover algorithm (approximation for NP-hard problem).
+   *
+   * Algorithm:
+   * 1. Start with all activities uncovered
+   * 2. Repeatedly select occupation that covers most uncovered activities
+   * 3. Stop when no more progress can be made or 100% coverage achieved
+   */
+  async getMinimumTeam(sessionId: string): Promise<MinimumTeamResponseRO> {
+    // 1. Load session with required relations
+    const session = await this.findOne({
+      where: { id: sessionId },
+      relations: ['careActivity', 'careActivity.bundle', 'careSettingTemplate', 'careLocation'],
+    });
+
+    if (!session) {
+      throw new NotFoundException('Planning session not found');
+    }
+
+    const activities = session.careActivity || [];
+    if (activities.length === 0) {
+      return {
+        occupationIds: [],
+        occupationNames: [],
+        achievedCoverage: 0,
+        uncoveredActivityIds: [],
+        uncoveredActivityNames: [],
+        totalActivities: 0,
+        isFullCoverage: true,
+      };
+    }
+
+    const activityIds = activities.map(a => a.id);
+    const activityNames = new Map(activities.map(a => [a.id, a.displayName]));
+
+    // 2. Get all permissions
+    let permissions: {
+      permission: string;
+      care_activity_id: string;
+      occupation_id: string;
+      occupation_name: string;
+    }[];
+
+    if (session.careSettingTemplate?.id) {
+      permissions = await this.careSettingTemplateService.getPermissionsForSuggestions(
+        session.careSettingTemplate.id,
+        activityIds,
+      );
+    } else if (session.careLocation?.id) {
+      permissions = await this.planningSessionRepo
+        .createQueryBuilder('ps')
+        .select('aa.permission', 'permission')
+        .addSelect('aa.care_activity_id', 'care_activity_id')
+        .addSelect('aa.occupation_id', 'occupation_id')
+        .addSelect('o.displayName', 'occupation_name')
+        .innerJoin('ps.careActivity', 'ca')
+        .innerJoin(AllowedActivity, 'aa', 'aa.careActivity = ca.id AND aa.unit = ps.careLocation')
+        .innerJoin('aa.occupation', 'o')
+        .where('ps.id = :sessionId', { sessionId })
+        .andWhere('aa.permission IN (:...perms)', { perms: ['Y', 'LC'] })
+        .getRawMany();
+    } else {
+      return {
+        occupationIds: [],
+        occupationNames: [],
+        achievedCoverage: 0,
+        uncoveredActivityIds: activityIds,
+        uncoveredActivityNames: activityIds.map(id => activityNames.get(id) || id),
+        totalActivities: activities.length,
+        isFullCoverage: false,
+      };
+    }
+
+    // 3. Build occupation -> activities map
+    const occupationCoverage = new Map<string, { name: string; activities: Set<string> }>();
+    permissions.forEach(p => {
+      if (!occupationCoverage.has(p.occupation_id)) {
+        occupationCoverage.set(p.occupation_id, {
+          name: p.occupation_name,
+          activities: new Set(),
+        });
+      }
+      occupationCoverage.get(p.occupation_id)!.activities.add(p.care_activity_id);
+    });
+
+    // 4. Greedy set cover algorithm
+    const uncovered = new Set(activityIds);
+    const selectedTeam: { id: string; name: string }[] = [];
+    const selectedIds = new Set<string>();
+
+    // Convert Map to array for easier iteration with type safety
+    const occupationList = Array.from(occupationCoverage.entries()).map(([id, data]) => ({
+      id,
+      name: data.name,
+      activities: data.activities,
+    }));
+
+    while (uncovered.size > 0) {
+      // Find occupation that covers most uncovered activities
+      let bestOccupation: { id: string; name: string; covered: string[] } | null = null;
+
+      for (const occ of occupationList) {
+        // Skip if already selected
+        if (selectedIds.has(occ.id)) continue;
+
+        // Count how many uncovered activities this occupation can cover
+        const coveredActivities: string[] = [];
+        occ.activities.forEach(actId => {
+          if (uncovered.has(actId)) {
+            coveredActivities.push(actId);
+          }
+        });
+
+        if (
+          coveredActivities.length > 0 &&
+          (!bestOccupation || coveredActivities.length > bestOccupation.covered.length)
+        ) {
+          bestOccupation = {
+            id: occ.id,
+            name: occ.name,
+            covered: coveredActivities,
+          };
+        }
+      }
+
+      // No more progress possible
+      if (!bestOccupation) {
+        break;
+      }
+
+      // Add best occupation to team and mark activities as covered
+      selectedTeam.push({ id: bestOccupation.id, name: bestOccupation.name });
+      selectedIds.add(bestOccupation.id);
+      bestOccupation.covered.forEach(actId => uncovered.delete(actId));
+    }
+
+    // 5. Build response
+    const achievedCoverage =
+      activities.length > 0
+        ? Math.round(((activities.length - uncovered.size) / activities.length) * 100)
+        : 0;
+
+    return {
+      occupationIds: selectedTeam.map(t => t.id),
+      occupationNames: selectedTeam.map(t => t.name),
+      achievedCoverage,
+      uncoveredActivityIds: Array.from(uncovered),
+      uncoveredActivityNames: Array.from(uncovered).map(id => activityNames.get(id) || id),
+      totalActivities: activities.length,
+      isFullCoverage: uncovered.size === 0,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Private helper methods for getSuggestions
+  // ─────────────────────────────────────────────────────────────────────
+
+  /**
+   * Get criticality multiplier by activity type.
+   * Higher criticality = higher score contribution.
+   */
+  private getCriticality(type: CareActivityType): number {
+    switch (type) {
+      case CareActivityType.RESTRICTED_ACTIVITY:
+        return SUGGESTION_SCORING.CRITICALITY.RESTRICTED_ACTIVITY;
+      case CareActivityType.ASPECT_OF_PRACTICE:
+        return SUGGESTION_SCORING.CRITICALITY.ASPECT_OF_PRACTICE;
+      case CareActivityType.TASK:
+        return SUGGESTION_SCORING.CRITICALITY.TASK;
+      default:
+        this.logger.warn(`Unknown activity type: ${type}, using default criticality`);
+        return SUGGESTION_SCORING.CRITICALITY.DEFAULT;
+    }
+  }
+
+  /**
+   * Build coverage map showing how many Y/LC permissions each activity has
+   * from the current team (session occupations + temp selections).
+   */
+  private buildTeamCoverageMap(
+    permissions: PermissionRow[],
+    teamOccupationIds: Set<string>,
+    activityIds: string[],
+  ): Map<string, CoverageCount> {
+    const coverageMap = new Map<string, CoverageCount>();
     activityIds.forEach(id => coverageMap.set(id, { yCount: 0, lcCount: 0 }));
 
     permissions.forEach(p => {
@@ -541,7 +894,21 @@ export class PlanningSessionService {
       }
     });
 
-    // 6. Categorize activities into gaps/fragile/redundant
+    return coverageMap;
+  }
+
+  /**
+   * Categorize activities into gaps (0 coverage), fragile (1 coverage),
+   * and redundant (2+ coverage) based on the coverage map.
+   */
+  private categorizeActivitiesByCoverage(
+    coverageMap: Map<string, CoverageCount>,
+    activityMap: Map<string, ActivityInfo>,
+  ): {
+    gaps: ActivityCoverageRO[];
+    fragile: ActivityCoverageRO[];
+    redundant: ActivityCoverageRO[];
+  } {
     const gaps: ActivityCoverageRO[] = [];
     const fragile: ActivityCoverageRO[] = [];
     const redundant: ActivityCoverageRO[] = [];
@@ -564,17 +931,22 @@ export class PlanningSessionService {
       else redundant.push(activityCoverage);
     });
 
-    // 7. Determine dynamic weights based on current coverage state
-    const hasGaps = gaps.length > 0;
-    const weights = hasGaps
-      ? { gap: 100, fragile: 10, density: 1 }
-      : { gap: 0, fragile: 50, density: 5 };
+    return { gaps, fragile, redundant };
+  }
 
-    // 8. Group permissions by candidate occupation (not on team)
+  /**
+   * Group permissions by candidate occupation (not on team).
+   * Returns a map of occupationId -> { name, permissions by activity }.
+   */
+  private groupPermissionsByOccupation(
+    permissions: PermissionRow[],
+    teamOccupationIds: Set<string>,
+  ): Map<string, { name: string; permissions: Map<string, string> }> {
     const occupationPermissions = new Map<
       string,
       { name: string; permissions: Map<string, string> }
     >();
+
     permissions.forEach(p => {
       if (!teamOccupationIds.has(p.occupation_id)) {
         if (!occupationPermissions.has(p.occupation_id)) {
@@ -589,180 +961,207 @@ export class PlanningSessionService {
       }
     });
 
-    // Helper: Get criticality multiplier by activity type
-    const getCriticality = (type: CareActivityType): number => {
-      switch (type) {
-        case CareActivityType.RESTRICTED_ACTIVITY:
-          return 3;
-        case CareActivityType.ASPECT_OF_PRACTICE:
-          return 2;
-        case CareActivityType.TASK:
-          return 1;
-        default:
-          return 1;
+    return occupationPermissions;
+  }
+
+  /**
+   * Calculate tiered score for a single candidate occupation.
+   * Returns score details and activity breakdowns for UI.
+   */
+  private calculateOccupationScore(
+    occupationId: string,
+    occupationName: string,
+    occupationPermissions: Map<string, string>,
+    activityIds: string[],
+    activityMap: Map<string, ActivityInfo>,
+    coverageMap: Map<string, CoverageCount>,
+    weights: { gap: number; fragile: number; density: number },
+  ): OccupationScoreResult | null {
+    let score = 0;
+    let gapsFilled = 0;
+    let redundancyGains = 0;
+
+    const activitiesY = new Map<string, { activityId: string; bundleId: string }>();
+    const activitiesLC = new Map<string, { activityId: string; bundleId: string }>();
+
+    activityIds.forEach(activityId => {
+      const permission = occupationPermissions.get(activityId);
+      if (!permission) return;
+
+      const activity = activityMap.get(activityId);
+      if (!activity) return;
+
+      const coverage = coverageMap.get(activityId);
+      if (!coverage) return;
+
+      const criticality = this.getCriticality(activity.activityType);
+      const permValue =
+        permission === 'Y'
+          ? SUGGESTION_SCORING.PERMISSION_VALUE.Y
+          : SUGGESTION_SCORING.PERMISSION_VALUE.LC;
+      const totalCoverage = coverage.yCount + coverage.lcCount;
+
+      // Track activities for competency breakdown
+      if (permission === 'Y') {
+        activitiesY.set(activityId, { activityId, bundleId: activity.bundleId });
+      } else if (permission === 'LC') {
+        activitiesLC.set(activityId, { activityId, bundleId: activity.bundleId });
       }
-    };
 
-    // 9. Calculate tiered scores for each candidate occupation
-    const occupationScores: {
-      occupationId: string;
-      occupationName: string;
-      score: number;
-      tier: 1 | 2 | 3;
-      gapsFilled: number;
-      redundancyGains: number;
-      activitiesY: Map<string, { activityId: string; bundleId: string }>;
-      activitiesLC: Map<string, { activityId: string; bundleId: string }>;
-    }[] = [];
-
-    occupationPermissions.forEach((data, occupationId) => {
-      let score = 0;
-      let gapsFilled = 0;
-      let redundancyGains = 0;
-
-      // Track activities for UI competency breakdown (preserved from V1)
-      const activitiesY = new Map<string, { activityId: string; bundleId: string }>();
-      const activitiesLC = new Map<string, { activityId: string; bundleId: string }>();
-
-      activityIds.forEach(activityId => {
-        const permission = data.permissions.get(activityId);
-        if (!permission) return;
-
-        const activity = activityMap.get(activityId);
-        if (!activity) return;
-
-        const coverage = coverageMap.get(activityId);
-        if (!coverage) return;
-
-        const criticality = getCriticality(activity.activityType);
-        const permValue = permission === 'Y' ? 1.0 : 0.6;
-        const totalCoverage = coverage.yCount + coverage.lcCount;
-
-        // Track activities for competency breakdown
-        if (permission === 'Y') {
-          activitiesY.set(activityId, { activityId, bundleId: activity.bundleId });
-        } else if (permission === 'LC') {
-          activitiesLC.set(activityId, { activityId, bundleId: activity.bundleId });
-        }
-
-        if (totalCoverage === 0) {
-          // Tier 1: Gap filling
-          gapsFilled++;
-          score += weights.gap * criticality * permValue;
-        } else if (totalCoverage === 1) {
-          // Tier 2: Redundancy
-          // LC-only coverage is more fragile (1.5x bonus)
-          const fragilityBonus = coverage.yCount === 0 ? 1.5 : 1.0;
-          redundancyGains++;
-          score += weights.fragile * criticality * fragilityBonus * permValue;
-        }
-
-        // Tier 3: Density (always contributes)
-        score += weights.density * permValue;
-      });
-
-      if (score > 0) {
-        // Tier reflects highest-value contribution (1 > 2 > 3)
-        const tier: 1 | 2 | 3 = gapsFilled > 0 ? 1 : redundancyGains > 0 ? 2 : 3;
-        occupationScores.push({
-          occupationId,
-          occupationName: data.name,
-          score: Math.round(score),
-          tier,
-          gapsFilled,
-          redundancyGains,
-          activitiesY,
-          activitiesLC,
-        });
+      if (totalCoverage === 0) {
+        // Tier 1: Gap filling
+        gapsFilled++;
+        score += weights.gap * criticality * permValue;
+      } else if (totalCoverage === 1) {
+        // Tier 2: Redundancy
+        const fragilityBonus = coverage.yCount === 0 ? SUGGESTION_SCORING.LC_FRAGILITY_BONUS : 1.0;
+        redundancyGains++;
+        score += weights.fragile * criticality * fragilityBonus * permValue;
       }
+
+      // Tier 3: Density (always contributes)
+      score += weights.density * permValue;
     });
 
-    // 10. Sort by score DESC, then displayName ASC
-    occupationScores.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return a.occupationName.localeCompare(b.occupationName);
-    });
+    if (score <= 0) return null;
 
-    const total = occupationScores.length;
-
-    // 11. Paginate
-    const startIndex = (page - 1) * pageSize;
-    const paginatedScores = occupationScores.slice(startIndex, startIndex + pageSize);
-
-    // 12. Build response with competencies grouped
-    const suggestions: OccupationSuggestionRO[] = paginatedScores.map(os => {
-      // Group by bundle
-      const competencyMap = new Map<string, SuggestionCompetencyRO>();
-
-      // Add Y activities
-      os.activitiesY.forEach((data, activityId) => {
-        const activity = activityMap.get(activityId)!;
-        if (!competencyMap.has(data.bundleId)) {
-          competencyMap.set(data.bundleId, {
-            bundleId: data.bundleId,
-            bundleName: activity.bundleName,
-            activitiesY: [],
-            activitiesLC: [],
-          });
-        }
-        competencyMap.get(data.bundleId)!.activitiesY.push({
-          activityId,
-          activityName: activity.name,
-          activityType: activity.activityType,
-        });
-      });
-
-      // Add LC activities
-      os.activitiesLC.forEach((data, activityId) => {
-        const activity = activityMap.get(activityId)!;
-        if (!competencyMap.has(data.bundleId)) {
-          competencyMap.set(data.bundleId, {
-            bundleId: data.bundleId,
-            bundleName: activity.bundleName,
-            activitiesY: [],
-            activitiesLC: [],
-          });
-        }
-        competencyMap.get(data.bundleId)!.activitiesLC.push({
-          activityId,
-          activityName: activity.name,
-          activityType: activity.activityType,
-        });
-      });
-
-      return {
-        occupationId: os.occupationId,
-        occupationName: os.occupationName,
-        score: os.score,
-        tier: os.tier,
-        gapsFilled: os.gapsFilled,
-        redundancyGains: os.redundancyGains,
-        competencies: Array.from(competencyMap.values()).sort((a, b) =>
-          a.bundleName.localeCompare(b.bundleName),
-        ),
-      };
-    });
-
-    // 13. Build coverage summary
-    const coveragePercent =
-      activityIds.length > 0
-        ? Math.round(((fragile.length + redundant.length) / activityIds.length) * 100)
-        : 0;
-
-    const summary: CoverageSummaryRO = {
-      gaps,
-      fragile,
-      redundant,
-      coveragePercent,
-    };
+    const tier: 1 | 2 | 3 = gapsFilled > 0 ? 1 : redundancyGains > 0 ? 2 : 3;
 
     return {
-      suggestions,
-      totalUncoveredActivities: gaps.length,
-      total,
-      page,
-      pageSize,
-      summary,
+      occupationId,
+      occupationName,
+      score: Math.round(score),
+      tier,
+      gapsFilled,
+      redundancyGains,
+      activitiesY,
+      activitiesLC,
+    };
+  }
+
+  /**
+   * Build competency breakdown grouped by bundle for UI display.
+   */
+  private buildCompetencyBreakdown(
+    activitiesY: Map<string, { activityId: string; bundleId: string }>,
+    activitiesLC: Map<string, { activityId: string; bundleId: string }>,
+    activityMap: Map<string, ActivityInfo>,
+  ): SuggestionCompetencyRO[] {
+    const competencyMap = new Map<string, SuggestionCompetencyRO>();
+
+    // Add Y activities
+    activitiesY.forEach((data, activityId) => {
+      const activity = activityMap.get(activityId)!;
+      if (!competencyMap.has(data.bundleId)) {
+        competencyMap.set(data.bundleId, {
+          bundleId: data.bundleId,
+          bundleName: activity.bundleName,
+          activitiesY: [],
+          activitiesLC: [],
+        });
+      }
+      competencyMap.get(data.bundleId)!.activitiesY.push({
+        activityId,
+        activityName: activity.name,
+        activityType: activity.activityType,
+      });
+    });
+
+    // Add LC activities
+    activitiesLC.forEach((data, activityId) => {
+      const activity = activityMap.get(activityId)!;
+      if (!competencyMap.has(data.bundleId)) {
+        competencyMap.set(data.bundleId, {
+          bundleId: data.bundleId,
+          bundleName: activity.bundleName,
+          activitiesY: [],
+          activitiesLC: [],
+        });
+      }
+      competencyMap.get(data.bundleId)!.activitiesLC.push({
+        activityId,
+        activityName: activity.name,
+        activityType: activity.activityType,
+      });
+    });
+
+    return Array.from(competencyMap.values()).sort((a, b) =>
+      a.bundleName.localeCompare(b.bundleName),
+    );
+  }
+
+  /**
+   * Build a single suggestion response with simulated coverage and alerts.
+   */
+  private buildSuggestionWithAlerts(
+    os: OccupationScoreResult,
+    activityMap: Map<string, ActivityInfo>,
+    gaps: ActivityCoverageRO[],
+    fragile: ActivityCoverageRO[],
+    redundant: ActivityCoverageRO[],
+    totalActivities: number,
+    currentCoveragePercent: number,
+    alerts: SuggestionAlertRO[],
+  ): OccupationSuggestionRO {
+    // Build competencies
+    const competencies = this.buildCompetencyBreakdown(
+      os.activitiesY,
+      os.activitiesLC,
+      activityMap,
+    );
+
+    // Calculate simulated coverage (what-if this occupation is added)
+    const gapsRemaining = gaps.length - os.gapsFilled;
+    const fragileRemaining = fragile.length - os.redundancyGains + os.gapsFilled;
+    const newCoveredCount = fragile.length + redundant.length + os.gapsFilled;
+    const newCoveragePercent =
+      totalActivities > 0 ? Math.round((newCoveredCount / totalActivities) * 100) : 0;
+    const marginalBenefit = newCoveragePercent - currentCoveragePercent;
+
+    const simulatedCoverage: SimulatedCoverageRO = {
+      gapsRemaining: Math.max(0, gapsRemaining),
+      fragileRemaining: Math.max(0, fragileRemaining),
+      coveragePercent: Math.min(100, newCoveragePercent),
+      marginalBenefit,
+    };
+
+    // Generate alerts for this suggestion
+    if (marginalBenefit < 5 && marginalBenefit >= 0) {
+      alerts.push({
+        type: 'LOW_MARGINAL_BENEFIT',
+        message: `Adding ${os.occupationName} would only improve coverage by ${marginalBenefit}%`,
+        occupationId: os.occupationId,
+        occupationName: os.occupationName,
+      });
+    }
+
+    if (gaps.length > 0 && os.gapsFilled === 0) {
+      alerts.push({
+        type: 'NO_GAP_COVERAGE',
+        message: `${os.occupationName} cannot fill any of the ${gaps.length} gap activities`,
+        occupationId: os.occupationId,
+        occupationName: os.occupationName,
+      });
+    }
+
+    if (os.gapsFilled === 0 && os.redundancyGains === 0) {
+      alerts.push({
+        type: 'REDUNDANT_ONLY',
+        message: `${os.occupationName} only adds redundancy to already well-covered activities`,
+        occupationId: os.occupationId,
+        occupationName: os.occupationName,
+      });
+    }
+
+    return {
+      occupationId: os.occupationId,
+      occupationName: os.occupationName,
+      score: os.score,
+      tier: os.tier,
+      gapsFilled: os.gapsFilled,
+      redundancyGains: os.redundancyGains,
+      competencies,
+      simulatedCoverage,
     };
   }
 }

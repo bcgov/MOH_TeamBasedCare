@@ -13,6 +13,18 @@ export interface SuggestionCompetencyRO {
   activitiesLC: SuggestionActivityRO[];
 }
 
+/** Simulated coverage if this occupation is added to the team */
+export interface SimulatedCoverageRO {
+  /** How many gap activities would remain after adding this occupation */
+  gapsRemaining: number;
+  /** How many fragile activities would remain after adding this occupation */
+  fragileRemaining: number;
+  /** New coverage percentage if this occupation is added */
+  coveragePercent: number;
+  /** Percentage improvement over current coverage */
+  marginalBenefit: number;
+}
+
 export interface OccupationSuggestionRO {
   occupationId: string;
   occupationName: string;
@@ -24,6 +36,8 @@ export interface OccupationSuggestionRO {
   gapsFilled: number;
   /** Number of fragile activities (1 coverage) this occupation can back up */
   redundancyGains: number;
+  /** What-if simulation: projected coverage if this occupation is added */
+  simulatedCoverage?: SimulatedCoverageRO;
 }
 
 /** Coverage info for a single activity */
@@ -49,6 +63,20 @@ export interface CoverageSummaryRO {
   coveragePercent: number;
 }
 
+/** Alert types for suggestion quality warnings */
+export type SuggestionAlertType =
+  | 'LOW_MARGINAL_BENEFIT'
+  | 'REDUNDANT_ONLY'
+  | 'NO_GAP_COVERAGE';
+
+/** Alert for potential issues with a suggestion */
+export interface SuggestionAlertRO {
+  type: SuggestionAlertType;
+  message: string;
+  occupationId: string;
+  occupationName: string;
+}
+
 export interface SuggestionResponseRO {
   suggestions: OccupationSuggestionRO[];
   totalUncoveredActivities: number;
@@ -58,4 +86,24 @@ export interface SuggestionResponseRO {
   message?: string;
   /** V2: Coverage summary with gaps/fragile/redundant breakdown */
   summary?: CoverageSummaryRO;
+  /** V2: Alerts for potential issues with suggestions */
+  alerts?: SuggestionAlertRO[];
+}
+
+/** Response for minimum team calculator endpoint */
+export interface MinimumTeamResponseRO {
+  /** Ordered list of occupation IDs forming the minimum team */
+  occupationIds: string[];
+  /** Ordered list of occupation names (parallel to IDs) */
+  occupationNames: string[];
+  /** Coverage percentage achieved by this team */
+  achievedCoverage: number;
+  /** Activity IDs that remain uncovered (if any) */
+  uncoveredActivityIds: string[];
+  /** Activity names that remain uncovered (if any) */
+  uncoveredActivityNames: string[];
+  /** Total number of activities */
+  totalActivities: number;
+  /** Whether 100% coverage was achieved */
+  isFullCoverage: boolean;
 }
