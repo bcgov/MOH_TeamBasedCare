@@ -281,7 +281,10 @@ export class PlanningSessionService {
     await this.planningSessionRepo.save({
       ...planningSession,
       occupation,
-      unavailableOccupations: occupationDto.unavailableOccupations || [],
+      // Only update unavailableOccupations if explicitly provided (preserve existing if not sent)
+      ...(occupationDto.unavailableOccupations !== undefined && {
+        unavailableOccupations: occupationDto.unavailableOccupations,
+      }),
       updatedAt: new Date(), // Manually updating as TypeORM does not update this field when relations are updated;
     });
   }
