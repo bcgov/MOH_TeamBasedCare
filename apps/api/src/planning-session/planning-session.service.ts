@@ -974,7 +974,10 @@ export class PlanningSessionService {
 
     permissions.forEach(p => {
       // Exclude occupations already on team or marked as unavailable
-      if (!teamOccupationIds.has(p.occupation_id) && !unavailableOccupationIds.has(p.occupation_id)) {
+      if (
+        !teamOccupationIds.has(p.occupation_id) &&
+        !unavailableOccupationIds.has(p.occupation_id)
+      ) {
         if (!occupationPermissions.has(p.occupation_id)) {
           occupationPermissions.set(p.occupation_id, {
             name: p.occupation_name,
