@@ -4,6 +4,7 @@ import { isOdd } from 'src/common/util';
 import { useFormikContext } from 'formik';
 import { Spinner } from './generic/Spinner';
 import { PlanningOccupation } from '@services';
+import { useCallback } from 'react';
 
 export const OccupationSelector = ({ searchValue = '', showDescriptionModal = false }) => {
   const { occupations, isLoading } = useOccupations();
@@ -14,6 +15,25 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
 
     return o.name?.toLowerCase().includes(searchValue?.toLowerCase());
   });
+
+  const handleToggleUnavailable = useCallback(
+    (occupationId: string) => {
+      const currentUnavailable = values.unavailableOccupations || [];
+      const isCurrentlyUnavailable = currentUnavailable.includes(occupationId);
+
+      if (isCurrentlyUnavailable) {
+        // Remove from unavailable list
+        setFieldValue(
+          'unavailableOccupations',
+          currentUnavailable.filter(id => id !== occupationId),
+        );
+      } else {
+        // Add to unavailable list
+        setFieldValue('unavailableOccupations', [...currentUnavailable, occupationId]);
+      }
+    },
+    [values.unavailableOccupations, setFieldValue],
+  );
 
   if (isLoading) {
     return <Spinner show={isLoading} />;
@@ -67,11 +87,14 @@ export const OccupationSelector = ({ searchValue = '', showDescriptionModal = fa
       <div className='flex-1 flex flex-col'>
         {filteredOccupations.map((occupation, index) => {
           const styling = isOdd(index) ? 'item-box-gray' : 'item-box-white';
+          const isUnavailable = (values.unavailableOccupations || []).includes(occupation.id);
           return (
             <div key={index} className={`occupation-item-box ${styling}`}>
               <OccupationItem
                 key={occupation.id}
                 showDescriptionModal={showDescriptionModal}
+                isUnavailable={isUnavailable}
+                onToggleUnavailable={handleToggleUnavailable}
                 {...occupation}
               ></OccupationItem>
             </div>

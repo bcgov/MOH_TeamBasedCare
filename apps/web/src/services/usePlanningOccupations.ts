@@ -10,6 +10,7 @@ interface usePlanningOccupationsProps {
 
 export interface PlanningOccupation {
   occupation: string[];
+  unavailableOccupations: string[];
 }
 
 export const usePlanningOccupations = ({
@@ -22,6 +23,7 @@ export const usePlanningOccupations = ({
 
   const [initialValues, setInitialValues] = useState<PlanningOccupation>({
     occupation: [],
+    unavailableOccupations: [],
   });
 
   const { sendApiRequest, fetchData } = useHttp();
@@ -43,11 +45,17 @@ export const usePlanningOccupations = ({
   };
 
   const updateOccupationsForSessionId = useCallback(() => {
-    fetchData({ endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) }, (data: string[]) => {
-      if (data && data?.length > 0) {
-        setInitialValues({ occupation: data });
-      }
-    });
+    fetchData(
+      { endpoint: API_ENDPOINT.getPlanningOccupation(sessionId) },
+      (data: { occupation: string[]; unavailableOccupations: string[] }) => {
+        if (data) {
+          setInitialValues({
+            occupation: data.occupation || [],
+            unavailableOccupations: data.unavailableOccupations || [],
+          });
+        }
+      },
+    );
   }, [fetchData, sessionId, refetchActivityGap]);
 
   useEffect(() => {

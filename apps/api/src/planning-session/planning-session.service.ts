@@ -281,18 +281,24 @@ export class PlanningSessionService {
     await this.planningSessionRepo.save({
       ...planningSession,
       occupation,
+      unavailableOccupations: occupationDto.unavailableOccupations || [],
       updatedAt: new Date(), // Manually updating as TypeORM does not update this field when relations are updated;
     });
   }
 
-  async getOccupation(sessionId: string): Promise<string[] | undefined> {
+  async getOccupation(
+    sessionId: string,
+  ): Promise<{ occupation: string[]; unavailableOccupations: string[] } | undefined> {
     const planningSession = await this.planningSessionRepo.findOne({
       where: { id: sessionId },
       relations: ['occupation'],
     });
 
     if (planningSession) {
-      return planningSession.occupation?.map(each => each.id);
+      return {
+        occupation: planningSession.occupation?.map(each => each.id) || [],
+        unavailableOccupations: planningSession.unavailableOccupations || [],
+      };
     }
 
     return;
@@ -533,6 +539,9 @@ export class PlanningSessionService {
     const sessionOccupations = session.occupation || [];
     const teamOccupationIds = new Set([...sessionOccupations.map(o => o.id), ...tempSelectedIds]);
 
+    // 3. Get unavailable occupation IDs (excluded from suggestions, do NOT affect coverage)
+    const unavailableOccupationIds = new Set(session.unavailableOccupations || []);
+
     // 3. Get all activities for session
     const activities = session.careActivity || [];
     if (activities.length === 0) {
@@ -626,8 +635,12 @@ export class PlanningSessionService {
     const hasGaps = gaps.length > 0;
     const weights = hasGaps ? SUGGESTION_SCORING.WITH_GAPS : SUGGESTION_SCORING.NO_GAPS;
 
-    // 8. Group permissions by candidate occupation (not on team)
-    const occupationPermissions = this.groupPermissionsByOccupation(permissions, teamOccupationIds);
+    // 8. Group permissions by candidate occupation (not on team, not unavailable)
+    const occupationPermissions = this.groupPermissionsByOccupation(
+      permissions,
+      teamOccupationIds,
+      unavailableOccupationIds,
+    );
 
     // 9. Calculate tiered scores for each candidate occupation
     const occupationScores: OccupationScoreResult[] = [];
@@ -777,9 +790,13 @@ export class PlanningSessionService {
       };
     }
 
-    // 3. Build occupation -> activities map
+    // 3. Build occupation -> activities map (excluding unavailable occupations)
+    const unavailableOccupationIds = new Set(session.unavailableOccupations || []);
     const occupationCoverage = new Map<string, { name: string; activities: Set<string> }>();
     permissions.forEach(p => {
+      // Skip unavailable occupations
+      if (unavailableOccupationIds.has(p.occupation_id)) return;
+
       if (!occupationCoverage.has(p.occupation_id)) {
         occupationCoverage.set(p.occupation_id, {
           name: p.occupation_name,
@@ -942,12 +959,13 @@ export class PlanningSessionService {
   }
 
   /**
-   * Group permissions by candidate occupation (not on team).
+   * Group permissions by candidate occupation (not on team, not unavailable).
    * Returns a map of occupationId -> { name, permissions by activity }.
    */
   private groupPermissionsByOccupation(
     permissions: PermissionRow[],
     teamOccupationIds: Set<string>,
+    unavailableOccupationIds: Set<string> = new Set(),
   ): Map<string, { name: string; permissions: Map<string, string> }> {
     const occupationPermissions = new Map<
       string,
@@ -955,7 +973,8 @@ export class PlanningSessionService {
     >();
 
     permissions.forEach(p => {
-      if (!teamOccupationIds.has(p.occupation_id)) {
+      // Exclude occupations already on team or marked as unavailable
+      if (!teamOccupationIds.has(p.occupation_id) && !unavailableOccupationIds.has(p.occupation_id)) {
         if (!occupationPermissions.has(p.occupation_id)) {
           occupationPermissions.set(p.occupation_id, {
             name: p.occupation_name,
