@@ -5,6 +5,7 @@ import { OccupationService } from './occupation.service';
 import { Occupation } from './entity/occupation.entity';
 import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
 import { OccupationsCMSFindSortKeys, OccupationsFindSortKeys, SortOrder } from '@tbcm/common';
+import { CareSettingTemplateService } from '../unit/care-setting-template.service';
 
 describe('OccupationService', () => {
   let service: OccupationService;
@@ -40,6 +41,11 @@ describe('OccupationService', () => {
     delete: jest.fn(),
   };
 
+  const mockCareSettingTemplateService = {
+    syncOccupationToAllTemplates: jest.fn(),
+    removeOccupationFromAllTemplates: jest.fn(),
+  };
+
   const mockOccupation = {
     id: 'occ-1',
     name: 'registerednurse',
@@ -67,6 +73,10 @@ describe('OccupationService', () => {
         {
           provide: getRepositoryToken(AllowedActivity),
           useValue: mockAllowedActivityRepo,
+        },
+        {
+          provide: CareSettingTemplateService,
+          useValue: mockCareSettingTemplateService,
         },
       ],
     }).compile();
@@ -311,12 +321,13 @@ describe('OccupationService', () => {
       await expect(service.createOccupation(dto as any)).rejects.toThrow(BadRequestException);
     });
 
-    it('should create scope permissions when provided', async () => {
+    it('should create scope permissions and sync to templates when provided', async () => {
       mockOccupationRepo.findOne.mockResolvedValue(null);
       mockOccupationRepo.create.mockReturnValue(mockOccupation);
       mockOccupationRepo.save.mockResolvedValue(mockOccupation);
       mockAllowedActivityRepo.create.mockReturnValue({});
       mockAllowedActivityRepo.save.mockResolvedValue([]);
+      mockCareSettingTemplateService.syncOccupationToAllTemplates.mockResolvedValue(undefined);
 
       const dto = {
         name: 'New Occupation',
@@ -332,9 +343,13 @@ describe('OccupationService', () => {
 
       expect(mockAllowedActivityRepo.create).toHaveBeenCalledTimes(2);
       expect(mockAllowedActivityRepo.save).toHaveBeenCalled();
+      expect(mockCareSettingTemplateService.syncOccupationToAllTemplates).toHaveBeenCalledWith(
+        mockOccupation.id,
+        dto.scopePermissions,
+      );
     });
 
-    it('should skip scope permissions when not provided', async () => {
+    it('should skip scope permissions and sync when not provided', async () => {
       mockOccupationRepo.findOne.mockResolvedValue(null);
       mockOccupationRepo.create.mockReturnValue(mockOccupation);
       mockOccupationRepo.save.mockResolvedValue(mockOccupation);
@@ -345,6 +360,7 @@ describe('OccupationService', () => {
 
       expect(mockAllowedActivityRepo.create).not.toHaveBeenCalled();
       expect(mockAllowedActivityRepo.save).not.toHaveBeenCalled();
+      expect(mockCareSettingTemplateService.syncOccupationToAllTemplates).not.toHaveBeenCalled();
     });
   });
 
@@ -391,25 +407,29 @@ describe('OccupationService', () => {
       expect(mockOccupationRepo.findOne).not.toHaveBeenCalled();
     });
 
-    it('should delete and recreate scope permissions', async () => {
+    it('should delete and recreate scope permissions and sync to templates', async () => {
       mockOccupationRepo.findOneBy.mockResolvedValue({ ...mockOccupation });
       mockOccupationRepo.save.mockResolvedValue(mockOccupation);
       mockAllowedActivityRepo.delete.mockResolvedValue({});
       mockAllowedActivityRepo.create.mockReturnValue({});
       mockAllowedActivityRepo.save.mockResolvedValue([]);
+      mockCareSettingTemplateService.syncOccupationToAllTemplates.mockResolvedValue(undefined);
 
-      await service.updateOccupationWithScope('occ-1', {
-        scopePermissions: [{ careActivityId: 'ca-1', permission: 'Y' }],
-      } as any);
+      const scopePermissions = [{ careActivityId: 'ca-1', permission: 'Y' }];
+      await service.updateOccupationWithScope('occ-1', { scopePermissions } as any);
 
       expect(mockAllowedActivityRepo.delete).toHaveBeenCalledWith({
         occupation: { id: 'occ-1' },
       });
       expect(mockAllowedActivityRepo.create).toHaveBeenCalledTimes(1);
       expect(mockAllowedActivityRepo.save).toHaveBeenCalled();
+      expect(mockCareSettingTemplateService.syncOccupationToAllTemplates).toHaveBeenCalledWith(
+        'occ-1',
+        scopePermissions,
+      );
     });
 
-    it('should skip scope permissions update when undefined', async () => {
+    it('should skip scope permissions update and sync when undefined', async () => {
       mockOccupationRepo.findOneBy.mockResolvedValue({ ...mockOccupation });
       mockOccupationRepo.save.mockResolvedValue(mockOccupation);
 
@@ -418,6 +438,7 @@ describe('OccupationService', () => {
       } as any);
 
       expect(mockAllowedActivityRepo.delete).not.toHaveBeenCalled();
+      expect(mockCareSettingTemplateService.syncOccupationToAllTemplates).not.toHaveBeenCalled();
     });
   });
 
@@ -454,12 +475,16 @@ describe('OccupationService', () => {
   });
 
   describe('deleteOccupation', () => {
-    it('should soft delete the occupation', async () => {
+    it('should remove from templates and soft delete the occupation', async () => {
       mockOccupationRepo.findOneBy.mockResolvedValue(mockOccupation);
       mockOccupationRepo.softDelete.mockResolvedValue({});
+      mockCareSettingTemplateService.removeOccupationFromAllTemplates.mockResolvedValue(undefined);
 
       await service.deleteOccupation('occ-1');
 
+      expect(mockCareSettingTemplateService.removeOccupationFromAllTemplates).toHaveBeenCalledWith(
+        'occ-1',
+      );
       expect(mockOccupationRepo.softDelete).toHaveBeenCalledWith('occ-1');
     });
 
@@ -467,6 +492,9 @@ describe('OccupationService', () => {
       mockOccupationRepo.findOneBy.mockResolvedValue(null);
 
       await expect(service.deleteOccupation('nonexistent')).rejects.toThrow(NotFoundException);
+      expect(
+        mockCareSettingTemplateService.removeOccupationFromAllTemplates,
+      ).not.toHaveBeenCalled();
     });
   });
 

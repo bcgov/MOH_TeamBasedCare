@@ -25,6 +25,7 @@ import {
 } from '@tbcm/common';
 import { cleanText, reverseSortOrder } from 'src/common/utils';
 import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
+import { CareSettingTemplateService } from '../unit/care-setting-template.service';
 
 /**
  * Service for managing occupations and their scope permissions.
@@ -36,6 +37,7 @@ export class OccupationService {
     private occupationRepository: Repository<Occupation>,
     @InjectRepository(AllowedActivity)
     private allowedActivityRepository: Repository<AllowedActivity>,
+    private careSettingTemplateService: CareSettingTemplateService,
   ) {}
 
   async getAllOccupations(): Promise<Occupation[]> {
@@ -225,6 +227,12 @@ export class OccupationService {
         }),
       );
       await this.allowedActivityRepository.save(entities);
+
+      // Sync permissions to all care setting templates
+      await this.careSettingTemplateService.syncOccupationToAllTemplates(
+        saved.id,
+        data.scopePermissions,
+      );
     }
 
     return saved;
@@ -296,6 +304,12 @@ export class OccupationService {
         );
         await this.allowedActivityRepository.save(entities);
       }
+
+      // Sync permissions to all care setting templates
+      await this.careSettingTemplateService.syncOccupationToAllTemplates(
+        id,
+        data.scopePermissions,
+      );
     }
   }
 
@@ -303,6 +317,7 @@ export class OccupationService {
    * Delete an occupation (soft delete).
    *
    * Sets the deletedAt timestamp rather than permanently removing the record.
+   * Also removes all permissions for this occupation from care setting templates.
    * AllowedActivities remain in the database but the occupation won't appear
    * in queries due to TypeORM's automatic soft delete filtering.
    *
@@ -318,6 +333,10 @@ export class OccupationService {
         data: { id },
       });
     }
+
+    // Remove from all care setting templates before soft delete
+    // (FK cascade only works for hard delete, not soft delete)
+    await this.careSettingTemplateService.removeOccupationFromAllTemplates(id);
 
     await this.occupationRepository.softDelete(id);
   }
