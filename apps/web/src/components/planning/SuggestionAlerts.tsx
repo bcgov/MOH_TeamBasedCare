@@ -6,8 +6,7 @@ interface SuggestionAlertsProps {
 }
 
 /**
- * Display warning alerts for suboptimal suggestions.
- * Groups alerts by type for cleaner presentation.
+ * Display a single consolidated warning banner for suboptimal suggestions.
  */
 export const SuggestionAlerts: React.FC<SuggestionAlertsProps> = ({ alerts }) => {
   if (!alerts || alerts.length === 0) return null;
@@ -25,26 +24,29 @@ export const SuggestionAlerts: React.FC<SuggestionAlertsProps> = ({ alerts }) =>
   );
 
   // Map alert types to user-friendly messages
-  const getAlertTitle = (type: string, count: number) => {
+  const getAlertMessage = (type: string, count: number) => {
     switch (type) {
       case 'LOW_MARGINAL_BENEFIT':
-        return `${count} suggestion${count > 1 ? 's' : ''} with low impact (<5% improvement)`;
+        return `${count} with low impact (<5% improvement)`;
       case 'NO_GAP_COVERAGE':
-        return `${count} suggestion${count > 1 ? 's' : ''} cannot fill any gaps`;
+        return `${count} cannot fill any gaps`;
       case 'REDUNDANT_ONLY':
-        return `${count} suggestion${count > 1 ? 's' : ''} only add${count === 1 ? 's' : ''} redundancy`;
+        return `${count} only add${count === 1 ? 's' : ''} redundancy`;
       default:
         return `${count} alert${count > 1 ? 's' : ''}`;
     }
   };
 
+  const messages = Object.entries(alertsByType).map(([type, typeAlerts]) =>
+    getAlertMessage(type, typeAlerts.length),
+  );
+
   return (
-    <div className='space-y-2'>
-      {Object.entries(alertsByType).map(([type, typeAlerts]) => (
-        <Alert key={type} type='warning' className='text-sm'>
-          <p>{getAlertTitle(type, typeAlerts.length)}</p>
-        </Alert>
-      ))}
-    </div>
+    <Alert type='warning' className='text-sm'>
+      <p>
+        <span className='font-medium'>Some suggestions have limited value: </span>
+        {messages.join(', ')}.
+      </p>
+    </Alert>
   );
 };

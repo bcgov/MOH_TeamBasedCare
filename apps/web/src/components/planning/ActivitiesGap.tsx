@@ -50,7 +50,10 @@ const TableHeader: React.FC = () => {
   const [selectedOccupation, setSelectedOccupation] = useState({ title: '', description: '' });
 
   const handleRemoveOccupation = (occupationName: string) => {
-    const occupationToRemove = occupations.find(o => o.name === occupationName);
+    // Match by name or displayName since headers may use either
+    const occupationToRemove = occupations.find(
+      o => o.name === occupationName || o.displayName === occupationName,
+    );
     if (!occupationToRemove || !sessionId) return;
 
     const remainingOccupations = occupationData.occupation.filter(
