@@ -258,6 +258,8 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         {occupation.simulatedCoverage && (
                           <SimulatedCoverageBadge
                             simulatedCoverage={occupation.simulatedCoverage}
+                            tier={occupation.tier}
+                            redundancyGains={occupation.redundancyGains}
                           />
                         )}
                       </td>
@@ -286,6 +288,8 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         {occupation.simulatedCoverage && (
                           <SimulatedCoverageBadge
                             simulatedCoverage={occupation.simulatedCoverage}
+                            tier={occupation.tier}
+                            redundancyGains={occupation.redundancyGains}
                           />
                         )}
                       </td>
@@ -380,12 +384,12 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                 </button>
               </div>
 
-              <div className='px-6 pt-4'>
+              <div className='p-6 overflow-y-auto max-h-[60vh]'>
                 <p className='text-base text-black mb-4'>
                   System suggestions to increase the coverage of care competencies/care activities
                   within the scope of practice.
                 </p>
-                <div className='bg-[#d9eaf7] border-2 border-[#d9eaf7] rounded px-4 py-3'>
+                <div className='bg-[#d9eaf7] border-2 border-[#d9eaf7] rounded px-4 py-3 mb-4'>
                   <div className='flex items-start'>
                     <FontAwesomeIcon
                       icon={faInfoCircle}
@@ -397,13 +401,12 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                   </div>
                 </div>
                 {suggestions?.alerts && suggestions.alerts.length > 0 && (
-                  <div className='mt-3'>
+                  <div className='mb-4'>
                     <SuggestionAlerts alerts={suggestions.alerts} />
                   </div>
                 )}
+                {renderContent()}
               </div>
-
-              <div className='p-6 overflow-y-auto max-h-[60vh]'>{renderContent()}</div>
             </div>
           </Transition.Child>
         </div>
