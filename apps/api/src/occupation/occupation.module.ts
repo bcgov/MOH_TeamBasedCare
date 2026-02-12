@@ -5,9 +5,13 @@ import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.ent
 import { OccupationController } from './occupation.controller';
 import { OccupationService } from './occupation.service';
 import { OccupationSubscriber } from './subscribers/occupation.subscriber';
+import { UnitModule } from '../unit/unit.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Occupation, AllowedActivity])],
+  imports: [
+    TypeOrmModule.forFeature([Occupation, AllowedActivity]),
+    UnitModule, // Import to access CareSettingTemplateService for permission sync
+  ],
   exports: [OccupationService],
   controllers: [OccupationController],
   providers: [OccupationService, OccupationSubscriber],

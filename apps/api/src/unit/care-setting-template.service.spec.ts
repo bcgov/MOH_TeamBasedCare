@@ -863,4 +863,108 @@ describe('CareSettingTemplateService', () => {
       expect(mockPermissionQB.getRawMany).not.toHaveBeenCalled();
     });
   });
+
+  // ─── syncOccupationToAllTemplates ─────────────────────────────────
+  describe('syncOccupationToAllTemplates', () => {
+    it('should delete existing permissions and create new ones for all templates', async () => {
+      const mockTemplates = [
+        {
+          id: 'tmpl-1',
+          selectedActivities: [{ id: 'a-1' }, { id: 'a-2' }],
+        },
+        {
+          id: 'tmpl-2',
+          selectedActivities: [{ id: 'a-1' }, { id: 'a-3' }],
+        },
+      ];
+      mockTemplateRepo.find.mockResolvedValue(mockTemplates);
+      mockPermissionRepo.delete.mockResolvedValue({});
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockPermissionRepo.save.mockResolvedValue([]);
+
+      const permissions = [
+        { careActivityId: 'a-1', permission: 'Y' },
+        { careActivityId: 'a-2', permission: 'LC' },
+      ];
+
+      await service.syncOccupationToAllTemplates('occ-1', permissions);
+
+      // Should delete all existing permissions for this occupation
+      expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ occupation: { id: 'occ-1' } });
+
+      // Should load all templates with selectedActivities
+      expect(mockTemplateRepo.find).toHaveBeenCalledWith({
+        relations: ['selectedActivities'],
+      });
+
+      // Should create permissions:
+      // - tmpl-1: a-1(Y), a-2(LC) - both activities are in template
+      // - tmpl-2: a-1(Y) only - a-2 is not in this template, a-3 has no permission
+      expect(mockPermissionRepo.save).toHaveBeenCalled();
+      const savedPermissions = mockPermissionRepo.save.mock.calls[0][0];
+      expect(savedPermissions).toHaveLength(3); // 2 for tmpl-1, 1 for tmpl-2
+    });
+
+    it('should only delete permissions when permissions array is empty', async () => {
+      mockPermissionRepo.delete.mockResolvedValue({});
+
+      await service.syncOccupationToAllTemplates('occ-1', []);
+
+      expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ occupation: { id: 'occ-1' } });
+      expect(mockTemplateRepo.find).not.toHaveBeenCalled();
+      expect(mockPermissionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should filter out N permissions (only sync Y and LC)', async () => {
+      const mockTemplates = [
+        {
+          id: 'tmpl-1',
+          selectedActivities: [{ id: 'a-1' }, { id: 'a-2' }],
+        },
+      ];
+      mockTemplateRepo.find.mockResolvedValue(mockTemplates);
+      mockPermissionRepo.delete.mockResolvedValue({});
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockPermissionRepo.save.mockResolvedValue([]);
+
+      const permissions = [
+        { careActivityId: 'a-1', permission: 'Y' },
+        { careActivityId: 'a-2', permission: 'N' }, // This should be filtered out
+      ];
+
+      await service.syncOccupationToAllTemplates('occ-1', permissions);
+
+      const savedPermissions = mockPermissionRepo.save.mock.calls[0][0];
+      expect(savedPermissions).toHaveLength(1); // Only Y permission
+      expect(savedPermissions[0].careActivity.id).toBe('a-1');
+    });
+
+    it('should not save when no matching permissions for templates', async () => {
+      const mockTemplates = [
+        {
+          id: 'tmpl-1',
+          selectedActivities: [{ id: 'a-3' }], // Different activity
+        },
+      ];
+      mockTemplateRepo.find.mockResolvedValue(mockTemplates);
+      mockPermissionRepo.delete.mockResolvedValue({});
+
+      const permissions = [{ careActivityId: 'a-1', permission: 'Y' }];
+
+      await service.syncOccupationToAllTemplates('occ-1', permissions);
+
+      expect(mockPermissionRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── removeOccupationFromAllTemplates ─────────────────────────────
+  describe('removeOccupationFromAllTemplates', () => {
+    it('should delete all permissions for the occupation', async () => {
+      mockPermissionRepo.delete.mockResolvedValue({});
+
+      await service.removeOccupationFromAllTemplates('occ-1');
+
+      expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ occupation: { id: 'occ-1' } });
+    });
+  });
 });

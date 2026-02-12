@@ -37,6 +37,7 @@ import {
   SortOrder,
   BundleRO,
   OccupationRO,
+  Permissions,
 } from '@tbcm/common';
 
 @Injectable()
@@ -760,5 +761,79 @@ export class CareSettingTemplateService {
       .andWhere('cstp.careActivity IN (:...activityIds)', { activityIds: careActivityIds })
       .andWhere('cstp.permission IN (:...perms)', { perms: ['Y', 'LC'] })
       .getRawMany();
+  }
+
+  /**
+   * Sync occupation permissions to ALL templates.
+   * Called when CMS creates or updates occupation scope permissions.
+   *
+   * Templates define which activities are needed for a care setting.
+   * Occupations define what roles can do (permissions).
+   * When occupation capabilities change, all templates should reflect this.
+   *
+   * @param occupationId - The occupation whose permissions changed
+   * @param permissions - New permissions array from CMS (careActivityId + permission)
+   */
+  async syncOccupationToAllTemplates(
+    occupationId: string,
+    permissions: { careActivityId: string; permission: string }[],
+  ): Promise<void> {
+    // 1. Delete ALL existing permissions for this occupation across ALL templates
+    // This is efficient: single DELETE query instead of N queries
+    await this.permissionRepo.delete({ occupation: { id: occupationId } });
+
+    // 2. If no permissions to add (occupation cleared), we're done
+    if (permissions.length === 0) {
+      return;
+    }
+
+    // 3. Get all templates with their selected activities
+    const templates = await this.templateRepo.find({
+      relations: ['selectedActivities'],
+    });
+
+    // 4. Build a map of activity IDs to permissions for quick lookup
+    // Only include Y and LC permissions (N means "no permission" = no record)
+    const permissionMap = new Map<string, string>();
+    for (const p of permissions) {
+      if (p.permission === Permissions.PERFORM || p.permission === Permissions.LIMITS) {
+        permissionMap.set(p.careActivityId, p.permission);
+      }
+    }
+
+    // 5. Collect all new permissions to insert across all templates
+    const newPermissions: CareSettingTemplatePermission[] = [];
+
+    for (const template of templates) {
+      // For each activity in this template, check if the occupation has permission
+      for (const activity of template.selectedActivities) {
+        const permission = permissionMap.get(activity.id);
+        if (permission) {
+          newPermissions.push(
+            this.permissionRepo.create({
+              template: { id: template.id },
+              occupation: { id: occupationId },
+              careActivity: { id: activity.id },
+              permission: permission as Permissions,
+            }),
+          );
+        }
+      }
+    }
+
+    // 6. Batch insert all new permissions (efficient: single INSERT with multiple rows)
+    if (newPermissions.length > 0) {
+      await this.permissionRepo.save(newPermissions);
+    }
+  }
+
+  /**
+   * Remove all permissions for an occupation from ALL templates.
+   * Called when an occupation is soft-deleted from CMS.
+   *
+   * @param occupationId - The occupation being deleted
+   */
+  async removeOccupationFromAllTemplates(occupationId: string): Promise<void> {
+    await this.permissionRepo.delete({ occupation: { id: occupationId } });
   }
 }

@@ -160,6 +160,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
   const [scopePageIndex, setScopePageIndex] = useState(1);
   const [scopePageSize, setScopePageSize] = useState(15);
+  const [selectedBundleId, setSelectedBundleId] = useState<string>('');
 
   // Debounce search text (500ms delay) and reset to page 1
   useEffect(() => {
@@ -186,21 +187,36 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
     );
   }, [bundles]);
 
-  // Filter activities by debounced search text (multi-word AND logic)
-  const filteredActivities = useMemo(() => {
-    if (!debouncedSearchText.trim()) return allActivities;
+  // Build dropdown options from bundles
+  const bundleFilterOptions = useMemo(() => {
+    if (!bundles) return [{ label: 'All', value: '' }];
+    return [
+      { label: 'All', value: '' },
+      ...bundles.map(bundle => ({ label: bundle.name || '', value: bundle.id })),
+    ];
+  }, [bundles]);
 
-    // Split search into terms and lowercase
+  // Filter activities by bundle and debounced search text (multi-word AND logic)
+  const filteredActivities = useMemo(() => {
+    let result = allActivities;
+
+    // Filter by selected bundle
+    if (selectedBundleId) {
+      result = result.filter(activity => activity.bundleId === selectedBundleId);
+    }
+
+    // Filter by search text
+    if (!debouncedSearchText.trim()) return result;
+
     const searchTerms = debouncedSearchText
       .toLowerCase()
       .trim()
       .split(/\s+/)
       .filter(term => term.length > 0);
 
-    if (searchTerms.length === 0) return allActivities;
+    if (searchTerms.length === 0) return result;
 
-    return allActivities.filter(activity => {
-      // Combine all searchable fields into one string
+    return result.filter(activity => {
       const searchableText = [
         activity.name,
         activity.bundleName,
@@ -211,10 +227,9 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
         .join(' ')
         .toLowerCase();
 
-      // ALL terms must match (AND logic)
       return searchTerms.every(term => searchableText.includes(term));
     });
-  }, [allActivities, debouncedSearchText]);
+  }, [allActivities, debouncedSearchText, selectedBundleId]);
 
   // Paginate filtered activities
   const paginatedActivities = useMemo(() => {
@@ -247,6 +262,11 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
   const handlePageOptionsChange = (options: PageOptions) => {
     setScopePageIndex(options.pageIndex);
     setScopePageSize(options.pageSize);
+  };
+
+  const handleBundleFilterChange = (value: string) => {
+    setSelectedBundleId(value);
+    setScopePageIndex(1);
   };
 
   const submit = async (values: FormValues, { setFieldError }: FormikHelpers<FormValues>) => {
@@ -397,11 +417,23 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
               </div>
             )}
 
-            <div className='mb-4 max-w-md'>
-              <SearchBar
-                handleChange={e => setActivitySearchText(e.target.value)}
-                placeholderText='Search field'
-              />
+            <div className='mb-4 flex gap-3 items-end'>
+              <div className='flex-1 max-w-md'>
+                <SearchBar
+                  handleChange={e => setActivitySearchText(e.target.value)}
+                  placeholderText='Search field'
+                />
+              </div>
+              <div className='min-w-[14rem]'>
+                <BasicSelect<string>
+                  id='scope-bundle-filter'
+                  label='Care Competencies'
+                  value={selectedBundleId}
+                  onChange={handleBundleFilterChange}
+                  options={bundleFilterOptions}
+                  buttonClassName='w-full border border-gray-300 rounded py-3'
+                />
+              </div>
             </div>
 
             {!isLoadingBundles && filteredActivities.length > 0 && (
@@ -491,7 +523,7 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
 
             {!isLoadingBundles && filteredActivities.length === 0 && (
               <div className='text-center py-8 text-gray-500'>
-                {activitySearchText
+                {activitySearchText || selectedBundleId
                   ? 'No activities match your search.'
                   : 'No care activities found.'}
               </div>
