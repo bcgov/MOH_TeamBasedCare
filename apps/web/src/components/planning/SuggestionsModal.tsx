@@ -3,6 +3,8 @@ import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faCheck, faSpinner, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { CareActivityType, OccupationSuggestionRO, SuggestionResponseRO } from '@tbcm/common';
+import { SimulatedCoverageBadge } from './SimulatedCoverageBadge';
+import { SuggestionAlerts } from './SuggestionAlerts';
 import { usePlanningContext } from '../../services/usePlanningContext';
 import { useSuggestions } from '../../services/useSuggestions';
 import { Pagination, PageOptions } from '../Pagination';
@@ -207,6 +209,11 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         <span className='font-bold text-sm text-[#272833]'>
                           {occupation.occupationName}
                         </span>
+                        {occupation.simulatedCoverage && (
+                          <SimulatedCoverageBadge
+                            simulatedCoverage={occupation.simulatedCoverage}
+                          />
+                        )}
                       </td>
                       <td className='px-3 py-3 text-sm text-gray-400'>-</td>
                       <td className='px-3 py-3 text-sm text-gray-400'>-</td>
@@ -230,6 +237,11 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         <span className='font-bold text-sm text-[#272833]'>
                           {occupation.occupationName}
                         </span>
+                        {occupation.simulatedCoverage && (
+                          <SimulatedCoverageBadge
+                            simulatedCoverage={occupation.simulatedCoverage}
+                          />
+                        )}
                       </td>
                     )}
                     <td className='px-3 py-3 text-sm text-[#313132] align-top'>
@@ -328,6 +340,11 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                     </p>
                   </div>
                 </div>
+                {suggestions?.alerts && suggestions.alerts.length > 0 && (
+                  <div className='mt-3'>
+                    <SuggestionAlerts alerts={suggestions.alerts} />
+                  </div>
+                )}
               </div>
 
               <div className='p-6 overflow-y-auto max-h-[60vh]'>{renderContent()}</div>

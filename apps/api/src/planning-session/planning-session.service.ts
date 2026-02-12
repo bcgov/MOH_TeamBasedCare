@@ -22,6 +22,8 @@ import {
   SimulatedCoverageRO,
   SuggestionAlertRO,
   MinimumTeamResponseRO,
+  RedundancyAnalysisResponseRO,
+  RedundantOccupationRO,
 } from '@tbcm/common';
 import { IProfileSelection, Permissions } from '@tbcm/common';
 import { CareActivityService } from '../care-activity/care-activity.service';
@@ -1164,6 +1166,132 @@ export class PlanningSessionService {
       redundancyGains: os.redundancyGains,
       competencies,
       simulatedCoverage,
+    };
+  }
+
+  /**
+   * Analyze which occupations can be removed without reducing coverage.
+   * For each team member, simulates their removal and checks if any activity loses all coverage.
+   */
+  async getRedundantOccupations(sessionId: string): Promise<RedundancyAnalysisResponseRO> {
+    // 1. Load session with occupations and activities
+    const session = await this.findOne({
+      where: { id: sessionId },
+      relations: ['careActivity', 'occupation', 'careSettingTemplate', 'careLocation'],
+    });
+
+    if (!session) {
+      throw new NotFoundException('Planning session not found');
+    }
+
+    const activities = session.careActivity || [];
+    const occupations = session.occupation || [];
+
+    if (activities.length === 0 || occupations.length === 0) {
+      return {
+        currentCoverage: 0,
+        totalOccupations: occupations.length,
+        removableOccupations: [],
+        essentialOccupations: [],
+      };
+    }
+
+    const activityIds = activities.map(a => a.id);
+    const occupationIds = occupations.map(o => o.id);
+
+    // 2. Get all permissions for team occupations
+    let permissions: PermissionRow[];
+
+    if (session.careSettingTemplate?.id) {
+      permissions = await this.careSettingTemplateService.getPermissionsForSuggestions(
+        session.careSettingTemplate.id,
+        activityIds,
+      );
+    } else if (session.careLocation?.id) {
+      permissions = await this.planningSessionRepo
+        .createQueryBuilder('ps')
+        .select('aa.permission', 'permission')
+        .addSelect('aa.care_activity_id', 'care_activity_id')
+        .addSelect('aa.occupation_id', 'occupation_id')
+        .addSelect('o.displayName', 'occupation_name')
+        .innerJoin('ps.careActivity', 'ca')
+        .innerJoin(AllowedActivity, 'aa', 'aa.careActivity = ca.id AND aa.unit = ps.careLocation')
+        .innerJoin('aa.occupation', 'o')
+        .where('ps.id = :sessionId', { sessionId })
+        .andWhere('aa.permission IN (:...perms)', { perms: ['Y', 'LC'] })
+        .getRawMany();
+    } else {
+      return {
+        currentCoverage: 0,
+        totalOccupations: occupations.length,
+        removableOccupations: [],
+        essentialOccupations: [],
+      };
+    }
+
+    // Filter to only team members' permissions
+    const teamOccupationIds = new Set(occupationIds);
+    const teamPermissions = permissions.filter(p => teamOccupationIds.has(p.occupation_id));
+
+    // 3. Build coverage map with all team members
+    const activityCoverage = new Map<string, Set<string>>(); // activityId -> Set of occupationIds that cover it
+    activityIds.forEach(id => activityCoverage.set(id, new Set()));
+
+    teamPermissions.forEach(p => {
+      activityCoverage.get(p.care_activity_id)?.add(p.occupation_id);
+    });
+
+    // Calculate current coverage
+    const coveredActivities = Array.from(activityCoverage.values()).filter(s => s.size > 0).length;
+    const currentCoverage =
+      activityIds.length > 0 ? Math.round((coveredActivities / activityIds.length) * 100) : 0;
+
+    // 4. For each occupation, check if removing it would reduce coverage
+    const removableOccupations: RedundantOccupationRO[] = [];
+    const essentialOccupations: RedundantOccupationRO[] = [];
+
+    const occupationNameMap = new Map(occupations.map(o => [o.id, o.displayName]));
+
+    for (const occupationId of occupationIds) {
+      // Find activities that ONLY this occupation covers
+      const uniqueActivities: string[] = [];
+
+      for (const [activityId, coveringOccupations] of activityCoverage.entries()) {
+        if (coveringOccupations.has(occupationId) && coveringOccupations.size === 1) {
+          // This activity is covered ONLY by this occupation
+          const activity = activities.find(a => a.id === activityId);
+          uniqueActivities.push(activity?.displayName || activityId);
+        }
+      }
+
+      const isRemovable = uniqueActivities.length === 0;
+      const coverageImpact = isRemovable
+        ? 0
+        : Math.round((uniqueActivities.length / activityIds.length) * 100);
+
+      const occupationData: RedundantOccupationRO = {
+        occupationId,
+        occupationName: occupationNameMap.get(occupationId) || occupationId,
+        isRemovable,
+        coverageImpact,
+        uniqueActivities,
+      };
+
+      if (isRemovable) {
+        removableOccupations.push(occupationData);
+      } else {
+        essentialOccupations.push(occupationData);
+      }
+    }
+
+    // Sort essential occupations by coverage impact (most critical first)
+    essentialOccupations.sort((a, b) => b.coverageImpact - a.coverageImpact);
+
+    return {
+      currentCoverage,
+      totalOccupations: occupations.length,
+      removableOccupations,
+      essentialOccupations,
     };
   }
 }

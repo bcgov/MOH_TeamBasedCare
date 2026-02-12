@@ -104,3 +104,27 @@ export interface MinimumTeamResponseRO {
   /** Whether 100% coverage was achieved */
   isFullCoverage: boolean;
 }
+
+/** Analysis of a single occupation's removability */
+export interface RedundantOccupationRO {
+  occupationId: string;
+  occupationName: string;
+  /** True if removing this occupation doesn't reduce coverage */
+  isRemovable: boolean;
+  /** Percentage of coverage lost if this occupation is removed (0 = safe to remove) */
+  coverageImpact: number;
+  /** Activities that ONLY this occupation covers (would become gaps if removed) */
+  uniqueActivities: string[];
+}
+
+/** Response for redundancy analysis endpoint */
+export interface RedundancyAnalysisResponseRO {
+  /** Current team coverage percentage */
+  currentCoverage: number;
+  /** Total number of occupations on the team */
+  totalOccupations: number;
+  /** Occupations that can be removed without reducing coverage */
+  removableOccupations: RedundantOccupationRO[];
+  /** Occupations that are essential (removing would reduce coverage) */
+  essentialOccupations: RedundantOccupationRO[];
+}

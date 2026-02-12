@@ -1,6 +1,12 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faCaretUp, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCaretDown,
+  faCaretUp,
+  faLightbulb,
+  faCalculator,
+  faUserMinus,
+} from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes, API_ENDPOINT, REQUEST_METHOD } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
@@ -15,6 +21,8 @@ import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
 import { OccupationListDropdown } from '../OccupationListDropdown';
 import { SuggestionsModal } from './SuggestionsModal';
+import { MinimumTeamModal } from './MinimumTeamModal';
+import { RedundancyModal } from './RedundancyModal';
 import { ActivityGapCareActivity } from '@tbcm/common';
 
 export interface ActivitiesGapProps {
@@ -216,6 +224,8 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [showMinimumTeamModal, setShowMinimumTeamModal] = useState(false);
+  const [showRedundancyModal, setShowRedundancyModal] = useState(false);
   const { initialValues: occupationData } = usePlanningOccupations({});
   const { sendApiRequest } = useHttp();
   const {
@@ -245,6 +255,39 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
     }
   };
 
+  const handleMinimumTeamApply = (occupationIds: string[]) => {
+    if (occupationIds.length > 0 && sessionId) {
+      sendApiRequest(
+        {
+          method: REQUEST_METHOD.PATCH,
+          data: { occupation: occupationIds },
+          endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+        },
+        () => {
+          updateRefetchActivityGap(true);
+        },
+      );
+    }
+  };
+
+  const handleRemoveOccupations = (occupationIds: string[]) => {
+    if (occupationIds.length > 0 && sessionId && occupationData.occupation) {
+      const remainingOccupations = occupationData.occupation.filter(
+        (id: string) => !occupationIds.includes(id),
+      );
+      sendApiRequest(
+        {
+          method: REQUEST_METHOD.PATCH,
+          data: { occupation: remainingOccupations },
+          endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+        },
+        () => {
+          updateRefetchActivityGap(true);
+        },
+      );
+    }
+  };
+
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
@@ -258,6 +301,14 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
             <Button variant='secondary' onClick={() => setShowSuggestionsModal(true)}>
               <FontAwesomeIcon icon={faLightbulb} className='mr-2' />
               Suggestions
+            </Button>
+            <Button variant='secondary' onClick={() => setShowMinimumTeamModal(true)}>
+              <FontAwesomeIcon icon={faCalculator} className='mr-2' />
+              Minimum Team
+            </Button>
+            <Button variant='secondary' onClick={() => setShowRedundancyModal(true)}>
+              <FontAwesomeIcon icon={faUserMinus} className='mr-2' />
+              Optimize Team
             </Button>
             <OccupationListDropdown />
           </div>
@@ -273,6 +324,18 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
       </div>
 
       <SuggestionsModal isOpen={showSuggestionsModal} onClose={handleSuggestionsClose} />
+      <MinimumTeamModal
+        isOpen={showMinimumTeamModal}
+        onClose={() => setShowMinimumTeamModal(false)}
+        sessionId={sessionId || ''}
+        onApply={handleMinimumTeamApply}
+      />
+      <RedundancyModal
+        isOpen={showRedundancyModal}
+        onClose={() => setShowRedundancyModal(false)}
+        sessionId={sessionId || ''}
+        onRemove={handleRemoveOccupations}
+      />
     </div>
   );
 };

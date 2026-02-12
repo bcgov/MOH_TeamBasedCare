@@ -67,6 +67,8 @@ export const API_ENDPOINT = {
   getPlanningCareActivity: (sessionId: string) => `/sessions/${sessionId}/care-activity`,
   getPlanningActivityGap: (sessionId: string) => `/sessions/${sessionId}/activities-gap`,
   getSuggestions: (sessionId: string) => `/sessions/${sessionId}/suggestions`,
+  getMinimumTeam: (sessionId: string) => `/sessions/${sessionId}/minimum-team`,
+  getRedundantOccupations: (sessionId: string) => `/sessions/${sessionId}/redundant-occupations`,
   getActivitiesAllowedByOccupation: (
     occupationId: string,
     params: EndpointQueryParams<OccupationalScopeOfPracticeSortKeys>,
