@@ -64,10 +64,7 @@ export interface CoverageSummaryRO {
 }
 
 /** Alert types for suggestion quality warnings */
-export type SuggestionAlertType =
-  | 'LOW_MARGINAL_BENEFIT'
-  | 'REDUNDANT_ONLY'
-  | 'NO_GAP_COVERAGE';
+export type SuggestionAlertType = 'LOW_MARGINAL_BENEFIT' | 'REDUNDANT_ONLY' | 'NO_GAP_COVERAGE';
 
 /** Alert for potential issues with a suggestion */
 export interface SuggestionAlertRO {
