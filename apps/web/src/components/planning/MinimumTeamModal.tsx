@@ -11,7 +11,7 @@ interface MinimumTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
   sessionId: string;
-  onApply: (occupationIds: string[]) => void;
+  onApply: (occupationIds: string[], action: 'add' | 'replace') => void;
 }
 
 export const MinimumTeamModal: React.FC<MinimumTeamModalProps> = ({
@@ -23,6 +23,7 @@ export const MinimumTeamModal: React.FC<MinimumTeamModalProps> = ({
   const { getMinimumTeam, isLoading } = useMinimumTeam();
   const [result, setResult] = useState<MinimumTeamResponseRO | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [applyAction, setApplyAction] = useState<'add' | 'replace'>('replace');
 
   useEffect(() => {
     if (isOpen && sessionId) {
@@ -38,7 +39,7 @@ export const MinimumTeamModal: React.FC<MinimumTeamModalProps> = ({
 
   const handleApply = () => {
     if (result) {
-      onApply(result.occupationIds);
+      onApply(result.occupationIds, applyAction);
       onClose();
     }
   };
@@ -147,6 +148,34 @@ export const MinimumTeamModal: React.FC<MinimumTeamModalProps> = ({
                         </div>
                       </Alert>
                     )}
+
+                    <div className='mt-4 space-y-2 border-t pt-4'>
+                      <p className='font-medium text-gray-700'>
+                        How would you like to apply this team?
+                      </p>
+                      <label className='flex items-center gap-2 cursor-pointer'>
+                        <input
+                          type='radio'
+                          name='applyAction'
+                          value='replace'
+                          checked={applyAction === 'replace'}
+                          onChange={() => setApplyAction('replace')}
+                          className='h-4 w-4 text-blue-600'
+                        />
+                        <span>Replace current team with minimum team</span>
+                      </label>
+                      <label className='flex items-center gap-2 cursor-pointer'>
+                        <input
+                          type='radio'
+                          name='applyAction'
+                          value='add'
+                          checked={applyAction === 'add'}
+                          onChange={() => setApplyAction('add')}
+                          className='h-4 w-4 text-blue-600'
+                        />
+                        <span>Add minimum team to existing roles</span>
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>
