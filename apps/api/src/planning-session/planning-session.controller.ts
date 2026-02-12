@@ -139,4 +139,25 @@ export class PlanningSessionController {
       dto.pageSize || 10,
     );
   }
+
+  /**
+   * Calculate the minimum team needed to achieve target coverage.
+   * Uses greedy set cover algorithm to find smallest team.
+   * Auth: class-level @AllowRoles(Role.USER) + SessionGuard (session ownership).
+   */
+  @UseGuards(SessionGuard)
+  @Post('/:sessionId/minimum-team')
+  getMinimumTeam(@Param('sessionId') sessionId: string) {
+    return this.planningSessionService.getMinimumTeam(sessionId);
+  }
+
+  /**
+   * Analyze which team occupations can be removed without reducing coverage.
+   * Auth: class-level @AllowRoles(Role.USER) + SessionGuard (session ownership).
+   */
+  @UseGuards(SessionGuard)
+  @Post('/:sessionId/redundant-occupations')
+  getRedundantOccupations(@Param('sessionId') sessionId: string) {
+    return this.planningSessionService.getRedundantOccupations(sessionId);
+  }
 }

@@ -1,4 +1,11 @@
-import { ArrayMinSize, ArrayNotEmpty, IsArray, IsString, MinLength } from 'class-validator';
+import {
+  ArrayMinSize,
+  ArrayNotEmpty,
+  IsArray,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class SaveOccupationDTO {
   @IsArray()
@@ -7,4 +14,9 @@ export class SaveOccupationDTO {
   @IsString({ each: true })
   @MinLength(1, { each: true })
   occupation!: string[];
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  unavailableOccupations?: string[];
 }

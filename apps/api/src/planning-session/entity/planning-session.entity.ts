@@ -31,6 +31,9 @@ export class PlanningSession extends CustomBaseEntity {
   @JoinTable()
   occupation?: Occupation[];
 
+  @Column('simple-array', { nullable: true, default: '' })
+  unavailableOccupations?: string[];
+
   @Column({ default: PlanningStatus.DRAFT })
   status: string;
 }

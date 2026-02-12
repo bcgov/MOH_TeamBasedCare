@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faCheck, faSpinner, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faCheck,
+  faSpinner,
+  faInfoCircle,
+  faChevronDown,
+  faChevronUp,
+} from '@fortawesome/free-solid-svg-icons';
 import { CareActivityType, OccupationSuggestionRO, SuggestionResponseRO } from '@tbcm/common';
+import { SimulatedCoverageBadge } from './SimulatedCoverageBadge';
+import { SuggestionAlerts } from './SuggestionAlerts';
 import { usePlanningContext } from '../../services/usePlanningContext';
 import { useSuggestions } from '../../services/useSuggestions';
 import { Pagination, PageOptions } from '../Pagination';
@@ -28,6 +37,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     pageSize: 10,
     total: 0,
   });
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   // Reset state when modal opens
   useEffect(() => {
@@ -36,6 +46,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
       setTempSelectedData(new Map());
       setSuggestions(null);
       setPageOptions({ pageIndex: 1, pageSize: 10, total: 0 });
+      setExpandedRows(new Set());
     }
   }, [isOpen]);
 
@@ -102,7 +113,19 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     return [...selectedOccupations, ...apiSuggestions];
   }, [suggestions, tempSelected, tempSelectedData]);
 
-  // Render activities as comma-separated text per Figma design
+  const toggleRowExpansion = (rowKey: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(rowKey)) {
+        newSet.delete(rowKey);
+      } else {
+        newSet.add(rowKey);
+      }
+      return newSet;
+    });
+  };
+
+  // Render activities with truncation and expand/collapse
   // Colors depend on selection state:
   // - Not selected: both columns gray (#313132)
   // - Selected: Y column blue (#013366), L&C column yellow/gold (#664b07)
@@ -110,17 +133,42 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     activities: { activityId: string; activityName: string; activityType: CareActivityType }[],
     isLCColumn: boolean = false,
     isSelected: boolean = false,
+    rowKey?: string,
   ) => {
     if (activities.length === 0) return <span className='text-gray-400'>-</span>;
 
-    const text = activities.map(a => a.activityName).join(', ');
+    const TRUNCATE_COUNT = 3;
+    const isExpanded = rowKey ? expandedRows.has(rowKey) : true;
+    const displayActivities = isExpanded ? activities : activities.slice(0, TRUNCATE_COUNT);
+    const hiddenCount = activities.length - TRUNCATE_COUNT;
 
     let colorClass = 'text-[#313132]'; // default gray for not selected
     if (isSelected) {
       colorClass = isLCColumn ? 'text-[#664b07]' : 'text-[#013366]';
     }
 
-    return <span className={`text-sm leading-6 ${colorClass}`}>{text}</span>;
+    const text = displayActivities.map(a => a.activityName).join(', ');
+
+    return (
+      <div className='flex flex-col'>
+        <span className={`text-sm leading-6 ${colorClass}`}>{text}</span>
+        {rowKey && hiddenCount > 0 && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              toggleRowExpansion(rowKey);
+            }}
+            className='text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center gap-1'
+          >
+            <FontAwesomeIcon
+              icon={isExpanded ? faChevronUp : faChevronDown}
+              className='h-2.5 w-2.5'
+            />
+            {isExpanded ? 'Show less' : `+${hiddenCount} more`}
+          </button>
+        )}
+      </div>
+    );
   };
 
   // Render the action button for an occupation
@@ -207,6 +255,13 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         <span className='font-bold text-sm text-[#272833]'>
                           {occupation.occupationName}
                         </span>
+                        {occupation.simulatedCoverage && (
+                          <SimulatedCoverageBadge
+                            simulatedCoverage={occupation.simulatedCoverage}
+                            tier={occupation.tier}
+                            redundancyGains={occupation.redundancyGains}
+                          />
+                        )}
                       </td>
                       <td className='px-3 py-3 text-sm text-gray-400'>-</td>
                       <td className='px-3 py-3 text-sm text-gray-400'>-</td>
@@ -230,16 +285,33 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         <span className='font-bold text-sm text-[#272833]'>
                           {occupation.occupationName}
                         </span>
+                        {occupation.simulatedCoverage && (
+                          <SimulatedCoverageBadge
+                            simulatedCoverage={occupation.simulatedCoverage}
+                            tier={occupation.tier}
+                            redundancyGains={occupation.redundancyGains}
+                          />
+                        )}
                       </td>
                     )}
                     <td className='px-3 py-3 text-sm text-[#313132] align-top'>
                       {competency.bundleName}
                     </td>
                     <td className='px-3 py-3 align-top'>
-                      {renderActivities(competency.activitiesY, false, isSelected)}
+                      {renderActivities(
+                        competency.activitiesY,
+                        false,
+                        isSelected,
+                        `${occupation.occupationId}-${competency.bundleId}-y`,
+                      )}
                     </td>
                     <td className='px-3 py-3 align-top'>
-                      {renderActivities(competency.activitiesLC, true, isSelected)}
+                      {renderActivities(
+                        competency.activitiesLC,
+                        true,
+                        isSelected,
+                        `${occupation.occupationId}-${competency.bundleId}-lc`,
+                      )}
                     </td>
                     {compIndex === 0 && (
                       <td className='px-3 py-3 text-right align-top' rowSpan={competencies.length}>
@@ -312,12 +384,12 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                 </button>
               </div>
 
-              <div className='px-6 pt-4'>
+              <div className='p-6 overflow-y-auto max-h-[60vh]'>
                 <p className='text-base text-black mb-4'>
                   System suggestions to increase the coverage of care competencies/care activities
                   within the scope of practice.
                 </p>
-                <div className='bg-[#d9eaf7] border-2 border-[#d9eaf7] rounded px-4 py-3'>
+                <div className='bg-[#d9eaf7] border-2 border-[#d9eaf7] rounded px-4 py-3 mb-4'>
                   <div className='flex items-start'>
                     <FontAwesomeIcon
                       icon={faInfoCircle}
@@ -328,9 +400,13 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                     </p>
                   </div>
                 </div>
+                {suggestions?.alerts && suggestions.alerts.length > 0 && (
+                  <div className='mb-4'>
+                    <SuggestionAlerts alerts={suggestions.alerts} />
+                  </div>
+                )}
+                {renderContent()}
               </div>
-
-              <div className='p-6 overflow-y-auto max-h-[60vh]'>{renderContent()}</div>
             </div>
           </Transition.Child>
         </div>

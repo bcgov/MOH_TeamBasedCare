@@ -1,7 +1,8 @@
-import { faCheck, faExclamation, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faExclamation, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, ReactNode } from 'react';
 import { Heading } from '../Heading';
+import { Popover } from './Popover';
 
 export interface CardProps {
   color?: CardColor;
@@ -10,12 +11,14 @@ export interface CardProps {
   extraSpacing?: boolean;
   bgWhite?: boolean;
   className?: string;
+  tooltip?: ReactNode;
 }
 
 export enum CardColor {
   GREEN = 'green',
   YELLOW = 'yellow',
   RED = 'red',
+  BLUE = 'blue',
 }
 
 export const Card: React.FC<PropsWithChildren<CardProps>> = ({
@@ -26,6 +29,7 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = ({
   extraSpacing,
   bgWhite,
   className = '',
+  tooltip,
 }) => {
   let icon = faExclamation;
   switch (color) {
@@ -38,6 +42,9 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = ({
     case CardColor.RED:
       icon = faTimes;
       break;
+    case CardColor.BLUE:
+      icon = faInfoCircle;
+      break;
   }
 
   return (
@@ -46,27 +53,49 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = ({
         {color && (
           <div
             className={`flex-shrink-0 rounded-lg p-4 ${
-              color === CardColor.GREEN // inline conditional logic for JIT compiler to purge css classes properly; ref: Dynamic values section at https://v2.tailwindcss.com/docs/just-in-time-mode
+              color === CardColor.GREEN
                 ? 'bg-green-100'
                 : color === CardColor.YELLOW
                   ? 'bg-yellow-100'
-                  : 'bg-red-100'
+                  : color === CardColor.BLUE
+                    ? 'bg-blue-100'
+                    : 'bg-red-100'
             }`}
           >
             <FontAwesomeIcon
               className={`w-6 h-6 ${
-                color === CardColor.GREEN // inline conditional logic for JIT compiler to purge css classes properly; ref: Dynamic values section at https://v2.tailwindcss.com/docs/just-in-time-mode
+                color === CardColor.GREEN
                   ? 'text-green-600'
                   : color === CardColor.YELLOW
                     ? 'text-yellow-600'
-                    : 'text-red-600'
+                    : color === CardColor.BLUE
+                      ? 'text-blue-600'
+                      : 'text-red-600'
               }`}
               icon={icon}
             />
           </div>
         )}
-        <div className='flex-1 min-w-0'>
-          <Heading title={title} subTitle={subtitle} />
+        <div className='flex-1'>
+          <div className='flex items-center gap-2'>
+            <Heading title={title} subTitle={subtitle} className='' />
+            {tooltip && (
+              <Popover
+                title={
+                  <FontAwesomeIcon
+                    icon={faInfoCircle}
+                    className='text-gray-400 hover:text-gray-600 cursor-pointer w-4 h-4'
+                  />
+                }
+              >
+                {() => (
+                  <div className='bg-white p-4 text-sm max-w-xs shadow-lg rounded-lg border'>
+                    {tooltip}
+                  </div>
+                )}
+              </Popover>
+            )}
+          </div>
           {children}
         </div>
       </div>

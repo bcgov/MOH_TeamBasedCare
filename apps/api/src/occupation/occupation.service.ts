@@ -262,15 +262,19 @@ export class OccupationService {
       });
     }
 
-    // Check name uniqueness if name is being changed
-    if (data.name && data.name !== occupation.displayName) {
-      const cleanedName = cleanText(data.name);
-      const existing = await this.occupationRepository.findOne({
-        where: { name: cleanedName },
-      });
+    // Check name uniqueness if name is being changed (compare cleaned versions)
+    if (data.name) {
+      const cleanedNewName = cleanText(data.name);
+      const cleanedCurrentName = occupation.name;
 
-      if (existing && existing.id !== id) {
-        throw new BadRequestException('An occupation with this name already exists.');
+      if (cleanedNewName !== cleanedCurrentName) {
+        const existing = await this.occupationRepository.findOne({
+          where: { name: cleanedNewName },
+        });
+
+        if (existing && existing.id !== id) {
+          throw new BadRequestException('An occupation with this name already exists.');
+        }
       }
     }
 
@@ -284,7 +288,15 @@ export class OccupationService {
       }),
     });
 
-    await this.occupationRepository.save(occupation);
+    try {
+      await this.occupationRepository.save(occupation);
+    } catch (error: any) {
+      // Handle unique constraint violation (race condition or edge case)
+      if (error.code === '23505' || error.message?.includes('duplicate key')) {
+        throw new BadRequestException('An occupation with this name already exists.');
+      }
+      throw error;
+    }
 
     // Update scope permissions if provided
     // Delete existing permissions first, then insert new ones

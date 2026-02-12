@@ -1,6 +1,13 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faCaretUp, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCaretDown,
+  faCaretUp,
+  faLightbulb,
+  faCalculator,
+  faUserMinus,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes, API_ENDPOINT, REQUEST_METHOD } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
@@ -9,12 +16,16 @@ import {
   usePlanningContext,
   usePlanningOccupations,
 } from '../../services';
+import { useOccupations } from '../../services/useOccupations';
+import { useRedundancyCount } from '../../services/useRedundancyCount';
 import { useHttp } from '../../services/useHttp';
 import { OverviewCards } from './ActivitiesGap/OverviewCards';
 import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
 import { OccupationListDropdown } from '../OccupationListDropdown';
 import { SuggestionsModal } from './SuggestionsModal';
+import { MinimumTeamModal } from './MinimumTeamModal';
+import { RedundancyModal } from './RedundancyModal';
 import { ActivityGapCareActivity } from '@tbcm/common';
 
 export interface ActivitiesGapProps {
@@ -24,11 +35,42 @@ export interface ActivitiesGapProps {
 
 const TableHeader: React.FC = () => {
   const { initialValues, isLoading } = usePlanningActivitiesGap();
+  const { occupations } = useOccupations();
+  const { initialValues: occupationData } = usePlanningOccupations({});
+  const { sendApiRequest } = useHttp();
+  const {
+    state: { sessionId },
+    updateRefetchActivityGap,
+  } = usePlanningContext();
+
   const tdStyles =
-    'table-td table-header cursor-pointer px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
+    'table-td table-header px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
 
   const [showModal, setShowModal] = useState(false);
   const [selectedOccupation, setSelectedOccupation] = useState({ title: '', description: '' });
+
+  const handleRemoveOccupation = (occupationName: string) => {
+    // Match by name or displayName since headers may use either
+    const occupationToRemove = occupations.find(
+      o => o.name === occupationName || o.displayName === occupationName,
+    );
+    if (!occupationToRemove || !sessionId) return;
+
+    const remainingOccupations = occupationData.occupation.filter(
+      (id: string) => id !== occupationToRemove.id,
+    );
+
+    sendApiRequest(
+      {
+        method: REQUEST_METHOD.PATCH,
+        data: { occupation: remainingOccupations },
+        endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+      },
+      () => {
+        updateRefetchActivityGap(true);
+      },
+    );
+  };
 
   // already a loader in the overview section
   if (isLoading) {
@@ -41,16 +83,31 @@ const TableHeader: React.FC = () => {
         {initialValues.headers &&
           initialValues.headers.map(
             ({ title, description }: { title: string; description: string }, index: number) => (
-              <th
-                key={`th${index}`}
-                className={tdStyles}
-                onClick={() => {
-                  if (index === 0) return; // no description modal to be shown for the first column header - Care Competencies
-                  setSelectedOccupation({ title, description });
-                  setShowModal(true);
-                }}
-              >
-                {title}
+              <th key={`th${index}`} className={tdStyles}>
+                <div className='flex items-center justify-center gap-2'>
+                  <span
+                    className='cursor-pointer'
+                    onClick={() => {
+                      if (index === 0) return;
+                      setSelectedOccupation({ title, description });
+                      setShowModal(true);
+                    }}
+                  >
+                    {title}
+                  </span>
+                  {index > 0 && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveOccupation(title);
+                      }}
+                      className='text-gray-400 hover:text-red-500 transition-colors'
+                      title={`Remove ${title}`}
+                    >
+                      <FontAwesomeIcon icon={faTimes} className='h-3 w-3' />
+                    </button>
+                  )}
+                </div>
               </th>
             ),
           )}
@@ -217,12 +274,15 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
     'Considering the roles and tasks you outlined in the previous steps, here is a summary of the identified gaps, optimizations, and suggestions we have offered.';
 
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [showMinimumTeamModal, setShowMinimumTeamModal] = useState(false);
+  const [showRedundancyModal, setShowRedundancyModal] = useState(false);
   const { initialValues: occupationData } = usePlanningOccupations({});
   const { sendApiRequest } = useHttp();
   const {
     state: { sessionId },
     updateRefetchActivityGap,
   } = usePlanningContext();
+  const { removableCount } = useRedundancyCount();
 
   const handleSuggestionsClose = async (selectedIds: string[]) => {
     setShowSuggestionsModal(false);
@@ -246,6 +306,44 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
     }
   };
 
+  const handleMinimumTeamApply = (occupationIds: string[], action: 'add' | 'replace') => {
+    if (occupationIds.length > 0 && sessionId) {
+      const finalOccupations =
+        action === 'add'
+          ? Array.from(new Set([...occupationData.occupation, ...occupationIds]))
+          : occupationIds;
+
+      sendApiRequest(
+        {
+          method: REQUEST_METHOD.PATCH,
+          data: { occupation: finalOccupations },
+          endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+        },
+        () => {
+          updateRefetchActivityGap(true);
+        },
+      );
+    }
+  };
+
+  const handleRemoveOccupations = (occupationIds: string[]) => {
+    if (occupationIds.length > 0 && sessionId && occupationData.occupation) {
+      const remainingOccupations = occupationData.occupation.filter(
+        (id: string) => !occupationIds.includes(id),
+      );
+      sendApiRequest(
+        {
+          method: REQUEST_METHOD.PATCH,
+          data: { occupation: remainingOccupations },
+          endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
+        },
+        () => {
+          updateRefetchActivityGap(true);
+        },
+      );
+    }
+  };
+
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
@@ -259,6 +357,19 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
             <Button variant='secondary' onClick={() => setShowSuggestionsModal(true)}>
               <FontAwesomeIcon icon={faLightbulb} className='mr-2' />
               Suggestions
+            </Button>
+            <Button variant='secondary' onClick={() => setShowMinimumTeamModal(true)}>
+              <FontAwesomeIcon icon={faCalculator} className='mr-2' />
+              Minimum Team
+            </Button>
+            <Button variant='secondary' onClick={() => setShowRedundancyModal(true)}>
+              <FontAwesomeIcon icon={faUserMinus} className='mr-2' />
+              Optimize Team
+              {removableCount !== null && removableCount > 0 && (
+                <span className='ml-2 bg-yellow-500 text-white text-xs rounded-full px-2 py-0.5'>
+                  {removableCount}
+                </span>
+              )}
             </Button>
             <OccupationListDropdown />
           </div>
@@ -274,6 +385,18 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
       </div>
 
       <SuggestionsModal isOpen={showSuggestionsModal} onClose={handleSuggestionsClose} />
+      <MinimumTeamModal
+        isOpen={showMinimumTeamModal}
+        onClose={() => setShowMinimumTeamModal(false)}
+        sessionId={sessionId || ''}
+        onApply={handleMinimumTeamApply}
+      />
+      <RedundancyModal
+        isOpen={showRedundancyModal}
+        onClose={() => setShowRedundancyModal(false)}
+        sessionId={sessionId || ''}
+        onRemove={handleRemoveOccupations}
+      />
     </div>
   );
 };
