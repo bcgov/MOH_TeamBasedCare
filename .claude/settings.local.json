@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker info:*)",
+      "Bash(make run-local:*)",
+      "Bash(make:*)",
+      "Bash(yarn start:local)",
+      "Bash(yarn watch)",
+      "Bash(curl:*)"
+    ]
+  }
+}

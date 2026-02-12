@@ -704,6 +704,9 @@ export class PlanningSessionService {
    * 1. Start with all activities uncovered
    * 2. Repeatedly select occupation that covers most uncovered activities
    * 3. Stop when no more progress can be made or 100% coverage achieved
+   *
+   * Note: No pagination - minimum teams are typically small (5-15 occupations).
+   * If this grows, consider adding pagination in future iterations.
    */
   async getMinimumTeam(sessionId: string): Promise<MinimumTeamResponseRO> {
     // 1. Load session with required relations
@@ -1112,6 +1115,8 @@ export class PlanningSessionService {
 
     // Calculate simulated coverage (what-if this occupation is added)
     const gapsRemaining = gaps.length - os.gapsFilled;
+    // Fragile calculation: current fragile activities minus those gaining redundancy,
+    // plus newly filled gaps (which become fragile with 1 coverage)
     const fragileRemaining = fragile.length - os.redundancyGains + os.gapsFilled;
     const newCoveredCount = fragile.length + redundant.length + os.gapsFilled;
     const newCoveragePercent =
@@ -1125,16 +1130,8 @@ export class PlanningSessionService {
       marginalBenefit,
     };
 
-    // Generate alerts for this suggestion
-    if (marginalBenefit < 5 && marginalBenefit >= 0) {
-      alerts.push({
-        type: 'LOW_MARGINAL_BENEFIT',
-        message: `Adding ${os.occupationName} would only improve coverage by ${marginalBenefit}%`,
-        occupationId: os.occupationId,
-        occupationName: os.occupationName,
-      });
-    }
-
+    // Generate at most one alert per suggestion (prioritized by severity)
+    // Priority: NO_GAP_COVERAGE > REDUNDANT_ONLY > LOW_MARGINAL_BENEFIT
     if (gaps.length > 0 && os.gapsFilled === 0) {
       alerts.push({
         type: 'NO_GAP_COVERAGE',
@@ -1142,12 +1139,17 @@ export class PlanningSessionService {
         occupationId: os.occupationId,
         occupationName: os.occupationName,
       });
-    }
-
-    if (os.gapsFilled === 0 && os.redundancyGains === 0) {
+    } else if (os.gapsFilled === 0 && os.redundancyGains === 0) {
       alerts.push({
         type: 'REDUNDANT_ONLY',
         message: `${os.occupationName} only adds redundancy to already well-covered activities`,
+        occupationId: os.occupationId,
+        occupationName: os.occupationName,
+      });
+    } else if (marginalBenefit < 5 && marginalBenefit >= 0) {
+      alerts.push({
+        type: 'LOW_MARGINAL_BENEFIT',
+        message: `Adding ${os.occupationName} would only improve coverage by ${marginalBenefit}%`,
         occupationId: os.occupationId,
         occupationName: os.occupationName,
       });
