@@ -646,8 +646,10 @@ export class PlanningSessionService {
       }
     });
 
-    // 10. Sort by score DESC, then displayName ASC
+    // 10. Sort by gapsFilled DESC (correlates with marginalBenefit shown to user),
+    //     then score DESC, then displayName ASC
     occupationScores.sort((a, b) => {
+      if (b.gapsFilled !== a.gapsFilled) return b.gapsFilled - a.gapsFilled;
       if (b.score !== a.score) return b.score - a.score;
       return a.occupationName.localeCompare(b.occupationName);
     });
