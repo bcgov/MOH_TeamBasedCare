@@ -306,10 +306,7 @@ export class OccupationService {
       }
 
       // Sync permissions to all care setting templates
-      await this.careSettingTemplateService.syncOccupationToAllTemplates(
-        id,
-        data.scopePermissions,
-      );
+      await this.careSettingTemplateService.syncOccupationToAllTemplates(id, data.scopePermissions);
     }
   }
 
