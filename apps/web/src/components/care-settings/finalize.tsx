@@ -240,8 +240,8 @@ export const Finalize: React.FC = () => {
           <FontAwesomeIcon icon={faExclamationTriangle} className='h-5 w-5 text-amber-500' />
           <div>
             <span className='font-semibold text-amber-800'>
-              {missingCount} {missingCount === 1 ? 'activity has' : 'activities have'} no
-              occupation permissions
+              {missingCount} {missingCount === 1 ? 'activity has' : 'activities have'} no occupation
+              permissions
             </span>
             <p className='text-sm text-amber-700'>
               Please review the highlighted activities below and set permissions where needed.

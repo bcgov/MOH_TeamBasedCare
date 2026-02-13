@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faCheck, faSpinner, faInfoCircle, faList, faTimes } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faCheck,
+  faSpinner,
+  faInfoCircle,
+  faList,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 import { CareActivityType, OccupationSuggestionRO, SuggestionResponseRO } from '@tbcm/common';
 import { usePlanningContext } from '../../services/usePlanningContext';
 import { useSuggestions } from '../../services/useSuggestions';
@@ -394,10 +401,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                         <h2>Activity Types</h2>
                         <ul className='flex flex-col items-start my-4'>
                           {activityTypeLegend.map((item, index) => (
-                            <li
-                              key={`legend-${index}`}
-                              className='flex items-start my-2 gap-3'
-                            >
+                            <li key={`legend-${index}`} className='flex items-start my-2 gap-3'>
                               <span
                                 className='w-4 h-4 rounded-full shrink-0 mt-1'
                                 style={{ backgroundColor: item.color }}

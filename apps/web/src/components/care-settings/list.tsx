@@ -92,10 +92,8 @@ const TableBody: React.FC<TableBodyProps> = ({
               template.missingPermissionsCount > 0 && (
                 <span className='ml-2 text-xs text-amber-600'>
                   ({template.missingPermissionsCount}{' '}
-                  {template.missingPermissionsCount === 1
-                    ? 'activity has'
-                    : 'activities have'}{' '}
-                  no occupation permissions)
+                  {template.missingPermissionsCount === 1 ? 'activity has' : 'activities have'} no
+                  occupation permissions)
                 </span>
               )}
           </td>

@@ -23,10 +23,7 @@ export class KpiController {
   constructor(private readonly kpiService: KpiService) {}
 
   @Get('overview')
-  async getOverview(
-    @Query() filter: KPIFilterDTO,
-    @Req() req: IRequest,
-  ): Promise<KPIsOverviewRO> {
+  async getOverview(@Query() filter: KPIFilterDTO, @Req() req: IRequest): Promise<KPIsOverviewRO> {
     // Content editors only see their own health authority's data
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     if (!isAdmin && !req.user.organization) {
