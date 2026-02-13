@@ -17,16 +17,16 @@ import { Popover, PopoverPosition } from '../generic/Popover';
 import { Button, buttonBase, buttonColor } from '../Button';
 
 // Activity type colors used for text coloring and legend
-// Colors match the tag styles in util.ts: RESTRICTED→teal, ASPECT→yellow, TASK→green
+// Colors match the tag styles in util.ts: RESTRICTED→blue, ASPECT→yellow, TASK→green
 const ACTIVITY_TYPE_COLORS: Record<CareActivityType, string> = {
-  [CareActivityType.RESTRICTED_ACTIVITY]: '#095954', // Teal (bcDarkTeal)
+  [CareActivityType.RESTRICTED_ACTIVITY]: '#013366', // Dark blue (bcDarkTeal)
   [CareActivityType.ASPECT_OF_PRACTICE]: '#664B07', // Dark yellow (bcDarkYellow)
   [CareActivityType.TASK]: '#2D4821', // Green (bcBannerSuccessText)
 };
 
 // Static Tailwind classes - must be complete strings for JIT to detect them
 const ACTIVITY_TYPE_TEXT_CLASSES: Record<CareActivityType, string> = {
-  [CareActivityType.RESTRICTED_ACTIVITY]: 'text-[#095954]',
+  [CareActivityType.RESTRICTED_ACTIVITY]: 'text-[#013366]',
   [CareActivityType.ASPECT_OF_PRACTICE]: 'text-[#664B07]',
   [CareActivityType.TASK]: 'text-[#2D4821]',
 };

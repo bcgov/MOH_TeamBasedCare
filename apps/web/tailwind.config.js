@@ -49,7 +49,7 @@ module.exports = {
         bcBannerSuccessText: '#2D4821',
         bcDarkPurple: '#511A96',
         bcLightPurple: '#DBD9F7',
-        bcDarkTeal: '#095954',
+        bcDarkTeal: '#013366',
         bcLightTeal: '#D9F4F3',
         bcDarkYellow: '#664B07',
         bcLightYellow: '#FFF3D6',
