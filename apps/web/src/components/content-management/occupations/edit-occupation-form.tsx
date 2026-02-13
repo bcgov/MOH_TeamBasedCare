@@ -418,12 +418,6 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
             )}
 
             <div className='mb-4 flex gap-3 items-end'>
-              <div className='flex-1 max-w-md'>
-                <SearchBar
-                  handleChange={e => setActivitySearchText(e.target.value)}
-                  placeholderText='Search field'
-                />
-              </div>
               <div className='min-w-[14rem]'>
                 <BasicSelect<string>
                   id='scope-bundle-filter'
@@ -432,6 +426,12 @@ export const EditOccupationForm = ({ occupation, isNew }: EditOccupationFormProp
                   onChange={handleBundleFilterChange}
                   options={bundleFilterOptions}
                   buttonClassName='w-full border border-gray-300 rounded py-3'
+                />
+              </div>
+              <div className='flex-1 max-w-md'>
+                <SearchBar
+                  handleChange={e => setActivitySearchText(e.target.value)}
+                  placeholderText='Search field'
                 />
               </div>
             </div>

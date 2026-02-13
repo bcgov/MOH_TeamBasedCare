@@ -1,11 +1,35 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faCheck, faSpinner, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faCheck,
+  faSpinner,
+  faInfoCircle,
+  faList,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 import { CareActivityType, OccupationSuggestionRO, SuggestionResponseRO } from '@tbcm/common';
 import { usePlanningContext } from '../../services/usePlanningContext';
 import { useSuggestions } from '../../services/useSuggestions';
 import { Pagination, PageOptions } from '../Pagination';
+import { Popover, PopoverPosition } from '../generic/Popover';
+import { Button, buttonBase, buttonColor } from '../Button';
+
+// Activity type colors used for text coloring and legend
+// Colors match the tag styles in util.ts: RESTRICTED→blue, ASPECT→yellow, TASK→green
+const ACTIVITY_TYPE_COLORS: Record<CareActivityType, string> = {
+  [CareActivityType.RESTRICTED_ACTIVITY]: '#013366', // Dark blue (bcDarkTeal)
+  [CareActivityType.ASPECT_OF_PRACTICE]: '#664B07', // Dark yellow (bcDarkYellow)
+  [CareActivityType.TASK]: '#2D4821', // Green (bcBannerSuccessText)
+};
+
+// Static Tailwind classes - must be complete strings for JIT to detect them
+const ACTIVITY_TYPE_TEXT_CLASSES: Record<CareActivityType, string> = {
+  [CareActivityType.RESTRICTED_ACTIVITY]: 'text-[#013366]',
+  [CareActivityType.ASPECT_OF_PRACTICE]: 'text-[#664B07]',
+  [CareActivityType.TASK]: 'text-[#2D4821]',
+};
 
 interface SuggestionsModalProps {
   isOpen: boolean;
@@ -102,26 +126,52 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     return [...selectedOccupations, ...apiSuggestions];
   }, [suggestions, tempSelected, tempSelectedData]);
 
-  // Render activities as comma-separated text per Figma design
-  // Colors depend on selection state:
-  // - Not selected: both columns gray (#313132)
-  // - Selected: Y column blue (#013366), L&C column yellow/gold (#664b07)
+  // Get color class based on activity type
+  const getActivityTypeColor = (activityType: CareActivityType): string => {
+    return ACTIVITY_TYPE_TEXT_CLASSES[activityType] || 'text-[#313132]';
+  };
+
+  // Render activities with colors based on activity type
   const renderActivities = (
     activities: { activityId: string; activityName: string; activityType: CareActivityType }[],
-    isLCColumn: boolean = false,
-    isSelected: boolean = false,
   ) => {
     if (activities.length === 0) return <span className='text-gray-400'>-</span>;
 
-    const text = activities.map(a => a.activityName).join(', ');
-
-    let colorClass = 'text-[#313132]'; // default gray for not selected
-    if (isSelected) {
-      colorClass = isLCColumn ? 'text-[#664b07]' : 'text-[#013366]';
-    }
-
-    return <span className={`text-sm leading-6 ${colorClass}`}>{text}</span>;
+    return (
+      <span className='text-sm leading-6'>
+        {activities.map((activity, index) => (
+          <React.Fragment key={activity.activityId}>
+            <span className={getActivityTypeColor(activity.activityType)}>
+              {activity.activityName}
+            </span>
+            {index < activities.length - 1 && <span className='text-[#313132]'>, </span>}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   };
+
+  // Legend items for activity types
+  const activityTypeLegend = [
+    {
+      type: 'Restricted Activity',
+      color: ACTIVITY_TYPE_COLORS[CareActivityType.RESTRICTED_ACTIVITY],
+      description:
+        'Restricted activities are a narrowly defined list of invasive, higher risk activities and are written in health profession specific regulations.',
+    },
+    {
+      type: 'Aspect of Practice',
+      color: ACTIVITY_TYPE_COLORS[CareActivityType.ASPECT_OF_PRACTICE],
+      description:
+        'Aspects of Practice are care activities, other than a restricted activity, which are part of providing a health service that is within the scope of practice of a designated health profession.',
+    },
+    {
+      type: 'Task',
+      color: ACTIVITY_TYPE_COLORS[CareActivityType.TASK],
+      description:
+        "Tasks are lower risk care activities which are not a 'restricted activity' or an 'aspect of practice.'",
+    },
+  ];
 
   // Render the action button for an occupation
   const renderActionButton = (occupation: OccupationSuggestionRO, isSelected: boolean) => (
@@ -157,9 +207,28 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     }
 
     if (mergedSuggestions.length === 0) {
+      const uncovered = suggestions?.totalUncoveredActivities ?? 0;
+
+      if (uncovered === 0) {
+        // Success: All activities covered by selected team
+        return (
+          <div className='flex items-center justify-center py-12 text-gray-500'>
+            <FontAwesomeIcon icon={faCheck} className='mr-2 text-green-500' />
+            All activities are covered by selected occupations
+          </div>
+        );
+      }
+
+      // Data gap: Uncovered activities but no occupation has permissions for them in this template
       return (
-        <div className='flex items-center justify-center py-12 text-gray-500'>
-          No additional occupations can cover remaining activities
+        <div className='flex flex-col items-center justify-center py-12 text-gray-500'>
+          <div className='mb-2'>
+            {uncovered} {uncovered === 1 ? 'activity has' : 'activities have'} no occupation
+            permissions in this care setting
+          </div>
+          <div className='text-sm text-gray-400'>
+            Permissions can be updated in the care setting&apos;s edit page
+          </div>
         </div>
       );
     }
@@ -236,10 +305,10 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                       {competency.bundleName}
                     </td>
                     <td className='px-3 py-3 align-top'>
-                      {renderActivities(competency.activitiesY, false, isSelected)}
+                      {renderActivities(competency.activitiesY)}
                     </td>
                     <td className='px-3 py-3 align-top'>
-                      {renderActivities(competency.activitiesLC, true, isSelected)}
+                      {renderActivities(competency.activitiesLC)}
                     </td>
                     {compIndex === 0 && (
                       <td className='px-3 py-3 text-right align-top' rowSpan={competencies.length}>
@@ -313,10 +382,47 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
               </div>
 
               <div className='px-6 pt-4'>
-                <p className='text-base text-black mb-4'>
-                  System suggestions to increase the coverage of care competencies/care activities
-                  within the scope of practice.
-                </p>
+                <div className='flex items-start justify-between gap-4 mb-4'>
+                  <p className='text-base text-black'>
+                    System suggestions to increase the coverage of care competencies/care activities
+                    within the scope of practice.
+                  </p>
+                  <Popover
+                    title={
+                      <span className={`${buttonBase} ${buttonColor.secondary}`}>
+                        Legend
+                        <FontAwesomeIcon icon={faList} className='h-4 ml-2 mr-1' />
+                      </span>
+                    }
+                    position={PopoverPosition.BOTTOM_LEFT}
+                  >
+                    {(close: () => void) => (
+                      <div className='legend-box w-[24rem] lg:w-[36rem]'>
+                        <h2>Activity Types</h2>
+                        <ul className='flex flex-col items-start my-4'>
+                          {activityTypeLegend.map((item, index) => (
+                            <li key={`legend-${index}`} className='flex items-start my-2 gap-3'>
+                              <span
+                                className='w-4 h-4 rounded-full shrink-0 mt-1'
+                                style={{ backgroundColor: item.color }}
+                              />
+                              <div>
+                                <span className='font-semibold' style={{ color: item.color }}>
+                                  {item.type}
+                                </span>
+                                <p className='text-sm text-gray-600 mt-1'>{item.description}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                        <Button variant='outline' type='button' classes='ml-2' onClick={close}>
+                          <FontAwesomeIcon icon={faTimes} className='h-4 mr-2' />
+                          Dismiss
+                        </Button>
+                      </div>
+                    )}
+                  </Popover>
+                </div>
                 <div className='bg-[#d9eaf7] border-2 border-[#d9eaf7] rounded px-4 py-3'>
                   <div className='flex items-start'>
                     <FontAwesomeIcon

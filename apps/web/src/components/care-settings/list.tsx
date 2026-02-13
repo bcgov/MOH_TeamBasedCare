@@ -85,7 +85,18 @@ const TableBody: React.FC<TableBodyProps> = ({
     <tbody>
       {careSettings?.map((template, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
-          <td className={tdStyles}>{template.name}</td>
+          <td className={tdStyles}>
+            {template.name}
+            {!template.isMaster &&
+              template.missingPermissionsCount !== undefined &&
+              template.missingPermissionsCount > 0 && (
+                <span className='ml-2 text-xs text-amber-600'>
+                  ({template.missingPermissionsCount}{' '}
+                  {template.missingPermissionsCount === 1 ? 'activity has' : 'activities have'} no
+                  occupation permissions)
+                </span>
+              )}
+          </td>
           <td className={tdStyles}>{template.parentName || '-'}</td>
           <td className={tdStyles}>
             {template.updatedAt ? dayjs(template.updatedAt).format('MMM D, YYYY') : '-'}

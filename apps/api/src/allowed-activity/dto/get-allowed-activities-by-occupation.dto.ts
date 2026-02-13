@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, IsEnum, Length, Max } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsEnum, IsUUID, Length, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { OccupationalScopeOfPracticeSortKeys, Permissions, SortOrder } from '@tbcm/common';
@@ -65,4 +65,13 @@ export class GetAllowedActivitiesByOccupationDto {
   @IsEnum(Permissions)
   @IsOptional()
   readonly filterByPermission?: string;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+    description: 'Filter by Care Competencies (bundle) ID',
+  })
+  @IsUUID()
+  @IsOptional()
+  readonly bundleId?: string;
 }

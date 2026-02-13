@@ -32,6 +32,9 @@ export class CareSettingTemplateRO extends BaseRO {
   @Expose()
   updatedAt!: Date;
 
+  @Expose()
+  missingPermissionsCount?: number;
+
   constructor(data: any) {
     super(data);
     this.name = data.name ?? this.name;
@@ -41,6 +44,7 @@ export class CareSettingTemplateRO extends BaseRO {
     this.parentName = data.parent?.name ?? (data.isMaster ? 'Master' : this.parentName);
     this.unitId = data.unit?.id ?? this.unitId;
     this.unitName = data.unit?.displayName ?? this.unitName;
+    this.missingPermissionsCount = data.missingPermissionsCount;
   }
 }
 

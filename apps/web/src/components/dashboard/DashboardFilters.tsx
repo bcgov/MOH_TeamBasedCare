@@ -11,6 +11,7 @@ export interface DashboardFiltersProps {
   selectedCareSetting: string;
   onHealthAuthorityChange: (value: string) => void;
   onCareSettingChange: (value: string) => void;
+  showHealthAuthorityFilter?: boolean;
 }
 
 interface FilterDropdownProps {
@@ -65,15 +66,18 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
   selectedCareSetting,
   onHealthAuthorityChange,
   onCareSettingChange,
+  showHealthAuthorityFilter = true,
 }) => {
   return (
     <div className='flex flex-wrap gap-4 mb-6'>
-      <FilterDropdown
-        label='Filter by Health Authority'
-        options={healthAuthorityOptions}
-        value={selectedHealthAuthority}
-        onChange={onHealthAuthorityChange}
-      />
+      {showHealthAuthorityFilter && (
+        <FilterDropdown
+          label='Filter by Health Authority'
+          options={healthAuthorityOptions}
+          value={selectedHealthAuthority}
+          onChange={onHealthAuthorityChange}
+        />
+      )}
       <FilterDropdown
         label='Filter by Care Setting'
         options={careSettingOptions}

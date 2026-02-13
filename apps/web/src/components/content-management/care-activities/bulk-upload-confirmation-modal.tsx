@@ -1,5 +1,5 @@
 import { useCareLocations, useHttp } from '@services';
-import { CareActivityBulkData } from '@tbcm/common';
+import { CareActivityBulkData, DuplicateHandling } from '@tbcm/common';
 import { Dispatch, SetStateAction } from 'react';
 import { toast } from 'react-toastify';
 import { API_ENDPOINT, REQUEST_METHOD } from 'src/common';
@@ -13,6 +13,9 @@ export interface ConfirmData {
   add?: number;
   edit?: number;
   newOccupations?: string[];
+  duplicateHandling?: DuplicateHandling;
+  proceedWithMissingOccupations?: boolean;
+  proceedWithStaleIds?: boolean;
 }
 
 interface BulkUploadConfirmationModalCMSProps {
@@ -42,6 +45,9 @@ export const BulkUploadConfirmationModalCMS: React.FC<BulkUploadConfirmationModa
       data: {
         headers: confirmData.headers,
         data: confirmData.data,
+        duplicateHandling: confirmData.duplicateHandling,
+        proceedWithMissingOccupations: confirmData.proceedWithMissingOccupations,
+        proceedWithStaleIds: confirmData.proceedWithStaleIds,
       },
     };
 

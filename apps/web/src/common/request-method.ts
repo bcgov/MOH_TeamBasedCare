@@ -27,6 +27,7 @@ export interface EndpointQueryParams<T> {
   searchText?: string;
   careSetting?: string;
   filterByPermission?: Permissions;
+  bundleId?: string;
 }
 
 const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<T>) => {
@@ -39,6 +40,7 @@ const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<
   if (listParams.careSetting) parameterizedEndpoint += `&careSetting=${listParams.careSetting}`;
   if (listParams.filterByPermission)
     parameterizedEndpoint += `&filterByPermission=${listParams.filterByPermission}`;
+  if (listParams.bundleId) parameterizedEndpoint += `&bundleId=${listParams.bundleId}`;
   return parameterizedEndpoint;
 };
 

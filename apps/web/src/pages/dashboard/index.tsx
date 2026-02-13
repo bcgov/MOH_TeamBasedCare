@@ -1,8 +1,8 @@
 import { NextPage } from 'next';
 import AppLayout from 'src/components/AppLayout';
 import { Card } from 'src/components/generic/Card';
-import { useKPIs, useKPICareSettings } from '@services';
-import { HealthAuthorities } from '@tbcm/common';
+import { useKPIs, useKPICareSettings, useMe } from '@services';
+import { HealthAuthorities, Role } from '@tbcm/common';
 import { UsersIcon, ClipboardIcon } from 'src/components/icons';
 import {
   KPICard,
@@ -15,10 +15,13 @@ import {
 import { HeadlessListOptions } from 'src/components/HeadlessList';
 
 const Dashboard: NextPage = () => {
+  const { hasUserRole } = useMe();
   const { overview, isLoading, filters, setHealthAuthorityFilter, setCareSettingFilter } =
     useKPIs();
 
   const { careSettings } = useKPICareSettings();
+
+  const isAdmin = hasUserRole([Role.ADMIN]);
 
   // Build health authority options from HealthAuthorities constant
   const healthAuthorityOptions: HeadlessListOptions<string>[] = [
@@ -93,6 +96,7 @@ const Dashboard: NextPage = () => {
             selectedCareSetting={filters.careSettingId}
             onHealthAuthorityChange={setHealthAuthorityFilter}
             onCareSettingChange={setCareSettingFilter}
+            showHealthAuthorityFilter={isAdmin}
           />
 
           {isLoading ? (

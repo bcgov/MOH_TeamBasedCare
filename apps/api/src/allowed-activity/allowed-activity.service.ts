@@ -43,6 +43,11 @@ export class AllowedActivityService {
       });
     }
 
+    // Filter by Care Competencies (bundle)
+    if (query.bundleId) {
+      queryBuilder.andWhere('aa_ca_b.id = :bundleId', { bundleId: query.bundleId });
+    }
+
     // Sorting
     const sortBy = query.sortBy as OccupationalScopeOfPracticeSortKeys;
 
