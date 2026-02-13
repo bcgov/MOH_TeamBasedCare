@@ -12,6 +12,10 @@ import {
   CareActivityBulkRO,
   CareActivityBulkROError,
   CareActivityType,
+  DuplicateHandling,
+  DuplicateInfo,
+  MissingIdsInfo,
+  MissingOccupationsInfo,
   Permissions,
 } from '@tbcm/common';
 import { OccupationService } from 'src/occupation/occupation.service';
@@ -21,7 +25,6 @@ import { In, Repository } from 'typeorm';
 import { cleanText } from 'src/common/utils';
 import { UnitService } from 'src/unit/unit.service';
 import { BundleService } from './bundle.service';
-import { CareActivityService } from './care-activity.service';
 import { Occupation } from 'src/occupation/entity/occupation.entity';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { AllowedActivityService } from 'src/allowed-activity/allowed-activity.service';
@@ -45,9 +48,6 @@ export class CareActivityBulkService {
     @Inject(BundleService)
     private readonly bundleService: BundleService,
 
-    @Inject(CareActivityService)
-    private readonly careActivityService: CareActivityService,
-
     @Inject(AllowedActivityService)
     private readonly allowedActivityService: AllowedActivityService,
   ) {}
@@ -63,6 +63,117 @@ export class CareActivityBulkService {
   async validateCareActivitiesBulk(
     careActivitiesBulkDto: CareActivityBulkDTO,
   ): Promise<CareActivityBulkRO> {
+    // Delegate to internal method and return just the RO part
+    const { result } = await this.validateWithEntities(careActivitiesBulkDto);
+    return result;
+  }
+
+  private async checkCareActivitiesUniq(data: CareActivityBulkData[]): Promise<{
+    duplicateInfo?: DuplicateInfo;
+    duplicateActivities: CareActivity[];
+    idErrors: CareActivityBulkROError[];
+    missingIdsInfo?: MissingIdsInfo;
+  }> {
+    // This method assumes all column values exist in the rowData array
+    const idErrors: CareActivityBulkROError[] = [];
+
+    // Extract IDs from rows (reused for lookup and difference check)
+    const idsFromRows = data
+      .map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim())
+      .filter(Boolean);
+
+    // validate rows with ID
+    let activities: CareActivity[];
+    try {
+      activities = await this.careActivityRepo.find({
+        where: {
+          id: In(idsFromRows),
+        },
+      });
+    } catch (e) {
+      idErrors.push({
+        message: `ID must be empty for new care activities or should not be modified.`,
+      });
+      return { duplicateActivities: [], idErrors };
+    }
+
+    // Find IDs that don't exist in the database
+    const missingIdValues = _.difference(
+      idsFromRows,
+      activities.map(e => e.id),
+    );
+
+    // Build MissingIdsInfo instead of individual errors
+    // This allows frontend to show a grouped warning with "Strip IDs and add as new" option
+    let missingIdsInfo: MissingIdsInfo | undefined;
+    if (missingIdValues.length > 0) {
+      const missingRows = data.filter(row =>
+        missingIdValues.includes(row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()),
+      );
+      missingIdsInfo = {
+        count: missingIdValues.length,
+        names: missingRows
+          .slice(0, 10)
+          .map(r => r.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY] || 'Unknown'),
+        rowNumbers: missingRows.map(r => r.rowNumber),
+      };
+    }
+
+    // ** ensure care activity names are not duplicated in the database
+    const rowsWithoutId = data.filter(row => !row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim());
+    if (rowsWithoutId.length === 0) {
+      // All rows have IDs, so they're updates (not new activities).
+      // Duplicate-by-name check only applies to new activities.
+      // Note: Stale IDs are caught by missingIdsInfo; TOCTOU re-check in
+      // uploadCareActivitiesBulk handles duplicates after ID stripping.
+      return { duplicateActivities: [], idErrors, missingIdsInfo };
+    }
+
+    const duplicateCareActivitiesDb = await this.careActivityRepo.find({
+      where: {
+        name: In(
+          rowsWithoutId.map(c =>
+            this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]),
+          ),
+        ),
+      },
+    });
+
+    // Build duplicate info for response
+    let duplicateInfo: DuplicateInfo | undefined;
+    if (duplicateCareActivitiesDb.length > 0) {
+      // Use flatMap + filter to capture ALL rows matching each duplicate (defensive)
+      const duplicateRowNumbers = duplicateCareActivitiesDb.flatMap(ca => {
+        const rows = data.filter(
+          c =>
+            this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]) === ca.name,
+        );
+        return rows.map(r => r.rowNumber);
+      });
+
+      duplicateInfo = {
+        count: duplicateCareActivitiesDb.length,
+        names: duplicateCareActivitiesDb.map(ca => ca.displayName),
+        rowNumbers: duplicateRowNumbers,
+      };
+    }
+
+    return {
+      duplicateInfo,
+      duplicateActivities: duplicateCareActivitiesDb,
+      idErrors,
+      missingIdsInfo,
+    };
+  }
+
+  /**
+   * Internal validation that returns both the RO and entity data
+   * Used by uploadCareActivitiesBulk to avoid double DB query
+   */
+  private async validateWithEntities(careActivitiesBulkDto: CareActivityBulkDTO): Promise<{
+    result: CareActivityBulkRO;
+    duplicateActivities: CareActivity[];
+  }> {
     const { headers, data } = careActivitiesBulkDto;
     const errors: CareActivityBulkROError[] = [];
 
@@ -83,12 +194,22 @@ export class CareActivityBulkService {
     // fetch occupations
     const occupations = await this.occupationService.getAllOccupations();
 
-    // ensure all occupations' exists in headers; ensuring no tampering of data
-    if (!occupations.every(occupation => headers.includes(occupation.displayName))) {
-      errors.push({
-        message: 'One or more occupations not found in headers',
-      });
+    // Check for missing occupations (return as info, not error - user can choose to proceed)
+    const missingOccupationNames = occupations
+      .filter(occupation => !headers.includes(occupation.displayName))
+      .map(o => o.displayName);
+
+    // Build missing occupations info for response (not as error)
+    let missingOccupationsInfo: MissingOccupationsInfo | undefined;
+    if (missingOccupationNames.length > 0) {
+      missingOccupationsInfo = {
+        count: missingOccupationNames.length,
+        names: missingOccupationNames,
+      };
     }
+
+    // Filter occupations to only those present in headers for permission validation
+    const occupationsInHeaders = occupations.filter(o => headers.includes(o.displayName));
 
     const newOccupations = _.difference(
       _.difference(headers, Object.values(BULK_UPLOAD_COLUMNS)),
@@ -122,7 +243,10 @@ export class CareActivityBulkService {
 
     // return if missing fields
     if (errors.length > 0) {
-      return { errors, total: data.length };
+      return {
+        result: { errors, total: data.length },
+        duplicateActivities: [],
+      };
     }
 
     // ** ensure care activity names are not duplicated in the supplied data
@@ -167,7 +291,8 @@ export class CareActivityBulkService {
     const careActivityTypeEnumErrorLineNumbers = new Set<number>();
 
     // ** ensure occupation values are from BULK_UPLOAD_ALLOWED_PERMISSIONS
-    const occupationNames = occupations.map(o => o.displayName);
+    // Only validate occupations that exist in headers (skip missing ones)
+    const occupationNamesInHeaders = occupationsInHeaders.map(o => o.displayName);
     const occupationPermissionValueErrorLineNumbers = new Set<number>();
 
     data.forEach(({ rowData, rowNumber }) => {
@@ -187,7 +312,7 @@ export class CareActivityBulkService {
         careActivityTypeEnumErrorLineNumbers.add(rowNumber);
       }
 
-      occupationNames.forEach(o => {
+      occupationNamesInHeaders.forEach(o => {
         if (!BULK_UPLOAD_ALLOWED_PERMISSIONS.includes(rowData[o])) {
           occupationPermissionValueErrorLineNumbers.add(rowNumber);
           return;
@@ -231,73 +356,32 @@ export class CareActivityBulkService {
     }
 
     if (errors.length > 0) {
-      return { errors, total: data.length };
+      return {
+        result: { errors, total: data.length, missingOccupations: missingOccupationsInfo },
+        duplicateActivities: [],
+      };
     }
 
-    await this.checkCareActivitiesUniq(data, errors);
+    // Check for duplicates in DB and get duplicate info + entities + missing IDs
+    const { duplicateInfo, idErrors, duplicateActivities, missingIdsInfo } =
+      await this.checkCareActivitiesUniq(data);
+    errors.push(...idErrors);
 
     const countToAdd = data.filter(r => !r.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).length;
 
     return {
-      errors,
-      total: data.length,
-      add: countToAdd,
-      edit: data.length - countToAdd,
-      newOccupations,
-    };
-  }
-
-  async checkCareActivitiesUniq(data: CareActivityBulkData[], errors: CareActivityBulkROError[]) {
-    // This method assumes all column values exist in the rowData array
-
-    // validate rows with ID
-    let activities: CareActivity[];
-    try {
-      activities = await this.careActivityRepo.find({
-        where: {
-          id: In(data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()).filter(Boolean)),
-        },
-      });
-    } catch (e) {
-      errors.push({
-        message: `ID must be empty for new care activities or should not be modified.`,
-      });
-      return;
-    }
-    const missingIds = _.difference(
-      data.map(row => row.rowData[BULK_UPLOAD_COLUMNS.ID]).filter(Boolean),
-      activities.map(e => e.id),
-    );
-    missingIds.forEach(id => {
-      const rowNumber = data.find(c => c.rowData[BULK_UPLOAD_COLUMNS.ID])!.rowNumber;
-      errors.push({
-        message: `Care Activity not found - ${id}`,
-        rowNumber: [rowNumber],
-      });
-    });
-
-    // ** ensure care activity names are not duplicated in the database
-    const duplicateCareActivitiesDb = await this.careActivityRepo.find({
-      where: {
-        name: In(
-          data
-            .filter(row => !row.rowData.ID?.trim())
-            .map(c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY])),
-        ),
+      result: {
+        errors,
+        total: data.length,
+        add: countToAdd,
+        edit: data.length - countToAdd,
+        newOccupations,
+        duplicates: duplicateInfo,
+        missingOccupations: missingOccupationsInfo,
+        missingIds: missingIdsInfo,
       },
-    });
-
-    // return as errors for duplicate care activities
-    duplicateCareActivitiesDb.forEach(ca => {
-      const rowNumber = data.find(
-        c => this.getNameFromDisplayName(c.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]) === ca.name,
-      )!.rowNumber;
-
-      errors.push({
-        message: `Care Activity already exists in the system - ${ca.displayName}`,
-        rowNumber: [rowNumber],
-      });
-    });
+      duplicateActivities,
+    };
   }
 
   /**
@@ -306,25 +390,131 @@ export class CareActivityBulkService {
    *
    */
   async uploadCareActivitiesBulk(careActivitiesBulkDto: CareActivityBulkDTO) {
-    const { errors: validationErrors } =
-      await this.validateCareActivitiesBulk(careActivitiesBulkDto);
+    const {
+      duplicateHandling = DuplicateHandling.REJECT,
+      proceedWithMissingOccupations,
+      proceedWithStaleIds,
+    } = careActivitiesBulkDto;
 
-    if (validationErrors.length > 0) {
+    // Run validation and get duplicate entities in one pass (avoids double DB query)
+    const { result: validationResult, duplicateActivities } =
+      await this.validateWithEntities(careActivitiesBulkDto);
+
+    if (validationResult.errors.length > 0) {
       throw new BadRequestException(
         'There are some validation errors while confirming, please try again by reuploading the template',
       );
     }
-    if (
-      !Array.isArray(careActivitiesBulkDto.headers) ||
-      careActivitiesBulkDto.headers.length > 1000
-    ) {
-      throw new BadRequestException(
-        'Invalid headers: must be an array with a maximum length of 1000',
-      );
+
+    // Check for missing occupations - reject unless user explicitly chose to proceed
+    if (validationResult.missingOccupations && validationResult.missingOccupations.count > 0) {
+      if (!proceedWithMissingOccupations) {
+        throw new BadRequestException(
+          `Your template is missing ${validationResult.missingOccupations.count} occupation column(s): ${validationResult.missingOccupations.names.join(', ')}. Choose "Proceed anyway" to continue with these occupations set to "N" (no permission).`,
+        );
+      }
+      // If proceedWithMissingOccupations is true, continue - missing columns will be treated as "N" implicitly
     }
 
-    // extract data
-    const { data } = careActivitiesBulkDto;
+    // Check for stale/missing IDs - reject unless user explicitly chose to proceed
+    if (validationResult.missingIds && validationResult.missingIds.count > 0) {
+      if (!proceedWithStaleIds) {
+        throw new BadRequestException(
+          `${validationResult.missingIds.count} activities have IDs that don't exist in this system. Choose "Strip IDs and add as new" to continue.`,
+        );
+      }
+    }
+
+    // Stage 1: Create data copy, stripping IDs from stale-ID rows if proceedWithStaleIds is true
+    // Using immutable map instead of mutating the input DTO
+    // Note: If frontend already stripped IDs before re-validation, missingIds will be
+    // empty here and this is a no-op. This handles the direct upload path.
+    const staleRowNumbers = new Set(validationResult.missingIds?.rowNumbers ?? []);
+    let data = careActivitiesBulkDto.data.map(row => {
+      if (proceedWithStaleIds && staleRowNumbers.has(row.rowNumber)) {
+        return {
+          ...row,
+          rowData: { ...row.rowData, [BULK_UPLOAD_COLUMNS.ID]: '' },
+        };
+      }
+      return row;
+    });
+
+    // TOCTOU fix: After stripping IDs, re-check those rows for duplicates
+    // The original duplicateActivities was computed before IDs were stripped, so those rows
+    // (which had IDs) were excluded from the duplicate check. Now they're "new" rows.
+    let allDuplicateActivities = duplicateActivities;
+    if (proceedWithStaleIds && validationResult.missingIds?.count) {
+      const strippedRowNames = data
+        .filter(r => staleRowNumbers.has(r.rowNumber))
+        .map(r => this.getNameFromDisplayName(r.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]));
+
+      if (strippedRowNames.length > 0) {
+        const newDuplicates = await this.careActivityRepo.find({
+          where: { name: In(strippedRowNames) },
+        });
+
+        if (newDuplicates.length > 0) {
+          if (duplicateHandling === DuplicateHandling.REJECT) {
+            throw new BadRequestException(
+              `After stripping IDs, ${newDuplicates.length} activities now match existing records. Re-upload and choose how to handle duplicates.`,
+            );
+          }
+          // Merge new duplicates for SKIP/UPDATE handling below (immutable)
+          allDuplicateActivities = [
+            ...duplicateActivities,
+            ...newDuplicates.filter(nd => !duplicateActivities.some(da => da.id === nd.id)),
+          ];
+        }
+      }
+    }
+
+    if (allDuplicateActivities.length > 0) {
+      // Build Map for O(1) duplicate lookups (name → id)
+      const duplicateNameToId = new Map(allDuplicateActivities.map(ca => [ca.name, ca.id]));
+
+      switch (duplicateHandling) {
+        case DuplicateHandling.REJECT:
+          throw new BadRequestException(
+            `${allDuplicateActivities.length} care activities already exist. Use "Skip duplicates" to add only new activities, or "Update existing" to update them.`,
+          );
+
+        case DuplicateHandling.SKIP:
+          // Stage 2: Filter out rows that match existing activities (SKIP mode)
+          data = data.filter(row => {
+            const rowName = this.getNameFromDisplayName(
+              row.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY],
+            );
+            return !duplicateNameToId.has(rowName);
+          });
+          break;
+
+        case DuplicateHandling.UPDATE:
+          // Stage 2: Add IDs to matching rows so they become updates (UPDATE mode)
+          data = data.map(row => {
+            const rowName = this.getNameFromDisplayName(
+              row.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY],
+            );
+            const matchId = duplicateNameToId.get(rowName);
+            if (matchId) {
+              return {
+                ...row,
+                rowData: { ...row.rowData, [BULK_UPLOAD_COLUMNS.ID]: matchId },
+              };
+            }
+            return row;
+          });
+          break;
+
+        default:
+          throw new BadRequestException(`Unknown duplicate handling option: ${duplicateHandling}`);
+      }
+    }
+
+    // If all activities were skipped, return early (success with nothing to do)
+    if (data.length === 0) {
+      return;
+    }
 
     // care settings and care bundles list definitions
     const careSettingDisplayNames = new Set<string>();
@@ -339,6 +529,9 @@ export class CareActivityBulkService {
       careBundleDisplayNames.add(this.trimDisplayName(careBundle));
     });
 
+    // Note: These reference data upserts (care settings, bundles, occupations) happen outside
+    // the transaction intentionally. They're idempotent and safe to persist even if the main
+    // transaction fails - they represent valid reference data that can be reused.
     // upsert care settings (aka care locations) (aka Units)
     await this.unitService.saveCareLocations(Array.from(careSettingDisplayNames));
     const units = await this.unitService.getAllUnits();
@@ -373,22 +566,49 @@ export class CareActivityBulkService {
       careBundleDisplayNames,
     );
 
-    // upsert care activities
-    const activities = await this.careActivityService.saveCareActivities(partialCareActivities);
+    // Wrap critical operations in a transaction to ensure atomicity
+    // If any step fails, all changes are rolled back
+    await this.careActivityRepo.manager.transaction(async manager => {
+      // upsert care activities within transaction
+      const activities = await manager.save(CareActivity, partialCareActivities);
 
-    // process allowed activity
-    const { allowedActivities, disallowedActivities } = await this.processAllowedActivities(
-      data,
-      activities,
-    );
+      // process allowed activities (see processAllowedActivities JSDoc for filtering behavior)
+      const { allowedActivities, disallowedActivities } = await this.processAllowedActivities(
+        data,
+        activities,
+        proceedWithMissingOccupations ? careActivitiesBulkDto.headers : undefined,
+      );
 
-    // upsert allowed activities
-    if (allowedActivities.length) {
-      await this.allowedActivityService.upsertAllowedActivities(allowedActivities);
-    }
-    if (disallowedActivities.length) {
-      await this.allowedActivityService.removeAllowedActivities(disallowedActivities);
-    }
+      // upsert allowed activities within transaction
+      if (allowedActivities.length) {
+        await manager.upsert(
+          AllowedActivity,
+          allowedActivities.map(partial => manager.create(AllowedActivity, partial)),
+          {
+            skipUpdateIfNoValuesChanged: true,
+            conflictPaths: ['careActivity', 'occupation', 'unit'],
+          },
+        );
+      }
+
+      // remove disallowed activities within transaction
+      // Note: Promise.all doesn't truly parallelize here (transaction shares one DB connection),
+      // but chunking keeps promise count manageable for code clarity and avoids memory pressure
+      if (disallowedActivities.length) {
+        const chunks = _.chunk(disallowedActivities, 20);
+        for (const chunk of chunks) {
+          await Promise.all(
+            chunk.map(activity =>
+              manager.delete(AllowedActivity, {
+                careActivity: activity.careActivity,
+                occupation: activity.occupation,
+                unit: activity.unit,
+              }),
+            ),
+          );
+        }
+      }
+    });
   }
 
   /**
@@ -473,10 +693,22 @@ export class CareActivityBulkService {
    *
    * Process Allowed Activities
    *
+   * @param headers - Optional. When provided, only occupations present in headers will be processed.
+   *                  This prevents deletion of existing permissions for occupations not in the template
+   *                  (used when proceedWithMissingOccupations is true).
    */
-  async processAllowedActivities(data: CareActivityBulkData[], careActivities: CareActivity[]) {
+  async processAllowedActivities(
+    data: CareActivityBulkData[],
+    careActivities: CareActivity[],
+    headers?: string[],
+  ) {
     // fetch occupations
-    const occupations = await this.occupationService.getAllOccupations();
+    const allOccupations = await this.occupationService.getAllOccupations();
+
+    // Filter to only occupations in headers if headers provided (see JSDoc above)
+    const occupations = headers
+      ? allOccupations.filter(o => headers.includes(o.displayName))
+      : allOccupations;
 
     const unitEntities = _.keyBy(await this.unitService.getAllUnits(), 'displayName');
 
@@ -505,8 +737,11 @@ export class CareActivityBulkService {
         const permission = rowData[occupation.displayName];
         const occupationDisplayName = occupation.displayName;
 
-        // ignore not allowed activity ['N']
-        if (!(Object.values(Permissions) as string[]).includes(permission)) {
+        // Only 'Y' (PERFORM) and 'LC' (LIMITS) are allowed in the database
+        // 'N' and any other value should be treated as disallowed (remove from allowed_activity table)
+        const isAllowed = permission === Permissions.PERFORM || permission === Permissions.LIMITS;
+
+        if (!isAllowed) {
           if (!disallowedActivityMapping.has(careActivityDisplayName)) {
             disallowedActivityMapping.set(careActivityDisplayName, new Map());
           }
