@@ -18,6 +18,7 @@ export class MissingIdsInfo {
   count!: number;
   names!: string[]; // Activity names (first 10 for display)
   rowNumbers!: number[]; // All affected row numbers
+  matchingExistingCount!: number; // How many stale-ID rows match existing activities by name
 }
 
 export class CareActivityBulkRO {

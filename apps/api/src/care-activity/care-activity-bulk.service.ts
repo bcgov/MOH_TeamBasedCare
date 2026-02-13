@@ -114,12 +114,31 @@ export class CareActivityBulkService {
       const missingRows = data.filter(row =>
         missingIdValues.includes(row.rowData[BULK_UPLOAD_COLUMNS.ID]?.trim()),
       );
+
+      // Proactively check how many stale-ID rows match existing activities by name
+      // This lets the frontend offer a 1-step "Sync" option instead of Strip → Duplicate flow
+      // Count matching ROWS (not unique entities) so the math with count is consistent
+      const staleRowNames = missingRows.map(r =>
+        this.getNameFromDisplayName(r.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]),
+      );
+      const uniqueStaleNames = [...new Set(staleRowNames)];
+      const matchingExisting =
+        uniqueStaleNames.length > 0
+          ? await this.careActivityRepo.find({
+              where: { name: In(uniqueStaleNames) },
+              select: ['name'],
+            })
+          : [];
+      const matchingNameSet = new Set(matchingExisting.map(a => a.name));
+      const matchingRowCount = staleRowNames.filter(n => matchingNameSet.has(n)).length;
+
       missingIdsInfo = {
         count: missingIdValues.length,
         names: missingRows
           .slice(0, 10)
           .map(r => r.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY] || 'Unknown'),
         rowNumbers: missingRows.map(r => r.rowNumber),
+        matchingExistingCount: matchingRowCount,
       };
     }
 

@@ -597,6 +597,64 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
     );
   }, [pendingData, missingIdsInfo, sendApiRequest, resetValidationMessage]);
 
+  // 1-step sync: strips IDs + sets UPDATE handling, skips re-validation round-trip
+  const handleSyncStaleIds = useCallback(() => {
+    if (!pendingData || !missingIdsInfo) return;
+
+    // Strip IDs from affected rows (same as handleProceedWithStaleIds)
+    const modifiedData = pendingData.data.map(row => {
+      if (missingIdsInfo.rowNumbers.includes(row.rowNumber)) {
+        return {
+          ...row,
+          rowData: { ...row.rowData, [BULK_UPLOAD_COLUMNS.ID]: '' },
+        };
+      }
+      return row;
+    });
+
+    const matchCount = missingIdsInfo.matchingExistingCount;
+    const newCount = missingIdsInfo.count - matchCount;
+
+    // Compute correct add/edit counts for the confirmation modal:
+    // - Original edit included stale rows (they had IDs) → subtract them, add back matched ones
+    // - Original add was rows without IDs → add the unmatched stale rows
+    const editCount = (pendingData.edit ?? 0) - missingIdsInfo.count + matchCount;
+    const addCount = (pendingData.add ?? 0) + newCount;
+
+    setShowMissingIdsWarning(false);
+    setMissingIdsInfo(null);
+
+    setValidationMessageType('success');
+    setValidationMessage(
+      <>
+        <p>
+          {'The file has been successfully processed. Click "Confirm" to '}
+          <b>
+            {editCount > 0
+              ? `update ${editCount} existing care ${editCount === 1 ? 'activity' : 'activities'}`
+              : ''}
+            {editCount > 0 && addCount > 0 && ' and '}
+            {addCount > 0 ? `add ${addCount} new` : ''}
+          </b>
+          .
+          {pendingData.proceedWithMissingOccupations &&
+            ' For new activities, missing occupations will have no permission. For existing activities, their current permissions will be preserved.'}
+        </p>
+      </>,
+    );
+
+    setCanConfirm(true);
+    setConfirmData({
+      ...pendingData,
+      data: modifiedData,
+      add: addCount,
+      edit: editCount,
+      proceedWithStaleIds: true,
+      duplicateHandling: DuplicateHandling.UPDATE,
+    });
+    setPendingData(null);
+  }, [pendingData, missingIdsInfo]);
+
   const onConfirmClick = () => {
     if (!canConfirm || !confirmData) {
       return;
@@ -691,14 +749,47 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
                 database changes. The following activities are affected:
               </p>
               <ExpandableList items={missingIdsInfo.names} />
-              <p className='mt-3 text-sm text-gray-600'>
-                <b>If you proceed:</b> The IDs will be removed and these activities will be added as
-                new records (they may become duplicates if activities with the same name exist).
-              </p>
+
+              {missingIdsInfo.matchingExistingCount > 0 ? (
+                <p className='mt-3 text-sm text-gray-600'>
+                  <b>
+                    {missingIdsInfo.matchingExistingCount} of {missingIdsInfo.count}
+                  </b>{' '}
+                  match existing activities by name.
+                  {missingIdsInfo.count - missingIdsInfo.matchingExistingCount > 0 && (
+                    <>
+                      {' '}
+                      The remaining{' '}
+                      <b>{missingIdsInfo.count - missingIdsInfo.matchingExistingCount}</b> will be
+                      added as new.
+                    </>
+                  )}
+                </p>
+              ) : (
+                <p className='mt-3 text-sm text-gray-600'>
+                  <b>If you proceed:</b> The IDs will be removed and these activities will be added
+                  as new records (they may become duplicates if activities with the same name
+                  exist).
+                </p>
+              )}
+
               <p className='mt-3 font-medium'>What would you like to do?</p>
               <div className='flex gap-2 mt-3'>
-                <Button variant='primary' onClick={handleProceedWithStaleIds} disabled={isLoading}>
-                  {isLoading ? 'Validating...' : 'Strip IDs and add as new'}
+                {missingIdsInfo.matchingExistingCount > 0 && (
+                  <Button variant='primary' onClick={handleSyncStaleIds} disabled={isLoading}>
+                    Sync ({missingIdsInfo.matchingExistingCount}{' '}
+                    {missingIdsInfo.matchingExistingCount === 1 ? 'update' : 'updates'}
+                    {missingIdsInfo.count - missingIdsInfo.matchingExistingCount > 0 &&
+                      `, ${missingIdsInfo.count - missingIdsInfo.matchingExistingCount} new`}
+                    )
+                  </Button>
+                )}
+                <Button
+                  variant={missingIdsInfo.matchingExistingCount > 0 ? 'outline' : 'primary'}
+                  onClick={handleProceedWithStaleIds}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Validating...' : 'Strip IDs and review'}
                 </Button>
                 <Button variant='outline' onClick={resetValidationMessage} disabled={isLoading}>
                   Cancel
