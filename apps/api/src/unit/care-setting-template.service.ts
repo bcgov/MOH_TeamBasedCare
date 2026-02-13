@@ -172,7 +172,48 @@ export class CareSettingTemplateService {
       .take(pageSize)
       .getManyAndCount();
 
-    return [results.map(t => new CareSettingTemplateRO(t)), count];
+    // Batch load missing permissions counts for the returned templates
+    const templateIds = results.map(t => t.id);
+    const missingCounts = await this.getMissingPermissionsCountBatch(templateIds);
+
+    return [
+      results.map(t => {
+        const ro = new CareSettingTemplateRO(t);
+        ro.missingPermissionsCount = missingCounts.get(t.id) ?? 0;
+        return ro;
+      }),
+      count,
+    ];
+  }
+
+  /**
+   * Batch count activities missing Y/LC permissions for multiple templates.
+   * An activity is "missing permissions" if it's selected in the template but has
+   * NO rows in care_setting_template_permission with Y or LC for ANY occupation.
+   * @param templateIds - Template IDs to count for
+   * @returns Map of templateId -> missing count (templates not in map have 0)
+   */
+  private async getMissingPermissionsCountBatch(
+    templateIds: string[],
+  ): Promise<Map<string, number>> {
+    if (templateIds.length === 0) return new Map();
+
+    const results = await this.templateRepo.manager
+      .createQueryBuilder()
+      .select('csta.care_setting_template_id', 'template_id')
+      .addSelect('COUNT(*)', 'missing_count')
+      .from('care_setting_template_activities', 'csta')
+      .leftJoin(
+        'care_setting_template_permission',
+        'cstp',
+        "cstp.template_id = csta.care_setting_template_id AND cstp.care_activity_id = csta.care_activity_id AND cstp.permission IN ('Y', 'LC')",
+      )
+      .where('csta.care_setting_template_id IN (:...templateIds)', { templateIds })
+      .andWhere('cstp.id IS NULL')
+      .groupBy('csta.care_setting_template_id')
+      .getRawMany();
+
+    return new Map(results.map(r => [r.template_id, Number(r.missing_count)]));
   }
 
   /**
@@ -216,6 +257,11 @@ export class CareSettingTemplateService {
           permission: p.permission,
         }),
     );
+
+    // Note: We do NOT load parent permissions here.
+    // Permission inheritance happens only at copy time (copyTemplate).
+    // Once a template is saved, it is self-contained. This prevents
+    // silently restoring permissions an admin explicitly removed (set to N).
 
     const detail = new CareSettingTemplateDetailRO(template);
     detail.selectedBundles = selectedBundles;

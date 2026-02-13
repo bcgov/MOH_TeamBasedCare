@@ -15,8 +15,12 @@
  * - N (No): Removes permission entry
  * - LC (Limits & Conditions): Activity can be performed with restrictions
  */
-import { useState, SetStateAction } from 'react';
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { useState, SetStateAction, useMemo } from 'react';
+import {
+  faChevronDown,
+  faChevronRight,
+  faExclamationTriangle,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Permissions } from '@tbcm/common';
 import { useCareSettingsContext } from './CareSettingsContext';
@@ -64,7 +68,8 @@ const PermissionSelect: React.FC<{
 const ActivityOccupationGrid: React.FC<{
   activityId: string;
   activityName: string;
-}> = ({ activityId, activityName }) => {
+  hasNoPermissions: boolean;
+}> = ({ activityId, activityName, hasNoPermissions }) => {
   const { state, dispatch, getPermission } = useCareSettingsContext();
 
   const handlePermissionChange = (occupationId: string, permission: Permissions) => {
@@ -75,8 +80,18 @@ const ActivityOccupationGrid: React.FC<{
   };
 
   return (
-    <div className='border-t py-4'>
-      <h4 className='font-bold text-gray-800 mb-4'>{activityName}</h4>
+    <div
+      className={`border-t py-4 ${hasNoPermissions ? 'bg-amber-50 border-l-4 border-l-amber-400 pl-3 -ml-4' : ''}`}
+    >
+      <h4 className='font-bold text-gray-800 mb-4 flex items-center gap-2'>
+        {hasNoPermissions && (
+          <FontAwesomeIcon icon={faExclamationTriangle} className='h-4 w-4 text-amber-500' />
+        )}
+        {activityName}
+        {hasNoPermissions && (
+          <span className='text-xs font-normal text-amber-600'>(no permissions set)</span>
+        )}
+      </h4>
       <div className='overflow-x-auto'>
         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 min-w-[400px]'>
           {state.occupations.map(occupation => (
@@ -88,7 +103,7 @@ const ActivityOccupationGrid: React.FC<{
                 {getName(occupation)}
               </label>
               <PermissionSelect
-                value={getPermission(activityId, occupation.id) || Permissions.PERFORM}
+                value={getPermission(activityId, occupation.id) || Permissions.NO}
                 onChange={value => handlePermissionChange(occupation.id, value)}
               />
             </div>
@@ -102,13 +117,18 @@ const ActivityOccupationGrid: React.FC<{
 const BundleAccordion: React.FC<{
   bundleId: string;
   bundleName: string;
-}> = ({ bundleId, bundleName }) => {
+  activitiesWithoutPermissions: Set<string>;
+}> = ({ bundleId, bundleName, activitiesWithoutPermissions }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { state } = useCareSettingsContext();
 
   const bundle = state.bundles.find(b => b.id === bundleId);
   const selectedActivities =
     bundle?.careActivities?.filter(a => state.selectedActivityIds.has(a.id)) || [];
+
+  const activitiesNeedingPermissions = selectedActivities.filter(a =>
+    activitiesWithoutPermissions.has(a.id),
+  );
 
   if (selectedActivities.length === 0) {
     return null;
@@ -125,6 +145,11 @@ const BundleAccordion: React.FC<{
           <span className='font-bold text-bcBluePrimary'>{bundleName}</span>
           <span className='text-sm text-bcBlueLink'>
             {selectedActivities.length} care & restricted activities
+            {activitiesNeedingPermissions.length > 0 && (
+              <span className='text-amber-600 ml-1'>
+                ({activitiesNeedingPermissions.length} without permissions)
+              </span>
+            )}
           </span>
         </div>
         <FontAwesomeIcon
@@ -140,6 +165,7 @@ const BundleAccordion: React.FC<{
               key={activity.id}
               activityId={activity.id}
               activityName={getName(activity)}
+              hasNoPermissions={activitiesWithoutPermissions.has(activity.id)}
             />
           ))}
         </div>
@@ -180,9 +206,26 @@ const LegendModal: React.FC<{
 
 export const Finalize: React.FC = () => {
   const [showLegend, setShowLegend] = useState(false);
-  const { state } = useCareSettingsContext();
+  const { state, getPermission } = useCareSettingsContext();
 
   const selectedBundles = state.bundles.filter(b => state.selectedBundleIds.has(b.id));
+
+  // Calculate which activities have no Y/LC permissions
+  const activitiesWithoutPermissions = useMemo(() => {
+    const result = new Set<string>();
+    state.selectedActivityIds.forEach(activityId => {
+      const hasAnyPermission = state.occupations.some(occ => {
+        const perm = getPermission(activityId, occ.id);
+        return perm === Permissions.PERFORM || perm === Permissions.LIMITS;
+      });
+      if (!hasAnyPermission) {
+        result.add(activityId);
+      }
+    });
+    return result;
+  }, [state.selectedActivityIds, state.occupations, state.permissions, getPermission]);
+
+  const missingCount = activitiesWithoutPermissions.size;
 
   return (
     <Card bgWhite>
@@ -191,6 +234,21 @@ export const Finalize: React.FC = () => {
           Table Legend
         </Button>
       </div>
+
+      {missingCount > 0 && (
+        <div className='mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-3'>
+          <FontAwesomeIcon icon={faExclamationTriangle} className='h-5 w-5 text-amber-500' />
+          <div>
+            <span className='font-semibold text-amber-800'>
+              {missingCount} {missingCount === 1 ? 'activity has' : 'activities have'} no
+              occupation permissions
+            </span>
+            <p className='text-sm text-amber-700'>
+              Please review the highlighted activities below and set permissions where needed.
+            </p>
+          </div>
+        </div>
+      )}
 
       <h3 className='text-bcBlueLink font-semibold mb-4'>
         Care Competencies and Corresponding Activities
@@ -203,7 +261,12 @@ export const Finalize: React.FC = () => {
           </div>
         ) : (
           selectedBundles.map(bundle => (
-            <BundleAccordion key={bundle.id} bundleId={bundle.id} bundleName={getName(bundle)} />
+            <BundleAccordion
+              key={bundle.id}
+              bundleId={bundle.id}
+              bundleName={getName(bundle)}
+              activitiesWithoutPermissions={activitiesWithoutPermissions}
+            />
           ))
         )}
       </div>

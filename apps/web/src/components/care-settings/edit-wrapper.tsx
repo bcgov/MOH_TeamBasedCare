@@ -87,9 +87,13 @@ const EditContent: React.FC = () => {
         b.selectedActivityIds?.forEach(id => selectedActivityIds.add(id));
       });
 
+      // Only load the template's own permissions — do NOT inherit from parent
+      // N (no permission) is represented as absence of a row, and we cannot
+      // distinguish "explicitly set to N" from "never set", so inheriting
+      // from parent would silently override intentional N decisions.
+      // Permission inheritance happens only at copy time (copyTemplate).
       const permissions = new Map<string, Permissions>();
       template.permissions?.forEach(p => {
-        // Using :: as separator because UUIDs contain dashes
         permissions.set(`${p.activityId}::${p.occupationId}`, p.permission);
       });
 
