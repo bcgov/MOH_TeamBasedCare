@@ -17,13 +17,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { CareSettingTemplate } from './entity/care-setting-template.entity';
 import { CareSettingTemplatePermission } from './entity/care-setting-template-permission.entity';
 import { Unit } from './entity/unit.entity';
 import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from '../occupation/entity/occupation.entity';
+import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
 import { FindCareSettingTemplatesDto } from './dto/find-care-setting-templates.dto';
 import {
   CareSettingsCMSFindSortKeys,
@@ -38,7 +39,9 @@ import {
   BundleRO,
   OccupationRO,
   Permissions,
+  MASTER_TEMPLATE_SUFFIX,
 } from '@tbcm/common';
+import _ from 'lodash';
 
 @Injectable()
 export class CareSettingTemplateService {
@@ -881,5 +884,211 @@ export class CareSettingTemplateService {
    */
   async removeOccupationFromAllTemplates(occupationId: string): Promise<void> {
     await this.permissionRepo.delete({ occupation: { id: occupationId } });
+  }
+
+  /**
+   * Find or create master templates for a batch of units within a transaction.
+   * Used by bulk upload to ensure every unit has a master template before
+   * syncing activities and permissions.
+   *
+   * @param manager - Transaction EntityManager (all DB ops go through this)
+   * @param units - Units that need master templates
+   * @returns Map of unitId -> masterTemplateId
+   */
+  async findOrCreateMasterTemplates(
+    manager: EntityManager,
+    units: Unit[],
+  ): Promise<Map<string, string>> {
+    if (units.length === 0) return new Map();
+
+    const unitIds = units.map(u => u.id);
+
+    // Find existing master templates for these units
+    const existing = await manager
+      .createQueryBuilder()
+      .select('cst.id', 'id')
+      .addSelect('cst.unit_id', 'unit_id')
+      .from('care_setting_template', 'cst')
+      .where('cst.unit_id IN (:...unitIds)', { unitIds })
+      .andWhere('cst.is_master = true')
+      .getRawMany();
+
+    const result = new Map<string, string>();
+    const existingUnitIds = new Set<string>();
+
+    for (const row of existing) {
+      result.set(row.unit_id, row.id);
+      existingUnitIds.add(row.unit_id);
+    }
+
+    // Create master templates for units that don't have one
+    // Uses manager.save() to stay in sync with entity definition (avoids raw SQL column drift)
+    const unitsWithoutMaster = units.filter(u => !existingUnitIds.has(u.id));
+
+    for (const unit of unitsWithoutMaster) {
+      const template = manager.create(CareSettingTemplate, {
+        name: `${unit.displayName}${MASTER_TEMPLATE_SUFFIX}`,
+        isMaster: true,
+        healthAuthority: 'GLOBAL',
+        unit,
+      });
+      const saved = await manager.save(CareSettingTemplate, template);
+      result.set(unit.id, saved.id);
+    }
+
+    return result;
+  }
+
+  /**
+   * Sync bulk upload data to master templates within a transaction.
+   * Adds activities and bundles to templates, upserts Y/LC permissions,
+   * and removes N permissions.
+   *
+   * @param manager - Transaction EntityManager
+   * @param templatesByUnitId - Map of unitId -> masterTemplateId
+   * @param activities - Saved CareActivity entities
+   * @param activityUnitMapping - Map of activityId -> Set of unitIds
+   * @param activityBundleMapping - Map of activityId -> bundleId (built pre-save to avoid relying on TypeORM preserving relations)
+   * @param allowedActivities - Y/LC permission partials (with full entity refs)
+   * @param disallowedActivities - N permission partials (to delete from templates)
+   */
+  async syncBulkUploadToTemplates(
+    manager: EntityManager,
+    templatesByUnitId: Map<string, string>,
+    activities: CareActivity[],
+    activityUnitMapping: Map<string, Set<string>>,
+    activityBundleMapping: Map<string, string>,
+    allowedActivities: Partial<AllowedActivity>[],
+    disallowedActivities: Partial<AllowedActivity>[],
+  ): Promise<void> {
+    // 1. Sync activities and bundles to templates
+    const activityInserts: { templateId: string; activityId: string }[] = [];
+    const bundleInserts: { templateId: string; bundleId: string }[] = [];
+    const bundlesSeen = new Set<string>();
+
+    for (const activity of activities) {
+      const unitIds = activityUnitMapping.get(activity.id);
+      if (!unitIds) continue;
+
+      for (const unitId of unitIds) {
+        const templateId = templatesByUnitId.get(unitId);
+        if (!templateId) continue;
+
+        activityInserts.push({ templateId, activityId: activity.id });
+
+        // Use pre-save mapping instead of activity.bundle?.id — TypeORM's save()
+        // doesn't guarantee relation objects survive the round-trip
+        const bundleId = activityBundleMapping.get(activity.id);
+        if (bundleId) {
+          const key = `${templateId}-${bundleId}`;
+          if (!bundlesSeen.has(key)) {
+            bundlesSeen.add(key);
+            bundleInserts.push({ templateId, bundleId });
+          }
+        }
+      }
+    }
+
+    // Batch insert activities with ON CONFLICT DO NOTHING
+    const BATCH_SIZE = 5000;
+    if (activityInserts.length > 0) {
+      for (const batch of _.chunk(activityInserts, BATCH_SIZE)) {
+        const values = batch.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(', ');
+        const params = batch.flatMap(a => [a.templateId, a.activityId]);
+        await manager.query(
+          `INSERT INTO care_setting_template_activities (care_setting_template_id, care_activity_id)
+           VALUES ${values} ON CONFLICT DO NOTHING`,
+          params,
+        );
+      }
+    }
+
+    // Batch insert bundles with ON CONFLICT DO NOTHING
+    if (bundleInserts.length > 0) {
+      for (const batch of _.chunk(bundleInserts, BATCH_SIZE)) {
+        const values = batch.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(', ');
+        const params = batch.flatMap(b => [b.templateId, b.bundleId]);
+        await manager.query(
+          `INSERT INTO care_setting_template_bundles (care_setting_template_id, bundle_id)
+           VALUES ${values} ON CONFLICT DO NOTHING`,
+          params,
+        );
+      }
+    }
+
+    // 2. Upsert Y/LC permissions to care_setting_template_permission
+    const permInserts: {
+      templateId: string;
+      activityId: string;
+      occupationId: string;
+      permission: string;
+    }[] = [];
+
+    for (const aa of allowedActivities) {
+      const unitId = aa.unit?.id;
+      const activityId = aa.careActivity?.id;
+      const occupationId = aa.occupation?.id;
+      const permission = aa.permission;
+      if (!unitId || !activityId || !occupationId || !permission) continue;
+
+      const templateId = templatesByUnitId.get(unitId);
+      if (!templateId) continue;
+
+      permInserts.push({ templateId, activityId, occupationId, permission });
+    }
+
+    if (permInserts.length > 0) {
+      // 4 params per row → chunk at ~4000 to stay under PG's 65535 param limit
+      for (const batch of _.chunk(permInserts, 4000)) {
+        const values = batch
+          .map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`)
+          .join(', ');
+        const params = batch.flatMap(p => [
+          p.templateId,
+          p.activityId,
+          p.occupationId,
+          p.permission,
+        ]);
+        await manager.query(
+          `INSERT INTO care_setting_template_permission
+             (template_id, care_activity_id, occupation_id, permission)
+           VALUES ${values}
+           ON CONFLICT ON CONSTRAINT template_activity_occupation
+           DO UPDATE SET permission = EXCLUDED.permission, updated_at = NOW()`,
+          params,
+        );
+      }
+    }
+
+    // 3. Delete N permissions from care_setting_template_permission
+    const deleteTriples: { templateId: string; activityId: string; occupationId: string }[] = [];
+
+    for (const da of disallowedActivities) {
+      const unitId = da.unit?.id;
+      const activityId = da.careActivity?.id;
+      const occupationId = da.occupation?.id;
+      if (!unitId || !activityId || !occupationId) continue;
+
+      const templateId = templatesByUnitId.get(unitId);
+      if (!templateId) continue;
+
+      deleteTriples.push({ templateId, activityId, occupationId });
+    }
+
+    if (deleteTriples.length > 0) {
+      for (const chunk of _.chunk(deleteTriples, 100)) {
+        const conditions = chunk
+          .map(
+            (_, i) =>
+              `(template_id = $${i * 3 + 1} AND care_activity_id = $${i * 3 + 2} AND occupation_id = $${i * 3 + 3})`,
+          )
+          .join(' OR ');
+        const params = chunk.flatMap(d => [d.templateId, d.activityId, d.occupationId]);
+        await manager.query(
+          `DELETE FROM care_setting_template_permission WHERE ${conditions}`,
+          params,
+        );
+      }
+    }
   }
 }

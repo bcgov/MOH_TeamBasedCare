@@ -7,6 +7,7 @@ import { OccupationService } from '../occupation/occupation.service';
 import { UnitService } from '../unit/unit.service';
 import { BundleService } from './bundle.service';
 import { AllowedActivityService } from '../allowed-activity/allowed-activity.service';
+import { CareSettingTemplateService } from '../unit/care-setting-template.service';
 import { BULK_UPLOAD_COLUMNS, CareActivityType, DuplicateHandling } from '@tbcm/common';
 
 describe('CareActivityBulkService', () => {
@@ -42,6 +43,11 @@ describe('CareActivityBulkService', () => {
   const mockAllowedActivityService = {
     upsertAllowedActivities: jest.fn(),
     removeAllowedActivities: jest.fn(),
+  };
+
+  const mockCareSettingTemplateService = {
+    findOrCreateMasterTemplates: jest.fn().mockResolvedValue(new Map()),
+    syncBulkUploadToTemplates: jest.fn().mockResolvedValue(undefined),
   };
 
   // Test data factories
@@ -107,6 +113,10 @@ describe('CareActivityBulkService', () => {
         {
           provide: AllowedActivityService,
           useValue: mockAllowedActivityService,
+        },
+        {
+          provide: CareSettingTemplateService,
+          useValue: mockCareSettingTemplateService,
         },
       ],
     }).compile();
@@ -179,6 +189,50 @@ describe('CareActivityBulkService', () => {
       expect(result.duplicates).toBeDefined();
       expect(result.duplicates?.count).toBe(1);
       expect(result.duplicates?.names).toContain('Test Activity');
+    });
+
+    it('should allow same-name activities in different care settings without IDs', async () => {
+      // Arrange: Same activity name, different care settings, no IDs
+      // This scenario occurs after stale-ID stripping removes IDs from rows
+      mockOccupationService.getAllOccupations.mockResolvedValue([
+        createMockOccupation({ displayName: 'Registered Nurse' }),
+      ]);
+      mockCareActivityRepo.find.mockResolvedValue([]);
+
+      const dto = {
+        headers: createValidHeaders(),
+        data: [
+          {
+            rowData: {
+              [BULK_UPLOAD_COLUMNS.ID]: '', // No ID
+              [BULK_UPLOAD_COLUMNS.CARE_SETTING]: 'Setting A',
+              [BULK_UPLOAD_COLUMNS.CARE_BUNDLE]: 'Test Bundle',
+              [BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]: 'Shared Activity',
+              [BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE]: CareActivityType.TASK,
+              'Registered Nurse': 'Y',
+            },
+            rowNumber: 2,
+          },
+          {
+            rowData: {
+              [BULK_UPLOAD_COLUMNS.ID]: '', // No ID
+              [BULK_UPLOAD_COLUMNS.CARE_SETTING]: 'Setting B',
+              [BULK_UPLOAD_COLUMNS.CARE_BUNDLE]: 'Test Bundle',
+              [BULK_UPLOAD_COLUMNS.CARE_ACTIVITY]: 'Shared Activity',
+              [BULK_UPLOAD_COLUMNS.ASPECT_OF_PRACTICE]: CareActivityType.TASK,
+              'Registered Nurse': 'LC',
+            },
+            rowNumber: 3,
+          },
+        ],
+      };
+
+      // Act
+      const result = await service.validateCareActivitiesBulk(dto);
+
+      // Assert: Should NOT report as duplicate — different care settings makes it valid
+      expect(result.errors).toHaveLength(0);
+      expect(result.duplicates).toBeUndefined();
     });
 
     it('should pass validation for valid data with all occupations in headers', async () => {

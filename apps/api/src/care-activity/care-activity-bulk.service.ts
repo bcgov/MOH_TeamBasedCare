@@ -28,6 +28,7 @@ import { BundleService } from './bundle.service';
 import { Occupation } from 'src/occupation/entity/occupation.entity';
 import { AllowedActivity } from 'src/allowed-activity/entity/allowed-activity.entity';
 import { AllowedActivityService } from 'src/allowed-activity/allowed-activity.service';
+import { CareSettingTemplateService } from 'src/unit/care-setting-template.service';
 import { AppLogger } from 'src/common/logger.service';
 import _ from 'lodash';
 
@@ -50,6 +51,9 @@ export class CareActivityBulkService {
 
     @Inject(AllowedActivityService)
     private readonly allowedActivityService: AllowedActivityService,
+
+    @Inject(CareSettingTemplateService)
+    private readonly careSettingTemplateService: CareSettingTemplateService,
   ) {}
 
   trimDisplayName(displayName: string): string {
@@ -267,13 +271,13 @@ export class CareActivityBulkService {
         )
         .map(c => c.rowNumber);
 
-      // allow for different care setting
+      // allow for different care settings (e.g. same activity in multiple bundles)
+      // This is valid regardless of whether rows have IDs — after stale-ID stripping,
+      // rows lose their IDs but still belong to distinct care settings.
       const activities = data.filter(a => a.rowData[BULK_UPLOAD_COLUMNS.CARE_ACTIVITY] === name);
-      if (activities.every(a => a.rowData[BULK_UPLOAD_COLUMNS.ID])) {
-        const careSettings = activities.map(a => a.rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING]);
-        if (_.uniq(careSettings).length === activities.length) {
-          return;
-        }
+      const careSettings = activities.map(a => a.rowData[BULK_UPLOAD_COLUMNS.CARE_SETTING]);
+      if (_.uniq(careSettings).length === activities.length) {
+        return;
       }
       errors.push({
         message: `Duplicate care activity - ${name}`,
@@ -566,11 +570,45 @@ export class CareActivityBulkService {
       careBundleDisplayNames,
     );
 
+    // Build pre-save maps keyed by cleanText(name) BEFORE save, because:
+    // 1. M-M relations (careLocations) aren't guaranteed on TypeORM save() return
+    // 2. CareActivity's @BeforeInsert hook transforms name via cleanText()
+    // 3. bundle relation may not survive the save() round-trip
+    // After save we remap by activity.id.
+    const nameToUnitIds = new Map<string, Set<string>>();
+    const nameToBundleId = new Map<string, string>();
+    for (const partial of partialCareActivities) {
+      const key = cleanText(partial.name);
+      nameToUnitIds.set(key, new Set(partial.careLocations?.map(u => u.id) ?? []));
+      if (partial.bundle?.id) {
+        nameToBundleId.set(key, partial.bundle.id);
+      }
+    }
+
+    // Fetch affected units before the transaction (units are already committed from saveCareLocations above)
+    const affectedUnits = await this.unitService.getUnitsByNames(
+      Array.from(careSettingDisplayNames),
+    );
+
     // Wrap critical operations in a transaction to ensure atomicity
     // If any step fails, all changes are rolled back
     await this.careActivityRepo.manager.transaction(async manager => {
       // upsert care activities within transaction
       const activities = await manager.save(CareActivity, partialCareActivities);
+
+      // Remap name-based mappings to ID-based for template sync
+      const activityUnitMapping = new Map<string, Set<string>>();
+      const activityBundleMapping = new Map<string, string>();
+      for (const activity of activities) {
+        const unitIds = nameToUnitIds.get(activity.name);
+        if (unitIds) {
+          activityUnitMapping.set(activity.id, unitIds);
+        }
+        const bundleId = nameToBundleId.get(activity.name);
+        if (bundleId) {
+          activityBundleMapping.set(activity.id, bundleId);
+        }
+      }
 
       // process allowed activities (see processAllowedActivities JSDoc for filtering behavior)
       const { allowedActivities, disallowedActivities } = await this.processAllowedActivities(
@@ -579,7 +617,7 @@ export class CareActivityBulkService {
         proceedWithMissingOccupations ? careActivitiesBulkDto.headers : undefined,
       );
 
-      // upsert allowed activities within transaction
+      // upsert allowed activities within transaction (legacy — still used by Scope of Practice)
       if (allowedActivities.length) {
         await manager.upsert(
           AllowedActivity,
@@ -591,9 +629,7 @@ export class CareActivityBulkService {
         );
       }
 
-      // remove disallowed activities within transaction
-      // Note: Promise.all doesn't truly parallelize here (transaction shares one DB connection),
-      // but chunking keeps promise count manageable for code clarity and avoids memory pressure
+      // remove disallowed activities within transaction (legacy)
       if (disallowedActivities.length) {
         const chunks = _.chunk(disallowedActivities, 20);
         for (const chunk of chunks) {
@@ -608,6 +644,22 @@ export class CareActivityBulkService {
           );
         }
       }
+
+      // Sync to template system — ensures CMS display and planning sessions see bulk-uploaded data
+      const templatesByUnitId = await this.careSettingTemplateService.findOrCreateMasterTemplates(
+        manager,
+        affectedUnits,
+      );
+
+      await this.careSettingTemplateService.syncBulkUploadToTemplates(
+        manager,
+        templatesByUnitId,
+        activities,
+        activityUnitMapping,
+        activityBundleMapping,
+        allowedActivities,
+        disallowedActivities,
+      );
     });
   }
 
