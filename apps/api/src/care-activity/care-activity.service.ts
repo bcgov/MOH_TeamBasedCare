@@ -339,6 +339,25 @@ export class CareActivityService {
     });
   }
 
+  async removeCareActivityCMS(id: string) {
+    if (!id) {
+      throw new BadRequestException({
+        message: 'Cannot delete care activity: id missing',
+      });
+    }
+
+    const careActivity = await this.careActivityRepo.findOne({ where: { id } });
+
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot delete care activity: id not found',
+        data: { id },
+      });
+    }
+
+    await this.careActivityRepo.remove(careActivity);
+  }
+
   async removeCareActivity(id: string, unitId: string) {
     // validate id exist
     if (!id) {
