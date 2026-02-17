@@ -9,6 +9,7 @@ describe('KpiController', () => {
   const mockKpiService = {
     getKPIsOverview: jest.fn(),
     getCareSettings: jest.fn(),
+    getEffectiveHealthAuthority: jest.fn(),
   };
 
   const createMockReq = (roles: Role[], organization?: string) => ({
@@ -57,17 +58,20 @@ describe('KpiController', () => {
     });
 
     it('should pass filter as-is for admin users', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue(null);
       mockKpiService.getKPIsOverview.mockResolvedValue(mockOverview);
       const req = createMockReq([Role.ADMIN]);
 
       const filter = { healthAuthority: 'Fraser Health' };
       const result = await controller.getOverview(filter, req as any);
 
+      expect(mockKpiService.getEffectiveHealthAuthority).toHaveBeenCalledWith(req.user);
       expect(mockKpiService.getKPIsOverview).toHaveBeenCalledWith(filter);
       expect(result).toBe(mockOverview);
     });
 
     it('should override HA filter for content admin', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue('Interior Health');
       mockKpiService.getKPIsOverview.mockResolvedValue(mockOverview);
       const req = createMockReq([Role.CONTENT_ADMIN], 'Interior Health');
 
@@ -80,6 +84,7 @@ describe('KpiController', () => {
     });
 
     it('should pass empty filter for admin', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue(null);
       mockKpiService.getKPIsOverview.mockResolvedValue(mockOverview);
       const req = createMockReq([Role.ADMIN]);
 
@@ -89,6 +94,7 @@ describe('KpiController', () => {
     });
 
     it('should pass careSettingId filter for admin', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue(null);
       mockKpiService.getKPIsOverview.mockResolvedValue(mockOverview);
       const req = createMockReq([Role.ADMIN]);
 
@@ -106,16 +112,19 @@ describe('KpiController', () => {
     ];
 
     it('should pass null HA for admin (sees all templates)', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue(null);
       mockKpiService.getCareSettings.mockResolvedValue(mockCareSettings);
       const req = createMockReq([Role.ADMIN]);
 
       const result = await controller.getCareSettings(req as any);
 
+      expect(mockKpiService.getEffectiveHealthAuthority).toHaveBeenCalledWith(req.user);
       expect(mockKpiService.getCareSettings).toHaveBeenCalledWith(null);
       expect(result).toBe(mockCareSettings);
     });
 
     it('should pass user org for content admin', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue('Fraser Health');
       mockKpiService.getCareSettings.mockResolvedValue([mockCareSettings[1]]);
       const req = createMockReq([Role.CONTENT_ADMIN], 'Fraser Health');
 
@@ -125,6 +134,7 @@ describe('KpiController', () => {
     });
 
     it('should pass empty string when content admin has no org', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue('');
       mockKpiService.getCareSettings.mockResolvedValue([]);
       const req = createMockReq([Role.CONTENT_ADMIN]);
 
@@ -134,6 +144,7 @@ describe('KpiController', () => {
     });
 
     it('should return empty array when no care settings exist', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue(null);
       mockKpiService.getCareSettings.mockResolvedValue([]);
       const req = createMockReq([Role.ADMIN]);
 
@@ -143,6 +154,7 @@ describe('KpiController', () => {
     });
 
     it('should propagate service errors', async () => {
+      mockKpiService.getEffectiveHealthAuthority.mockReturnValue(null);
       mockKpiService.getCareSettings.mockRejectedValue(new Error('DB error'));
       const req = createMockReq([Role.ADMIN]);
 

@@ -36,6 +36,22 @@ export class CarePlansBySettingRO {
 }
 
 @Exclude()
+export class KPICareSettingRO {
+  @Expose()
+  id!: string;
+
+  @Expose()
+  displayName!: string;
+
+  @Expose()
+  healthAuthority!: string;
+
+  constructor(data: Partial<KPICareSettingRO>) {
+    Object.assign(this, data);
+  }
+}
+
+@Exclude()
 export class KPIsOverviewRO {
   @Expose()
   general!: GeneralKPIsRO;

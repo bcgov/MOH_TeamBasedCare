@@ -4,7 +4,7 @@ import { KpiService } from './kpi.service';
 import { User } from 'src/user/entities/user.entity';
 import { PlanningSession } from 'src/planning-session/entity/planning-session.entity';
 import { CareSettingTemplate } from 'src/unit/entity/care-setting-template.entity';
-import { GeneralKPIsRO, CarePlansBySettingRO, KPIsOverviewRO } from '@tbcm/common';
+import { GeneralKPIsRO, CarePlansBySettingRO, KPIsOverviewRO, KPICareSettingRO, Role } from '@tbcm/common';
 
 describe('KpiService', () => {
   let service: KpiService;
@@ -74,6 +74,39 @@ describe('KpiService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('getEffectiveHealthAuthority', () => {
+    it('should return null for admin users', () => {
+      const result = service.getEffectiveHealthAuthority({
+        roles: [Role.ADMIN],
+        organization: 'Fraser Health',
+      });
+      expect(result).toBeNull();
+    });
+
+    it('should return organization for content admin', () => {
+      const result = service.getEffectiveHealthAuthority({
+        roles: [Role.CONTENT_ADMIN],
+        organization: 'Interior Health',
+      });
+      expect(result).toBe('Interior Health');
+    });
+
+    it('should return empty string when content admin has no organization', () => {
+      const result = service.getEffectiveHealthAuthority({
+        roles: [Role.CONTENT_ADMIN],
+      });
+      expect(result).toBe('');
+    });
+
+    it('should return null when user has both admin and content admin roles', () => {
+      const result = service.getEffectiveHealthAuthority({
+        roles: [Role.ADMIN, Role.CONTENT_ADMIN],
+        organization: 'Fraser Health',
+      });
+      expect(result).toBeNull();
+    });
   });
 
   describe('getGeneralKPIs', () => {
@@ -377,11 +410,10 @@ describe('KpiService', () => {
       const result = await service.getCareSettings(null);
 
       expect(result).toHaveLength(3);
-      expect(result[0]).toEqual({
-        id: 'tmpl-1',
-        displayName: 'ACUTE Care',
-        healthAuthority: 'GLOBAL',
-      });
+      expect(result[0]).toBeInstanceOf(KPICareSettingRO);
+      expect(result[0].id).toBe('tmpl-1');
+      expect(result[0].displayName).toBe('ACUTE Care');
+      expect(result[0].healthAuthority).toBe('GLOBAL');
       expect(mockTemplateQueryBuilder.where).not.toHaveBeenCalled();
     });
 
@@ -426,11 +458,10 @@ describe('KpiService', () => {
 
       const result = await service.getCareSettings(null);
 
-      expect(result[0]).toEqual({
-        id: 'tmpl-1',
-        displayName: 'ACUTE Care',
-        healthAuthority: 'GLOBAL',
-      });
+      expect(result[0]).toBeInstanceOf(KPICareSettingRO);
+      expect(result[0].id).toBe('tmpl-1');
+      expect(result[0].displayName).toBe('ACUTE Care');
+      expect(result[0].healthAuthority).toBe('GLOBAL');
       expect(result[0]).not.toHaveProperty('extraField');
     });
   });

@@ -4,7 +4,14 @@ import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { PlanningSession } from 'src/planning-session/entity/planning-session.entity';
 import { CareSettingTemplate } from 'src/unit/entity/care-setting-template.entity';
-import { GeneralKPIsRO, CarePlansBySettingRO, KPIsOverviewRO, KPIFilterDTO } from '@tbcm/common';
+import {
+  GeneralKPIsRO,
+  CarePlansBySettingRO,
+  KPIsOverviewRO,
+  KPIFilterDTO,
+  KPICareSettingRO,
+  Role,
+} from '@tbcm/common';
 
 @Injectable()
 export class KpiService {
@@ -16,6 +23,13 @@ export class KpiService {
     @InjectRepository(CareSettingTemplate)
     private readonly templateRepo: Repository<CareSettingTemplate>,
   ) {}
+
+  /** Returns null for admins (no HA restriction), or the user's org for content admins. */
+  getEffectiveHealthAuthority(user: { roles?: Role[]; organization?: string }): string | null {
+    const isAdmin = user.roles?.some(r => r === Role.ADMIN);
+    if (isAdmin) return null;
+    return user.organization || '';
+  }
 
   async getGeneralKPIs(healthAuthority?: string): Promise<GeneralKPIsRO> {
     // Total Users (non-revoked)
@@ -117,9 +131,7 @@ export class KpiService {
     });
   }
 
-  async getCareSettings(
-    healthAuthority?: string | null,
-  ): Promise<{ id: string; displayName: string; healthAuthority: string }[]> {
+  async getCareSettings(healthAuthority?: string | null): Promise<KPICareSettingRO[]> {
     const queryBuilder = this.templateRepo
       .createQueryBuilder('cst')
       .innerJoin('cst.unit', 'u')
@@ -141,10 +153,13 @@ export class KpiService {
     queryBuilder.orderBy('u.displayName', 'ASC').addOrderBy('cst.healthAuthority', 'ASC');
 
     const results = await queryBuilder.getRawMany();
-    return results.map(r => ({
-      id: r.id,
-      displayName: r.displayName,
-      healthAuthority: r.healthAuthority,
-    }));
+    return results.map(
+      r =>
+        new KPICareSettingRO({
+          id: r.id,
+          displayName: r.displayName,
+          healthAuthority: r.healthAuthority,
+        }),
+    );
   }
 }
