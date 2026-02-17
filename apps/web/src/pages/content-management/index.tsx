@@ -91,7 +91,7 @@ const ContentManagement: NextPage = () => {
 
   const onEditCareActivityClick = (careActivity: CareActivityCMSRO) => {
     const url = AllowedPath.CONTENT_MANAGEMENT_CARE_ACTIVITY.replace(':id', careActivity.id);
-    updateActivePath(`${url}?unitId=${careActivity.unitId}`);
+    updateActivePath(url);
   };
 
   const onBulkUploadClick = () => {

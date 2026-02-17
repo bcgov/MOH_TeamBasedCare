@@ -47,10 +47,20 @@ const Dashboard: NextPage = () => {
   return (
     <AppLayout>
       <div className='space-y-6'>
-        {/* Header with title and Download button */}
-        <div className='flex justify-between items-center'>
+        {/* Header with title, HA filter, and Download button */}
+        <div className='flex flex-wrap justify-between items-center gap-4'>
           <h1 className='text-2xl font-bold text-bcBluePrimary'>KPIs Overview</h1>
-          <ExportKPIButton data={overview} isLoading={isLoading} />
+          <div className='flex items-center gap-4'>
+            {isAdmin && (
+              <DashboardFilters
+                healthAuthorityOptions={healthAuthorityOptions}
+                selectedHealthAuthority={filters.healthAuthority}
+                onHealthAuthorityChange={setHealthAuthorityFilter}
+                filterType='healthAuthority'
+              />
+            )}
+            <ExportKPIButton data={overview} isLoading={isLoading} />
+          </div>
         </div>
 
         {/* Section 1: General KPIs */}
@@ -92,15 +102,14 @@ const Dashboard: NextPage = () => {
             Care Plans Created By Practice Settings & Health Authority
           </h2>
 
-          <DashboardFilters
-            healthAuthorityOptions={healthAuthorityOptions}
-            careSettingOptions={careSettingOptions}
-            selectedHealthAuthority={filters.healthAuthority}
-            selectedCareSetting={filters.careSettingId}
-            onHealthAuthorityChange={setHealthAuthorityFilter}
-            onCareSettingChange={setCareSettingFilter}
-            showHealthAuthorityFilter={isAdmin}
-          />
+          <div className='mb-6'>
+            <DashboardFilters
+              careSettingOptions={careSettingOptions}
+              selectedCareSetting={filters.careSettingId}
+              onCareSettingChange={setCareSettingFilter}
+              filterType='careSetting'
+            />
+          </div>
 
           {isLoading ? (
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>

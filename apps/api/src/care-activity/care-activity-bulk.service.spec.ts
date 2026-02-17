@@ -1121,9 +1121,10 @@ describe('CareActivityBulkService', () => {
       mockOccupationService.getAllOccupations.mockResolvedValue([
         createMockOccupation({ id: 'occ-1', displayName: 'Registered Nurse' }),
       ]);
-      // First call: ID lookup returns empty (stale IDs)
-      // Second call: duplicate check after stripping returns empty
-      // Third call: TOCTOU re-check after stripping returns empty
+      // All find calls return empty:
+      // 1. ID lookup in checkCareActivitiesUniq → no match (stale ID)
+      // 2. Proactive name match in checkCareActivitiesUniq → no match
+      // 3. TOCTOU re-check in uploadCareActivitiesBulk → no match
       mockCareActivityRepo.find.mockResolvedValue([]);
       mockUnitService.saveCareLocations.mockResolvedValue(undefined);
       mockUnitService.getAllUnits.mockResolvedValue([
@@ -1186,12 +1187,13 @@ describe('CareActivityBulkService', () => {
         displayName: 'Duplicate Activity',
       });
 
-      // When all rows have IDs, rowsWithoutId is empty, so checkCareActivitiesUniq
-      // does NOT call the second find. The order is:
+      // The find calls are:
       // 1. ID lookup in checkCareActivitiesUniq → returns empty (stale ID)
-      // 2. TOCTOU re-check in uploadCareActivitiesBulk → finds duplicate
+      // 2. Proactive name match in checkCareActivitiesUniq → returns match
+      // 3. TOCTOU re-check in uploadCareActivitiesBulk → finds duplicate
       mockCareActivityRepo.find
         .mockResolvedValueOnce([]) // ID lookup - no match for stale ID
+        .mockResolvedValueOnce([existingActivity]) // Proactive name match check
         .mockResolvedValueOnce([existingActivity]); // TOCTOU re-check finds duplicate
 
       const dto = {

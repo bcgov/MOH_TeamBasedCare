@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Bundle } from './entity/bundle.entity';
@@ -337,6 +343,44 @@ export class CareActivityService {
         await manager.save(allowedActivitiesToCreate);
       }
     });
+  }
+
+  async removeCareActivityCMS(id: string, healthAuthority?: string | null) {
+    if (!id) {
+      throw new BadRequestException({
+        message: 'Cannot delete care activity: id missing',
+      });
+    }
+
+    const careActivity = await this.careActivityRepo.findOne({ where: { id } });
+
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot delete care activity: id not found',
+        data: { id },
+      });
+    }
+
+    // Content admins can only delete if the activity is not used in other HAs' templates
+    if (healthAuthority !== null && healthAuthority !== undefined) {
+      const otherHATemplates = await this.careActivityRepo.manager
+        .createQueryBuilder()
+        .select('cst.id')
+        .from('care_setting_template_activities', 'csta')
+        .innerJoin('care_setting_template', 'cst', 'cst.id = csta.care_setting_template_id')
+        .where('csta.care_activity_id = :id', { id })
+        .andWhere('cst.health_authority != :ha', { ha: healthAuthority })
+        .andWhere("cst.health_authority != 'GLOBAL'")
+        .getRawMany();
+
+      if (otherHATemplates.length > 0) {
+        throw new ForbiddenException(
+          'Cannot delete care activity: it is used in templates belonging to another health authority',
+        );
+      }
+    }
+
+    await this.careActivityRepo.remove(careActivity);
   }
 
   async removeCareActivity(id: string, unitId: string) {

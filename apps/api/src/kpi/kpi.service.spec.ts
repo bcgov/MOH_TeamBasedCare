@@ -225,12 +225,11 @@ describe('KpiService', () => {
       expect(result[0].healthAuthority).toBe('Fraser Health');
       expect(result[0].count).toBe(10);
 
-      // Verify joins use template, not unit directly
+      // Verify joins use template directly (no unit join needed)
       expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith(
         'ps.careSettingTemplate',
         'cst',
       );
-      expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith('cst.unit', 'u');
       expect(mockPlanningSessionQueryBuilder.groupBy).toHaveBeenCalledWith('cst.id');
     });
 
@@ -450,7 +449,7 @@ describe('KpiService', () => {
 
       await service.getCareSettings(null);
 
-      expect(mockTemplateQueryBuilder.orderBy).toHaveBeenCalledWith('u.displayName', 'ASC');
+      expect(mockTemplateQueryBuilder.orderBy).toHaveBeenCalledWith('cst.name', 'ASC');
       expect(mockTemplateQueryBuilder.addOrderBy).toHaveBeenCalledWith(
         'cst.healthAuthority',
         'ASC',

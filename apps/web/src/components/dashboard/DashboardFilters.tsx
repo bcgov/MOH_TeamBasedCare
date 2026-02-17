@@ -4,16 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { HeadlessListOptions } from '../HeadlessList';
 
-export interface DashboardFiltersProps {
-  healthAuthorityOptions: HeadlessListOptions<string>[];
-  careSettingOptions: HeadlessListOptions<string>[];
-  selectedHealthAuthority: string;
-  selectedCareSetting: string;
-  onHealthAuthorityChange: (value: string) => void;
-  onCareSettingChange: (value: string) => void;
-  showHealthAuthorityFilter?: boolean;
-}
-
 interface FilterDropdownProps {
   label: string;
   options: HeadlessListOptions<string>[];
@@ -22,7 +12,7 @@ interface FilterDropdownProps {
 }
 
 const FilterDropdown: React.FC<FilterDropdownProps> = ({ label, options, value, onChange }) => {
-  const selectedLabel = options.find(o => o.value === value)?.label || 'All';
+  const selectedLabel = options.find(o => o.value === value)?.label ?? 'All';
 
   return (
     <Listbox value={value} onChange={onChange}>
@@ -39,9 +29,9 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({ label, options, value, 
           leaveTo='opacity-0'
         >
           <Listbox.Options className='absolute mt-1 max-h-60 w-full min-w-[200px] overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10'>
-            {options.map((option, index) => (
+            {options.map(option => (
               <Listbox.Option
-                key={index}
+                key={option.value}
                 value={option.value}
                 className={({ selected }) =>
                   `cursor-pointer select-none py-2 px-4 ${
@@ -59,31 +49,38 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({ label, options, value, 
   );
 };
 
-export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
-  healthAuthorityOptions,
-  careSettingOptions,
-  selectedHealthAuthority,
-  selectedCareSetting,
-  onHealthAuthorityChange,
-  onCareSettingChange,
-  showHealthAuthorityFilter = true,
-}) => {
-  return (
-    <div className='flex flex-wrap gap-4 mb-6'>
-      {showHealthAuthorityFilter && (
-        <FilterDropdown
-          label='Filter by Health Authority'
-          options={healthAuthorityOptions}
-          value={selectedHealthAuthority}
-          onChange={onHealthAuthorityChange}
-        />
-      )}
+export type DashboardFiltersProps =
+  | {
+      filterType: 'healthAuthority';
+      healthAuthorityOptions: HeadlessListOptions<string>[];
+      selectedHealthAuthority: string;
+      onHealthAuthorityChange: (value: string) => void;
+    }
+  | {
+      filterType: 'careSetting';
+      careSettingOptions: HeadlessListOptions<string>[];
+      selectedCareSetting: string;
+      onCareSettingChange: (value: string) => void;
+    };
+
+export const DashboardFilters: React.FC<DashboardFiltersProps> = props => {
+  if (props.filterType === 'healthAuthority') {
+    return (
       <FilterDropdown
-        label='Filter by Care Setting'
-        options={careSettingOptions}
-        value={selectedCareSetting}
-        onChange={onCareSettingChange}
+        label='Health Authority'
+        options={props.healthAuthorityOptions}
+        value={props.selectedHealthAuthority}
+        onChange={props.onHealthAuthorityChange}
       />
-    </div>
+    );
+  }
+
+  return (
+    <FilterDropdown
+      label='Care Setting'
+      options={props.careSettingOptions}
+      value={props.selectedCareSetting}
+      onChange={props.onCareSettingChange}
+    />
   );
 };
