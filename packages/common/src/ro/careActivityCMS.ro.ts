@@ -15,7 +15,6 @@ export class CareActivityCMSRO extends CareActivityRO {
   @Expose()
   unitName!: string;
 
-
   constructor(data: any) {
     super(data);
     this.bundleName = data.bundle?.displayName ?? this.bundleName;
