@@ -81,13 +81,12 @@ export class KpiService {
     const queryBuilder = this.planningSessionRepo
       .createQueryBuilder('ps')
       .innerJoin('ps.careSettingTemplate', 'cst')
-      .innerJoin('cst.unit', 'u')
       .select('cst.id', 'careSettingId')
-      .addSelect('u.displayName', 'careSettingName')
+      .addSelect('cst.name', 'careSettingName')
       .addSelect('cst.healthAuthority', 'healthAuthority')
       .addSelect('COUNT(ps.id)', 'count')
       .groupBy('cst.id')
-      .addGroupBy('u.displayName')
+      .addGroupBy('cst.name')
       .addGroupBy('cst.healthAuthority')
       .orderBy('count', 'DESC');
 
@@ -134,9 +133,8 @@ export class KpiService {
   async getCareSettings(healthAuthority?: string | null): Promise<KPICareSettingRO[]> {
     const queryBuilder = this.templateRepo
       .createQueryBuilder('cst')
-      .innerJoin('cst.unit', 'u')
       .select('cst.id', 'id')
-      .addSelect('u.displayName', 'displayName')
+      .addSelect('cst.name', 'displayName')
       .addSelect('cst.healthAuthority', 'healthAuthority');
 
     // Content admins see their HA + GLOBAL templates; admins see all (healthAuthority = null)
@@ -150,7 +148,7 @@ export class KpiService {
       }
     }
 
-    queryBuilder.orderBy('u.displayName', 'ASC').addOrderBy('cst.healthAuthority', 'ASC');
+    queryBuilder.orderBy('cst.name', 'ASC').addOrderBy('cst.healthAuthority', 'ASC');
 
     const results = await queryBuilder.getRawMany();
     return results.map(
