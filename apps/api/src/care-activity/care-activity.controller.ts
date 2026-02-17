@@ -121,9 +121,11 @@ export class CareActivityController {
 
   @Delete('cms/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
-  async removeCareActivityCMS(@Param('id') id: string) {
-    await this.careActivityService.removeCareActivityCMS(id);
+  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
+  async removeCareActivityCMS(@Param('id') id: string, @Req() req: IRequest) {
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isAdmin ? null : req.user.organization ?? '';
+    await this.careActivityService.removeCareActivityCMS(id, healthAuthority);
   }
 
   @Delete(':id/:unitName')
