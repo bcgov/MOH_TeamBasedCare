@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { API_ENDPOINT } from '../common';
-import { KPIsOverviewRO } from '@tbcm/common';
+import { KPIsOverviewRO, KPICareSettingRO } from '@tbcm/common';
 import { AxiosPublic } from 'src/utils';
 import useSWR from 'swr';
 
@@ -51,7 +51,7 @@ export const useKPIs = () => {
 };
 
 export const useKPICareSettings = () => {
-  const response = useSWR<{ id: string; displayName: string }[]>(
+  const response = useSWR<KPICareSettingRO[]>(
     API_ENDPOINT.KPI_CARE_SETTINGS,
     (url: string) => AxiosPublic(url).then(res => res.data),
     {

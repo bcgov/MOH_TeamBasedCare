@@ -8,7 +8,7 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Role, KPIFilterDTO, KPIsOverviewRO } from '@tbcm/common';
+import { Role, KPIFilterDTO, KPIsOverviewRO, KPICareSettingRO } from '@tbcm/common';
 import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { IRequest } from 'src/common/app-request';
 import { KpiService } from './kpi.service';
@@ -24,21 +24,24 @@ export class KpiController {
 
   @Get('overview')
   async getOverview(@Query() filter: KPIFilterDTO, @Req() req: IRequest): Promise<KPIsOverviewRO> {
-    // Content editors only see their own health authority's data
-    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
-    if (!isAdmin && !req.user.organization) {
+    const ha = this.kpiService.getEffectiveHealthAuthority(req.user);
+    if (ha !== null && !req.user.organization) {
       this.logger.warn(
         `Non-admin user ${req.user.id} has no organization set - KPI data will be empty`,
       );
     }
-    const effectiveFilter = isAdmin
-      ? filter
-      : { ...filter, healthAuthority: req.user.organization || '' };
+    const effectiveFilter = ha === null ? filter : { ...filter, healthAuthority: ha };
     return this.kpiService.getKPIsOverview(effectiveFilter);
   }
 
   @Get('care-settings')
-  async getCareSettings(): Promise<{ id: string; displayName: string }[]> {
-    return this.kpiService.getCareSettings();
+  async getCareSettings(@Req() req: IRequest): Promise<KPICareSettingRO[]> {
+    const ha = this.kpiService.getEffectiveHealthAuthority(req.user);
+    if (ha !== null && !req.user.organization) {
+      this.logger.warn(
+        `Non-admin user ${req.user.id} has no organization set - KPI data will be empty`,
+      );
+    }
+    return this.kpiService.getCareSettings(ha);
   }
 }
