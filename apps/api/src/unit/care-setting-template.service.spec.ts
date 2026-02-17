@@ -33,6 +33,7 @@ describe('CareSettingTemplateService', () => {
     getRawMany: jest.fn(),
     getRawOne: jest.fn(),
     from: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
   });
 
   let mockTemplateQB: ReturnType<typeof createMockQueryBuilder>;
@@ -146,6 +147,8 @@ describe('CareSettingTemplateService', () => {
   describe('findTemplates', () => {
     beforeEach(() => {
       mockTemplateQB.getManyAndCount.mockResolvedValue([[mockTemplate], 1]);
+      // getMissingPermissionsCountBatch uses manager QB with getRawMany
+      mockManagerQB.getRawMany.mockResolvedValue([]);
     });
 
     it('should return paginated results with defaults', async () => {
@@ -245,13 +248,21 @@ describe('CareSettingTemplateService', () => {
 
   // ─── getTemplateById ───────────────────────────────────────────────
   describe('getTemplateById', () => {
-    it('should return template detail with bundles and permissions', async () => {
+    it('should return template detail with bundles and permissions from raw query', async () => {
+      // Entity has 2 permissions via relation, but raw query returns only 1.
+      // Result should have 1 — proving the raw query path is used.
       const templateWithPerms = {
         ...mockTemplate,
-        permissions: [{ careActivity: { id: 'a-1' }, occupation: { id: 'o-1' }, permission: 'Y' }],
+        permissions: [
+          { careActivity: { id: 'a-1' }, occupation: { id: 'o-1' }, permission: 'Y' },
+          { careActivity: { id: 'a-2' }, occupation: { id: 'o-2' }, permission: 'LC' },
+        ],
       };
       mockTemplateRepo.findOne.mockResolvedValue(templateWithPerms);
       mockBundleQB.getMany.mockResolvedValue([]);
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'a-1', occupation_id: 'o-1', permission: 'Y' },
+      ]);
 
       const result = await service.getTemplateById('tmpl-1');
 
