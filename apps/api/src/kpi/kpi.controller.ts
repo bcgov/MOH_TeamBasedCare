@@ -22,23 +22,29 @@ export class KpiController {
 
   constructor(private readonly kpiService: KpiService) {}
 
-  @Get('overview')
-  async getOverview(@Query() filter: KPIFilterDTO, @Req() req: IRequest): Promise<KPIsOverviewRO> {
-    // Content editors only see their own health authority's data
+  /** Returns null for admins (no HA restriction), or the user's org for content admins. */
+  private getEffectiveHealthAuthority(req: IRequest): string | null {
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
-    if (!isAdmin && !req.user.organization) {
+    if (isAdmin) return null;
+    if (!req.user.organization) {
       this.logger.warn(
         `Non-admin user ${req.user.id} has no organization set - KPI data will be empty`,
       );
     }
-    const effectiveFilter = isAdmin
-      ? filter
-      : { ...filter, healthAuthority: req.user.organization || '' };
+    return req.user.organization || '';
+  }
+
+  @Get('overview')
+  async getOverview(@Query() filter: KPIFilterDTO, @Req() req: IRequest): Promise<KPIsOverviewRO> {
+    const ha = this.getEffectiveHealthAuthority(req);
+    const effectiveFilter = ha === null ? filter : { ...filter, healthAuthority: ha };
     return this.kpiService.getKPIsOverview(effectiveFilter);
   }
 
   @Get('care-settings')
-  async getCareSettings(): Promise<{ id: string; displayName: string }[]> {
-    return this.kpiService.getCareSettings();
+  async getCareSettings(
+    @Req() req: IRequest,
+  ): Promise<{ id: string; displayName: string; healthAuthority: string }[]> {
+    return this.kpiService.getCareSettings(this.getEffectiveHealthAuthority(req));
   }
 }

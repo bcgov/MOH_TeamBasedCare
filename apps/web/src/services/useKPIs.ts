@@ -51,7 +51,7 @@ export const useKPIs = () => {
 };
 
 export const useKPICareSettings = () => {
-  const response = useSWR<{ id: string; displayName: string }[]>(
+  const response = useSWR<{ id: string; displayName: string; healthAuthority: string }[]>(
     API_ENDPOINT.KPI_CARE_SETTINGS,
     (url: string) => AxiosPublic(url).then(res => res.data),
     {

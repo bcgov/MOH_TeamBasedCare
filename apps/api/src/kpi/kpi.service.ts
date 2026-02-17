@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { PlanningSession } from 'src/planning-session/entity/planning-session.entity';
-import { Unit } from 'src/unit/entity/unit.entity';
+import { CareSettingTemplate } from 'src/unit/entity/care-setting-template.entity';
 import { GeneralKPIsRO, CarePlansBySettingRO, KPIsOverviewRO, KPIFilterDTO } from '@tbcm/common';
 
 @Injectable()
@@ -13,8 +13,8 @@ export class KpiService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(PlanningSession)
     private readonly planningSessionRepo: Repository<PlanningSession>,
-    @InjectRepository(Unit)
-    private readonly unitRepo: Repository<Unit>,
+    @InjectRepository(CareSettingTemplate)
+    private readonly templateRepo: Repository<CareSettingTemplate>,
   ) {}
 
   async getGeneralKPIs(healthAuthority?: string): Promise<GeneralKPIsRO> {
@@ -43,13 +43,15 @@ export class KpiService {
 
     const activeUsers = await activeUsersQuery.getCount();
 
-    // Total Care Plans (filter by createdBy user's organization)
-    const carePlansQuery = this.planningSessionRepo.createQueryBuilder('ps');
+    // Total Care Plans (always join template for consistency with per-template cards)
+    const carePlansQuery = this.planningSessionRepo
+      .createQueryBuilder('ps')
+      .innerJoin('ps.careSettingTemplate', 'cst');
 
     if (healthAuthority) {
-      carePlansQuery
-        .innerJoin('ps.createdBy', 'usr')
-        .where('usr.organization = :healthAuthority', { healthAuthority });
+      carePlansQuery.where('cst.healthAuthority IN (:...authorities)', {
+        authorities: [healthAuthority, 'GLOBAL'],
+      });
     }
 
     const totalCarePlans = await carePlansQuery.getCount();
@@ -64,27 +66,27 @@ export class KpiService {
   async getCarePlansBySetting(filter: KPIFilterDTO): Promise<CarePlansBySettingRO[]> {
     const queryBuilder = this.planningSessionRepo
       .createQueryBuilder('ps')
-      .innerJoin('ps.careLocation', 'u')
-      .innerJoin('ps.createdBy', 'usr')
-      .select('u.id', 'careSettingId')
+      .innerJoin('ps.careSettingTemplate', 'cst')
+      .innerJoin('cst.unit', 'u')
+      .select('cst.id', 'careSettingId')
       .addSelect('u.displayName', 'careSettingName')
-      .addSelect('usr.organization', 'healthAuthority')
+      .addSelect('cst.healthAuthority', 'healthAuthority')
       .addSelect('COUNT(ps.id)', 'count')
-      .groupBy('u.id')
+      .groupBy('cst.id')
       .addGroupBy('u.displayName')
-      .addGroupBy('usr.organization')
+      .addGroupBy('cst.healthAuthority')
       .orderBy('count', 'DESC');
 
-    // Apply health authority filter
+    // Apply health authority filter (uses template's HA, not creator's org)
     if (filter.healthAuthority) {
-      queryBuilder.andWhere('usr.organization = :healthAuthority', {
-        healthAuthority: filter.healthAuthority,
+      queryBuilder.andWhere('cst.healthAuthority IN (:...authorities)', {
+        authorities: [filter.healthAuthority, 'GLOBAL'],
       });
     }
 
-    // Apply care setting filter
+    // Apply care setting filter (now a template ID)
     if (filter.careSettingId) {
-      queryBuilder.andWhere('u.id = :careSettingId', {
+      queryBuilder.andWhere('cst.id = :careSettingId', {
         careSettingId: filter.careSettingId,
       });
     }
@@ -96,7 +98,8 @@ export class KpiService {
         new CarePlansBySettingRO({
           careSettingId: r.careSettingId,
           careSettingName: r.careSettingName,
-          healthAuthority: r.healthAuthority || 'Unknown',
+          healthAuthority:
+            r.healthAuthority === 'GLOBAL' ? 'Master' : r.healthAuthority || 'Unknown',
           count: parseInt(r.count, 10),
         }),
     );
@@ -114,15 +117,34 @@ export class KpiService {
     });
   }
 
-  async getCareSettings(): Promise<{ id: string; displayName: string }[]> {
-    const units = await this.unitRepo.find({
-      select: ['id', 'displayName'],
-      order: { displayName: 'ASC' },
-    });
+  async getCareSettings(
+    healthAuthority?: string | null,
+  ): Promise<{ id: string; displayName: string; healthAuthority: string }[]> {
+    const queryBuilder = this.templateRepo
+      .createQueryBuilder('cst')
+      .innerJoin('cst.unit', 'u')
+      .select('cst.id', 'id')
+      .addSelect('u.displayName', 'displayName')
+      .addSelect('cst.healthAuthority', 'healthAuthority');
 
-    return units.map(u => ({
-      id: u.id,
-      displayName: u.displayName,
+    // Content admins see their HA + GLOBAL templates; admins see all (healthAuthority = null)
+    if (healthAuthority !== undefined && healthAuthority !== null) {
+      if (healthAuthority) {
+        queryBuilder.where('cst.healthAuthority IN (:...authorities)', {
+          authorities: [healthAuthority, 'GLOBAL'],
+        });
+      } else {
+        queryBuilder.where('cst.healthAuthority = :global', { global: 'GLOBAL' });
+      }
+    }
+
+    queryBuilder.orderBy('u.displayName', 'ASC').addOrderBy('cst.healthAuthority', 'ASC');
+
+    const results = await queryBuilder.getRawMany();
+    return results.map(r => ({
+      id: r.id,
+      displayName: r.displayName,
+      healthAuthority: r.healthAuthority,
     }));
   }
 }

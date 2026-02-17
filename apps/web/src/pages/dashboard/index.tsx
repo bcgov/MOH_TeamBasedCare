@@ -32,12 +32,15 @@ const Dashboard: NextPage = () => {
     })),
   ];
 
-  // Build care setting options from API
+  // Build care setting options from API (templates with HA context)
   const careSettingOptions: HeadlessListOptions<string>[] = [
     { value: '', label: 'All' },
     ...careSettings.map(cs => ({
       value: cs.id,
-      label: cs.displayName,
+      label:
+        cs.healthAuthority === 'GLOBAL'
+          ? `${cs.displayName} (Master)`
+          : `${cs.displayName} (${cs.healthAuthority})`,
     })),
   ];
 
