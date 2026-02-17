@@ -23,6 +23,7 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
   const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [searchText, setSearchText] = useState('');
   const [filterByPermission, setFilterByPermission] = useState<Permissions>();
+  const [selectedBundleId, setSelectedBundleId] = useState('');
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {
     if (size !== pageSize) {
@@ -78,6 +79,13 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
     resetPageIndex();
   };
 
+  const onBundleChange = (bundleId: string) => {
+    setSelectedBundleId(bundleId);
+
+    // reset to first page
+    resetPageIndex();
+  };
+
   useEffect(() => {
     if (!occupationId) return;
 
@@ -89,6 +97,7 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
         sortOrder,
         searchText,
         filterByPermission,
+        bundleId: selectedBundleId || undefined,
       }),
     };
 
@@ -105,6 +114,7 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
     searchText,
     occupationId,
     filterByPermission,
+    selectedBundleId,
   ]);
 
   return {
@@ -120,6 +130,8 @@ export const useActivitiesAllowedByOccupation = (occupationId?: string) => {
     onSearchTextChange,
     filterByPermission,
     onFilterByPermissionChange,
+    selectedBundleId,
+    onBundleChange,
     isLoading,
   };
 };

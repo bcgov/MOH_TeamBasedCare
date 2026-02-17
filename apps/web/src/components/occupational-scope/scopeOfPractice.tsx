@@ -1,6 +1,8 @@
 import { OccupationItemProps } from 'src/common/interfaces';
 import { useActivitiesAllowedByOccupation } from 'src/services/useActivitiesAllowedByOccupation';
+import { useBundlesWithActivities } from 'src/services/useBundlesWithActivities';
 import { Heading } from '../Heading';
+import { BasicSelect } from '../Select';
 import { ScopeOfPracticeFilters } from './ScopeOfPracticeFilters';
 import { OccupationalScopeOfPracticeList } from './ScopeOfPracticeList';
 import { ScopeOfPracticeSearch } from './ScopeOfPracticeSearch';
@@ -23,8 +25,22 @@ export const OccupationalScopeDetailsScopeOfPractice: React.FC<
     onSearchTextChange,
     filterByPermission,
     onFilterByPermissionChange,
+    selectedBundleId,
+    onBundleChange,
     isLoading,
   } = useActivitiesAllowedByOccupation(occupation?.id);
+
+  const { bundles } = useBundlesWithActivities();
+
+  // Build bundle filter options for Care Competencies dropdown
+  const bundleFilterOptions = [
+    { label: 'All', value: '' },
+    ...bundles.map(bundle => ({
+      label: bundle.displayName,
+      value: bundle.id,
+    })),
+  ];
+
   if (!occupation) return <></>;
 
   return (
@@ -36,7 +52,22 @@ export const OccupationalScopeDetailsScopeOfPractice: React.FC<
           filterByPermission={filterByPermission}
           onFilterByPermissionChange={onFilterByPermissionChange}
         />
-        <ScopeOfPracticeSearch onSearchTextChange={onSearchTextChange} />
+      </div>
+
+      <div className='pt-3 flex gap-3 items-end'>
+        <div className='min-w-[14rem]'>
+          <BasicSelect<string>
+            id='scope-bundle-filter'
+            label='Care Competencies'
+            value={selectedBundleId}
+            onChange={onBundleChange}
+            options={bundleFilterOptions}
+            buttonClassName='w-full border border-gray-300 rounded py-3'
+          />
+        </div>
+        <div className='flex-1 max-w-md'>
+          <ScopeOfPracticeSearch onSearchTextChange={onSearchTextChange} />
+        </div>
       </div>
 
       <div className='pt-3'>

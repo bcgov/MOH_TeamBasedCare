@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { PlanningSession } from 'src/planning-session/entity/planning-session.entity';
 import { Unit } from 'src/unit/entity/unit.entity';
@@ -17,25 +17,42 @@ export class KpiService {
     private readonly unitRepo: Repository<Unit>,
   ) {}
 
-  async getGeneralKPIs(): Promise<GeneralKPIsRO> {
+  async getGeneralKPIs(healthAuthority?: string): Promise<GeneralKPIsRO> {
     // Total Users (non-revoked)
-    const totalUsers = await this.userRepo.count({
-      where: { revokedAt: IsNull() },
-    });
+    const totalUsersQuery = this.userRepo.createQueryBuilder('u').where('u.revokedAt IS NULL');
+
+    if (healthAuthority) {
+      totalUsersQuery.andWhere('u.organization = :healthAuthority', { healthAuthority });
+    }
+
+    const totalUsers = await totalUsersQuery.getCount();
 
     // Active Users (logged in during current month)
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const activeUsers = await this.userRepo
+    const activeUsersQuery = this.userRepo
       .createQueryBuilder('u')
       .where('u.lastLoginAt >= :startOfMonth', { startOfMonth })
-      .andWhere('u.revokedAt IS NULL')
-      .getCount();
+      .andWhere('u.revokedAt IS NULL');
 
-    // Total Care Plans
-    const totalCarePlans = await this.planningSessionRepo.count();
+    if (healthAuthority) {
+      activeUsersQuery.andWhere('u.organization = :healthAuthority', { healthAuthority });
+    }
+
+    const activeUsers = await activeUsersQuery.getCount();
+
+    // Total Care Plans (filter by createdBy user's organization)
+    const carePlansQuery = this.planningSessionRepo.createQueryBuilder('ps');
+
+    if (healthAuthority) {
+      carePlansQuery
+        .innerJoin('ps.createdBy', 'usr')
+        .where('usr.organization = :healthAuthority', { healthAuthority });
+    }
+
+    const totalCarePlans = await carePlansQuery.getCount();
 
     return new GeneralKPIsRO({
       totalUsers,
@@ -87,7 +104,7 @@ export class KpiService {
 
   async getKPIsOverview(filter: KPIFilterDTO): Promise<KPIsOverviewRO> {
     const [general, carePlansBySetting] = await Promise.all([
-      this.getGeneralKPIs(),
+      this.getGeneralKPIs(filter.healthAuthority),
       this.getCarePlansBySetting(filter),
     ]);
 

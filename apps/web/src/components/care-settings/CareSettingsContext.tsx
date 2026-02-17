@@ -210,7 +210,10 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
     const entries: PermissionEntry[] = [];
     state.permissions.forEach((permission, key) => {
       const [activityId, occupationId] = key.split(PERMISSION_KEY_SEPARATOR);
-      entries.push({ activityId, occupationId, permission });
+      // Only include Y and LC — the template system represents N as absence of a row
+      if (permission !== Permissions.NO) {
+        entries.push({ activityId, occupationId, permission });
+      }
     });
     return entries;
   };
