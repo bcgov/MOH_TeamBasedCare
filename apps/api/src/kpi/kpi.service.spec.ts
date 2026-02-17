@@ -4,7 +4,13 @@ import { KpiService } from './kpi.service';
 import { User } from 'src/user/entities/user.entity';
 import { PlanningSession } from 'src/planning-session/entity/planning-session.entity';
 import { CareSettingTemplate } from 'src/unit/entity/care-setting-template.entity';
-import { GeneralKPIsRO, CarePlansBySettingRO, KPIsOverviewRO, KPICareSettingRO, Role } from '@tbcm/common';
+import {
+  GeneralKPIsRO,
+  CarePlansBySettingRO,
+  KPIsOverviewRO,
+  KPICareSettingRO,
+  Role,
+} from '@tbcm/common';
 
 describe('KpiService', () => {
   let service: KpiService;
