@@ -2,6 +2,8 @@ export * from './useAuth';
 export * from './useBundles';
 export * from './useBundlesWithActivities';
 export * from './useCareActivities';
+export * from './useCareActivityCMSById';
+export * from './useCareActivityCMSEdit';
 export * from './useCareActivityEdit';
 export * from './useCareActivityById';
 export * from './useCareLocations';

@@ -90,6 +90,8 @@ export const API_ENDPOINT = {
   CARE_ACTIVITY_CMS_BULK_VALIDATE: '/care-activity/cms/bulk/validate',
   CARE_ACTIVITY_CMS_BULK_UPLOAD: '/care-activity/cms/bulk/upload',
   CARE_ACTIVITY_DOWNLOAD: '/care-activity/cms/download',
+  getCareActivityCMS: (id: string) => `/care-activity/cms/${id}`,
+  updateCareActivityCMS: (id: string) => `/care-activity/cms/${id}`,
 
   // Care Settings
   CMS_CARE_SETTING_TEMPLATES_FILTER: '/care-settings/cms/templates-for-filter',

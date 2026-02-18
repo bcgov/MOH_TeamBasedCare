@@ -1,4 +1,4 @@
-import { useCareActivityById } from '@services';
+import { useCareActivityCMSById } from '@services';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import AppLayout from 'src/components/AppLayout';
@@ -7,8 +7,8 @@ import { Spinner } from 'src/components/generic/Spinner';
 
 const CareCareActivityDetailPage: NextPage = () => {
   const router = useRouter();
-  const { id, unitId } = router.query as { id: string; unitId: string };
-  const { careActivity, isLoading } = useCareActivityById(id, unitId);
+  const { id } = router.query as { id: string };
+  const { careActivity, isLoading } = useCareActivityCMSById(id);
 
   return (
     <AppLayout>
