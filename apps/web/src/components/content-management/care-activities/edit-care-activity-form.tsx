@@ -1,9 +1,4 @@
-import {
-  CareActivityDetailRO,
-  CareActivityType,
-  EditCareActivityDTO,
-  Permissions,
-} from '@tbcm/common';
+import { CareActivityCMSDetailRO, CareActivityType, EditCareActivityCMSDTO } from '@tbcm/common';
 import { BackButtonLink } from '../../BackButtonLink';
 import { Heading } from 'src/components/Heading';
 import { Button } from 'src/components/Button';
@@ -13,84 +8,39 @@ import { Formik } from 'formik';
 import { dtoValidator } from 'src/utils/dto-validator';
 import { Field, Textarea } from '@components';
 import { BasicSelect } from 'src/components/Select';
-import { AllowedActivityDTO } from '@tbcm/common/dist/dto/allowed-activity-dto';
-import { SearchBar } from 'src/components/generic/SearchBar';
-import { useState } from 'react';
-import { useBundles, useCareActivityById, useCareActivityEdit } from '@services';
+import { useBundles, useCareActivityCMSById, useCareActivityCMSEdit } from '@services';
 
 interface EditCareActivityFormProps {
-  careActivity: CareActivityDetailRO;
+  careActivity: CareActivityCMSDetailRO;
 }
 
-const getInitialValues = (careActivity: CareActivityDetailRO): EditCareActivityDTO => ({
+const getInitialValues = (careActivity: CareActivityCMSDetailRO): EditCareActivityCMSDTO => ({
   name: careActivity.displayName ?? '',
   description: careActivity.description ?? '',
   clinicalType: careActivity.clinicalType,
   activityType: careActivity.activityType,
   bundleId: careActivity.bundle.id,
-  unitId: careActivity.careLocation.id ?? '',
-  allowedActivities: careActivity.allowedActivities.map(allowedActivity => ({
-    id: allowedActivity.id,
-    unitId: allowedActivity.unit.id,
-    occupation: allowedActivity.occupation.displayName!,
-    occupationId: allowedActivity.occupation.id,
-    permission: allowedActivity.permission,
-  })),
 });
-const permissionOptions = [
-  { label: 'Y', value: Permissions.PERFORM },
-  { label: 'LC', value: Permissions.LIMITS },
-  { label: 'N', value: 'N' },
-];
 
 const activityTypeOptions = Object.values(CareActivityType).map(value => ({ label: value, value }));
 
 export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps) => {
   const router = useRouter();
   const { bundles } = useBundles();
-  const { mutate } = useCareActivityById(careActivity.id, careActivity.careLocation.id);
-  const { handleSubmit } = useCareActivityEdit();
-  const [occupationKeyword, setOccupationKeyword] = useState('');
+  const { mutate } = useCareActivityCMSById(careActivity.id);
+  const { handleSubmit } = useCareActivityCMSEdit();
 
-  const getFilteredAllowedActivities = (allowedActivities: AllowedActivityDTO[]) =>
-    occupationKeyword
-      ? allowedActivities.filter(a =>
-          a.occupation?.toLowerCase().includes(occupationKeyword.toLowerCase()),
-        )
-      : allowedActivities;
-
-  const submit = async (values: EditCareActivityDTO) => {
-    await handleSubmit(careActivity.id, values);
-    mutate();
-  };
-
-  const getOccupationScopeRow = (row: AllowedActivityDTO, onChange: (value: string) => void) => {
-    const allowedActivity = careActivity.allowedActivities.find(
-      a => a.occupation.id === row.occupationId && a.unit.id === row.unitId,
-    );
-    if (!allowedActivity) return null;
-    const id = `matrix-${allowedActivity.occupation.id}-${allowedActivity.unit.id}`;
-    return (
-      <tr key={id} className='border-b'>
-        <td className='py-4 px-3'>{allowedActivity.occupation.displayName}</td>
-        <td>
-          <BasicSelect
-            id={id}
-            buttonClassName='max-w-[100px]'
-            options={permissionOptions}
-            value={row.permission}
-            onChange={onChange}
-          />
-        </td>
-      </tr>
-    );
+  const submit = async (values: EditCareActivityCMSDTO) => {
+    await handleSubmit(careActivity.id, values, () => {
+      mutate();
+    });
   };
 
   return (
-    <Formik<EditCareActivityDTO>
+    <Formik<EditCareActivityCMSDTO>
       initialValues={getInitialValues(careActivity)}
       onSubmit={submit}
-      validate={values => dtoValidator(EditCareActivityDTO, values)}
+      validate={values => dtoValidator(EditCareActivityCMSDTO, values)}
     >
       {({ values, setFieldValue, handleSubmit, isSubmitting, isValid }) => (
         <div className='mt-4 w-full'>
@@ -122,7 +72,7 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
               <div>
                 <label className='block text-bcBlack text-base font-bold mb-2'>Care settings</label>
                 <div className='border w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 disabled:bg-bcDisabled bg-bcGrayInput flex items-center hover:cursor-not-allowed text-sm'>
-                  {careActivity.careLocation.displayName}
+                  {careActivity.templateNames || 'None'}
                 </div>
               </div>
               <div>
@@ -153,42 +103,6 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
                 className='max-h-[80px] border w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 text-sm border-gray-300'
               />
             </div>
-          </Card>
-          <Card bgWhite className='mt-4 p-6'>
-            <div className='flex flex-row text-left text-bcBluePrimary font-bold'>
-              Scope of practice
-            </div>
-            <div>
-              Enter here to demonstrate what are the capacities of the new occupation being added to
-              the system
-            </div>
-            <SearchBar
-              handleChange={e => setOccupationKeyword(e.target.value)}
-              className='my-4 max-w-[400px]'
-              placeholderText='Search for occupation'
-            />
-            <table className='table-auto w-full border-collapse'>
-              <thead className='border-b table-row-fixed table-header'>
-                <tr>
-                  <th className='table-header item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-4'>
-                    Occupations
-                  </th>
-                  <th className='table-header item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-4'>
-                    Matrix
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {getFilteredAllowedActivities(values.allowedActivities).map(allowedActivity =>
-                  getOccupationScopeRow(allowedActivity, value => {
-                    const newAllowedActivities = values.allowedActivities?.map(row =>
-                      row.id === allowedActivity.id ? { ...row, permission: value } : row,
-                    );
-                    setFieldValue('allowedActivities', newAllowedActivities);
-                  }),
-                )}
-              </tbody>
-            </table>
           </Card>
         </div>
       )}

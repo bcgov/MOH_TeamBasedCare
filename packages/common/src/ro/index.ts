@@ -4,6 +4,7 @@ export * from './bundle.ro';
 export * from './careActivity.ro';
 export * from './careActivityBulk.ro';
 export * from './careActivityCMS.ro';
+export * from './careActivityCMSDetail.ro';
 export * from './careActivityDetail.ro';
 export * from './careSettingTemplate.ro';
 export * from './kpi.ro';

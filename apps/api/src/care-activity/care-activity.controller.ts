@@ -17,11 +17,13 @@ import { ApiTags } from '@nestjs/swagger';
 import {
   CareActivityBulkDTO,
   BundleRO,
+  CareActivityCMSDetailRO,
   CareActivityCMSRO,
   CareActivityRO,
   PaginationRO,
   Role,
   CareActivityDetailRO,
+  EditCareActivityCMSDTO,
   EditCareActivityDTO,
 } from '@tbcm/common';
 import { CareActivityService } from './care-activity.service';
@@ -100,6 +102,23 @@ export class CareActivityController {
     const commonSearchTerms = await this.careActivityService.getCommonSearchTerms();
 
     return commonSearchTerms;
+  }
+
+  @Get('cms/:id')
+  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  async getCareActivityCMSById(@Param('id') id: string): Promise<CareActivityCMSDetailRO> {
+    const { entity, templateNames } = await this.careActivityService.getCareActivityByIdCMS(id);
+    return new CareActivityCMSDetailRO({ ...entity, templateNames });
+  }
+
+  @Patch('cms/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  async updateCareActivityCMS(
+    @Param('id') id: string,
+    @Body() data: EditCareActivityCMSDTO,
+  ): Promise<void> {
+    await this.careActivityService.updateCareActivityCMS(id, data);
   }
 
   @Get(':id')

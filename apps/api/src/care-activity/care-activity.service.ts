@@ -16,6 +16,7 @@ import {
   CareActivitiesCMSFindSortKeys,
   CareActivityDetailRO,
   CareActivityRO,
+  EditCareActivityCMSDTO,
   EditCareActivityDTO,
   MASTER_TEMPLATE_SUFFIX,
   SortOrder,
@@ -425,6 +426,69 @@ export class CareActivityService {
     } else {
       await this.careActivityRepo.remove(careActivity);
     }
+  }
+
+  async getCareActivityByIdCMS(id: string) {
+    if (!id) {
+      throw new BadRequestException({ message: 'Care activity id is required' });
+    }
+
+    const entity = await this.careActivityRepo.findOne({
+      where: { id },
+      relations: ['bundle'],
+    });
+
+    if (!entity) {
+      throw new NotFoundException({
+        message: 'Care activity not found',
+        data: { id },
+      });
+    }
+
+    const templateResult = await this.careActivityRepo.manager.query(
+      `SELECT STRING_AGG(DISTINCT REPLACE(cst.name, $2, ''), ', ' ORDER BY REPLACE(cst.name, $2, ''))
+         AS template_names
+       FROM care_setting_template_activities csta
+       JOIN care_setting_template cst ON cst.id = csta.care_setting_template_id
+       WHERE csta.care_activity_id = $1`,
+      [id, MASTER_TEMPLATE_SUFFIX],
+    );
+
+    const templateNames = templateResult?.[0]?.template_names ?? '';
+
+    return { entity, templateNames };
+  }
+
+  async updateCareActivityCMS(id: string, data: EditCareActivityCMSDTO) {
+    const careActivity = await this.careActivityRepo.findOne({
+      where: { id },
+      relations: ['bundle'],
+    });
+
+    if (!careActivity) {
+      throw new NotFoundException({
+        message: 'Cannot update care activity: id not found',
+        data: { id },
+      });
+    }
+
+    if (data.bundleId && careActivity.bundle.id !== data.bundleId) {
+      const bundle = await this.bundleRepo.findOneBy({ id: data.bundleId });
+      if (!bundle) {
+        throw new NotFoundException({
+          message: 'Cannot update care activity: bundle not found',
+          data: { id: data.bundleId },
+        });
+      }
+    }
+
+    await this.careActivityRepo.update(id, {
+      displayName: data.name,
+      description: data.description,
+      bundle: { id: data.bundleId },
+      activityType: data.activityType,
+      ...(data.clinicalType !== undefined ? { clinicalType: data.clinicalType } : {}),
+    });
   }
 
   async saveCareActivities(partials: Partial<CareActivity>[]) {
