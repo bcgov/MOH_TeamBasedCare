@@ -88,7 +88,7 @@ const ActivityOccupationGrid: React.FC<{
           <FontAwesomeIcon icon={faExclamationTriangle} className='h-4 w-4 text-amber-500' />
         )}
         {activityName}
-        {hasNoPermissions && (
+        {process.env.NEXT_PUBLIC_ENABLE_MISSING_COUNT && hasNoPermissions && (
           <span className='text-xs font-normal text-amber-600'>(no permissions set)</span>
         )}
       </h4>
@@ -145,11 +145,12 @@ const BundleAccordion: React.FC<{
           <span className='font-bold text-bcBluePrimary'>{bundleName}</span>
           <span className='text-sm text-bcBlueLink'>
             {selectedActivities.length} care & restricted activities
-            {activitiesNeedingPermissions.length > 0 && (
-              <span className='text-amber-600 ml-1'>
-                ({activitiesNeedingPermissions.length} without permissions)
-              </span>
-            )}
+            {process.env.NEXT_PUBLIC_ENABLE_MISSING_COUNT &&
+              activitiesNeedingPermissions.length > 0 && (
+                <span className='text-amber-600 ml-1'>
+                  ({activitiesNeedingPermissions.length} without permissions)
+                </span>
+              )}
           </span>
         </div>
         <FontAwesomeIcon
@@ -235,18 +236,20 @@ export const Finalize: React.FC = () => {
         </Button>
       </div>
 
-      {missingCount > 0 && (
+      {process.env.NEXT_PUBLIC_ENABLE_MISSING_COUNT && missingCount > 0 && (
         <div className='mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-3'>
           <FontAwesomeIcon icon={faExclamationTriangle} className='h-5 w-5 text-amber-500' />
-          <div>
-            <span className='font-semibold text-amber-800'>
-              {missingCount} {missingCount === 1 ? 'activity has' : 'activities have'} no occupation
-              permissions
-            </span>
-            <p className='text-sm text-amber-700'>
-              Please review the highlighted activities below and set permissions where needed.
-            </p>
-          </div>
+          {process.env.NEXT_PUBLIC_ENABLE_MISSING_COUNT && (
+            <div>
+              <span className='font-semibold text-amber-800'>
+                {missingCount} {missingCount === 1 ? 'activity has' : 'activities have'} no
+                occupation permissions
+              </span>
+              <p className='text-sm text-amber-700'>
+                Please review the highlighted activities below and set permissions where needed.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
