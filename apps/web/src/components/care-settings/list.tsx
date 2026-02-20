@@ -87,7 +87,8 @@ const TableBody: React.FC<TableBodyProps> = ({
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>
             {template.name}
-            {!template.isMaster &&
+            {process.env.NEXT_PUBLIC_ENABLE_MISSING_COUNT &&
+              !template.isMaster &&
               template.missingPermissionsCount !== undefined &&
               template.missingPermissionsCount > 0 && (
                 <span className='ml-2 text-xs text-amber-600'>
