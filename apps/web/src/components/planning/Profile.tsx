@@ -1,6 +1,6 @@
-import { Radio, Checkbox } from '@components';
+import { Radio } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
-import { usePlanningContent, usePlanningContext, useMe } from '../../services';
+import { usePlanningContent, usePlanningContext } from '../../services';
 import { useCareSettingTemplatesForPlanning } from '../../services/useCareSettingTemplatesForPlanning';
 import {
   PlanningSessionRO,
@@ -24,7 +24,6 @@ export interface ProfileProps {
 interface ProfileFormProps {
   profileOption: string;
   careLocation: string;
-  userPrefNotShowConfirmDraftRemoval?: boolean;
 }
 
 const ProfileForm = ({
@@ -187,8 +186,8 @@ const ConfirmDraftRemove = ({
   handleSubmit,
   lastDraft,
 }: ConfirmDraftRemoveProps) => {
-  const { values, resetForm } = useFormikContext<ProfileFormProps>();
-  const { mutate: refetchUser } = useMe();
+  const { values } = useFormikContext<ProfileFormProps>();
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   return (
     <ModalWrapper
@@ -198,17 +197,17 @@ const ConfirmDraftRemove = ({
       closeButton={{
         title: 'Cancel',
         onClick: () => {
-          /* Only want to reset the "do not show draft" checkbox,
-        leave anything selected outside of the modal untouched*/
-          resetForm({ values: { ...values, userPrefNotShowConfirmDraftRemoval: false } });
+          setDontShowAgain(false);
           setShowModal(false);
         },
       }}
       actionButton={{
         title: 'Continue the process',
         onClick: async () => {
+          if (dontShowAgain) {
+            document.cookie = 'hideConfirmDraftRemoval=true; path=/';
+          }
           await handleSubmit(values);
-          refetchUser();
         },
       }}
     >
@@ -238,7 +237,14 @@ const ConfirmDraftRemove = ({
           </p>
         </div>
         <div className='pt-8'>
-          <Checkbox label={`Don't show this again`} name='userPrefNotShowConfirmDraftRemoval' />
+          <label className='flex items-center gap-2 cursor-pointer'>
+            <input
+              type='checkbox'
+              checked={dontShowAgain}
+              onChange={e => setDontShowAgain(e.target.checked)}
+            />
+            Don&apos;t show this again
+          </label>
         </div>
       </div>
     </ModalWrapper>
@@ -247,11 +253,8 @@ const ConfirmDraftRemove = ({
 
 export const Profile: React.FC<ProfileProps> = () => {
   const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
-  const { me } = useMe();
 
   const [showModal, setShowModal] = useState(false);
-  // Used to check if the user selected not to see the draft modal
-  const authUserPreference = me?.userPreference || {};
 
   return (
     <Formik
@@ -259,11 +262,11 @@ export const Profile: React.FC<ProfileProps> = () => {
       validate={values => dtoValidator(SaveProfileDTO, values)}
       onSubmit={values => {
         // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft.
-        // Do not show the modal if the user set their preference as such
+        // Do not show the modal if the user dismissed it via cookie
         if (
           lastDraft &&
           values.profileOption !== ProfileOptions.DRAFT &&
-          !authUserPreference.notShowConfirmDraftRemoval
+          !document.cookie.includes('hideConfirmDraftRemoval=true')
         ) {
           setShowModal(true);
           return;

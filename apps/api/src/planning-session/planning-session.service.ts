@@ -102,13 +102,6 @@ export class PlanningSessionService {
 
     await this.planningSessionRepo.save(planningSession);
 
-    //Save preference for user to not show confirmation popup
-    if (saveProfileDto.userPrefNotShowConfirmDraftRemoval) {
-      await this.userService.upsertUserPreference(user.id, {
-        notShowConfirmDraftRemoval: saveProfileDto.userPrefNotShowConfirmDraftRemoval,
-      });
-    }
-
     return planningSession;
   }
 

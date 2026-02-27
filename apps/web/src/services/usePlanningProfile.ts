@@ -51,6 +51,8 @@ export const usePlanningProfile = () => {
       };
 
       await sendApiRequest(config, (data: PlanningSessionRO) => {
+        // Clear the "don't show again" cookie so popup reappears for the next draft
+        document.cookie = 'hideConfirmDraftRemoval=; path=/; max-age=0';
         updateSessionId(data.id);
         updateProceedToNext();
       });
