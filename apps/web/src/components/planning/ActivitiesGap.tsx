@@ -257,7 +257,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
           <div className='flex flex-row flex-1 lg:flex-none flex-wrap space-y-2 lg:space-y-0 space-x-1 items-center justify-end'>
             <ActivitiesGapLegend />
             <Button variant='secondary' onClick={() => setShowSuggestionsModal(true)}>
-              <FontAwesomeIcon icon={faLightbulb} className='mr-2' />
+              <FontAwesomeIcon icon={faLightbulb} className='mr-2 h-4 w-4' />
               Suggestions
             </Button>
             <OccupationListDropdown />

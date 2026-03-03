@@ -28,14 +28,14 @@ export const Alert: React.FC<PropsWithChildren<AlertProps>> = ({
     >
       <div className={`flex flex-row gap-4 overflow-y-auto max-h-[16rem]`}>
         {type === 'error' && (
-          <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faTimesCircle} />
+          <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faTimesCircle} />
         )}
-        {type === 'info' && <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faInfoCircle} />}
+        {type === 'info' && <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faInfoCircle} />}
         {type === 'success' && (
-          <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faCheckCircle} />
+          <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faCheckCircle} />
         )}
         {type === 'warning' && (
-          <FontAwesomeIcon className='h-6 min-w-[1.5rem]' icon={faExclamationCircle} />
+          <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faExclamationCircle} />
         )}
         {children}
       </div>

@@ -128,7 +128,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             dragOver || loading ? 'opacity-20 disabled' : ''
           }`}
         >
-          <FontAwesomeIcon icon={faCloudUploadAlt} className='h-8 text-bcBluePrimary' />
+          <FontAwesomeIcon icon={faCloudUploadAlt} className='h-8 w-8 text-bcBluePrimary' />
           {file && (
             <div className='flex flex-row gap-2 items-center w-full justify-center'>
               <h1 className='text-bcBluePrimary'>{file.name}</h1>

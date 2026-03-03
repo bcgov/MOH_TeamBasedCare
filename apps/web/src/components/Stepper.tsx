@@ -69,7 +69,7 @@ export const Stepper: React.FC<{ steps: string[]; currentStep: number }> = ({
             <React.Fragment key={step}>
               <Step currentStep={currentStep} label={step} step={index + 1} />
               {stepCount !== index + 1 ? (
-                <FontAwesomeIcon icon={faGreaterThan} className={`h-3 text-gray-400 px-1`} />
+                <FontAwesomeIcon icon={faGreaterThan} className={`h-3 w-3 text-gray-400 px-1`} />
               ) : null}
             </React.Fragment>
           ))}

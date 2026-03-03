@@ -78,7 +78,7 @@ const TableBody: React.FC<TableBodyProps> = ({ occupations = [] }) => {
               onClick={() => onViewDetailsClick(occupation.id)}
             >
               View details
-              <FontAwesomeIcon icon={faAngleRight} className='h-4 text-bcBluePrimary' />
+              <FontAwesomeIcon icon={faAngleRight} className='h-4 w-4 text-bcBluePrimary' />
             </Button>
           </td>
         </tr>

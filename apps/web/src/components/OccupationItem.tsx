@@ -29,7 +29,7 @@ export const OccupationItem = ({
             <FontAwesomeIcon
               title='More information'
               icon={faInfoCircle}
-              className='text-bcBluePrimary cursor-pointer h-4 px-2 flex align-center'
+              className='text-bcBluePrimary cursor-pointer h-4 w-4 px-2 flex align-center'
               onClick={() => setShowModal(true)}
             />
 

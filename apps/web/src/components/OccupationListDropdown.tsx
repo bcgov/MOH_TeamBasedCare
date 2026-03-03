@@ -77,7 +77,7 @@ export const OccupationListDropdown = () => {
           onClick={() => handleMenuToggle()}
         >
           Occupation List
-          <FontAwesomeIcon title='Close' icon={faEdit} className='h-4 ml-2 mr-1' />
+          <FontAwesomeIcon title='Close' icon={faEdit} className='h-4 w-4 ml-2 mr-1' />
         </Button>
       </div>
       {showMenu && (
