@@ -30,7 +30,9 @@ export const Alert: React.FC<PropsWithChildren<AlertProps>> = ({
         {type === 'error' && (
           <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faTimesCircle} />
         )}
-        {type === 'info' && <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faInfoCircle} />}
+        {type === 'info' && (
+          <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faInfoCircle} />
+        )}
         {type === 'success' && (
           <FontAwesomeIcon className='h-6 w-6 min-w-[1.5rem]' icon={faCheckCircle} />
         )}
