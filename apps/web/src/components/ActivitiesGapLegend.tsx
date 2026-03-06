@@ -11,7 +11,7 @@ export const ActivitiesGapLegend: React.FC = () => {
   const title = (
     <span className={`${buttonBase} ${buttonColor.secondary}`}>
       Table legend
-      <FontAwesomeIcon title='Close' icon={faList} className='h-4 ml-2 mr-1' />
+      <FontAwesomeIcon title='Close' icon={faList} className='h-4 w-4 ml-2 mr-1' />
     </span>
   );
   return (
@@ -40,7 +40,7 @@ export const ActivitiesGapLegend: React.FC = () => {
               })}
             </ul>
             <Button variant='outline' type='button' classes={`ml-2`} onClick={close}>
-              <FontAwesomeIcon title='Close' icon={faTimes} className='h-4 mr-2' />
+              <FontAwesomeIcon title='Close' icon={faTimes} className='h-4 w-4 mr-2' />
               Dismiss
             </Button>
           </div>

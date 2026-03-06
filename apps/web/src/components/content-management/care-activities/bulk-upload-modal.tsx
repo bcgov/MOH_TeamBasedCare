@@ -691,7 +691,7 @@ export const BulkUploadModalCMS: React.FC<BulkUploadModalCMSProps> = ({
             onClick={() => onDownloadClick()}
           >
             <div className='flex flex-row p-4 items-center'>
-              <FontAwesomeIcon icon={faDownload} className='h-4 text-bcBluePrimary mr-4' />
+              <FontAwesomeIcon icon={faDownload} className='h-4 w-4 text-bcBluePrimary mr-4' />
               Download template .xlsx
             </div>
           </Button>

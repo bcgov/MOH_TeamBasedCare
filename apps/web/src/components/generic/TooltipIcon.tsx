@@ -22,7 +22,9 @@ export const TooltipIcon = ({
       <div className='relative flex flex-col items-center group'>
         <Popover
           position={position}
-          title={<FontAwesomeIcon className={`${style} w-[25px]`} icon={icon}></FontAwesomeIcon>}
+          title={
+            <FontAwesomeIcon className={`${style} w-[25px] h-[25px]`} icon={icon}></FontAwesomeIcon>
+          }
         >
           {() => (
             <>

@@ -35,9 +35,9 @@ export const useOccupationsFindCMS = () => {
   const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
   const [total, setTotal] = useState(0);
   const [sortKey, setSortKey] = useState<OccupationsCMSFindSortKeys>(
-    OccupationsCMSFindSortKeys.UPDATED_AT,
+    OccupationsCMSFindSortKeys.DISPLAY_NAME,
   );
-  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.DESC);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.ASC);
   const [searchText, setSearchText] = useState('');
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {

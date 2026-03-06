@@ -209,7 +209,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
     if (mergedSuggestions.length === 0) {
       return (
         <div className='flex items-center justify-center py-12 text-gray-500'>
-          <FontAwesomeIcon icon={faInfoCircle} className='mr-2 text-gray-400 text-xl' />
+          <FontAwesomeIcon icon={faInfoCircle} className='mr-2 text-gray-400 h-5 w-5' />
           No more suggestions available
         </div>
       );
@@ -373,7 +373,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                     title={
                       <span className={`${buttonBase} ${buttonColor.secondary}`}>
                         Legend
-                        <FontAwesomeIcon icon={faList} className='h-4 ml-2 mr-1' />
+                        <FontAwesomeIcon icon={faList} className='h-4 w-4 ml-2 mr-1' />
                       </span>
                     }
                     position={PopoverPosition.BOTTOM_LEFT}
@@ -398,7 +398,7 @@ export const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onCl
                           ))}
                         </ul>
                         <Button variant='outline' type='button' classes='ml-2' onClick={close}>
-                          <FontAwesomeIcon icon={faTimes} className='h-4 mr-2' />
+                          <FontAwesomeIcon icon={faTimes} className='h-4 w-4 mr-2' />
                           Dismiss
                         </Button>
                       </div>
