@@ -2,6 +2,7 @@ import { createNestApp } from './app.config';
 import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
+  console.log(`Node.js version: ${process.version}`);
   const { app } = await createNestApp();
   app.enableCors();
   app.use(bodyParser.json({ limit: '25mb' }));
