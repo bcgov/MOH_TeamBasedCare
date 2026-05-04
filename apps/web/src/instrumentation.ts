@@ -3,11 +3,11 @@
 // The register function is called at applications startup
 
 export function register() {
-    console.log('Instrumentation registered:');
+  console.log('Instrumentation registered:');
 
-    if (process.release?.name === 'node') {
-        console.log(`Node.js version: ${process.version}`);
-    } else {
-        console.log(`Runtime other than Node.js detected: ${process.release?.name || 'unknown'}`);
-    }
+  if (process.release?.name === 'node') {
+    console.log(`Node.js version: ${process.version}`);
+  } else {
+    console.log(`Runtime other than Node.js detected: ${process.release?.name || 'unknown'}`);
+  }
 }
