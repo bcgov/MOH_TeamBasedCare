@@ -1,4 +1,5 @@
 import serverlessExpress from '@vendia/serverless-express';
+import { Logger } from '@nestjs/common';
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
@@ -13,6 +14,8 @@ let cachedServer: Handler;
 
 async function bootstrap() {
   if (!cachedServer) {
+    const logger = new Logger('Bootstrap');
+    logger.log(`Node.js version: ${process.version}`);
     const { app: nestApp, expressApp } = await createNestApp();
     nestApp.use(bodyParser.json({ limit: '25mb' }));
     nestApp.use(bodyParser.urlencoded({ limit: '25mb', extended: true }));
