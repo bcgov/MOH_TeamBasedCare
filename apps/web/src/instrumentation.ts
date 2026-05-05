@@ -2,12 +2,16 @@
 // Read https://nextjs.org/docs/pages/guides/instrumentation for more details
 // The register function is called at applications startup
 
+function writeStartupLog(message: string) {
+  process.stdout.write(`${message}\n`);
+}
+
 export function register() {
-  console.log('Instrumentation registered:');
+  writeStartupLog('Instrumentation registered:');
 
   if (process.release?.name === 'node') {
-    console.log(`Node.js version: ${process.version}`);
+    writeStartupLog(`Node.js version: ${process.version}`);
   } else {
-    console.log(`Runtime other than Node.js detected: ${process.release?.name || 'unknown'}`);
+    writeStartupLog(`Runtime other than Node.js detected: ${process.release?.name || 'unknown'}`);
   }
 }

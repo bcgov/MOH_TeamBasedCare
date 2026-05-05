@@ -17,7 +17,6 @@ export class UserGuideService {
   }
 
   async findAll() {
-    console.log(`Node.js version: ${process.version}`);
     if (!this.s3Client) {
       throw new InternalServerErrorException('the feature is disabled');
     }
