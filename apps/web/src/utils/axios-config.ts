@@ -57,7 +57,7 @@ AxiosPublic.interceptors.response.use(
 
     // if retried and it still failed, log out and redirect to the landing page
     if ((originalRequest._retry || originalRequest._isException) && typeof window !== 'undefined') {
-      clearStorageAndRedirectToLandingPage();
+      // clearStorageAndRedirectToLandingPage();
     }
 
     // reject otherwise

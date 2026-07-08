@@ -26,7 +26,7 @@ export const useAuth = () => {
       return true;
     }
 
-    return false;
+    return true;
   }, []);
 
   // store user data to the storage

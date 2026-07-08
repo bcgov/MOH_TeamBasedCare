@@ -18,7 +18,7 @@ export const useHttp = () => {
     } else {
       switch (err?.response?.status) {
         case 401:
-          clearStorageAndRedirectToLandingPage();
+          // clearStorageAndRedirectToLandingPage();
           break;
         case 400:
           const errorMsg =

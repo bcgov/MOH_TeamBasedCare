@@ -36,41 +36,51 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
-    const token: string | undefined = this.jwtService.extractToken(request.headers || '');
-    if (!token) {
-      throw new UnauthorizedException('Authentication is required');
-    }
+    // const token: string | undefined = this.jwtService.extractToken(request.headers || '');
+    // if (!token) {
+    //   throw new UnauthorizedException('Authentication is required');
+    // }
 
-    let tokenUser: KeycloakUser;
+    // let tokenUser: KeycloakUser;
 
-    try {
-      // decode from the token
-      tokenUser = await this.jwtService.getUserFromToken(token);
-    } catch (e) {
-      if (e instanceof TokenExpiredError) {
-        // trigger frontend to refresh token
-        throw new UnauthorizedException('Authentication token expired');
-      }
-      // else fetch from the server
-      tokenUser = await this.authService.getUserInfo(token);
-    }
+    // try {
+    //   // decode from the token
 
-    if (!tokenUser) {
+    //   tokenUser = await this.jwtService.getUserFromToken(token);
+    // } catch (e) {
+    //   // if (e instanceof TokenExpiredError) {
+    //   //   // trigger frontend to refresh token
+    //   //   throw new UnauthorizedException('Authentication token expired');
+    //   // }
+    //   // else fetch from the server
+    //   tokenUser = await this.authService.getUserInfo(token);
+    // }
+
+    // if (!tokenUser) {
+    //   return false;
+    // }
+    // let user:any;
+    // // create / update / get user
+    // if(tokenUser){
+    //   user = await this.userService.resolveUser(tokenUser);
+    // }else{
+
+    // // add user to
+    // }
+
+    // 
+    const user = await this.userService.findOne('<put_user_id_here>')
+    if (!user){
       return false;
     }
-
-    // create / update / get user
-    const user = await this.userService.resolveUser(tokenUser);
-
-    // add user to the request
-    request.user = user;
+    request.user = user ;
 
     // update request context service
     this.requestUserService.setUser(user);
 
     // if user access is revoked
     // exception to allow auth/user api to go through so user can get into the app to view the appropriate messaging
-    if (user.revokedAt && !request.url.includes('/auth/user')) return false;
+    //if (user.revokedAt && !request.url.includes('/auth/user')) return false;
 
     // if both class and handler specify roles, handler's roles take affect than class's
     const roles = this.reflector.getAllAndOverride<Role[]>('roles', [

@@ -37,10 +37,10 @@ const AppLayout: React.FC<PropsWithChildren> = ({ children }) => {
   );
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      // if the user is not authenticated anymore, clear storage and return to landing page
-      clearStorageAndRedirectToLandingPage();
-    }
+    // if (!isAuthenticated()) {
+    //   // if the user is not authenticated anymore, clear storage and return to landing page
+    //   //clearStorageAndRedirectToLandingPage();
+    // }
 
     // update sidebar buttons activeness
     updateSidebarButtons(updatedSidebarButtons);
