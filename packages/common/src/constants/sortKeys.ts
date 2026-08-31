@@ -37,3 +37,10 @@ export enum OccupationsCMSFindSortKeys {
   IS_REGULATED = 'isRegulated',
   UPDATED_AT = 'updatedAt',
 }
+
+export enum PlanningSessionsFindSortKeys {
+  NAME = 'name',
+  CARE_SETTING_NAME = 'careSettingName',
+  UPDATED_AT = 'updatedAt',
+  CREATED_AT = 'createdAt',
+}

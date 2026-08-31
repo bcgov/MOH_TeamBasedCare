@@ -11,6 +11,7 @@ export interface ButtonProps {
   disabled?: boolean;
   classes?: string;
   onBlur?: () => void;
+  'aria-label'?: string;
 }
 
 export const buttonColor: Record<string, string> = {
@@ -38,6 +39,7 @@ export const Button: React.FC<PropsWithChildren<ButtonProps>> = props => {
     onClick,
     onBlur,
   } = props;
+  const ariaLabel = props['aria-label'];
   return (
     <button
       onClick={onClick}
@@ -50,6 +52,7 @@ export const Button: React.FC<PropsWithChildren<ButtonProps>> = props => {
       `}
       disabled={disabled}
       onBlur={onBlur}
+      aria-label={ariaLabel}
     >
       {loading ? (
         <div className='flex flex-row gap-4 items-center'>

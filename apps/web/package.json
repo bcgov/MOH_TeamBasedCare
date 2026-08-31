@@ -11,8 +11,8 @@
     "start": "next start",
     "lint": "eslint --fix --cache \"src/**/*.{js,ts,tsx}\"",
     "test": "jest",
-    "open:cypress": "cypress open",
-    "cypress": "cypress run"
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "7.24.1",
@@ -38,7 +38,9 @@
     "xlsx-js-style": "1.2.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@next/eslint-plugin-next": "15.5.3",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/typography": "0.5.10",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-dom": "5.15.1",
@@ -48,8 +50,6 @@
     "@types/react": "19.1.12",
     "autoprefixer": "10.4.21",
     "babel-jest": "29.7.0",
-    "cy-verify-downloads": "0.1.8",
-    "cypress": "13.7.1",
     "dotenv": "16.4.5",
     "eslint": "9.35.0",
     "eslint-config-next": "14.1.4",

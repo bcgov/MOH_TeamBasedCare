@@ -8,7 +8,12 @@ export const usePlanningContext = () => {
     updateProceedToNext,
     updateWaitForValidation,
     updateSessionId,
+    updateSessionName,
+    updateCurrentStep,
     updateRefetchActivityGap,
+    refreshSessionsList,
+    promptForSessionName,
+    clearSessionNamePrompt,
   } = useContext(PlanningContext) as PlanningContextType;
 
   return {
@@ -16,7 +21,12 @@ export const usePlanningContext = () => {
     updateProceedToNext: () => updateProceedToNext(),
     updateWaitForValidation: () => updateWaitForValidation(),
     updateSessionId: (sessionId?: string) => updateSessionId(sessionId),
+    updateSessionName: (sessionName: string) => updateSessionName(sessionName),
+    updateCurrentStep: (currentStep: number) => updateCurrentStep(currentStep),
     updateRefetchActivityGap: (fetch: boolean) => updateRefetchActivityGap(fetch),
+    refreshSessionsList: () => refreshSessionsList(),
+    promptForSessionName: (session: { id: string; name: string }) => promptForSessionName(session),
+    clearSessionNamePrompt: () => clearSessionNamePrompt(),
     state,
   };
 };

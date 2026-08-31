@@ -213,12 +213,12 @@ local-server-workspace:
 
 test-api:
 	@echo "++\n***** Running API Jest tests\n++"
-	@cd apps/api && yarn test
+	@cd apps/api && yarn exec jest --silent
 	@echo "++\n*****"
 
 test-web:
 	@echo "++\n***** Running Web Jest tests\n++"
-	@cd apps/web && yarn test
+	@yarn workspace @tbcm/web e2e
 	@echo "++\n*****"
 
 test-jest:

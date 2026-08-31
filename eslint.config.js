@@ -7,7 +7,7 @@ module.exports = [
     languageOptions: {
       parser: tsparser,
       parserOptions: {
-        project: ['tsconfig.json', 'cypress/tsconfig.json'],
+        project: ['tsconfig.json'],
         sourceType: 'module',
       },
       globals: {

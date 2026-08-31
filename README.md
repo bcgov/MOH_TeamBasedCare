@@ -3,6 +3,12 @@
 [![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)]()
 The codebase is being roughed out, but finer details are likely to change.
 
+## AI onboarding
+
+- Start with `docs/ai/README.md` for the repo map and change rules.
+- Use `docs/tech-design-document.md` for the domain model and `docs/runbooks.md` for commands.
+- Keep shared request/response shapes in `packages/common` and import them through `@tbcm/common`.
+
 ## Project structure
 
 ### Tech stack
@@ -17,7 +23,7 @@ The codebase is being roughed out, but finer details are likely to change.
     - Formik
     - Tailwind CSS
     - class-validator
-    - Cypress
+    - Playwright
 - Deployment
     - GitHub Actions
     - Terraform

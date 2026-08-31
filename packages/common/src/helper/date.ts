@@ -21,3 +21,10 @@ export const formatDateTime = (value: ConfigType) => {
 
   return dayjs(value).format('MMMM DD, YYYY h:mm A');
 };
+
+/** Compact variant, e.g. `Aug 28, 2026 5:39 PM`. */
+export const formatShortDateTime = (value: ConfigType) => {
+  if (!value) return;
+
+  return dayjs(value).format('MMM DD, YYYY h:mm A');
+};

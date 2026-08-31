@@ -6,15 +6,18 @@ import { UserDropdown } from './UserDropdown';
 interface HeaderProps {
   title?: string;
   icon?: React.ReactNode;
+  /** Rendered immediately after the title, e.g. the name of the open planning draft */
+  titleAccessory?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, icon }) => {
+export const Header: React.FC<HeaderProps> = ({ title, icon, titleAccessory }) => {
   return (
     <>
       <header className='flex w-full items-center justify-between border-b-2 border-gray-200'>
         <div className='flex items-center space-x-2'>
           {icon && <span className='h-8 w-8 text-bcBluePrimary'>{icon}</span>}
           <h1 className='text-2xl text-bcBluePrimary flex-col items-start'>{title}</h1>
+          {titleAccessory}
         </div>
 
         <div className='flex p-2'>

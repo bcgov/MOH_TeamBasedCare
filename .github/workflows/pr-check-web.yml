@@ -35,3 +35,6 @@ jobs:
 
       - name: Build web package
         run: yarn workspace @tbcm/web build
+
+      - name: Run end-to-end tests
+        run: yarn workspace @tbcm/web e2e

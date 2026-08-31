@@ -43,8 +43,8 @@ describe('KpiController', () => {
   describe('getOverview', () => {
     const mockOverview = new KPIsOverviewRO({
       general: new GeneralKPIsRO({
-        totalUsers: 100,
         activeUsers: 50,
+        pendingUsers: 20,
         totalCarePlans: 200,
       }),
       carePlansBySetting: [

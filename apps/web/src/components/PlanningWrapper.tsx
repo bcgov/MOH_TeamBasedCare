@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react';
 import { Stepper, Button, PlanningContent } from '@components';
 import { PlanningSteps } from '../common/constants';
-import { PlanningProvider } from './planning/PlanningContext';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
 import { PublishButton } from './PublishButton';
+import { SessionNamePrompt } from './planning/SessionNamePrompt';
 
 const WrapperContent = () => {
   const {
-    state: { canProceedToNext, sessionId },
+    state: { sessionId, currentStep },
     updateNextTriggered,
+    updateCurrentStep,
   } = usePlanningContext();
 
-  const [currentStep, setCurrentStep] = useState(1);
   const isFirstStep = currentStep === 1;
 
   const handleNextStep = () => {
@@ -20,15 +19,8 @@ const WrapperContent = () => {
   };
   const handlePreviousStep = () => {
     if (isFirstStep || currentStep < 1) return;
-    setCurrentStep(Number(currentStep) - 1);
+    updateCurrentStep(Number(currentStep) - 1);
   };
-
-  useEffect(() => {
-    if (canProceedToNext) {
-      if (currentStep >= PlanningSteps.length) return;
-      setCurrentStep(Number(currentStep) + 1);
-    }
-  }, [canProceedToNext]);
 
   return (
     <div className='flex-1 flex flex-col min-h-0'>
@@ -70,14 +62,14 @@ const WrapperContent = () => {
       <div className='flex-1 flex flex-col min-h-0 overflow-y-auto mt-4'>
         <PlanningContent step={currentStep} formTitle={PlanningSteps[currentStep - 1]} />
       </div>
+
+      {/* Outside PlanningContent so a stage change cannot unmount the prompt */}
+      <SessionNamePrompt />
     </div>
   );
 };
 
+// PlanningProvider is hoisted to the page so the header can read the open draft's name
 export const PlanningWrapper = () => {
-  return (
-    <PlanningProvider>
-      <WrapperContent />
-    </PlanningProvider>
-  );
+  return <WrapperContent />;
 };

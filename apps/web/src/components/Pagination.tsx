@@ -72,6 +72,8 @@ export const Pagination = (props: PaginationProps) => {
         </div>
         <div className='text-sm p-3'>of {numOfPages} pages</div>
         <button
+          type='button'
+          aria-label='Previous page'
           className='p-3 border-l'
           onClick={() => goToPage(pageIndex - 1)}
           disabled={pageIndex === 1}
@@ -82,6 +84,8 @@ export const Pagination = (props: PaginationProps) => {
           />
         </button>
         <button
+          type='button'
+          aria-label='Next page'
           className='p-3 border-l border-r'
           onClick={() => goToPage(pageIndex + 1)}
           disabled={pageIndex === numOfPages}

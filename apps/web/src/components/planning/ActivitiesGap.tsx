@@ -16,6 +16,7 @@ import { ModalWrapper } from '../Modal';
 import { OccupationListDropdown } from '../OccupationListDropdown';
 import { SuggestionsModal } from './SuggestionsModal';
 import { ActivityGapCareActivity } from '@tbcm/common';
+import { CurrentSessionName } from './CurrentSessionName';
 
 export interface ActivitiesGapProps {
   step: number;
@@ -249,6 +250,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
   return (
     <div>
       <div className='planning-form-box overflow-visible'>
+        <CurrentSessionName />
         <div className='flex flex-row space-x-8 items-start justify-between'>
           <div className='flex flex-1'>
             <PageTitle description={description} />

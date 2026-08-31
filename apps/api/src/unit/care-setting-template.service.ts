@@ -762,18 +762,18 @@ export class CareSettingTemplateService {
       throw new ForbiddenException('Cannot delete templates belonging to another health authority');
     }
 
-    // Check if any draft sessions reference this template (raw query to avoid module coupling)
+    // Check if any planning session references this template (raw query to avoid module coupling).
+    // All sessions count, draft and published — deleting the template would otherwise orphan them.
     const result = await this.templateRepo.manager
       .createQueryBuilder()
       .select('COUNT(*)', 'count')
       .from('planning_session', 'ps')
       .where('ps.care_setting_template_id = :id', { id })
-      .andWhere('ps.status = :status', { status: 'DRAFT' })
       .getRawOne();
 
     if (parseInt(result.count) > 0) {
       throw new BadRequestException(
-        `Cannot delete template: it is referenced by ${result.count} draft care plan(s).`,
+        `Cannot delete template: it is referenced by ${result.count} care plan(s).`,
       );
     }
 

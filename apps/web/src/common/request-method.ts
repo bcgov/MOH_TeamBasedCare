@@ -6,6 +6,7 @@ import {
   OccupationsCMSFindSortKeys,
   OccupationsFindSortKeys,
   Permissions,
+  PlanningSessionsFindSortKeys,
   SortOrder,
   UserManagementSortKeys,
 } from '@tbcm/common';
@@ -31,17 +32,20 @@ export interface EndpointQueryParams<T> {
 }
 
 const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<T>) => {
-  let parameterizedEndpoint = `${endpoint}?`;
-  if (listParams.pageSize) parameterizedEndpoint += `&pageSize=${listParams.pageSize}`;
-  if (listParams.pageIndex) parameterizedEndpoint += `&page=${listParams.pageIndex}`;
-  if (listParams.sortKey) parameterizedEndpoint += `&sortBy=${listParams.sortKey}`;
-  if (listParams.sortOrder) parameterizedEndpoint += `&sortOrder=${listParams.sortOrder}`;
-  if (listParams.searchText) parameterizedEndpoint += `&searchText=${listParams.searchText}`;
-  if (listParams.careSetting) parameterizedEndpoint += `&careSetting=${listParams.careSetting}`;
-  if (listParams.filterByPermission)
-    parameterizedEndpoint += `&filterByPermission=${listParams.filterByPermission}`;
-  if (listParams.bundleId) parameterizedEndpoint += `&bundleId=${listParams.bundleId}`;
-  return parameterizedEndpoint;
+  const params = new URLSearchParams();
+
+  if (listParams.pageSize != null) params.set('pageSize', String(listParams.pageSize));
+  if (listParams.pageIndex != null) params.set('page', String(listParams.pageIndex));
+  if (listParams.sortKey != null) params.set('sortBy', String(listParams.sortKey));
+  if (listParams.sortOrder != null) params.set('sortOrder', String(listParams.sortOrder));
+  if (listParams.searchText) params.set('searchText', listParams.searchText);
+  if (listParams.careSetting) params.set('careSetting', listParams.careSetting);
+  if (listParams.filterByPermission != null)
+    params.set('filterByPermission', String(listParams.filterByPermission));
+  if (listParams.bundleId) params.set('bundleId', listParams.bundleId);
+
+  const queryString = params.toString();
+  return queryString ? `${endpoint}?${queryString}` : endpoint;
 };
 
 export const API_ENDPOINT = {
@@ -59,6 +63,10 @@ export const API_ENDPOINT = {
   SESSIONS: '/sessions',
   PLANNING_CARE_SETTING_TEMPLATES: '/sessions/care-setting-templates',
   LAST_DRAFT_SESSION: '/sessions/last_draft',
+  findPlanningSessions: (params: EndpointQueryParams<PlanningSessionsFindSortKeys>) =>
+    appendQueryParams('/sessions/find', params),
+  renamePlanningSession: (sessionId: string) => `/sessions/${sessionId}/name`,
+  discardPlanningSession: (sessionId: string) => `/sessions/${sessionId}`,
   getPlanningProfile: (sessionId: string) => `/sessions/${sessionId}/profile`,
   OCCUPATIONS: '/occupations',
   FEEDBACK: '/feedback',

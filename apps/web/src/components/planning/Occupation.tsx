@@ -8,6 +8,7 @@ import { dtoValidator } from '../../utils/dto-validator';
 import { Error } from '../Error';
 import { PageTitle } from '../PageTitle';
 import { useState } from 'react';
+import { CurrentSessionName } from './CurrentSessionName';
 
 export interface OccupationProps {
   step: number;
@@ -38,6 +39,7 @@ export const Occupation: React.FC<OccupationProps> = () => {
     <div className='planning-form-box'>
       <div className='flex-1 flex flex-col min-h-0'>
         <div className='flex-1 min-h-0 flex flex-col'>
+          <CurrentSessionName />
           <div className='flex gap-1 justify-between items-center flex-row'>
             <PageTitle description={'Select all the occupations/roles on your team'} />
             <SearchBar

@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
     "lib": ["es2020"],
-    "module": "commonjs",
+    "module": "nodenext",
     "target": "es2020",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "noEmit": false,
     "incremental": true,
     "skipLibCheck": true,
@@ -19,8 +19,9 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "types": ["node", "jest", "multer"]
   },
   "exclude": ["node_modules", "dist", "**/*spec.ts"]
 }
