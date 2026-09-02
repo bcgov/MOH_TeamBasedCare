@@ -159,7 +159,7 @@ start-local: print-env start-local-db
 
 run-local-db:
 	@echo "++\n***** Starting local database\n++"
-	@docker-compose up -d db 
+	@docker compose up -d db 
 	@echo "++\n*****"
 
 stop-local-db:
@@ -180,7 +180,7 @@ seed-local-db:
 run-local:
 	@echo "++\n***** Running docker-compose\n++"
 	@yarn
-	@docker-compose up --build
+	@docker compose up --build
 	@echo "++\n*****"
 
 run-local-server:
