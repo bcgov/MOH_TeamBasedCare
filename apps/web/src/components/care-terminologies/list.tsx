@@ -132,7 +132,7 @@ export const CareTerminologiesList: React.FC<CareTerminologiesListProps> = ({
 
   return (
     <div className='max-h-full w-full flex-1 flex flex-col overflow-auto gap-3 p-4 bg-white'>
-      <div> Showing {total} members. </div>
+      <div>Showing {total} care activities.</div>
       <table className='table-auto'>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
         <TableBody careActivities={careActivities} />
