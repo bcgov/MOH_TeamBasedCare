@@ -435,7 +435,7 @@ export class CareActivityService {
 
     const entity = await this.careActivityRepo.findOne({
       where: { id },
-      relations: ['bundle'],
+      relations: ['bundle', 'bundle.careActivities'],
     });
 
     if (!entity) {
