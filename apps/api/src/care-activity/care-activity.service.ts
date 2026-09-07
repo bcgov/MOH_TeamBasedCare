@@ -485,6 +485,7 @@ export class CareActivityService {
     await this.careActivityRepo.update(id, {
       displayName: data.name,
       description: data.description,
+      requirementsAndConsiderations: data.requirementsAndConsiderations,
       bundle: { id: data.bundleId },
       activityType: data.activityType,
       ...(data.clinicalType !== undefined ? { clinicalType: data.clinicalType } : {}),

@@ -22,7 +22,7 @@ export const Alert: React.FC<PropsWithChildren<AlertProps>> = ({
       role='alert'
       className={`p-4 w-full flex items-center rounded ${className} 
       ${type === 'error' && 'bg-red-100 text-bcRedError'}
-      ${type === 'info' && 'bg-blue-100 text-blue-700'}
+      ${type === 'info' && 'bg-bcLightBlueBackground text-bcBlueLink border border-bcBlueLink'}
       ${type === 'success' && 'bg-bcBannerSuccessBg text-bcBannerSuccessText'}
       ${type === 'warning' && 'bg-bcYellowCream text-bcDarkYellow'} `}
     >

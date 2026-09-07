@@ -11,12 +11,6 @@ interface CareTerminologyDetailsProps {
   careActivity: CareActivityCMSDetailRO;
 }
 
-const RequirementsPlaceholder = () => (
-  <div className='p-2 pt-0 text-sm text-gray-700'>
-    <GlossaryText>Requirements and considerations will be added in a future update.</GlossaryText>
-  </div>
-);
-
 export const CareTerminologyDetails: React.FC<CareTerminologyDetailsProps> = ({ careActivity }) => {
   const relatedActivities =
     careActivity.bundle?.careActivities?.filter(activity => activity.id !== careActivity.id) ?? [];
@@ -45,7 +39,14 @@ export const CareTerminologyDetails: React.FC<CareTerminologyDetailsProps> = ({ 
           shouldExpand
           btnIcon={faClipboardList}
           buttonText='Requirements and Considerations'
-          content={<RequirementsPlaceholder />}
+          content={
+            <div className='whitespace-pre-wrap p-2 pt-0 text-sm text-gray-700'>
+              <GlossaryText>
+                {careActivity.requirementsAndConsiderations ||
+                  'No requirements and considerations available.'}
+              </GlossaryText>
+            </div>
+          }
         />
       </Card>
 

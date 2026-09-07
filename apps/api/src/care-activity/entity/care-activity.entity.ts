@@ -33,6 +33,9 @@ export class CareActivity extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 3000, nullable: true })
   description?: string;
 
+  @Column({ type: 'varchar', length: 3000, nullable: true })
+  requirementsAndConsiderations?: string;
+
   @ManyToOne(() => Bundle, bundle => bundle.careActivities)
   bundle: Bundle;
 
