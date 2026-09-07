@@ -1486,7 +1486,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@floating-ui/react@npm:^0.26.16":
+"@floating-ui/react@npm:0.26.28, @floating-ui/react@npm:^0.26.16":
   version: 0.26.28
   resolution: "@floating-ui/react@npm:0.26.28"
   dependencies:
@@ -3822,6 +3822,7 @@ __metadata:
   resolution: "@tbcm/web@workspace:apps/web"
   dependencies:
     "@babel/plugin-proposal-decorators": "npm:7.24.1"
+    "@floating-ui/react": "npm:0.26.28"
     "@fortawesome/fontawesome-svg-core": "npm:1.2.36"
     "@fortawesome/free-solid-svg-icons": "npm:5.15.4"
     "@fortawesome/react-fontawesome": "npm:0.1.16"

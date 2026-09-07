@@ -5,6 +5,7 @@ import { BackButtonLink } from '../BackButtonLink';
 import { Disclosure } from '../Disclosure';
 import { Heading } from '../Heading';
 import { Card } from '../generic/Card';
+import { GlossaryText } from '../glossary';
 
 interface CareTerminologyDetailsProps {
   careActivity: CareActivityCMSDetailRO;
@@ -12,7 +13,7 @@ interface CareTerminologyDetailsProps {
 
 const RequirementsPlaceholder = () => (
   <div className='p-2 pt-0 text-sm text-gray-700'>
-    Requirements and considerations will be added in a future update.
+    <GlossaryText>Requirements and considerations will be added in a future update.</GlossaryText>
   </div>
 );
 
@@ -33,7 +34,7 @@ export const CareTerminologyDetails: React.FC<CareTerminologyDetailsProps> = ({ 
           buttonText='Description'
           content={
             <div className='p-2 pt-0 text-sm text-gray-700'>
-              {careActivity.description || 'No description available.'}
+              <GlossaryText>{careActivity.description || 'No description available.'}</GlossaryText>
             </div>
           }
         />
