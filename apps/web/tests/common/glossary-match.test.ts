@@ -1,4 +1,8 @@
-import { GLOSSARY_DEFINITION_PENDING, GlossaryEntry } from '@tbcm/common';
+import {
+  GLOSSARY_DEFINITION_PENDING,
+  GLOSSARY_MATCH_INFLECTIONS,
+  GlossaryEntry,
+} from '@tbcm/common';
 import { buildGlossaryIndex, matchGlossaryTerms } from '../../src/common/glossary-match';
 
 const entries: GlossaryEntry[] = [
@@ -8,7 +12,8 @@ const entries: GlossaryEntry[] = [
   { term: 'C++', definition: 'A programming language.' },
 ];
 
-const index = buildGlossaryIndex(entries);
+// pinned explicitly so these cases hold whichever way the global setting is flipped
+const index = buildGlossaryIndex(entries, { matchInflections: false });
 const match = (text: string) => matchGlossaryTerms(text, index);
 
 describe('matchGlossaryTerms', () => {
@@ -69,11 +74,14 @@ describe('matchGlossaryTerms', () => {
 
 describe('buildGlossaryIndex', () => {
   it('skips entries with no definition yet', () => {
-    const index = buildGlossaryIndex([
-      { term: 'Administer', definition: GLOSSARY_DEFINITION_PENDING },
-      { term: 'Advocate', definition: '  ' },
-      { term: 'Assess', definition: 'Collects data.' },
-    ]);
+    const index = buildGlossaryIndex(
+      [
+        { term: 'Administer', definition: GLOSSARY_DEFINITION_PENDING },
+        { term: 'Advocate', definition: '  ' },
+        { term: 'Assess', definition: 'Collects data.' },
+      ],
+      { matchInflections: false },
+    );
 
     expect(matchGlossaryTerms('Administer and advocate and assess', index)).toEqual([
       { text: 'Administer and advocate and ' },
@@ -81,10 +89,21 @@ describe('buildGlossaryIndex', () => {
     ]);
   });
 
-  it('matches exact terms only by default', () => {
-    const index = buildGlossaryIndex([{ term: 'Assess', definition: 'Collects data.' }]);
+  it('matches exact terms only when inflections are off', () => {
+    const index = buildGlossaryIndex([{ term: 'Assess', definition: 'Collects data.' }], {
+      matchInflections: false,
+    });
 
     expect(matchGlossaryTerms('Assessing the patient', index).some(s => s.entry)).toBe(false);
+    expect(matchGlossaryTerms('Assess the patient', index).some(s => s.entry)).toBe(true);
+  });
+
+  it('defers to the global inflection setting when no option is passed', () => {
+    const index = buildGlossaryIndex([{ term: 'Assess', definition: 'Collects data.' }]);
+
+    expect(matchGlossaryTerms('Assessing the patient', index).some(s => s.entry)).toBe(
+      GLOSSARY_MATCH_INFLECTIONS,
+    );
   });
 
   it('matches regular inflections when enabled', () => {

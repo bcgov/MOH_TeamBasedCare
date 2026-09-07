@@ -46,11 +46,7 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
         <div className='mt-4 w-full'>
           <BackButtonLink />
           <div className='flex justify-between w-full'>
-            <Heading
-              className='mt-2'
-              title={careActivity?.name}
-              subTitle={careActivity?.description || ''}
-            />
+            <Heading className='mt-2' title={careActivity?.name} />
             <div className='flex flex-row gap-4 max-h-10'>
               <Button variant='outline' onClick={() => router.back()}>
                 Cancel
