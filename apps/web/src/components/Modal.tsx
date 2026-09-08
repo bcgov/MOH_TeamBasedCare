@@ -126,7 +126,7 @@ export const ModalWrapper = ({
   footerClassName,
   containerClassName,
 }: ModalWrapperProps) => {
-  const modalButtonClasses = 'box-border h-12 border-2 px-6 py-2 text-base font-bold';
+  const modalButtonClasses = 'box-border h-10 border-2 px-6 py-2 text-base font-bold';
 
   return (
     <Modal open={isOpen} containerClassName={containerClassName}>

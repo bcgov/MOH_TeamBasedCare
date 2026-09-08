@@ -283,6 +283,7 @@ export const SessionsTable = () => {
           actionButton={{
             title: 'Delete Draft',
             isLoading: isDiscarding,
+            isError: true,
             onClick: onConfirmDiscard,
             classes: 'min-w-[156px]',
           }}
