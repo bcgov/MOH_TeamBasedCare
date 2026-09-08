@@ -23,3 +23,5 @@ export * from './usePlanningCareActivities';
 export * from './usePlanningContent';
 export * from './usePlanningContext';
 export * from './usePlanningOccupations';
+export * from './usePlanningSessionMutations';
+export * from './usePlanningSessionsFind';

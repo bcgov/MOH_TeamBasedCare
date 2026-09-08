@@ -35,6 +35,9 @@ export class PlanningSessionRO {
   id!: string;
 
   @Expose()
+  name!: string;
+
+  @Expose()
   profileOption?: string;
 
   @Expose()
@@ -68,5 +71,42 @@ export class PlanningSessionRO {
       ? { ...data.careLocation, id: data.careSettingTemplate.id }
       : data.careLocation;
     this.careSetting = new PlanningSessionCareSettingRO(careSettingSource);
+  }
+}
+
+@Exclude()
+export class PlanningSessionSummaryRO {
+  @Expose()
+  id!: string;
+
+  @Expose()
+  name!: string;
+
+  @Expose()
+  careSetting!: PlanningSessionCareSettingRO | null;
+
+  @Expose()
+  updatedAt!: Date;
+
+  @Expose()
+  createdAt!: Date;
+
+  constructor(data: any) {
+    Object.assign(this, data);
+
+    /**
+     * Prefer the template name; fall back to the unit display name. Legacy rows whose
+     * template was deleted (ON DELETE SET NULL) have neither, and render as an em dash.
+     */
+    if (data?.careSettingTemplate) {
+      this.careSetting = new PlanningSessionCareSettingRO({
+        id: data.careSettingTemplate.id,
+        displayName: data.careSettingTemplate.name,
+      });
+    } else if (data?.careLocation) {
+      this.careSetting = new PlanningSessionCareSettingRO(data.careLocation);
+    } else {
+      this.careSetting = null;
+    }
   }
 }

@@ -224,11 +224,11 @@ describe('CareSettingTemplateService', () => {
       expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.name', 'DESC');
     });
 
-    it('should default sort by isMaster DESC then name ASC', async () => {
+    it('should default sort by isMaster DESC then createdAt DESC', async () => {
       await service.findTemplates({ page: 1, pageSize: 10 } as any, null);
 
       expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
-      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.name', 'ASC');
+      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.createdAt', 'DESC');
     });
 
     it('should calculate correct skip for page 3', async () => {
@@ -731,20 +731,57 @@ describe('CareSettingTemplateService', () => {
       );
     });
 
-    it('should throw BadRequestException when draft sessions reference template', async () => {
+    it('should throw BadRequestException when sessions reference template', async () => {
       mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
       mockManagerQB.getRawOne.mockResolvedValue({ count: '3' });
 
       await expect(service.deleteTemplate('tmpl-1')).rejects.toThrow(BadRequestException);
     });
 
-    it('should allow deletion when no draft sessions reference template', async () => {
+    it('should allow deletion when no sessions reference template', async () => {
       mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
       mockManagerQB.getRawOne.mockResolvedValue({ count: '0' });
       mockPermissionRepo.delete.mockResolvedValue({});
       mockTemplateRepo.delete.mockResolvedValue({});
 
       await expect(service.deleteTemplate('tmpl-1')).resolves.not.toThrow();
+    });
+
+    /**
+     * Regression (FR-048). The guard previously compared `ps.status = 'DRAFT'` while
+     * PlanningStatus.DRAFT is the lowercase 'draft' actually stored. Postgres string
+     * comparison is case-sensitive, so the count was always 0 and the guard never fired.
+     * The status filter is now gone entirely: every referencing session blocks deletion.
+     */
+    it('should count referencing sessions without filtering on status', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockManagerQB.getRawOne.mockResolvedValue({ count: '1' });
+
+      await expect(service.deleteTemplate('tmpl-1')).rejects.toThrow(BadRequestException);
+
+      expect(mockManagerQB.where).toHaveBeenCalledWith('ps.care_setting_template_id = :id', {
+        id: 'tmpl-1',
+      });
+      // No status clause of any casing may be applied
+      expect(mockManagerQB.andWhere).not.toHaveBeenCalled();
+      expect(mockTemplateRepo.delete).not.toHaveBeenCalled();
+    });
+
+    it('should refuse deletion when only a published session references the template', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      // The raw count does not distinguish status — a published-only reference still counts
+      mockManagerQB.getRawOne.mockResolvedValue({ count: '1' });
+
+      await expect(service.deleteTemplate('tmpl-1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should not describe the referencing sessions as drafts', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockManagerQB.getRawOne.mockResolvedValue({ count: '2' });
+
+      await expect(service.deleteTemplate('tmpl-1')).rejects.toThrow(
+        'Cannot delete template: it is referenced by 2 care plan(s).',
+      );
     });
   });
 

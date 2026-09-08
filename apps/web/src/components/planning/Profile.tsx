@@ -9,11 +9,13 @@ import {
   formatDateFromNow,
   formatDateTime,
 } from '@tbcm/common';
+import { SessionsTable } from './SessionsTable';
+import { Button } from '../Button';
 import { dtoValidator } from '../../utils/dto-validator';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
 import { ModalWrapper } from '../Modal';
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Spinner } from '../generic/Spinner';
 
 export interface ProfileProps {
@@ -37,13 +39,15 @@ const ProfileForm = ({
   const { careLocations, isValidating: isLoadingCareLocations } =
     useCareSettingTemplatesForPlanning();
   const [showModal, setShowModal] = useState(false);
-  const { updateSessionId } = usePlanningContext();
+  const { updateSessionId, updateSessionName } = usePlanningContext();
   const [lastDraftUpdatedFromNow, setLastDraftUpdatedFromNow] = useState('');
 
   const handleLastDraft = useCallback(() => {
     if (!lastDraft) return;
 
     updateSessionId(lastDraft.id);
+    // Keep the selected draft name available when the wizard advances.
+    updateSessionName(lastDraft.name);
 
     setValues({
       profileOption: ProfileOptions.DRAFT,
@@ -53,6 +57,7 @@ const ProfileForm = ({
 
   const handleScratch = useCallback(() => {
     updateSessionId(); // reset session id
+    updateSessionName(''); // a new draft has no name yet
 
     // reset care location to default value
     setValues({
@@ -160,6 +165,8 @@ const ProfileForm = ({
             )}
           </div>
         </div>
+
+        <SessionsTable />
       </div>
 
       <ModalWrapper
@@ -173,121 +180,39 @@ const ProfileForm = ({
   );
 };
 
-interface ConfirmDraftRemoveProps {
-  showModal: boolean;
-  setShowModal: Dispatch<SetStateAction<boolean>>;
-  handleSubmit: (values: SaveProfileDTO) => Promise<void>;
-  lastDraft?: PlanningSessionRO;
-}
-
-const ConfirmDraftRemove = ({
-  showModal,
-  setShowModal,
-  handleSubmit,
-  lastDraft,
-}: ConfirmDraftRemoveProps) => {
-  const { values } = useFormikContext<ProfileFormProps>();
-  const [dontShowAgain, setDontShowAgain] = useState(false);
-
-  return (
-    <ModalWrapper
-      isOpen={showModal}
-      setIsOpen={setShowModal}
-      title='Profile in draft'
-      closeButton={{
-        title: 'Cancel',
-        onClick: () => {
-          setDontShowAgain(false);
-          setShowModal(false);
-        },
-      }}
-      actionButton={{
-        title: 'Continue the process',
-        onClick: async () => {
-          if (dontShowAgain) {
-            document.cookie = 'hideConfirmDraftRemoval=true; path=/';
-          }
-          await handleSubmit(values);
-        },
-      }}
-    >
-      <div className='p-4 text-sm'>
-        <p>
-          You have an incomplete draft profile stored in the system. Here are the details of the
-          draft profile:
-        </p>
-
-        <div className='pt-4'>
-          <p className='font-bold'>Care setting:</p>
-          <p>{lastDraft?.careSetting.name}</p>
-        </div>
-        <div className='pt-2'>
-          <p className='font-bold'>Care competencies:</p>
-          <p>{lastDraft?.bundles.map(bundle => bundle.name).join(', ')}</p>
-        </div>
-        <div className='pt-2'>
-          <p className='font-bold'>Last saved on:</p>
-          <p>{formatDateTime(lastDraft?.updatedAt)}</p>
-        </div>
-
-        <div className='pt-4'>
-          <p>
-            Please keep in mind that selecting “Start from scratch” will result in the removal of
-            your last saved draft.
-          </p>
-        </div>
-        <div className='pt-8'>
-          <label className='flex items-center gap-2 cursor-pointer'>
-            <input
-              type='checkbox'
-              checked={dontShowAgain}
-              onChange={e => setDontShowAgain(e.target.checked)}
-            />
-            Don&apos;t show this again
-          </label>
-        </div>
-      </div>
-    </ModalWrapper>
-  );
-};
-
 export const Profile: React.FC<ProfileProps> = () => {
-  const { handleSubmit, initialValues, lastDraft, isLoading } = usePlanningProfile();
-
-  const [showModal, setShowModal] = useState(false);
+  // The naming prompt is rendered by the wizard (SessionNamePrompt), not here: the save
+  // that creates a draft also advances the stage, which would unmount this component.
+  const { handleSubmit, initialValues, lastDraft, isLoading, hasFailedSave, retryFailedSave } =
+    usePlanningProfile();
 
   return (
     <Formik
       initialValues={initialValues}
       validate={values => dtoValidator(SaveProfileDTO, values)}
-      onSubmit={values => {
-        // if last draft exists, and the user does not select it, trigger modal that will confirm deletion of the saved draft.
-        // Do not show the modal if the user dismissed it via cookie
-        if (
-          lastDraft &&
-          values.profileOption !== ProfileOptions.DRAFT &&
-          !document.cookie.includes('hideConfirmDraftRemoval=true')
-        ) {
-          setShowModal(true);
-          return;
-        }
-
-        return handleSubmit(values);
-      }}
+      onSubmit={values => handleSubmit(values)}
       validateOnBlur={true}
       validateOnMount={true}
       enableReinitialize={true}
     >
       <>
-        <ProfileForm lastDraft={lastDraft} isLoading={isLoading} />
-        {showModal && (
-          <ConfirmDraftRemove
-            showModal={showModal}
-            setShowModal={setShowModal}
-            handleSubmit={handleSubmit}
-            lastDraft={lastDraft}
-          />
+        {/*
+          A persistent banner, not a toast: it stays until a save succeeds or the planner
+          leaves the stage, so a failed auto-save cannot go unnoticed (FR-005).
+        */}
+        {hasFailedSave && (
+          <div
+            role='alert'
+            className='flex items-center justify-between gap-4 p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg'
+          >
+            <span>Your progress could not be saved. Your latest changes are not stored yet.</span>
+            <Button variant='outline' type='button' onClick={retryFailedSave}>
+              Retry
+            </Button>
+          </div>
         )}
+
+        <ProfileForm lastDraft={lastDraft} isLoading={isLoading} />
       </>
     </Formik>
   );

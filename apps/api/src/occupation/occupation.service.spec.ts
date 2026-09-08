@@ -17,6 +17,7 @@ describe('OccupationService', () => {
     innerJoin: jest.fn().mockReturnThis(),
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
     getManyAndCount: jest.fn(),
@@ -137,7 +138,7 @@ describe('OccupationService', () => {
       expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
     });
 
-    it('should apply search across occupation name, description, and care activity name', async () => {
+    it('should apply search by occupation name only', async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       await service.findOccupations({
@@ -146,13 +147,8 @@ describe('OccupationService', () => {
         searchText: 'nurse',
       } as any);
 
-      expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith('o.allowedActivities', 'o_aa');
-      expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith('o_aa.careActivity', 'o_aa_ca');
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('o_aa_ca.displayName ILIKE :name', {
-        name: '%nurse%',
-      });
-      expect(mockQueryBuilder.orWhere).toHaveBeenCalledWith('o.displayName ILIKE :name', {
-        name: '%nurse%',
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('o.displayName ILIKE :search', {
+        search: '%nurse%',
       });
     });
 

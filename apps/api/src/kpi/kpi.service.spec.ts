@@ -21,6 +21,7 @@ describe('KpiService', () => {
     andWhere: jest.fn().mockReturnThis(),
     getCount: jest.fn(),
     innerJoin: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
     groupBy: jest.fn().mockReturnThis(),
@@ -119,17 +120,17 @@ describe('KpiService', () => {
     beforeEach(() => {
       // Default: getCount returns values for both user queries and planning session query
       mockUserQueryBuilder.getCount
-        .mockResolvedValueOnce(100) // totalUsers
-        .mockResolvedValueOnce(50); // activeUsers
+        .mockResolvedValueOnce(50) // activeUsers
+        .mockResolvedValueOnce(20); // pendingUsers
       mockPlanningSessionQueryBuilder.getCount.mockResolvedValue(200);
     });
 
-    it('should return total users, active users, and care plans', async () => {
+    it('should return active users, pending users, and care plans', async () => {
       const result = await service.getGeneralKPIs();
 
       expect(result).toBeInstanceOf(GeneralKPIsRO);
-      expect(result.totalUsers).toBe(100);
       expect(result.activeUsers).toBe(50);
+      expect(result.pendingUsers).toBe(20);
       expect(result.totalCarePlans).toBe(200);
     });
 
@@ -143,16 +144,20 @@ describe('KpiService', () => {
       );
     });
 
-    it('should filter care plans by template HA when provided', async () => {
+    it('should filter care plans by creator HA when provided', async () => {
       await service.getGeneralKPIs('Fraser Health');
 
       expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith(
         'ps.careSettingTemplate',
         'cst',
       );
+      expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith(
+        'ps.createdBy',
+        'creator',
+      );
       expect(mockPlanningSessionQueryBuilder.where).toHaveBeenCalledWith(
-        'cst.healthAuthority IN (:...authorities)',
-        { authorities: ['Fraser Health', 'GLOBAL'] },
+        'creator.organization = :healthAuthority',
+        { healthAuthority: 'Fraser Health' },
       );
     });
 
@@ -173,20 +178,22 @@ describe('KpiService', () => {
 
       const result = await service.getGeneralKPIs();
 
-      expect(result.totalUsers).toBe(0);
       expect(result.activeUsers).toBe(0);
+      expect(result.pendingUsers).toBe(0);
       expect(result.totalCarePlans).toBe(0);
     });
 
-    it('should set startOfMonth to first day of current month at midnight', async () => {
+    it('should filter active users to keycloakId not null and not revoked', async () => {
       await service.getGeneralKPIs();
 
-      // calls[0] is revokedAt IS NULL (totalUsers), calls[1] is lastLoginAt (activeUsers)
-      const passedDate = mockUserQueryBuilder.where.mock.calls[1][1].startOfMonth;
-      expect(passedDate.getDate()).toBe(1);
-      expect(passedDate.getHours()).toBe(0);
-      expect(passedDate.getMinutes()).toBe(0);
-      expect(passedDate.getSeconds()).toBe(0);
+      expect(mockUserQueryBuilder.where).toHaveBeenCalledWith('u.keycloakId IS NOT NULL');
+      expect(mockUserQueryBuilder.andWhere).toHaveBeenCalledWith('u.revokedAt IS NULL');
+    });
+
+    it('should filter pending users to keycloakId null and not revoked', async () => {
+      await service.getGeneralKPIs();
+
+      expect(mockUserQueryBuilder.where).toHaveBeenCalledWith('u.keycloakId IS NULL');
     });
 
     it('should propagate repository errors', async () => {
@@ -203,18 +210,20 @@ describe('KpiService', () => {
         careSettingId: 'tmpl-1',
         careSettingName: 'ACUTE Care',
         healthAuthority: 'Fraser Health',
+        isMaster: false,
         count: '10',
       },
       {
         careSettingId: 'tmpl-2',
         careSettingName: 'Emergency',
         healthAuthority: 'Vancouver Coastal Health',
+        isMaster: false,
         count: '5',
       },
     ];
 
     it('should return grouped data without filters', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue(mockRawResults);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue(mockRawResults);
 
       const result = await service.getCarePlansBySetting({});
 
@@ -225,56 +234,56 @@ describe('KpiService', () => {
       expect(result[0].healthAuthority).toBe('Fraser Health');
       expect(result[0].count).toBe(10);
 
-      // Verify joins use template directly (no unit join needed)
-      expect(mockPlanningSessionQueryBuilder.innerJoin).toHaveBeenCalledWith(
-        'ps.careSettingTemplate',
-        'cst',
+      // Verify templates are the base table, left-joined to planning sessions
+      // so templates with zero care plans are still included
+      expect(mockTemplateQueryBuilder.leftJoin).toHaveBeenCalledWith(
+        PlanningSession,
+        'ps',
+        'ps.care_setting_template_id = cst.id',
       );
-      expect(mockPlanningSessionQueryBuilder.groupBy).toHaveBeenCalledWith('cst.id');
+      expect(mockTemplateQueryBuilder.groupBy).toHaveBeenCalledWith('cst.id');
     });
 
     it('should filter by health authority using template HA', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([mockRawResults[0]]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([mockRawResults[0]]);
 
       await service.getCarePlansBySetting({ healthAuthority: 'Fraser Health' });
 
-      expect(mockPlanningSessionQueryBuilder.andWhere).toHaveBeenCalledWith(
+      expect(mockTemplateQueryBuilder.andWhere).toHaveBeenCalledWith(
         'cst.healthAuthority IN (:...authorities)',
         { authorities: ['Fraser Health', 'GLOBAL'] },
       );
     });
 
     it('should filter by care setting (template ID)', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([mockRawResults[0]]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([mockRawResults[0]]);
 
       await service.getCarePlansBySetting({ careSettingId: 'tmpl-1' });
 
-      expect(mockPlanningSessionQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'cst.id = :careSettingId',
-        { careSettingId: 'tmpl-1' },
-      );
+      expect(mockTemplateQueryBuilder.andWhere).toHaveBeenCalledWith('cst.id = :careSettingId', {
+        careSettingId: 'tmpl-1',
+      });
     });
 
     it('should apply both filters', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([mockRawResults[0]]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([mockRawResults[0]]);
 
       await service.getCarePlansBySetting({
         healthAuthority: 'Fraser Health',
         careSettingId: 'tmpl-1',
       });
 
-      expect(mockPlanningSessionQueryBuilder.andWhere).toHaveBeenCalledWith(
+      expect(mockTemplateQueryBuilder.andWhere).toHaveBeenCalledWith(
         'cst.healthAuthority IN (:...authorities)',
         { authorities: ['Fraser Health', 'GLOBAL'] },
       );
-      expect(mockPlanningSessionQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'cst.id = :careSettingId',
-        { careSettingId: 'tmpl-1' },
-      );
+      expect(mockTemplateQueryBuilder.andWhere).toHaveBeenCalledWith('cst.id = :careSettingId', {
+        careSettingId: 'tmpl-1',
+      });
     });
 
     it('should return empty array when no results', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([]);
 
       const result = await service.getCarePlansBySetting({});
 
@@ -282,11 +291,12 @@ describe('KpiService', () => {
     });
 
     it('should map null healthAuthority to Unknown', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([
         {
           careSettingId: 'tmpl-1',
           careSettingName: 'ACUTE Care',
           healthAuthority: null,
+          isMaster: false,
           count: '10',
         },
       ]);
@@ -296,27 +306,12 @@ describe('KpiService', () => {
       expect(result[0].healthAuthority).toBe('Unknown');
     });
 
-    it('should map GLOBAL healthAuthority to Master', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([
-        {
-          careSettingId: 'tmpl-1',
-          careSettingName: 'ACUTE Care',
-          healthAuthority: 'GLOBAL',
-          count: '3',
-        },
-      ]);
-
-      const result = await service.getCarePlansBySetting({});
-
-      expect(result[0].healthAuthority).toBe('Master');
-    });
-
     it('should not apply healthAuthority filter when undefined', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([]);
 
       await service.getCarePlansBySetting({ careSettingId: 'tmpl-1' });
 
-      const andWhereCalls = mockPlanningSessionQueryBuilder.andWhere.mock.calls;
+      const andWhereCalls = mockTemplateQueryBuilder.andWhere.mock.calls;
       const haFilterCalls = andWhereCalls.filter(
         (call: any[]) => typeof call[0] === 'string' && call[0].includes('healthAuthority'),
       );
@@ -324,11 +319,11 @@ describe('KpiService', () => {
     });
 
     it('should not apply careSettingId filter when undefined', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([]);
 
       await service.getCarePlansBySetting({ healthAuthority: 'Fraser Health' });
 
-      const andWhereCalls = mockPlanningSessionQueryBuilder.andWhere.mock.calls;
+      const andWhereCalls = mockTemplateQueryBuilder.andWhere.mock.calls;
       const csFilterCalls = andWhereCalls.filter(
         (call: any[]) => typeof call[0] === 'string' && call[0].includes('careSettingId'),
       );
@@ -336,11 +331,12 @@ describe('KpiService', () => {
     });
 
     it('should parse count as integer', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([
         {
           careSettingId: 'tmpl-1',
           careSettingName: 'ACUTE Care',
           healthAuthority: 'Fraser Health',
+          isMaster: false,
           count: '42',
         },
       ]);
@@ -355,17 +351,18 @@ describe('KpiService', () => {
   describe('getKPIsOverview', () => {
     beforeEach(() => {
       mockUserQueryBuilder.getCount
-        .mockResolvedValueOnce(100) // totalUsers
-        .mockResolvedValueOnce(50); // activeUsers
+        .mockResolvedValueOnce(50) // activeUsers
+        .mockResolvedValueOnce(20); // pendingUsers
       mockPlanningSessionQueryBuilder.getCount.mockResolvedValue(200);
     });
 
     it('should return combined general and carePlansBySetting', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([
         {
           careSettingId: 'tmpl-1',
           careSettingName: 'ACUTE Care',
           healthAuthority: 'Fraser Health',
+          isMaster: false,
           count: '10',
         },
       ]);
@@ -374,28 +371,29 @@ describe('KpiService', () => {
 
       expect(result).toBeInstanceOf(KPIsOverviewRO);
       expect(result.general).toBeDefined();
-      expect(result.general.totalUsers).toBe(100);
+      expect(result.general.activeUsers).toBe(50);
+      expect(result.general.pendingUsers).toBe(20);
       expect(result.carePlansBySetting).toBeDefined();
       expect(result.carePlansBySetting).toHaveLength(1);
     });
 
     it('should return empty carePlansBySetting with populated general', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([]);
 
       const result = await service.getKPIsOverview({});
 
-      expect(result.general.totalUsers).toBe(100);
+      expect(result.general.activeUsers).toBe(50);
       expect(result.carePlansBySetting).toEqual([]);
     });
 
     it('should pass filter to both sub-queries', async () => {
-      mockPlanningSessionQueryBuilder.getRawMany.mockResolvedValue([]);
+      mockTemplateQueryBuilder.getRawMany.mockResolvedValue([]);
 
       const filter = { healthAuthority: 'Fraser Health' };
       await service.getKPIsOverview(filter);
 
       // getCarePlansBySetting should filter by template HA
-      expect(mockPlanningSessionQueryBuilder.andWhere).toHaveBeenCalledWith(
+      expect(mockTemplateQueryBuilder.andWhere).toHaveBeenCalledWith(
         'cst.healthAuthority IN (:...authorities)',
         { authorities: ['Fraser Health', 'GLOBAL'] },
       );

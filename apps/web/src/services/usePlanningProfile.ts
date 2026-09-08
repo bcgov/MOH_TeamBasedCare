@@ -1,5 +1,5 @@
 import { PlanningSessionRO, ProfileOptions, SaveProfileDTO } from '@tbcm/common';
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { useHttp } from './useHttp';
 import { usePlanningContext } from './usePlanningContext';
@@ -9,7 +9,16 @@ export const usePlanningProfile = () => {
     state: { sessionId },
     updateProceedToNext,
     updateSessionId,
+    updateSessionName,
+    refreshSessionsList,
+    promptForSessionName,
   } = usePlanningContext();
+
+  /**
+   * Holds the values of a save that did not complete, so the planner can retry it from a
+   * persistent banner rather than losing the attempt to a transient toast (FR-005).
+   */
+  const [failedSave, setFailedSave] = useState<SaveProfileDTO>();
 
   const [initialValues] = useState<SaveProfileDTO>({
     profileOption: '',
@@ -50,28 +59,51 @@ export const usePlanningProfile = () => {
         data,
       };
 
-      await sendApiRequest(config, (data: PlanningSessionRO) => {
-        // Clear the "don't show again" cookie so popup reappears for the next draft
-        document.cookie = 'hideConfirmDraftRemoval=; path=/; max-age=0';
-        updateSessionId(data.id);
-        updateProceedToNext();
-      });
+      await sendApiRequest(
+        config,
+        (created: PlanningSessionRO) => {
+          setFailedSave(undefined);
+          updateSessionId(created.id);
+          updateSessionName(created.name);
+          // the drafts table is mounted on this stage and must show the new row
+          refreshSessionsList();
+          // the prompt is owned by the wizard, so it survives the stage change below
+          promptForSessionName({ id: created.id, name: created.name });
+          updateProceedToNext();
+        },
+        () => setFailedSave(values),
+      );
 
       return;
     }
 
     // patch the result if session already exists
-    sendApiRequest(
+    await sendApiRequest(
       {
         method: REQUEST_METHOD.PATCH,
         data: values,
         endpoint: API_ENDPOINT.getPlanningProfile(sessionId),
       },
       () => {
+        setFailedSave(undefined);
         updateProceedToNext();
       },
+      () => setFailedSave(values),
     );
   };
 
-  return { handleSubmit, initialValues, lastDraft, isLoading };
+  const retryFailedSave = useCallback(() => {
+    if (!failedSave) return;
+
+    handleSubmit(failedSave);
+  }, [failedSave, sessionId]);
+
+  return {
+    handleSubmit,
+    initialValues,
+    lastDraft,
+    isLoading,
+    hasFailedSave: Boolean(failedSave),
+    retryFailedSave,
+  };
 };

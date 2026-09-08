@@ -12,10 +12,21 @@ dist
 node_modules
 .DS_Store
 .env
+.env.*
+!.env.example
+!.env.test
 .envrc
 .idea
 .history
 .vscode
+
+# AI
+.specify
+.github/skills
+docs/ai
+
+# Tests
+**/test-results
 
 # ts build artifacts
 *.tsbuildinfo

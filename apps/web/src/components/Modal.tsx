@@ -1,10 +1,11 @@
 import { Dialog, Transition } from '@headlessui/react';
 import React, { Fragment, PropsWithChildren, ReactNode } from 'react';
-import { Button } from './Button';
+import { Button, buttonColor } from './Button';
 
 export interface ModalProps {
   open: boolean;
   handleClose?: () => void;
+  containerClassName?: string;
 }
 
 const { Root, Child } = Transition;
@@ -13,6 +14,7 @@ const ModalContainer: React.FC<PropsWithChildren<ModalProps>> = ({
   children,
   open,
   handleClose = void 0,
+  containerClassName,
 }) => {
   return (
     <Root show={open} as={Fragment}>
@@ -49,8 +51,12 @@ const ModalContainer: React.FC<PropsWithChildren<ModalProps>> = ({
             leaveFrom='opacity-100 translate-y-0 sm:scale-100'
             leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
           >
-            <div className='inline-block align-bottom bg-white rounded text-left shadow-xl transform transition-all sm:my-8 sm:align-middle lg:max-w-xl sm:max-w-lg sm:w-full p-1'>
-              <div className='bg-white '>{children}</div>
+            <div
+              className={`inline-block align-bottom bg-white rounded-[4px] text-left shadow-[4px_7px_25px_rgba(0,0,0,0.05)] transform transition-all sm:my-8 sm:align-middle sm:w-full p-[24px] ${
+                containerClassName ?? 'sm:max-w-[652px]'
+              }`}
+            >
+              <div className='bg-white rounded-[4px]'>{children}</div>
             </div>
           </Child>
         </div>
@@ -68,9 +74,15 @@ const Modal = ModalContainer as ModalInterface;
 Modal.Title = Dialog.Title;
 Modal.Description = Dialog.Description;
 
-const ModalFooter = ({ children }: PropsWithChildren) => {
+const ModalFooter = ({ children, className }: PropsWithChildren<{ className?: string }>) => {
   return (
-    <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3'>{children}</div>
+    <div
+      className={`bg-transparent border-t border-gray-200 pt-4 mt-2 flex flex-row-reverse gap-4 items-center pr-0 ${
+        className ?? ''
+      }`}
+    >
+      {children}
+    </div>
   );
 };
 
@@ -81,6 +93,8 @@ interface ModalButtonProps {
   isLoading?: boolean;
   isError?: boolean;
   isDisabled?: boolean;
+  variant?: keyof typeof buttonColor;
+  classes?: string;
 }
 
 interface ModalWrapperProps {
@@ -91,6 +105,11 @@ interface ModalWrapperProps {
   closeButton?: ModalButtonProps;
   actionButton?: ModalButtonProps;
   children?: ReactNode;
+  headerRight?: ReactNode;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  footerClassName?: string;
+  containerClassName?: string;
 }
 
 export const ModalWrapper = ({
@@ -101,18 +120,32 @@ export const ModalWrapper = ({
   closeButton,
   actionButton,
   children,
+  headerRight,
+  titleClassName,
+  descriptionClassName,
+  footerClassName,
+  containerClassName,
 }: ModalWrapperProps) => {
+  const modalButtonClasses = 'box-border h-12 border-2 px-6 py-2 text-base font-bold';
+
   return (
-    <Modal open={isOpen}>
-      <Modal.Title
-        as='h1'
-        className='text-lg font-semibold leading-6 text-bcBluePrimary border-b p-4'
-      >
-        {title}
-      </Modal.Title>
+    <Modal open={isOpen} containerClassName={containerClassName}>
+      {(title || headerRight) && (
+        <div className='flex items-center justify-between border-b border-gray-200 pb-3 mb-4'>
+          {title && (
+            <Modal.Title
+              as='h1'
+              className={titleClassName || 'text-lg font-semibold leading-6 text-bcBluePrimary'}
+            >
+              {title}
+            </Modal.Title>
+          )}
+          {headerRight}
+        </div>
+      )}
 
       {description && (
-        <Modal.Description as='div' className='p-4 text-sm'>
+        <Modal.Description as='div' className={descriptionClassName || 'p-4 text-sm'}>
           {description}
         </Modal.Description>
       )}
@@ -120,14 +153,15 @@ export const ModalWrapper = ({
       {children}
 
       {(actionButton || closeButton) && (
-        <ModalFooter>
+        <ModalFooter className={footerClassName}>
           {actionButton && (
             <Button
               loading={actionButton?.isLoading}
               onClick={() => actionButton?.onClick?.()}
-              variant={actionButton.isError ? 'error' : 'primary'}
+              variant={actionButton.variant ?? (actionButton.isError ? 'error' : 'primary')}
               type={actionButton.type || 'button'}
               disabled={actionButton.isDisabled}
+              classes={`${modalButtonClasses} ${actionButton.classes ?? ''}`}
             >
               {actionButton.title}
             </Button>
@@ -136,9 +170,13 @@ export const ModalWrapper = ({
           {closeButton && (
             <Button
               onClick={() => (closeButton?.onClick ? closeButton?.onClick?.() : setIsOpen(false))}
-              variant={`${closeButton.isError ? 'error' : actionButton ? 'secondary' : 'primary'}`}
+              variant={
+                closeButton.variant ??
+                `${closeButton.isError ? 'error' : actionButton ? 'secondary' : 'primary'}`
+              }
               type={closeButton?.type || 'button'}
               disabled={closeButton.isDisabled}
+              classes={`${modalButtonClasses} ${closeButton.classes ?? ''}`}
             >
               {closeButton?.title || 'Ok'}
             </Button>

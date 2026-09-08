@@ -7,6 +7,7 @@ import { Error } from '../Error';
 import { SaveCareActivityDTO } from '@tbcm/common';
 import { dtoValidator } from '../../utils/dto-validator';
 import { usePlanningCareActivities } from '../../services';
+import { CurrentSessionName } from './CurrentSessionName';
 
 export interface CareActivitiesBundleProps {
   step?: number;
@@ -36,6 +37,7 @@ export const CareActivitiesBundle: React.FC<CareActivitiesBundleProps> = ({ titl
   return (
     <>
       <div className='planning-form-box'>
+        <CurrentSessionName />
         <PageTitle description={description} />
 
         <Formik

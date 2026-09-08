@@ -22,3 +22,9 @@ export * from './ActivitiesGapLegend';
 export * from './Textarea';
 export * from './Field';
 export * from './FeedbackForm';
+
+// Planning sessions
+export * from './planning/CurrentSessionName';
+export * from './planning/SessionNameRenameControl';
+export * from './planning/SessionNameModal';
+export * from './planning/SessionsTable';

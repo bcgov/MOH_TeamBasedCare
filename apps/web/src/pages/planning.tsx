@@ -1,12 +1,15 @@
 import { PlanningWrapper } from '@components';
 import { NextPage } from 'next';
 import AppLayout from 'src/components/AppLayout';
+import { PlanningProvider } from 'src/components/planning/PlanningContext';
 
 const Planning: NextPage = () => {
   return (
-    <AppLayout>
-      <PlanningWrapper />
-    </AppLayout>
+    <PlanningProvider>
+      <AppLayout>
+        <PlanningWrapper />
+      </AppLayout>
+    </PlanningProvider>
   );
 };
 

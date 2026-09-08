@@ -9,7 +9,12 @@ import { Header } from './Header';
 import { SidebarButtonProps } from './interface';
 import { Sidebar } from './Sidebar';
 
-const AppLayout: React.FC<PropsWithChildren> = ({ children }) => {
+interface AppLayoutProps {
+  /** Rendered beside the page title in the header */
+  titleAccessory?: React.ReactNode;
+}
+
+const AppLayout: React.FC<PropsWithChildren<AppLayoutProps>> = ({ children, titleAccessory }) => {
   const [mounted, setMounted] = React.useState(false);
 
   const router = useRouter();
@@ -87,6 +92,7 @@ const AppLayout: React.FC<PropsWithChildren> = ({ children }) => {
         <Header
           title={activeSidebarButton.current?.text}
           icon={activeSidebarButton.current?.icon}
+          titleAccessory={titleAccessory}
         />
         {!accessError && children}
         {accessError && (

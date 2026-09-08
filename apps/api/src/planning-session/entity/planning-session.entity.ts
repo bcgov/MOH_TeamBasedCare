@@ -8,6 +8,9 @@ import { Occupation } from '../../occupation/entity/occupation.entity';
 
 @Entity()
 export class PlanningSession extends CustomBaseEntity {
+  @Column({ length: 100 })
+  name: string;
+
   @Column({ nullable: true })
   profileOption?: string;
 

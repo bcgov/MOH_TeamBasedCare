@@ -15,9 +15,6 @@ type AppStorageType = Record<string, any>;
 export class AppStorage {
   private static getStorage() {
     if (typeof window === 'undefined' || !localStorage) {
-      // Failed to get storage
-      // eslint-disable-next-line no-console
-      console.error('Unable to fetch local storage: window is undefined');
       return;
     }
 
@@ -32,9 +29,6 @@ export class AppStorage {
 
   private static updateStorage(value: AppStorageType) {
     if (typeof window === 'undefined') {
-      // Failed to update storage
-      // eslint-disable-next-line no-console
-      console.error('Unable to fetch local storage: window is undefined');
       return;
     }
 
@@ -50,8 +44,6 @@ export class AppStorage {
 
     const storage = this.getStorage();
     if (!storage) {
-      // eslint-disable-next-line no-console
-      console.error('Unable to fetch local storage: storage is nil');
       return; // failed to get the storage
     }
 
@@ -65,8 +57,6 @@ export class AppStorage {
 
     const storage = this.getStorage();
     if (!storage) {
-      // eslint-disable-next-line no-console
-      console.error('Unable to fetch local storage: storage is nil');
       return; // failed to get the storage
     }
     return storage[key];

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlanningSessionService } from './planning-session.service';
 import { PlanningSession } from './entity/planning-session.entity';
 import { CareActivityService } from '../care-activity/care-activity.service';
@@ -12,6 +12,8 @@ import {
   PlanningStatus,
   Permissions,
   ActivityGapCareActivity,
+  PlanningSessionsFindSortKeys,
+  SortOrder,
 } from '@tbcm/common';
 import { ActivitiesActionType } from '../common/constants';
 
@@ -22,8 +24,15 @@ describe('PlanningSessionService', () => {
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
     innerJoin: jest.fn().mockReturnThis(),
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    getCount: jest.fn(),
+    getManyAndCount: jest.fn(),
     getRawMany: jest.fn(),
     getRawOne: jest.fn(),
   });
@@ -31,10 +40,12 @@ describe('PlanningSessionService', () => {
   let mockQueryBuilder: ReturnType<typeof createMockQueryBuilder>;
 
   const mockPlanningSessionRepo = {
+    find: jest.fn(),
     findOne: jest.fn(),
     findOneBy: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    remove: jest.fn(),
     createQueryBuilder: jest.fn(),
   };
 
@@ -133,7 +144,8 @@ describe('PlanningSessionService', () => {
           status: PlanningStatus.DRAFT,
           createdBy: { id: 'user-1' },
         },
-        order: { createdAt: -1 },
+        // must match the drafts table's default sort (Latest Modified, descending)
+        order: { updatedAt: 'DESC', id: 'ASC' },
         relations: ['careLocation', 'careSettingTemplate', 'careActivity', 'careActivity.bundle'],
       });
     });
@@ -152,11 +164,15 @@ describe('PlanningSessionService', () => {
   describe('createPlanningSession', () => {
     const mockTemplate = {
       id: 'tmpl-1',
+      name: 'Emergency - SPH',
       unit: { id: 'unit-1', displayName: 'ACUTE Care' },
       selectedActivities: [{ id: 'ca-1' }],
     };
 
+    const uniqueViolation = () => Object.assign(new Error('duplicate key'), { code: '23505' });
+
     beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-08-27T10:00:00.000Z'));
       mockCareSettingTemplateService.getTemplateForPlanning.mockResolvedValue(mockTemplate);
       mockPlanningSessionRepo.create.mockImplementation((data: any) => ({
         ...data,
@@ -166,11 +182,12 @@ describe('PlanningSessionService', () => {
       mockPlanningSessionRepo.save.mockImplementation((data: any) => Promise.resolve(data));
     });
 
-    it('should create session with template, unit, and activities', async () => {
-      const dto = {
-        profileOption: 'option1',
-        careLocation: 'tmpl-1',
-      } as any;
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should create session with template, unit, activities and a generated name', async () => {
+      const dto = { profileOption: 'option1', careLocation: 'tmpl-1' } as any;
 
       await service.createPlanningSession(dto);
 
@@ -180,33 +197,241 @@ describe('PlanningSessionService', () => {
         careSettingTemplate: mockTemplate,
         careLocation: mockTemplate.unit,
         careActivity: mockTemplate.selectedActivities,
+        name: 'Emergency - SPH - 2026-08-27',
       });
       expect(mockPlanningSessionRepo.save).toHaveBeenCalled();
     });
 
-    it('should save user preference when userPrefNotShowConfirmDraftRemoval is true', async () => {
-      const dto = {
-        profileOption: 'option1',
-        careLocation: 'tmpl-1',
-        userPrefNotShowConfirmDraftRemoval: true,
-      } as any;
+    // FR-001 / SC-002: the one-draft-per-user restriction is gone
+    it("should not delete the planner's existing sessions", async () => {
+      const dto = { profileOption: 'option1', careLocation: 'tmpl-1' } as any;
 
       await service.createPlanningSession(dto);
 
-      expect(mockUserService.upsertUserPreference).toHaveBeenCalledWith('user-1', {
-        notShowConfirmDraftRemoval: true,
+      expect(mockPlanningSessionRepo.find).not.toHaveBeenCalled();
+      expect(mockPlanningSessionRepo.remove).not.toHaveBeenCalled();
+    });
+
+    // FR-006 / FR-013: collisions increment the counter
+    it('should increment the name counter on a unique-name violation', async () => {
+      const dto = { profileOption: 'option1', careLocation: 'tmpl-1' } as any;
+      mockPlanningSessionRepo.save
+        .mockRejectedValueOnce(uniqueViolation())
+        .mockRejectedValueOnce(uniqueViolation())
+        .mockImplementation((data: any) => Promise.resolve(data));
+
+      const result = await service.createPlanningSession(dto);
+
+      expect(result.name).toBe('Emergency - SPH - 2026-08-27 (3)');
+      expect(mockPlanningSessionRepo.save).toHaveBeenCalledTimes(3);
+    });
+
+    it('should rethrow an error that is not a unique-name violation', async () => {
+      const dto = { profileOption: 'option1', careLocation: 'tmpl-1' } as any;
+      mockPlanningSessionRepo.save.mockRejectedValue(new Error('connection lost'));
+
+      await expect(service.createPlanningSession(dto)).rejects.toThrow('connection lost');
+      expect(mockPlanningSessionRepo.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('should keep a generated name within the 100 character column length', async () => {
+      const dto = { profileOption: 'option1', careLocation: 'tmpl-1' } as any;
+      mockCareSettingTemplateService.getTemplateForPlanning.mockResolvedValue({
+        ...mockTemplate,
+        name: 'A'.repeat(200),
+      });
+
+      const result = await service.createPlanningSession(dto);
+
+      expect(result.name.length).toBeLessThanOrEqual(100);
+      expect(result.name.endsWith(' - 2026-08-27')).toBe(true);
+    });
+  });
+
+  // ─── renamePlanningSession ──────────────────────────────────────────
+  describe('renamePlanningSession', () => {
+    const existing = { id: 'session-1', name: 'Old name here', createdBy: { id: 'user-1' } };
+
+    beforeEach(() => {
+      mockPlanningSessionRepo.findOne.mockResolvedValue({ ...existing });
+      mockPlanningSessionRepo.save.mockImplementation((data: any) => Promise.resolve(data));
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+    });
+
+    it('should throw NotFoundException when the session does not exist', async () => {
+      mockPlanningSessionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.renamePlanningSession('missing', 'A valid name')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    // FR-013: trimmed before both validation and persist
+    it('should trim the name before persisting', async () => {
+      const result = await service.renamePlanningSession('session-1', '   Trimmed name   ');
+
+      expect(result.name).toBe('Trimmed name');
+    });
+
+    it('should reject a name shorter than 10 characters after trimming', async () => {
+      await expect(service.renamePlanningSession('session-1', '   short   ')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPlanningSessionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should reject a name longer than 100 characters', async () => {
+      await expect(service.renamePlanningSession('session-1', 'A'.repeat(101))).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPlanningSessionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should accept a name at each boundary', async () => {
+      await expect(
+        service.renamePlanningSession('session-1', 'A'.repeat(10)),
+      ).resolves.toBeDefined();
+      await expect(
+        service.renamePlanningSession('session-1', 'A'.repeat(100)),
+      ).resolves.toBeDefined();
+    });
+
+    // FR-014: unique per owner, case- and whitespace-insensitive
+    it('should reject a duplicate name owned by the same planner', async () => {
+      mockQueryBuilder.getCount.mockResolvedValue(1);
+
+      await expect(service.renamePlanningSession('session-1', 'Duplicate name')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPlanningSessionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should exclude the session being renamed from the duplicate check', async () => {
+      await service.renamePlanningSession('session-1', 'Old name here');
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('ps.id != :sessionId', {
+        sessionId: 'session-1',
+      });
+      expect(mockPlanningSessionRepo.save).toHaveBeenCalled();
+    });
+
+    it('should translate a unique-index violation into a BadRequestException', async () => {
+      mockPlanningSessionRepo.save.mockRejectedValue(
+        Object.assign(new Error('duplicate key'), { code: '23505' }),
+      );
+
+      await expect(service.renamePlanningSession('session-1', 'Racing name')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  // ─── discardPlanningSession ─────────────────────────────────────────
+  describe('discardPlanningSession', () => {
+    it('should throw NotFoundException when the session is already gone', async () => {
+      mockPlanningSessionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.discardPlanningSession('missing')).rejects.toThrow(NotFoundException);
+      expect(mockPlanningSessionRepo.remove).not.toHaveBeenCalled();
+    });
+
+    /**
+     * FR-038: `remove` (not `delete`) is required so TypeORM clears the
+     * planning_session_care_activity_care_activity and
+     * planning_session_occupation_occupation junction rows.
+     */
+    it('should load the junction relations and use remove', async () => {
+      const session = { id: 'session-1', careActivity: [{ id: 'ca-1' }], occupation: [] };
+      mockPlanningSessionRepo.findOne.mockResolvedValue(session);
+
+      await service.discardPlanningSession('session-1');
+
+      expect(mockPlanningSessionRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+        relations: ['careActivity', 'occupation'],
+      });
+      expect(mockPlanningSessionRepo.remove).toHaveBeenCalledWith(session);
+    });
+  });
+
+  // ─── findPlanningSessions ───────────────────────────────────────────
+  describe('findPlanningSessions', () => {
+    const user = { id: 'user-1' } as any;
+    const baseQuery = { page: 1, pageSize: 10 } as any;
+
+    beforeEach(() => {
+      mockQueryBuilder.getManyAndCount.mockResolvedValue([[{ id: 'session-1' }], 42]);
+    });
+
+    // FR-030 / FR-041 / FR-046
+    it('should scope to the requesting planner and to draft status only', async () => {
+      const [result, total] = await service.findPlanningSessions(baseQuery, user);
+
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('ps.createdBy = :ownerId', {
+        ownerId: 'user-1',
+      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('ps.status = :status', {
+        status: PlanningStatus.DRAFT,
+      });
+      expect(result).toHaveLength(1);
+      // total counts the whole filtered set, not just the page
+      expect(total).toBe(42);
+    });
+
+    // FR-033
+    it('should default the ordering to updatedAt DESC', async () => {
+      await service.findPlanningSessions(baseQuery, user);
+
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('ps.updatedAt', SortOrder.DESC);
+    });
+
+    // FR-045
+    it.each([
+      [PlanningSessionsFindSortKeys.NAME, 'LOWER(ps.name)'],
+      [
+        PlanningSessionsFindSortKeys.CARE_SETTING_NAME,
+        'LOWER(COALESCE(cst.name, cl.display_name))',
+      ],
+      [PlanningSessionsFindSortKeys.CREATED_AT, 'ps.createdAt'],
+      [PlanningSessionsFindSortKeys.UPDATED_AT, 'ps.updatedAt'],
+    ])('should sort by %s in the requested direction', async (sortBy, expression) => {
+      await service.findPlanningSessions(
+        { ...baseQuery, sortBy, sortOrder: SortOrder.DESC } as any,
+        user,
+      );
+
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(expression, SortOrder.DESC);
+    });
+
+    // FR-043
+    it('should match the search term case-insensitively on name only', async () => {
+      await service.findPlanningSessions({ ...baseQuery, searchText: 'Emerg' } as any, user);
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("ps.name ILIKE :search ESCAPE '\\'", {
+        search: '%Emerg%',
       });
     });
 
-    it('should not save user preference when flag is not set', async () => {
-      const dto = {
-        profileOption: 'option1',
-        careLocation: 'tmpl-1',
-      } as any;
+    it('should not apply a search filter when no term is supplied', async () => {
+      await service.findPlanningSessions(baseQuery, user);
 
-      await service.createPlanningSession(dto);
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledTimes(1); // status only
+    });
 
-      expect(mockUserService.upsertUserPreference).not.toHaveBeenCalled();
+    // Spec edge case: wildcards are literal text, not pattern syntax
+    it('should escape LIKE wildcards in the search term', async () => {
+      await service.findPlanningSessions({ ...baseQuery, searchText: '50%_x' } as any, user);
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith("ps.name ILIKE :search ESCAPE '\\'", {
+        search: '%50\\%\\_x%',
+      });
+    });
+
+    it('should page with the correct offset', async () => {
+      await service.findPlanningSessions({ page: 3, pageSize: 10 } as any, user);
+
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(20);
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
     });
   });
 

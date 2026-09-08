@@ -33,7 +33,13 @@ export const SortButton = <T,>({
     <div className='flex align-middle'>
       <span>{label}</span>
       {name && (
-        <button id={`sort-by-${sortKey}`} onClick={() => onChange({ key: name })} className='ml-2'>
+        <button
+          type='button'
+          id={`sort-by-${name}`}
+          aria-label={`Sort by ${label}`}
+          onClick={() => onChange({ key: name })}
+          className='ml-2'
+        >
           <FontAwesomeIcon className='h-3 w-3' icon={sortIcon} />
         </button>
       )}

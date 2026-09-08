@@ -2,18 +2,24 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import {
+  FindPlanningSessionsDto,
   GetSuggestionsDTO,
+  PaginationRO,
   PlanningSessionRO,
+  PlanningSessionSummaryRO,
+  RenamePlanningSessionDTO,
   Role,
   SaveCareActivityDTO,
   SaveOccupationDTO,
@@ -44,6 +50,23 @@ export class PlanningSessionController {
     return this.careSettingTemplateService.findAllForPlanning(healthAuthority);
   }
 
+  /**
+   * List the requesting planner's draft sessions.
+   * Declared before every '/:sessionId' route so Nest does not match 'find' as a session id.
+   */
+  @Get('/find')
+  async findPlanningSessions(@Query() query: FindPlanningSessionsDto, @Req() req: IRequest) {
+    const [sessions, total] = await this.planningSessionService.findPlanningSessions(
+      query,
+      req.user,
+    );
+
+    return new PaginationRO([
+      sessions.map(session => new PlanningSessionSummaryRO(session)),
+      total,
+    ]);
+  }
+
   @Get('/last_draft')
   async getDraftPlanningSession(@Req() req: IRequest) {
     const session = await this.planningSessionService.getLastDraftPlanningSession(req.user);
@@ -55,11 +78,8 @@ export class PlanningSessionController {
   }
 
   @Post()
-  async createPlanningSession(@Body() saveProfileDto: SaveProfileDTO, @Req() req: IRequest) {
-    const session = await this.planningSessionService.createPlanningSession(
-      saveProfileDto,
-      req.user,
-    );
+  async createPlanningSession(@Body() saveProfileDto: SaveProfileDTO) {
+    const session = await this.planningSessionService.createPlanningSession(saveProfileDto);
 
     return new PlanningSessionRO(session);
   }
@@ -148,5 +168,28 @@ export class PlanningSessionController {
       dto.page || 1,
       dto.pageSize || 10,
     );
+  }
+
+  @UseGuards(SessionGuard)
+  @Patch('/:sessionId/name')
+  @ApiBody({ type: RenamePlanningSessionDTO })
+  async renamePlanningSession(
+    @Param('sessionId') sessionId: string,
+    @Body() renameDto: RenamePlanningSessionDTO,
+  ) {
+    const session = await this.planningSessionService.renamePlanningSession(
+      sessionId,
+      renameDto.name,
+    );
+
+    return new PlanningSessionSummaryRO(session);
+  }
+
+  @UseGuards(SessionGuard)
+  @Delete('/:sessionId')
+  async discardPlanningSession(@Param('sessionId') sessionId: string) {
+    await this.planningSessionService.discardPlanningSession(sessionId);
+
+    return SUCCESS_RESPONSE;
   }
 }

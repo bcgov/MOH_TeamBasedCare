@@ -21,11 +21,9 @@
     "start:api:local": "yarn workspace @tbcm/api start:local",
     "start:web:local": "yarn workspace @tbcm/web start",
     "start:local": "run-p 'start:api:local' 'start:web:local'",
-    "start:cypress": "yarn workspace @tbcm/web cypress",
-    "open:cypress": "yarn workspace @tbcm/web open:cypress",
     "test": "echo 'Running tests' && wsrun --parallel --exclude-missing test",
     "test:seed": "scripts/seed-test-data.sh",
-    "test:e2e": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn start:cypress'",
+    "test:e2e": "yarn workspace @tbcm/web e2e",
     "test:pa11y": "start-test 'start:local' http://localhost:3000 'yarn test:seed && yarn workspace @tbcm/accessibility start'",
     "db:seed-care-activities": "yarn workspace @tbcm/api db:seed-care-activities"
   },
@@ -35,6 +33,7 @@
   ],
   "devDependencies": {
     "@tsconfig/node20": "1.0.1",
+    "@types/jest": "^30.0.0",
     "@types/papaparse": "5.3.2",
     "@typescript-eslint/eslint-plugin": "8.43.0",
     "@typescript-eslint/parser": "8.43.0",
