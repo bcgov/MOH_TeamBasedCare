@@ -41,7 +41,7 @@ export class CareActivityController {
   constructor(
     private careActivityService: CareActivityService,
     private careActivityBulkService: CareActivityBulkService,
-  ) { }
+  ) {}
 
   @Get('/bundles')
   async getAllBundles(): Promise<BundleRO[]> {
