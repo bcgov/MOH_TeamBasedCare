@@ -1,21 +1,21 @@
+import { useCareActivityCMSById } from '@services';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import AppLayout from 'src/components/AppLayout';
 import { Spinner } from 'src/components/generic/Spinner';
-import { OccupationalScopeDetails } from 'src/components/occupational-scope';
-import { useOccupationById } from 'src/services/useOccupationById';
+import { CareTerminologyDetails } from 'src/components/care-terminologies';
 
-const OccupationalScopeId: NextPage = () => {
+const CareTerminologyId: NextPage = () => {
   const router = useRouter();
   const { id } = router.query as { id: string };
-  const { occupation, isLoading } = useOccupationById(id);
+  const { careActivity, isLoading } = useCareActivityCMSById(id);
 
   return (
     <AppLayout>
       <Spinner show={isLoading} fullScreen />
-      {!isLoading && <OccupationalScopeDetails occupation={occupation}></OccupationalScopeDetails>}
+      {!isLoading && careActivity && <CareTerminologyDetails careActivity={careActivity} />}
     </AppLayout>
   );
 };
 
-export default OccupationalScopeId;
+export default CareTerminologyId;

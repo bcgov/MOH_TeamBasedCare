@@ -38,6 +38,14 @@ The codebase is being roughed out, but finer details are likely to change.
 | packages/common        | Shared library                |         |
 | packages/accessibility | **Accessibility** Test        |  |
 
+## Glossary hover definitions
+
+Glossary terms are defined in [packages/common/src/constants/glossary.ts](packages/common/src/constants/glossary.ts) and rendered as hover definitions by `GlossaryText` in [apps/web/src/components/glossary](apps/web/src/components/glossary).
+
+Matching is case-insensitive, word-boundary based, and applies to every occurrence in a block of text. Where terms overlap, the longest one wins.
+
+- **`GLOSSARY_MATCH_INFLECTIONS`** is `false` by default, so only the exact term and its explicit `aliases` match. Setting it to `true` in that same file also matches the regular `-s`, `-ed` and `-ing` forms of every single-word term, app-wide: with it on, "Assessing the patient" matches `Assess`, and "Applied a dressing" matches `Apply`. Multi-word terms such as "Set up" are never inflected, and irregular verbs such as "Take" need explicit `aliases` either way. Expect more incidental words to be underlined when it is on, since many glossary terms are common English verbs.
+
 ## Common issues and solutions
 
 ### AWS and Local environment differences with Buffer types

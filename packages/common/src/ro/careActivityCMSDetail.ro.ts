@@ -15,6 +15,9 @@ export class CareActivityCMSDetailRO extends BaseRO {
   description!: string;
 
   @Expose()
+  requirementsAndConsiderations!: string;
+
+  @Expose()
   bundle!: BundleRO;
 
   @Expose()

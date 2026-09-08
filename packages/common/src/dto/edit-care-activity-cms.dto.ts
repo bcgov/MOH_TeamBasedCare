@@ -11,6 +11,11 @@ export class EditCareActivityCMSDTO {
   @MaxLength(3000)
   description?: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(3000)
+  requirementsAndConsiderations?: string;
+
   @IsUUID()
   bundleId!: string;
 

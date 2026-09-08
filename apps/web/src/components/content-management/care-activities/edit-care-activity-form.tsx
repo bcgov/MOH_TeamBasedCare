@@ -8,6 +8,7 @@ import { Formik } from 'formik';
 import { dtoValidator } from 'src/utils/dto-validator';
 import { Field, Textarea } from '@components';
 import { BasicSelect } from 'src/components/Select';
+import { Alert } from 'src/components/Alert';
 import { useBundles, useCareActivityCMSById, useCareActivityCMSEdit } from '@services';
 
 interface EditCareActivityFormProps {
@@ -17,6 +18,7 @@ interface EditCareActivityFormProps {
 const getInitialValues = (careActivity: CareActivityCMSDetailRO): EditCareActivityCMSDTO => ({
   name: careActivity.displayName ?? '',
   description: careActivity.description ?? '',
+  requirementsAndConsiderations: careActivity.requirementsAndConsiderations ?? '',
   clinicalType: careActivity.clinicalType,
   activityType: careActivity.activityType,
   bundleId: careActivity.bundle.id,
@@ -46,11 +48,7 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
         <div className='mt-4 w-full'>
           <BackButtonLink />
           <div className='flex justify-between w-full'>
-            <Heading
-              className='mt-2'
-              title={careActivity?.name}
-              subTitle={careActivity?.description || ''}
-            />
+            <Heading className='mt-2' title={careActivity?.name} />
             <div className='flex flex-row gap-4 max-h-10'>
               <Button variant='outline' onClick={() => router.back()}>
                 Cancel
@@ -61,6 +59,13 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
             </div>
           </div>
 
+          <Alert type='info' className='mt-4'>
+            <span>
+              Updating care activity detail here will reflect across the full application, including{' '}
+              <strong>Planning</strong> and <strong>Regulatory Terminologies</strong>.
+            </span>
+          </Alert>
+
           <Card bgWhite className='mt-4 p-6'>
             <div className='flex flex-col gap-4 max-w-2xl'>
               <Field
@@ -68,6 +73,20 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
                 label='Name'
                 name='name'
                 className='border w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-200 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 text-sm'
+              />
+              <Textarea
+                maxLength={3000}
+                name='description'
+                label='Description'
+                placeholder='Please enter description'
+                className='max-h-[80px] border w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 text-sm border-gray-300'
+              />
+              <Textarea
+                maxLength={3000}
+                name='requirementsAndConsiderations'
+                label='Requirements and Considerations'
+                placeholder='Please enter requirements and considerations'
+                className='max-h-[80px] border w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 text-sm border-gray-300'
               />
               <div>
                 <label className='block text-bcBlack text-base font-bold mb-2'>Care settings</label>
@@ -95,13 +114,6 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
                   className='max-w-[240px]'
                 />
               </div>
-              <Textarea
-                maxLength={3000}
-                name='description'
-                label='Description'
-                placeholder='Please enter description'
-                className='max-h-[80px] border w-full rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 text-sm border-gray-300'
-              />
             </div>
           </Card>
         </div>

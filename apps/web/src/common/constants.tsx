@@ -12,6 +12,7 @@ import {
   CareSettingsIcon,
   UserManagementIcon,
   ContentManagementIcon,
+  RegulatoryTerminologiesIcon,
 } from '../components/icons';
 import { TooltipIconProps } from './interfaces';
 import { BULK_UPLOAD_COLUMNS, Role } from '@tbcm/common';
@@ -74,12 +75,12 @@ export const sidebarNavItems: SidebarButtonProps[] = [
   {
     id: '003',
     kind: SidebarButtonKind.REGULAR,
-    text: 'Modal of Care Terminologies',
+    text: 'Regulatory terminologies',
     active: false,
-    icon: <PlanningIcon />,
+    icon: <RegulatoryTerminologiesIcon />,
     path: AllowedPath.CARE_TERMINOLOGIES,
-    hidden: true,
-    roles: [Role.USER],
+    hidden: false,
+    roles: [Role.USER, Role.ADMIN, Role.CONTENT_ADMIN],
   },
   {
     id: '004',

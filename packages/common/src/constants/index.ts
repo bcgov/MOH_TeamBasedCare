@@ -12,3 +12,4 @@ export * from './userStatus';
 export * from './bulk-upload-columns';
 export * from './templates';
 export * from './duplicate-handling';
+export * from './glossary';
