@@ -133,7 +133,9 @@ const ChangedByHaBadge: React.FC<{
   // Nothing to edit on a non-LC cell, so the badge only explains itself.
   return (
     <Popover
-      className='min-w-0 max-w-full'
+      // Flex, so the trigger button does not sit on a text baseline and drop
+      // the badge below the centre of the select behind it.
+      className='flex min-w-0 max-w-full items-center'
       title={
         <span title='Changes made by HA' className={badgeClasses}>
           {label}
