@@ -4,6 +4,7 @@ export { DashboardIcon } from './DashboardIcon';
 export { PlanningIcon } from './PlanningIcon';
 export { CareSettingsIcon } from './CareSettingsIcon';
 export { ContentManagementIcon } from './ContentManagementIcon';
+export { RegulatoryTerminologiesIcon } from './RegulatoryTerminologiesIcon';
 export { OccupationalScopeIcon } from './OccupationalScopeIcon';
 export { UserManagementIcon } from './UserManagementIcon';
 export { MenuIcon } from './MenuIcon';
