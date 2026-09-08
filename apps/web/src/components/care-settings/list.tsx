@@ -28,6 +28,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 
   const headers = [
     { label: 'Care Setting Name', name: CareSettingsCMSFindSortKeys.NAME },
+    { label: 'Level', name: CareSettingsCMSFindSortKeys.LEVEL },
     { label: 'Parent', name: CareSettingsCMSFindSortKeys.PARENT_NAME },
     { label: 'Date Modified', name: CareSettingsCMSFindSortKeys.UPDATED_AT },
     { label: '' },
@@ -73,7 +74,7 @@ const TableBody: React.FC<TableBodyProps> = ({
     return (
       <tbody>
         <tr>
-          <td colSpan={4} className='text-center py-8 text-gray-500'>
+          <td colSpan={5} className='text-center py-8 text-gray-500'>
             No care settings found
           </td>
         </tr>
@@ -98,6 +99,7 @@ const TableBody: React.FC<TableBodyProps> = ({
                 </span>
               )}
           </td>
+          <td className={`${tdStyles} font-bold`}>{template.levelLabel || '-'}</td>
           <td className={tdStyles}>{template.parentName || '-'}</td>
           <td className={tdStyles}>
             {template.updatedAt ? dayjs(template.updatedAt).format('MMM D, YYYY') : '-'}
@@ -112,7 +114,7 @@ const TableBody: React.FC<TableBodyProps> = ({
                   <Button
                     variant='link'
                     onClick={() => onDeleteClick(template)}
-                    classes='text-red-600 hover:text-red-800'
+                    classes='text-red-700 hover:text-red-900'
                   >
                     Delete
                   </Button>

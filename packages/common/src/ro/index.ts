@@ -8,6 +8,7 @@ export * from './careActivityCMSDetail.ro';
 export * from './careActivityDetail.ro';
 export * from './careSettingTemplate.ro';
 export * from './kpi.ro';
+export * from './limitCondition.ro';
 export * from './occupation.ro';
 export * from './occupationCMS.ro';
 export * from './occupationDetail.ro';

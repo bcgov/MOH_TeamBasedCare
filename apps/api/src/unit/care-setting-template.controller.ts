@@ -40,6 +40,8 @@ import {
   CreateCareSettingTemplateCopyFullDTO,
   OccupationRO,
   PaginationRO,
+  LimitConditionRO,
+  Permissions,
   Role,
   UpdateCareSettingTemplateDTO,
 } from '@tbcm/common';
@@ -47,6 +49,7 @@ import { AllowRoles } from 'src/auth/allow-roles.decorator';
 import { IRequest } from 'src/common/app-request';
 import { CareSettingTemplateService } from './care-setting-template.service';
 import { FindCareSettingTemplatesDto } from './dto/find-care-setting-templates.dto';
+import { UpdateCareSettingTemplateDetailsDto } from './dto/update-care-setting-template-details.dto';
 
 @ApiTags('care-settings')
 @Controller('care-settings')
@@ -131,6 +134,18 @@ export class CareSettingTemplateController {
   }
 
   /**
+   * Get the catalogue of limits offered when a permission is set to LC.
+   *
+   * Declared with the other static `cms/` routes and before any `:id` route,
+   * or ParseUUIDPipe would reject the literal segment.
+   */
+  @Get('cms/limits-conditions')
+  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
+  async getLimitConditions(): Promise<LimitConditionRO[]> {
+    return this.templateService.getLimitConditions();
+  }
+
+  /**
    * Get lightweight template data for copy wizard - returns IDs only
    * Avoids loading full permission entities which can timeout on master templates
    */
@@ -144,7 +159,13 @@ export class CareSettingTemplateController {
     unitId: string;
     selectedBundleIds: string[];
     selectedActivityIds: string[];
-    permissions: { activityId: string; occupationId: string; permission: string }[];
+    permissions: {
+      activityId: string;
+      occupationId: string;
+      permission: string;
+      limitId: string | null;
+      restrictionDescription: string | null;
+    }[];
   }> {
     const template = await this.templateService.getTemplateBasic(id);
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
@@ -165,6 +186,25 @@ export class CareSettingTemplateController {
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     this.validateTemplateAccess(template, req.user.organization, isAdmin);
     return template;
+  }
+
+  /**
+   * Get the direct parent's permissions, used as the baseline for the
+   * "Changes made by HA" badge.
+   *
+   * Access is validated against the child template being viewed, not the
+   * parent: an administrator entitled to edit the child is entitled to see
+   * what it was derived from.
+   */
+  @Get(':id/parent-permissions')
+  async getParentPermissions(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: IRequest,
+  ): Promise<{ activityId: string; occupationId: string; permission: Permissions }[]> {
+    const template = await this.templateService.getTemplateBasic(id);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    this.validateTemplateAccess(template, req.user.organization, isAdmin);
+    return this.templateService.getParentPermissions(id);
   }
 
   /**
@@ -252,6 +292,24 @@ export class CareSettingTemplateController {
     const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     const healthAuthority = isSuperAdmin ? undefined : req.user.organization;
     await this.templateService.updateTemplate(id, dto, healthAuthority);
+  }
+
+  /**
+   * Update only a template's name and level, from the details dialog.
+   *
+   * `expectedVersion` is required here, so a details edit cannot silently
+   * overwrite a concurrent change.
+   */
+  @Patch(':id/details')
+  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
+  async updateTemplateDetails(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCareSettingTemplateDetailsDto,
+    @Req() req: IRequest,
+  ): Promise<CareSettingTemplateRO> {
+    const isSuperAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isSuperAdmin ? undefined : req.user.organization;
+    return this.templateService.updateTemplateDetails(id, dto, healthAuthority);
   }
 
   /**

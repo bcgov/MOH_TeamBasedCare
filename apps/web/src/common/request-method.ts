@@ -8,6 +8,7 @@ import {
   Permissions,
   PlanningSessionsFindSortKeys,
   SortOrder,
+  TemplateLevelFilter,
   UserManagementSortKeys,
 } from '@tbcm/common';
 
@@ -29,6 +30,7 @@ export interface EndpointQueryParams<T> {
   careSetting?: string;
   filterByPermission?: Permissions;
   bundleId?: string;
+  level?: TemplateLevelFilter;
 }
 
 const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<T>) => {
@@ -43,6 +45,9 @@ const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<
   if (listParams.filterByPermission != null)
     params.set('filterByPermission', String(listParams.filterByPermission));
   if (listParams.bundleId) params.set('bundleId', listParams.bundleId);
+  // `all` is the server default, so it is omitted to keep the URL clean
+  if (listParams.level && listParams.level !== TemplateLevelFilter.ALL)
+    params.set('level', listParams.level);
 
   const queryString = params.toString();
   return queryString ? `${endpoint}?${queryString}` : endpoint;
@@ -113,6 +118,9 @@ export const API_ENDPOINT = {
   copyCareSettingTemplate: (id: string) => `/care-settings/${id}/copy`,
   copyCareSettingTemplateFull: (sourceId: string) => `/care-settings/${sourceId}/copy-full`,
   updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
+  updateCareSettingTemplateDetails: (id: string) => `/care-settings/${id}/details`,
+  getCareSettingParentPermissions: (id: string) => `/care-settings/${id}/parent-permissions`,
+  CMS_LIMITS_CONDITIONS: '/care-settings/cms/limits-conditions',
   deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
 
   // Occupation CMS

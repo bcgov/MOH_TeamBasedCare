@@ -155,6 +155,50 @@ describe('SessionsTable', () => {
     expect(mockRefreshSessions).toHaveBeenCalled();
   });
 
+  // Deleting the last row on a later page would otherwise land on an empty page
+  // whose pagination control is hidden, stranding the planner.
+  it('steps back a page when the last draft on a later page is discarded', async () => {
+    const onPageOptionsChange = jest.fn();
+    mockFindState = buildFindState({
+      sessions: [sessions[1]],
+      pageIndex: 2,
+      pageSize: 10,
+      total: 11,
+      onPageOptionsChange,
+    });
+
+    render(<SessionsTable />);
+
+    await click(screen.getByRole('button', { name: /^Discard / }));
+
+    const dialog = screen.getByRole('dialog');
+    await click(within(dialog).getByRole('button', { name: 'Delete Draft' }));
+
+    await waitFor(() => {
+      expect(onPageOptionsChange).toHaveBeenCalledWith({ pageIndex: 1, pageSize: 10, total: 11 });
+    });
+    expect(mockRefreshSessions).not.toHaveBeenCalled();
+  });
+
+  // A page emptied by another tab hides the pagination control, so clamp back
+  // to the last page that still holds rows.
+  it('falls back to the last populated page when the current page comes back empty', async () => {
+    const onPageOptionsChange = jest.fn();
+    mockFindState = buildFindState({
+      sessions: [],
+      pageIndex: 3,
+      pageSize: 10,
+      total: 11,
+      onPageOptionsChange,
+    });
+
+    render(<SessionsTable />);
+
+    await waitFor(() => {
+      expect(onPageOptionsChange).toHaveBeenCalledWith({ pageIndex: 2, pageSize: 10, total: 11 });
+    });
+  });
+
   // FR-031: no drafts at all
   it('shows the empty state when the planner has no drafts', () => {
     mockFindState = buildFindState({ sessions: [], total: 0 });

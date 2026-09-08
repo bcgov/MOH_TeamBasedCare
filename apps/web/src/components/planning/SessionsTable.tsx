@@ -68,6 +68,19 @@ export const SessionsTable = () => {
   }, [sessionsRefreshToken]);
 
   const [sessionToDiscard, setSessionToDiscard] = useState<PlanningSessionSummaryRO | null>(null);
+
+  // Safety net for drafts removed in another tab: if the current page came back
+  // empty while earlier pages still hold rows, the empty state hides the
+  // pagination control, so fall back to the last page that has data.
+  useEffect(() => {
+    if (isLoading || sessions.length > 0 || total === 0 || pageIndex <= 1) return;
+
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    if (pageIndex > lastPage) {
+      onPageOptionsChange({ pageIndex: lastPage, pageSize, total });
+    }
+  }, [isLoading, sessions.length, total, pageIndex, pageSize]);
+
   const [isDiscarding, setIsDiscarding] = useState(false);
   const [goneMessage, setGoneMessage] = useState<string | null>(null);
 
@@ -108,6 +121,14 @@ export const SessionsTable = () => {
     }
 
     setSessionToDiscard(null);
+
+    // Removing the only row on a page past the first would leave an empty page
+    // with no pagination control to escape from, so step back instead.
+    if (sessions.length === 1 && pageIndex > 1) {
+      onPageOptionsChange({ pageIndex: pageIndex - 1, pageSize, total });
+      return;
+    }
+
     refreshSessions();
   };
 

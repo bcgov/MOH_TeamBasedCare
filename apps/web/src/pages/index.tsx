@@ -75,7 +75,7 @@ const Landing: NextPage = () => {
     <div className='h-screen flex flex-col'>
       <HeaderLanding />
 
-      <main className='w-full flex-auto flex justify-center'>
+      <div className='w-full flex-auto flex justify-center'>
         <div className='justify-center items-center flex flex-row gap-20 max-w-screen-lg p-10'>
           <div className='flex-1'>
             <h1 className='mb-3 font-bold text-4xl'>
@@ -96,6 +96,7 @@ const Landing: NextPage = () => {
                 You will go to a secure website to log in and automatically return
               </p>
               <button
+                id='landing-sign-in'
                 className='bg-bcBluePrimary mt-4 p-4 text-white font-bold rounded'
                 onClick={logMeIn}
               >
@@ -104,7 +105,7 @@ const Landing: NextPage = () => {
             </Card>
           </div>
         </div>
-      </main>
+      </div>
 
       <Spinner show={showSpinner} fullScreen={true} message={message} />
 

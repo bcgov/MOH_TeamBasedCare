@@ -145,7 +145,7 @@ export const ModalWrapper = ({
       )}
 
       {description && (
-        <Modal.Description as='div' className={descriptionClassName || 'p-4 text-sm'}>
+        <Modal.Description as='div' className={descriptionClassName || 'text-sm'}>
           {description}
         </Modal.Description>
       )}

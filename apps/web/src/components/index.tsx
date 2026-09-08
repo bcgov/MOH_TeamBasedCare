@@ -28,3 +28,10 @@ export * from './planning/CurrentSessionName';
 export * from './planning/SessionNameRenameControl';
 export * from './planning/SessionNameModal';
 export * from './planning/SessionsTable';
+
+// Care settings
+export * from './care-settings/level-filter';
+export * from './care-settings/template-details-card';
+export * from './care-settings/edit-details-modal';
+export * from './care-settings/limits-conditions-modal';
+export * from './care-settings/save-conflict-modal';

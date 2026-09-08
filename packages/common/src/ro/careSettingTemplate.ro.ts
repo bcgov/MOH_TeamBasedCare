@@ -7,6 +7,7 @@
 import { Exclude, Expose } from 'class-transformer';
 import { BaseRO } from './base.ro';
 import { Permissions } from '../constants/permissions';
+import { TemplateLevel, getTemplateLevelLabel } from '../constants/templateLevel';
 
 /** Basic template info for list views */
 @Exclude()
@@ -33,6 +34,17 @@ export class CareSettingTemplateRO extends BaseRO {
   updatedAt!: Date;
 
   @Expose()
+  level?: TemplateLevel | null;
+
+  /** Derived, never stored. `Provincial` for masters. */
+  @Expose()
+  levelLabel!: string;
+
+  /** Optimistic-concurrency token echoed back on save as `expectedVersion`. */
+  @Expose()
+  version!: number;
+
+  @Expose()
   missingPermissionsCount?: number;
 
   constructor(data: any) {
@@ -44,6 +56,9 @@ export class CareSettingTemplateRO extends BaseRO {
     this.parentName = data.parent?.name ?? (data.isMaster ? 'Master' : this.parentName);
     this.unitId = data.unit?.id ?? this.unitId;
     this.unitName = data.unit?.displayName ?? this.unitName;
+    this.level = data.level ?? null;
+    this.levelLabel = getTemplateLevelLabel(data.isMaster, this.level);
+    this.version = data.version ?? 0;
     this.missingPermissionsCount = data.missingPermissionsCount;
   }
 }
@@ -79,6 +94,19 @@ export class TemplatePermissionRO {
 
   @Expose()
   permission!: Permissions;
+
+  @Expose()
+  limitId?: string | null;
+
+  /**
+   * Inlined so the limits dialog pre-fills without a second request, and can
+   * still name a limit that has since been deactivated.
+   */
+  @Expose()
+  limitName?: string | null;
+
+  @Expose()
+  restrictionDescription?: string | null;
 
   constructor(data: Partial<TemplatePermissionRO>) {
     Object.assign(this, data);

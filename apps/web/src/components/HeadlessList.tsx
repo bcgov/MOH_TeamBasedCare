@@ -9,6 +9,8 @@ import classNames from 'classnames';
 
 export interface HeadlessListOptions<T extends OptionValueType> extends SelectOption<T> {
   tagVariant?: TagVariants;
+  /** Renders the entry as an unselectable hint, e.g. a placeholder row. */
+  disabled?: boolean;
 }
 
 export interface HeadlessListProps<T extends OptionValueType> {
@@ -135,9 +137,12 @@ export const HeadlessList = <T extends OptionValueType>({
               {options.map((option, index) => (
                 <Listbox.Option
                   key={index}
-                  className={({ selected }) =>
-                    `relative cursor-default select-none py-2 ${isMulti ? 'pl-8' : 'pl-3'} pr-4 ${
-                      selected ? 'bg-gray-100 text-amber-900' : 'text-gray-900'
+                  disabled={option.disabled}
+                  className={({ selected, disabled }) =>
+                    `relative select-none py-2 ${
+                      disabled ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer'
+                    } ${isMulti ? 'pl-8' : 'pl-3'} pr-4 ${
+                      disabled ? '' : selected ? 'bg-gray-100 text-amber-900' : 'text-gray-900'
                     }`
                   }
                   value={option.value}

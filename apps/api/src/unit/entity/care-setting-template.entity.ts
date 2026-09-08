@@ -17,6 +17,7 @@
  * - Has many selected activities (subset of bundle activities)
  * - Has many permissions (activity-occupation permission mappings)
  */
+import { TemplateLevel } from '@tbcm/common';
 import { Column, Entity, Index, JoinTable, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { CustomBaseEntity } from '../../common/custom-base.entity';
 import { Unit } from './unit.entity';
@@ -38,6 +39,23 @@ export class CareSettingTemplate extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Index()
   healthAuthority: string;
+
+  /**
+   * Level of the template. Null only for master templates, whose level is
+   * displayed as "Provincial" but never stored.
+   */
+  @Column({ type: 'enum', enum: TemplateLevel, enumName: 'template_level_enum', nullable: true })
+  @Index()
+  level: TemplateLevel | null;
+
+  /**
+   * Optimistic-concurrency token, incremented explicitly on every successful
+   * save. Deliberately not a TypeORM @VersionColumn: a permission-only edit
+   * changes no scalar column on this entity, so TypeORM may issue no UPDATE at
+   * all and neither the version nor updatedAt would move.
+   */
+  @Column({ type: 'int', nullable: false, default: 0 })
+  version: number;
 
   /** The care setting type (unit) this template belongs to */
   @ManyToOne(() => Unit, unit => unit.templates, { nullable: false })

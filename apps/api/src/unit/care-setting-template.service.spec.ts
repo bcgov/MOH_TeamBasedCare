@@ -8,7 +8,16 @@ import { Unit } from './entity/unit.entity';
 import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from '../occupation/entity/occupation.entity';
-import { CareSettingsCMSFindSortKeys, SortOrder } from '@tbcm/common';
+import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
+import { LimitCondition } from './entity/limit-condition.entity';
+import {
+  CareSettingsCMSFindSortKeys,
+  Permissions,
+  SortOrder,
+  TemplateLevel,
+  TemplateLevelFilter,
+} from '@tbcm/common';
+import { TemplateVersionConflictException } from './template-version-conflict.exception';
 
 describe('CareSettingTemplateService', () => {
   let service: CareSettingTemplateService;
@@ -39,6 +48,7 @@ describe('CareSettingTemplateService', () => {
   let mockTemplateQB: ReturnType<typeof createMockQueryBuilder>;
   let mockPermissionQB: ReturnType<typeof createMockQueryBuilder>;
   let mockBundleQB: ReturnType<typeof createMockQueryBuilder>;
+  let mockAllowedActivityQB: ReturnType<typeof createMockQueryBuilder>;
   let mockManagerQB: ReturnType<typeof createMockQueryBuilder>;
 
   const mockTemplateRepo = {
@@ -50,6 +60,12 @@ describe('CareSettingTemplateService', () => {
     createQueryBuilder: jest.fn(),
     manager: {
       createQueryBuilder: jest.fn(),
+      transaction: jest.fn(),
+      query: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+      create: jest.fn(),
+      findOne: jest.fn(),
     },
   };
 
@@ -64,6 +80,21 @@ describe('CareSettingTemplateService', () => {
   const mockBundleRepo = { find: jest.fn(), createQueryBuilder: jest.fn() };
   const mockCareActivityRepo = { find: jest.fn() };
   const mockOccupationRepo = { find: jest.fn() };
+  const mockAllowedActivityRepo = { find: jest.fn(), createQueryBuilder: jest.fn() };
+  const mockLimitConditionRepo = { find: jest.fn(), findOne: jest.fn() };
+
+  /**
+   * Stand-in for the transactional EntityManager. Runs the callback inline so
+   * the sequencing inside the transaction (version guard, then delete, then
+   * recreate) is observable in tests.
+   */
+  const mockManager = {
+    query: jest.fn(),
+    save: jest.fn(),
+    delete: jest.fn(),
+    create: jest.fn((_entity: unknown, data: unknown) => data),
+    findOne: jest.fn(),
+  };
 
   // Mock entities
   const mockUnit = { id: 'unit-1', displayName: 'Emergency Department' };
@@ -90,12 +121,35 @@ describe('CareSettingTemplateService', () => {
     mockTemplateQB = createMockQueryBuilder();
     mockPermissionQB = createMockQueryBuilder();
     mockBundleQB = createMockQueryBuilder();
+    mockAllowedActivityQB = createMockQueryBuilder();
     mockManagerQB = createMockQueryBuilder();
 
     mockTemplateRepo.createQueryBuilder.mockReturnValue(mockTemplateQB);
     mockPermissionRepo.createQueryBuilder.mockReturnValue(mockPermissionQB);
     mockBundleRepo.createQueryBuilder.mockReturnValue(mockBundleQB);
+    mockAllowedActivityRepo.createQueryBuilder.mockReturnValue(mockAllowedActivityQB);
     mockTemplateRepo.manager.createQueryBuilder.mockReturnValue(mockManagerQB);
+
+    // Raw queries default to "no rows" so a test only has to state the data it
+    // actually cares about.
+    mockTemplateQB.getRawMany.mockResolvedValue([]);
+    mockPermissionQB.getRawMany.mockResolvedValue([]);
+    mockBundleQB.getRawMany.mockResolvedValue([]);
+    mockManagerQB.getRawMany.mockResolvedValue([]);
+    mockAllowedActivityRepo.find.mockResolvedValue([]);
+    mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+    mockLimitConditionRepo.find.mockResolvedValue([]);
+
+    mockManager.query.mockReset();
+    mockManager.save.mockReset();
+    mockManager.delete.mockReset();
+    mockManager.findOne.mockReset();
+    mockManager.create.mockImplementation((_entity: unknown, data: unknown) => data);
+    // Default: the guarded UPDATE claims the row and returns the new version
+    mockManager.query.mockResolvedValue([[{ version: 4 }], 1]);
+    mockTemplateRepo.manager.transaction.mockImplementation(
+      async (cb: (m: typeof mockManager) => Promise<unknown>) => cb(mockManager),
+    );
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -109,6 +163,8 @@ describe('CareSettingTemplateService', () => {
         { provide: getRepositoryToken(Bundle), useValue: mockBundleRepo },
         { provide: getRepositoryToken(CareActivity), useValue: mockCareActivityRepo },
         { provide: getRepositoryToken(Occupation), useValue: mockOccupationRepo },
+        { provide: getRepositoryToken(AllowedActivity), useValue: mockAllowedActivityRepo },
+        { provide: getRepositoryToken(LimitCondition), useValue: mockLimitConditionRepo },
       ],
     }).compile();
 
@@ -292,7 +348,13 @@ describe('CareSettingTemplateService', () => {
       expect(result.selectedBundleIds).toEqual(['bundle-1']);
       expect(result.selectedActivityIds).toEqual(['activity-1']);
       expect(result.permissions).toEqual([
-        { activityId: 'a-1', occupationId: 'o-1', permission: 'Y' },
+        {
+          activityId: 'a-1',
+          occupationId: 'o-1',
+          permission: 'Y',
+          limitId: null,
+          restrictionDescription: null,
+        },
       ]);
     });
 
@@ -315,6 +377,95 @@ describe('CareSettingTemplateService', () => {
       expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
         templateId: 'tmpl-1',
       });
+    });
+
+    it('should not consult the occupation scope for a non-master template', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+
+      const result = await service.getTemplateForCopy('tmpl-1');
+
+      expect(mockAllowedActivityRepo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(result.permissions).toEqual([]);
+    });
+
+    it('should fill a master template gaps from the occupation scope', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, isMaster: true });
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.PERFORM,
+        },
+      ]);
+
+      const result = await service.getTemplateForCopy('tmpl-1');
+
+      expect(mockAllowedActivityQB.where).toHaveBeenCalledWith(
+        'aa.care_activity_id IN (:...activityIds)',
+        { activityIds: ['activity-1'] },
+      );
+      expect(mockAllowedActivityQB.andWhere).toHaveBeenCalledWith(
+        '(aa.unit_id = :unitId OR aa.unit_id IS NULL)',
+        { unitId: 'unit-1' },
+      );
+      // The column's enum only holds Y and LC, so comparing it against N is a
+      // Postgres error rather than a no-op filter.
+      expect(mockAllowedActivityQB.andWhere).toHaveBeenCalledTimes(1);
+      expect(result.permissions).toEqual([
+        {
+          activityId: 'activity-1',
+          occupationId: 'occ-1',
+          permission: Permissions.PERFORM,
+          limitId: null,
+          restrictionDescription: null,
+        },
+      ]);
+    });
+
+    it('should let a master stored permission win over the occupation scope', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, isMaster: true });
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.LIMITS,
+          limit_condition_id: 'limit-1',
+          restriction_description: 'Supervision required',
+        },
+      ]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.PERFORM,
+        },
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-2',
+          permission: Permissions.PERFORM,
+        },
+      ]);
+
+      const result = await service.getTemplateForCopy('tmpl-1');
+
+      expect(result.permissions).toEqual([
+        {
+          activityId: 'activity-1',
+          occupationId: 'occ-1',
+          permission: Permissions.LIMITS,
+          limitId: 'limit-1',
+          restrictionDescription: 'Supervision required',
+        },
+        {
+          activityId: 'activity-1',
+          occupationId: 'occ-2',
+          permission: Permissions.PERFORM,
+          limitId: null,
+          restrictionDescription: null,
+        },
+      ]);
     });
   });
 
@@ -490,6 +641,8 @@ describe('CareSettingTemplateService', () => {
   describe('copyTemplateWithData', () => {
     beforeEach(() => {
       mockTemplateQB.getOne.mockResolvedValue(null); // no duplicate name
+      // Template and permissions are now written through the transaction manager
+      mockManager.save.mockResolvedValue({ id: 'new-1' });
     });
 
     it('should create copy with custom data', async () => {
@@ -497,7 +650,6 @@ describe('CareSettingTemplateService', () => {
         .mockResolvedValueOnce(mockTemplate)
         .mockResolvedValueOnce({ ...mockTemplate, id: 'new-1' });
       mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
-      mockTemplateRepo.save.mockResolvedValue({ id: 'new-1' });
       mockBundleRepo.find.mockResolvedValue([mockBundle]);
       mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
 
@@ -514,6 +666,7 @@ describe('CareSettingTemplateService', () => {
     });
 
     it('should throw NotFoundException when source not found', async () => {
+      mockTemplateRepo.findOne.mockReset();
       mockTemplateRepo.findOne.mockResolvedValue(null);
 
       await expect(
@@ -535,14 +688,11 @@ describe('CareSettingTemplateService', () => {
         .mockResolvedValueOnce(mockTemplate)
         .mockResolvedValueOnce({ ...mockTemplate, id: 'new-1' });
       mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
-      mockTemplateRepo.save.mockResolvedValue({ id: 'new-1' });
       mockBundleRepo.find.mockResolvedValue([mockBundle]);
       mockCareActivityRepo.find
         .mockResolvedValueOnce([mockActivity]) // selectedActivities
         .mockResolvedValueOnce([mockActivity]); // permissions activities
       mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
-      mockPermissionRepo.create.mockReturnValue({});
-      mockPermissionRepo.save.mockResolvedValue([]);
 
       const dto = {
         name: 'Copy',
@@ -553,8 +703,125 @@ describe('CareSettingTemplateService', () => {
 
       await service.copyTemplateWithData('tmpl-1', dto as any, 'Fraser Health');
 
-      expect(mockPermissionRepo.create).toHaveBeenCalled();
-      expect(mockPermissionRepo.save).toHaveBeenCalled();
+      expect(mockManager.create).toHaveBeenCalledWith(
+        CareSettingTemplatePermission,
+        expect.objectContaining({ permission: 'Y' }),
+      );
+      expect(mockManager.save).toHaveBeenCalledWith(
+        CareSettingTemplatePermission,
+        expect.any(Array),
+      );
+    });
+
+    // The template row and its permissions must land together: a template saved
+    // ahead of a failing permission write would block the retry on its own name.
+    it('writes the template and its permissions in one transaction', async () => {
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce(mockTemplate)
+        .mockResolvedValueOnce({ ...mockTemplate, id: 'new-1' });
+      mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([]);
+      mockOccupationRepo.find.mockResolvedValue([]);
+
+      await service.copyTemplateWithData(
+        'tmpl-1',
+        { name: 'Copy', selectedBundleIds: [], selectedActivityIds: [], permissions: [] } as any,
+        'Fraser Health',
+      );
+
+      expect(mockTemplateRepo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(mockTemplateRepo.save).not.toHaveBeenCalled();
+    });
+
+    // An unusable limit must be caught before the template row exists, or the
+    // rejected copy leaves an orphan behind.
+    it('rejects an LC permission with no limit before writing anything', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+
+      await expect(
+        service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Copy',
+            selectedBundleIds: [],
+            selectedActivityIds: [],
+            permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'LC' }],
+          } as any,
+          'Fraser Health',
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockTemplateRepo.save).not.toHaveBeenCalled();
+      expect(mockManager.save).not.toHaveBeenCalled();
+    });
+
+    // The wizard resubmits inherited permissions verbatim, and an LC cell
+    // inherited from a template that predates limits carries none. Rejecting it
+    // would make the source uncopyable: an untouched cell shows no badge, so
+    // there is no way to open the limits dialog and attach one.
+    it('carries an inherited limit-less LC cell over from the source', async () => {
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce(mockTemplate)
+        .mockResolvedValueOnce({ ...mockTemplate, id: 'new-1' });
+      mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'activity-1', occupation_id: 'occ-1' },
+      ]);
+
+      await service.copyTemplateWithData(
+        'tmpl-1',
+        {
+          name: 'Copy',
+          selectedBundleIds: [],
+          selectedActivityIds: [],
+          permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'LC' }],
+        } as any,
+        'Fraser Health',
+      );
+
+      // The exemption is read from the source, not from the copy, which has no
+      // stored permissions yet.
+      expect(mockPermissionQB.where).toHaveBeenCalledWith(expect.any(String), {
+        templateId: 'tmpl-1',
+      });
+      expect(mockManager.create).toHaveBeenCalledWith(
+        CareSettingTemplatePermission,
+        expect.objectContaining({ permission: 'LC', limitCondition: null }),
+      );
+    });
+
+    it('still rejects a cell newly set to LC when the source exempts a different cell', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'other-activity', occupation_id: 'other-occ' },
+      ]);
+
+      await expect(
+        service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Copy',
+            selectedBundleIds: [],
+            selectedActivityIds: [],
+            permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'LC' }],
+          } as any,
+          'Fraser Health',
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockManager.save).not.toHaveBeenCalled();
     });
 
     it('should skip invalid permissions where activity/occupation not found', async () => {
@@ -562,7 +829,6 @@ describe('CareSettingTemplateService', () => {
         .mockResolvedValueOnce(mockTemplate)
         .mockResolvedValueOnce({ ...mockTemplate, id: 'new-1' });
       mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
-      mockTemplateRepo.save.mockResolvedValue({ id: 'new-1' });
       mockBundleRepo.find.mockResolvedValue([]);
       mockCareActivityRepo.find
         .mockResolvedValueOnce([]) // selectedActivities
@@ -579,7 +845,7 @@ describe('CareSettingTemplateService', () => {
       await service.copyTemplateWithData('tmpl-1', dto as any, 'Fraser Health');
 
       // No permissions created since activity/occupation not found
-      expect(mockPermissionRepo.create).not.toHaveBeenCalled();
+      expect(mockManager.create).not.toHaveBeenCalled();
     });
   });
 
@@ -605,7 +871,8 @@ describe('CareSettingTemplateService', () => {
 
       await service.updateTemplate('tmpl-1', dto as any);
 
-      expect(mockTemplateRepo.save).toHaveBeenCalled();
+      // Written through the transaction manager, not the bare repository
+      expect(mockManager.save).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when not found', async () => {
@@ -671,8 +938,10 @@ describe('CareSettingTemplateService', () => {
         permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' }],
       } as any);
 
-      expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ template: { id: 'tmpl-1' } });
-      expect(mockPermissionRepo.create).toHaveBeenCalled();
+      expect(mockManager.delete).toHaveBeenCalledWith(CareSettingTemplatePermission, {
+        template: { id: 'tmpl-1' },
+      });
+      expect(mockManager.create).toHaveBeenCalled();
     });
 
     it('should skip permissions recreation when empty', async () => {
@@ -688,9 +957,9 @@ describe('CareSettingTemplateService', () => {
         permissions: [],
       } as any);
 
-      expect(mockPermissionRepo.delete).toHaveBeenCalled();
-      // save should not be called for permissions since array is empty
-      expect(mockPermissionRepo.save).not.toHaveBeenCalled();
+      expect(mockManager.delete).toHaveBeenCalled();
+      // only the template row is saved; no permission rows to write
+      expect(mockManager.save).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -1013,6 +1282,602 @@ describe('CareSettingTemplateService', () => {
       await service.removeOccupationFromAllTemplates('occ-1');
 
       expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ occupation: { id: 'occ-1' } });
+    });
+  });
+  // ─── Template levels (feature 002, US1) ──────────────────────────
+  describe('findTemplates - level filter', () => {
+    beforeEach(() => {
+      mockTemplateQB.getManyAndCount.mockResolvedValue([[], 0]);
+    });
+
+    const whereClauses = () => mockTemplateQB.andWhere.mock.calls.map(c => c[0]);
+
+    it('adds no level predicate for ALL', async () => {
+      await service.findTemplates({ level: TemplateLevelFilter.ALL } as any, null);
+
+      expect(whereClauses().some((c: string) => c.includes('t.level'))).toBe(false);
+      expect(whereClauses().some((c: string) => c.includes('isMaster'))).toBe(false);
+    });
+
+    it('adds no level predicate when the filter is omitted entirely', async () => {
+      await service.findTemplates({} as any, null);
+
+      expect(whereClauses().some((c: string) => c.includes('t.level'))).toBe(false);
+    });
+
+    // The filter narrows the list page's existing query rather than fetching a
+    // level per row, so adding it costs one predicate no matter how many
+    // templates come back.
+    it('narrows the existing query rather than issuing a query per row', async () => {
+      await service.findTemplates({ level: TemplateLevelFilter.SITE } as any, null);
+
+      expect(mockTemplateQB.getManyAndCount).toHaveBeenCalledTimes(1);
+      expect(whereClauses()).toContain('t.level = :level');
+    });
+
+    it('matches provincial on isMaster, because it is never a stored level', async () => {
+      await service.findTemplates({ level: TemplateLevelFilter.PROVINCIAL } as any, null);
+
+      expect(whereClauses()).toContain('t.isMaster = true');
+      expect(whereClauses().some((c: string) => c.includes('t.level'))).toBe(false);
+    });
+
+    it('matches health authority on the stored level and excludes masters', async () => {
+      await service.findTemplates({ level: TemplateLevelFilter.HEALTH_AUTHORITY } as any, null);
+
+      expect(whereClauses()).toContain('t.isMaster = false');
+      expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.level = :level', {
+        level: TemplateLevel.HEALTH_AUTHORITY,
+      });
+    });
+
+    it('matches site on the stored level and excludes masters', async () => {
+      await service.findTemplates({ level: TemplateLevelFilter.SITE } as any, null);
+
+      expect(whereClauses()).toContain('t.isMaster = false');
+      expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.level = :level', {
+        level: TemplateLevel.SITE,
+      });
+    });
+
+    it('composes the level filter with the search text rather than replacing it', async () => {
+      await service.findTemplates(
+        { searchText: 'Emergency', level: TemplateLevelFilter.SITE } as any,
+        null,
+      );
+
+      expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.name ILIKE :name', {
+        name: '%Emergency%',
+      });
+      expect(whereClauses()).toContain('t.isMaster = false');
+    });
+
+    it('sorts masters into the provincial tier when sorting by level', async () => {
+      await service.findTemplates(
+        { sortBy: CareSettingsCMSFindSortKeys.LEVEL, sortOrder: SortOrder.ASC } as any,
+        null,
+      );
+
+      expect(mockTemplateQB.addSelect).toHaveBeenCalledWith(expect.any(String), 'level_rank');
+      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('level_rank', SortOrder.ASC);
+    });
+
+    it('filters by level as one predicate on the existing query, not a per-row lookup', async () => {
+      await service.findTemplates({ level: TemplateLevelFilter.SITE } as any, null);
+
+      // A single getManyAndCount for the page - no N+1
+      expect(mockTemplateQB.getManyAndCount).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('copy level derivation', () => {
+    beforeEach(() => {
+      mockTemplateQB.getOne.mockResolvedValue(null);
+      mockTemplateRepo.create.mockImplementation((data: any) => data);
+      mockTemplateRepo.save.mockImplementation(async (data: any) => ({ ...data, id: 'new-1' }));
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([]);
+    });
+
+    it('gives a copy of a master the health authority level', async () => {
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce({ ...mockTemplate, isMaster: true, permissions: [] })
+        .mockResolvedValueOnce({ ...mockTemplate });
+
+      await service.copyTemplate('src', { name: 'Copy' } as any, 'Fraser Health');
+
+      expect(mockTemplateRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ level: TemplateLevel.HEALTH_AUTHORITY }),
+      );
+    });
+
+    it('gives a copy of a non-master the site level', async () => {
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce({ ...mockTemplate, isMaster: false, permissions: [] })
+        .mockResolvedValueOnce({ ...mockTemplate });
+
+      await service.copyTemplate('src', { name: 'Copy' } as any, 'Fraser Health');
+
+      expect(mockTemplateRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ level: TemplateLevel.SITE }),
+      );
+    });
+
+    it('honours an explicitly chosen level over the derivation', async () => {
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce({ ...mockTemplate, isMaster: true, permissions: [] })
+        .mockResolvedValueOnce({ ...mockTemplate });
+
+      await service.copyTemplate(
+        'src',
+        { name: 'Copy', level: TemplateLevel.SITE } as any,
+        'Fraser Health',
+      );
+
+      expect(mockTemplateRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ level: TemplateLevel.SITE }),
+      );
+    });
+  });
+
+  // SC-001: the backfill rule, asserted rather than left to manual SQL
+  describe('backfill rule (SC-001)', () => {
+    const deriveLevel = (t: { isMaster: boolean; parentIsMaster?: boolean }) =>
+      t.isMaster ? null : t.parentIsMaster ? TemplateLevel.HEALTH_AUTHORITY : TemplateLevel.SITE;
+
+    const fixture = [
+      { name: 'ED - Master', isMaster: true },
+      { name: 'ED - Fraser', isMaster: false, parentIsMaster: true },
+      { name: 'ED - Fraser Site A', isMaster: false, parentIsMaster: false },
+      { name: 'Orphan', isMaster: false, parentIsMaster: false },
+    ];
+
+    it('leaves masters unlevelled, levels master-children as health authority, everything else as site', () => {
+      const levels = fixture.map(deriveLevel);
+
+      expect(levels).toEqual([
+        null,
+        TemplateLevel.HEALTH_AUTHORITY,
+        TemplateLevel.SITE,
+        TemplateLevel.SITE,
+      ]);
+      expect(levels.filter(l => l === null)).toHaveLength(1);
+      expect(levels.every((l, i) => (fixture[i].isMaster ? l === null : l !== null))).toBe(true);
+    });
+  });
+
+  // ─── Limits and conditions (feature 002, US3) ────────────────────
+  describe('updateTemplate - limits and conditions', () => {
+    const lcPermission = (over: any = {}) => ({
+      activityId: 'activity-1',
+      occupationId: 'occ-1',
+      permission: Permissions.LIMITS,
+      ...over,
+    });
+
+    const baseDto = (permissions: any[]) => ({
+      selectedBundleIds: [],
+      selectedActivityIds: [],
+      permissions,
+    });
+
+    beforeEach(() => {
+      mockTemplateQB.getOne.mockResolvedValue(null);
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+    });
+
+    // Contract case 9
+    it('rejects a newly set LC permission that carries no limit', async () => {
+      await expect(
+        service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects before deleting anything, so a bad payload leaves the stored permissions intact', async () => {
+      await expect(
+        service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockManager.delete).not.toHaveBeenCalled();
+      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
+    });
+
+    // Contract case 9a - legacy LC exemption
+    it('accepts an untouched legacy LC cell that was already stored without a limit', async () => {
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'activity-1', occupation_id: 'occ-1' },
+      ]);
+
+      await expect(
+        service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
+      ).resolves.toBeUndefined();
+
+      expect(mockManager.save).toHaveBeenCalled();
+    });
+
+    it('still rejects a different cell newly set to LC even when a legacy cell exists', async () => {
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'other-activity', occupation_id: 'other-occ' },
+      ]);
+
+      await expect(
+        service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    // Contract case 10
+    it('rejects a limit id that is not in the catalogue', async () => {
+      mockLimitConditionRepo.find.mockResolvedValue([]);
+
+      await expect(
+        service.updateTemplate('tmpl-1', baseDto([lcPermission({ limitId: 'ghost' })]) as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('writes the selected limit and description for a valid LC permission', async () => {
+      mockLimitConditionRepo.find.mockResolvedValue([{ id: 'limit-1', name: 'Supervision' }]);
+
+      await service.updateTemplate(
+        'tmpl-1',
+        baseDto([
+          lcPermission({ limitId: 'limit-1', restrictionDescription: '  Only overnight.  ' }),
+        ]) as any,
+      );
+
+      expect(mockManager.create).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          limitCondition: { id: 'limit-1', name: 'Supervision' },
+          restrictionDescription: 'Only overnight.',
+        }),
+      );
+    });
+
+    // Contract case 11 - leaving LC discards the limit
+    it.each([Permissions.PERFORM, Permissions.NO])(
+      'clears the limit and description when a permission moves to %s',
+      async permission => {
+        mockLimitConditionRepo.find.mockResolvedValue([{ id: 'limit-1', name: 'Supervision' }]);
+
+        await service.updateTemplate(
+          'tmpl-1',
+          baseDto([
+            lcPermission({
+              permission,
+              limitId: 'limit-1',
+              restrictionDescription: 'stale text',
+            }),
+          ]) as any,
+        );
+
+        expect(mockManager.create).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ limitCondition: null, restrictionDescription: null }),
+        );
+      },
+    );
+
+    it('ignores a limit the client sent alongside a non-LC permission', async () => {
+      await service.updateTemplate(
+        'tmpl-1',
+        baseDto([lcPermission({ permission: Permissions.PERFORM, limitId: 'limit-1' })]) as any,
+      );
+
+      // The catalogue is never consulted, because a non-LC limit is discarded
+      expect(mockLimitConditionRepo.find).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getLimitConditions', () => {
+    // Contract case 15
+    it('returns only active entries, ordered by sortOrder then name', async () => {
+      mockLimitConditionRepo.find.mockResolvedValue([
+        { id: 'l1', name: 'Supervision', description: null },
+      ]);
+
+      const result = await service.getLimitConditions();
+
+      expect(mockLimitConditionRepo.find).toHaveBeenCalledWith({
+        where: { isActive: true },
+        order: { sortOrder: 'ASC', name: 'ASC' },
+      });
+      expect(result).toEqual([{ id: 'l1', name: 'Supervision', description: null }]);
+    });
+  });
+
+  describe('getParentPermissions', () => {
+    // Contract case 13
+    it('returns an empty baseline when the template has no parent', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: null });
+
+      await expect(service.getParentPermissions('tmpl-1')).resolves.toEqual([]);
+    });
+
+    it('returns the parent permission triples without limits', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: { id: 'parent-1' } });
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'a1', occupation_id: 'o1', permission: Permissions.LIMITS },
+      ]);
+
+      const result = await service.getParentPermissions('tmpl-1');
+
+      expect(result).toEqual([
+        { activityId: 'a1', occupationId: 'o1', permission: Permissions.LIMITS },
+      ]);
+      expect(result[0]).not.toHaveProperty('limitId');
+    });
+
+    it('throws when the template does not exist', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getParentPermissions('ghost')).rejects.toThrow(NotFoundException);
+    });
+
+    // The badge compares every cell in the grid against this baseline, so the
+    // whole baseline has to arrive in one indexed read. A per-activity or
+    // per-occupation query here would put hundreds of round trips behind a
+    // single wizard step.
+    it('fetches the whole baseline in a single query regardless of its size', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: { id: 'parent-1' } });
+      mockPermissionQB.getRawMany.mockResolvedValue(
+        Array.from({ length: 1500 }, (_, i) => ({
+          care_activity_id: `a${i}`,
+          occupation_id: `o${i}`,
+          permission: Permissions.PERFORM,
+        })),
+      );
+
+      const result = await service.getParentPermissions('tmpl-1');
+
+      expect(result).toHaveLength(1500);
+      expect(mockPermissionQB.getRawMany).toHaveBeenCalledTimes(1);
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'parent-1',
+      });
+    });
+  });
+
+  // ─── Optimistic concurrency (feature 002, US4) ───────────────────
+  describe('updateTemplate - concurrency', () => {
+    const dto = (over: any = {}) => ({
+      selectedBundleIds: [],
+      selectedActivityIds: [],
+      permissions: [],
+      ...over,
+    });
+
+    beforeEach(() => {
+      mockTemplateQB.getOne.mockResolvedValue(null);
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockBundleRepo.find.mockResolvedValue([]);
+      mockCareActivityRepo.find.mockResolvedValue([]);
+    });
+
+    // Contract case 16
+    it('claims the row with a guarded update when the version matches', async () => {
+      await service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('version = version + 1'),
+        ['tmpl-1', 3],
+      );
+      expect(mockManager.save).toHaveBeenCalled();
+    });
+
+    // The entity save must not put the pre-guard version back, or the next
+    // editor's stale token would still match.
+    it('saves the version it just claimed rather than the stale one', async () => {
+      mockManager.query.mockResolvedValue([[{ version: 4 }], 1]);
+
+      await service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any);
+
+      expect(mockManager.save).toHaveBeenCalledWith(
+        CareSettingTemplate,
+        expect.objectContaining({ version: 4 }),
+      );
+    });
+
+    it('guards on the version rather than on updatedAt', async () => {
+      await service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any);
+
+      const sql = mockManager.query.mock.calls[0][0];
+      expect(sql).toContain('version = $2');
+      expect(sql).not.toContain('updated_at');
+    });
+
+    // Contract case 17
+    it('rejects a stale version with a conflict carrying the current version', async () => {
+      mockManager.query.mockResolvedValue([[], 0]);
+      mockManager.findOne.mockResolvedValue({
+        id: 'tmpl-1',
+        version: 7,
+        updatedAt: new Date('2026-09-02T10:00:00Z'),
+        updatedBy: { displayName: 'Jane Admin' },
+      });
+
+      await expect(
+        service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any),
+      ).rejects.toThrow(TemplateVersionConflictException);
+    });
+
+    it('writes nothing when the version guard rejects the save', async () => {
+      mockManager.query.mockResolvedValue([[], 0]);
+      mockManager.findOne.mockResolvedValue({ id: 'tmpl-1', version: 7 });
+
+      await expect(
+        service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any),
+      ).rejects.toThrow(TemplateVersionConflictException);
+
+      // The guard runs before the destructive step, so nothing is deleted
+      expect(mockManager.delete).not.toHaveBeenCalled();
+      expect(mockManager.save).not.toHaveBeenCalled();
+    });
+
+    it('names who saved last so the conflict can be explained to the user', async () => {
+      mockManager.query.mockResolvedValue([[], 0]);
+      mockManager.findOne.mockResolvedValue({
+        id: 'tmpl-1',
+        version: 7,
+        updatedBy: { displayName: 'Jane Admin' },
+      });
+
+      await service
+        .updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any)
+        .catch((e: TemplateVersionConflictException) => {
+          const body = e.getResponse() as any;
+          expect(body.data.currentVersion).toBe(7);
+          expect(body.data.updatedBy).toBe('Jane Admin');
+        });
+
+      expect.hasAssertions();
+    });
+
+    // Contract case 18 - existing callers keep working
+    it('still saves when no expectedVersion is supplied', async () => {
+      await service.updateTemplate('tmpl-1', dto() as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(expect.stringContaining('WHERE id = $1'), [
+        'tmpl-1',
+      ]);
+      expect(mockManager.save).toHaveBeenCalled();
+    });
+
+    // The guard reads `UPDATE ... RETURNING version` through the raw driver,
+    // whose result shape differs between drivers and TypeORM settings. Every
+    // shape has to yield the same claimed version, or a successful claim would
+    // be misread as a conflict.
+    it.each([
+      ['[rows, affectedCount]', [[{ version: 4 }], 1]],
+      ['a flat rows array', [{ version: 4 }]],
+      ['a QueryResult with rows', { rows: [{ version: 4 }], rowCount: 1 }],
+      ['a QueryResult with records', { records: [{ version: 4 }] }],
+      ['a single row object', { version: 4 }],
+    ])('reads the claimed version from %s', async (_shape, result) => {
+      mockManager.query.mockResolvedValue(result);
+
+      await service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any);
+
+      expect(mockManager.save).toHaveBeenCalledWith(
+        CareSettingTemplate,
+        expect.objectContaining({ version: 4 }),
+      );
+    });
+
+    // "No row matched" is the conflict signal, whichever way the driver spells
+    // an empty result.
+    it.each([
+      ['[rows, affectedCount]', [[], 0]],
+      ['a flat empty array', []],
+      ['a QueryResult with rows', { rows: [], rowCount: 0 }],
+      ['a QueryResult with records', { records: [] }],
+    ])('treats %s with no row as a conflict', async (_shape, result) => {
+      mockManager.query.mockResolvedValue(result);
+      mockManager.findOne.mockResolvedValue({ id: 'tmpl-1', version: 7 });
+
+      await expect(
+        service.updateTemplate('tmpl-1', dto({ expectedVersion: 3 }) as any),
+      ).rejects.toThrow(TemplateVersionConflictException);
+
+      expect(mockManager.save).not.toHaveBeenCalled();
+    });
+
+    // Contract case 19 - the whole save is one transaction
+    it('performs the delete and recreate inside a single transaction', async () => {
+      await service.updateTemplate('tmpl-1', dto({ expectedVersion: 0 }) as any);
+
+      expect(mockTemplateRepo.manager.transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('propagates a mid-save failure so the transaction rolls back', async () => {
+      mockManager.save.mockRejectedValueOnce(new Error('db exploded'));
+
+      await expect(
+        service.updateTemplate('tmpl-1', dto({ expectedVersion: 0 }) as any),
+      ).rejects.toThrow('db exploded');
+    });
+  });
+
+  describe('updateTemplateDetails', () => {
+    const detailsDto = (over: any = {}) => ({
+      name: 'Renamed',
+      level: TemplateLevel.SITE,
+      expectedVersion: 2,
+      ...over,
+    });
+
+    beforeEach(() => {
+      mockTemplateQB.getOne.mockResolvedValue(null);
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+    });
+
+    it('saves the new name and level', async () => {
+      await service.updateTemplateDetails('tmpl-1', detailsDto() as any);
+
+      expect(mockManager.save).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ name: 'Renamed', level: TemplateLevel.SITE }),
+      );
+    });
+
+    it('advances the stored version so the next stale save is rejected', async () => {
+      mockManager.query.mockResolvedValue([[{ version: 9 }], 1]);
+
+      await service.updateTemplateDetails('tmpl-1', detailsDto() as any);
+
+      expect(mockManager.save).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ version: 9 }),
+      );
+    });
+
+    // FR-012a - reclassifying must not disturb ancestry
+    it('never touches the parent link when the level changes', async () => {
+      await service.updateTemplateDetails('tmpl-1', detailsDto() as any);
+
+      const saved = mockManager.save.mock.calls[0][1];
+      expect(saved.parent).toBe(mockParent);
+    });
+
+    it('rejects editing a master template', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, isMaster: true });
+
+      await expect(service.updateTemplateDetails('tmpl-1', detailsDto() as any)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('rejects a cross-health-authority edit', async () => {
+      await expect(
+        service.updateTemplateDetails('tmpl-1', detailsDto() as any, 'Interior Health'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('rejects a duplicate name within the health authority', async () => {
+      mockTemplateQB.getOne.mockResolvedValue({ id: 'other' });
+
+      await expect(service.updateTemplateDetails('tmpl-1', detailsDto() as any)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('skips the duplicate check when the name is unchanged', async () => {
+      await service.updateTemplateDetails('tmpl-1', detailsDto({ name: 'Test Template' }) as any);
+
+      expect(mockTemplateQB.getOne).not.toHaveBeenCalled();
+    });
+
+    // Contract case 22
+    it('rejects a stale version and leaves name and level unchanged', async () => {
+      mockManager.query.mockResolvedValue([[], 0]);
+      mockManager.findOne.mockResolvedValue({ id: 'tmpl-1', version: 9 });
+
+      await expect(service.updateTemplateDetails('tmpl-1', detailsDto() as any)).rejects.toThrow(
+        TemplateVersionConflictException,
+      );
+      expect(mockManager.save).not.toHaveBeenCalled();
     });
   });
 });
