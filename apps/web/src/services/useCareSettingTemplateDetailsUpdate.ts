@@ -11,7 +11,7 @@
 import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { CareSettingTemplateRO, TemplateLevel } from '@tbcm/common';
 import { toast } from 'react-toastify';
-import { AxiosPublic } from '../utils';
+import { AxiosPublic, INVALID_TEMPLATE_ID_MESSAGE, SAFE_TEMPLATE_ID } from '../utils';
 import { useState } from 'react';
 import { TemplateVersionConflict, parseVersionConflict } from './templateVersionConflict';
 
@@ -37,6 +37,12 @@ export const useUpdateTemplateDetails = () => {
     | { status: 'conflict'; conflict: TemplateVersionConflict }
     | { status: 'error'; message: string }
   > => {
+    // The id comes from the route, so it is checked before it is built into a
+    // request path.
+    if (!SAFE_TEMPLATE_ID.test(id)) {
+      return { status: 'error', message: INVALID_TEMPLATE_ID_MESSAGE };
+    }
+
     setIsLoading(true);
 
     try {

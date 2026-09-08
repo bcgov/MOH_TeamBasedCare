@@ -12,7 +12,7 @@ import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { useHttp } from './useHttp';
 import { UpdateCareSettingTemplateDTO } from '@tbcm/common';
 import { toast } from 'react-toastify';
-import { AxiosPublic } from '../utils';
+import { AxiosPublic, INVALID_TEMPLATE_ID_MESSAGE, SAFE_TEMPLATE_ID } from '../utils';
 import { useState } from 'react';
 import { TemplateVersionConflict, parseVersionConflict } from './templateVersionConflict';
 
@@ -26,6 +26,14 @@ export const useCareSettingTemplateUpdate = () => {
     onSuccess?: () => void,
     onError?: () => void,
   ): Promise<boolean> => {
+    // The id comes from the route, so it is checked before it is built into a
+    // request path.
+    if (!SAFE_TEMPLATE_ID.test(id)) {
+      toast.error(INVALID_TEMPLATE_ID_MESSAGE);
+      onError?.();
+      return false;
+    }
+
     const config = {
       endpoint: API_ENDPOINT.updateCareSettingTemplate(id),
       method: REQUEST_METHOD.PATCH,
@@ -63,6 +71,13 @@ export const useCareSettingTemplateUpdate = () => {
     | { status: 'conflict'; conflict: TemplateVersionConflict }
     | { status: 'error'; message: string }
   > => {
+    // The id comes from the route, so it is checked before it is built into a
+    // request path.
+    if (!SAFE_TEMPLATE_ID.test(id)) {
+      toast.error(INVALID_TEMPLATE_ID_MESSAGE);
+      return { status: 'error', message: INVALID_TEMPLATE_ID_MESSAGE };
+    }
+
     setIsLoading(true);
 
     try {
