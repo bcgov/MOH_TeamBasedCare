@@ -23,7 +23,8 @@ import { Stepper, Button } from '@components';
 import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsContext';
 import { SelectCompetencies } from './select-competencies';
 import { Finalize } from './finalize';
-import { SaveNameModal } from './save-name-modal';
+import { EditDetailsModal } from './edit-details-modal';
+import { TemplateDetailsCard } from './template-details-card';
 import { useCareSettingTemplateForCopy } from 'src/services/useCareSettingTemplateForCopy';
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
@@ -31,7 +32,7 @@ import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateC
 import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
-import { Permissions, Role } from '@tbcm/common';
+import { Permissions, Role, TemplateLevel } from '@tbcm/common';
 import { CareSettingsSteps } from 'src/common/constants';
 
 const CopyContent: React.FC = () => {
@@ -59,7 +60,7 @@ const CopyContent: React.FC = () => {
   } = useCareSettingOccupations(sourceId);
   const { handleCopyWithData, isLoading: isCreating } = useCareSettingTemplateCopy();
 
-  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -72,19 +73,40 @@ const CopyContent: React.FC = () => {
 
       // Copy permissions from source template
       const permissions = new Map<string, Permissions>();
+      const permissionLimits = new Map<
+        string,
+        { limitId: string; restrictionDescription?: string }
+      >();
       sourceTemplate.permissions?.forEach(p => {
         // Using :: as separator because UUIDs contain dashes
-        permissions.set(`${p.activityId}::${p.occupationId}`, p.permission as Permissions);
+        const key = `${p.activityId}::${p.occupationId}`;
+        permissions.set(key, p.permission as Permissions);
+        if (p.limitId) {
+          permissionLimits.set(key, {
+            limitId: p.limitId,
+            restrictionDescription: p.restrictionDescription ?? undefined,
+          });
+        }
       });
+
+      // The source template is this copy's parent, so it is also the baseline
+      // the "Changes made by HA" badge compares against.
+      const parentPermissionsMap = new Map(permissions);
 
       dispatch({
         type: 'INITIALIZE_STATE',
         payload: {
           templateId: '', // No template ID yet - copy not created
-          templateName: sourceTemplate.name, // Source name for reference
+          templateName: '', // The copy has no name of its own until it is saved
+          parentName: sourceTemplate.name,
+          hasParent: true,
+          level: null,
+          version: 0,
           selectedBundleIds,
           selectedActivityIds,
           permissions,
+          permissionLimits,
+          parentPermissions: parentPermissionsMap,
           bundles,
           occupations,
           selectedBundleId: bundles.length > 0 ? bundles[0].id : null,
@@ -140,12 +162,15 @@ const CopyContent: React.FC = () => {
   }, [state.currentStep, isDirty, router, dispatch]);
 
   const handleSaveClick = () => {
-    setShowSaveModal(true);
+    setShowDetailsModal(true);
   };
 
-  const handleSaveConfirm = async (name: string) => {
+  // Name and level are captured together: a copy cannot be persisted without
+  // both, and the details dialog is the same one used to edit them later.
+  const handleDetailsConfirm = async ({ name, level }: { name: string; level: TemplateLevel }) => {
     const copyData = {
       name,
+      level,
       selectedBundleIds: Array.from(state.selectedBundleIds),
       selectedActivityIds: Array.from(state.selectedActivityIds),
       permissions: getPermissionsArray(),
@@ -154,7 +179,7 @@ const CopyContent: React.FC = () => {
     const result = await handleCopyWithData(sourceId, copyData);
 
     if (result) {
-      setShowSaveModal(false);
+      setShowDetailsModal(false);
       setIsDirty(false);
       router.push('/care-settings');
     }
@@ -212,8 +237,6 @@ const CopyContent: React.FC = () => {
     );
   }
 
-  const sourceName = sourceTemplate.name;
-
   return (
     <div className='flex flex-1 flex-col gap-3 mt-5'>
       {/* Stepper with navigation */}
@@ -236,30 +259,30 @@ const CopyContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Title and subtitle */}
-      <Card bgWhite>
-        <h1 className='text-2xl font-bold text-bcBluePrimary'>Create Copy</h1>
-        <p className='text-base text-gray-600 mt-1'>
-          Copy created from: <span className='font-semibold'>{sourceName}</span>
-        </p>
-        <p className='text-base text-gray-500 mt-2'>
-          {state.currentStep === 1
+      <TemplateDetailsCard
+        templateName={state.templateName}
+        parentName={state.parentName}
+        level={state.level}
+        isSaved={false}
+        stepDescription={
+          state.currentStep === 1
             ? 'Select the Care Competencies and Activities'
-            : 'Care Competencies and Corresponding Activities'}
-        </p>
-      </Card>
+            : 'Care Competencies and Corresponding Activities'
+        }
+      />
 
       <div className='flex-1 flex flex-col min-h-0'>
         {state.currentStep === 1 && <SelectCompetencies />}
         {state.currentStep === 2 && <Finalize />}
       </div>
 
-      {showSaveModal && (
-        <SaveNameModal
-          isOpen={showSaveModal}
-          setIsOpen={setShowSaveModal}
+      {showDetailsModal && (
+        <EditDetailsModal
+          isOpen={showDetailsModal}
+          setIsOpen={setShowDetailsModal}
+          title='Care Setting Details'
           currentName=''
-          onConfirm={handleSaveConfirm}
+          onConfirm={handleDetailsConfirm}
           isLoading={isCreating}
         />
       )}

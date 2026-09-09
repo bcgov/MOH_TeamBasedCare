@@ -28,6 +28,19 @@ export const SearchBar = ({
     }
   }, [inputRef.current, value]);
 
+  const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
+
+    // This input may live inside a wizard <Form>; without stopping the keypress here,
+    // Enter would submit that ancestor form (e.g. triggering the wizard's Next action)
+    // instead of just submitting the search query.
+    event.preventDefault();
+
+    // If a debounced search is still pending, fire it immediately instead of waiting.
+    debouncedSearch.cancel();
+    handleChange(event as unknown as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <div className={className}>
       <div className='relative w-full'>
@@ -58,6 +71,7 @@ export const SearchBar = ({
           } dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500`}
           placeholder={placeholderText}
           onChange={debouncedSearch}
+          onKeyDown={onKeyDown}
           autoComplete='off'
           defaultValue={value}
           ref={inputRef}

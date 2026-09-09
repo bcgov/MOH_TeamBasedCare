@@ -20,12 +20,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 import { CareSettingTemplate } from './entity/care-setting-template.entity';
 import { CareSettingTemplatePermission } from './entity/care-setting-template-permission.entity';
+import { LimitCondition } from './entity/limit-condition.entity';
 import { Unit } from './entity/unit.entity';
 import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from '../occupation/entity/occupation.entity';
 import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
 import { FindCareSettingTemplatesDto } from './dto/find-care-setting-templates.dto';
+import { UpdateCareSettingTemplateDetailsDto } from './dto/update-care-setting-template-details.dto';
+import { TemplateVersionConflictException } from './template-version-conflict.exception';
 import {
   CareSettingsCMSFindSortKeys,
   CareSettingTemplateRO,
@@ -40,6 +43,9 @@ import {
   OccupationRO,
   Permissions,
   MASTER_TEMPLATE_SUFFIX,
+  LimitConditionRO,
+  TemplateLevel,
+  TemplateLevelFilter,
 } from '@tbcm/common';
 import _ from 'lodash';
 
@@ -58,7 +64,16 @@ export class CareSettingTemplateService {
     private readonly careActivityRepo: Repository<CareActivity>,
     @InjectRepository(Occupation)
     private readonly occupationRepo: Repository<Occupation>,
+    @InjectRepository(AllowedActivity)
+    private readonly allowedActivityRepo: Repository<AllowedActivity>,
+    @InjectRepository(LimitCondition)
+    private readonly limitConditionRepo: Repository<LimitCondition>,
   ) {}
+
+  /** Key for comparing a permission across templates. */
+  private permissionKey(activityId: string, occupationId: string): string {
+    return `${activityId}::${occupationId}`;
+  }
 
   /**
    * Get basic template info for authorization checks
@@ -154,6 +169,28 @@ export class CareSettingTemplateService {
       });
     }
 
+    // Filter by level. "Provincial" is not a stored value - it is the master
+    // flag - so it is matched on isMaster rather than on the level column.
+    // Composes with the search predicate above rather than replacing it.
+    switch (query.level) {
+      case TemplateLevelFilter.PROVINCIAL:
+        queryBuilder.andWhere('t.isMaster = true');
+        break;
+      case TemplateLevelFilter.HEALTH_AUTHORITY:
+        queryBuilder.andWhere('t.isMaster = false').andWhere('t.level = :level', {
+          level: TemplateLevel.HEALTH_AUTHORITY,
+        });
+        break;
+      case TemplateLevelFilter.SITE:
+        queryBuilder.andWhere('t.isMaster = false').andWhere('t.level = :level', {
+          level: TemplateLevel.SITE,
+        });
+        break;
+      default:
+        // ALL, or unspecified - no predicate
+        break;
+    }
+
     // Sort - always put masters first, then by requested sort
     const sortOrder = query.sortOrder || SortOrder.ASC;
 
@@ -162,6 +199,16 @@ export class CareSettingTemplateService {
 
       if (query.sortBy === CareSettingsCMSFindSortKeys.PARENT_NAME) {
         orderBy = 't_parent.name';
+      }
+
+      if (query.sortBy === CareSettingsCMSFindSortKeys.LEVEL) {
+        // Masters have no stored level; sort them as the provincial tier so the
+        // column orders the way it reads: provincial, health authority, site.
+        queryBuilder.addSelect(
+          `CASE WHEN t.is_master THEN 0 WHEN t.level = '${TemplateLevel.HEALTH_AUTHORITY}' THEN 1 ELSE 2 END`,
+          'level_rank',
+        );
+        orderBy = 'level_rank';
       }
 
       queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy(orderBy, sortOrder as SortOrder);
@@ -248,11 +295,19 @@ export class CareSettingTemplateService {
 
     // Load permissions as flat data (no entity relations) - major performance improvement
     // Use snake_case column names for raw query
+    // The limit is joined in rather than fetched later so a single load gives
+    // the wizard everything it needs; the limits dialog then opens pre-filled
+    // without a request of its own, and a limit that has since been
+    // deactivated still resolves by name.
     const rawPermissions = await this.permissionRepo
       .createQueryBuilder('p')
+      .leftJoin(LimitCondition, 'lc', 'lc.id = p.limit_condition_id')
       .select('p.care_activity_id', 'care_activity_id')
       .addSelect('p.occupation_id', 'occupation_id')
       .addSelect('p.permission', 'permission')
+      .addSelect('p.limit_condition_id', 'limit_condition_id')
+      .addSelect('p.restriction_description', 'restriction_description')
+      .addSelect('lc.name', 'limit_name')
       .where('p.template_id = :templateId', { templateId: id })
       .getRawMany();
 
@@ -262,6 +317,9 @@ export class CareSettingTemplateService {
           activityId: p.care_activity_id,
           occupationId: p.occupation_id,
           permission: p.permission,
+          limitId: p.limit_condition_id ?? null,
+          limitName: p.limit_name ?? null,
+          restrictionDescription: p.restriction_description ?? null,
         }),
     );
 
@@ -287,7 +345,13 @@ export class CareSettingTemplateService {
     unitId: string;
     selectedBundleIds: string[];
     selectedActivityIds: string[];
-    permissions: { activityId: string; occupationId: string; permission: string }[];
+    permissions: {
+      activityId: string;
+      occupationId: string;
+      permission: string;
+      limitId: string | null;
+      restrictionDescription: string | null;
+    }[];
   }> {
     const template = await this.templateRepo.findOne({
       where: { id },
@@ -305,8 +369,41 @@ export class CareSettingTemplateService {
       .select('p.care_activity_id', 'care_activity_id')
       .addSelect('p.occupation_id', 'occupation_id')
       .addSelect('p.permission', 'permission')
+      .addSelect('p.limit_condition_id', 'limit_condition_id')
+      .addSelect('p.restriction_description', 'restriction_description')
       .where('p.template_id = :templateId', { templateId: id })
       .getRawMany();
+
+    const copied = new Map<
+      string,
+      {
+        activityId: string;
+        occupationId: string;
+        permission: string;
+        limitId: string | null;
+        restrictionDescription: string | null;
+      }
+    >();
+
+    // A master is read-only, so it has no deliberately removed cells: any pair
+    // it is missing is a gap left by an earlier sync, not an admin decision.
+    // The occupation scope is therefore laid down first as the baseline, and
+    // the template's own rows are applied over it below.
+    if (template.isMaster) {
+      for (const scoped of await this.getUnitScopePermissions(template)) {
+        copied.set(this.permissionKey(scoped.activityId, scoped.occupationId), scoped);
+      }
+    }
+
+    for (const p of permissions) {
+      copied.set(this.permissionKey(p.care_activity_id, p.occupation_id), {
+        activityId: p.care_activity_id,
+        occupationId: p.occupation_id,
+        permission: p.permission,
+        limitId: p.limit_condition_id ?? null,
+        restrictionDescription: p.restriction_description ?? null,
+      });
+    }
 
     return {
       id: template.id,
@@ -314,12 +411,49 @@ export class CareSettingTemplateService {
       unitId: template.unit.id,
       selectedBundleIds: template.selectedBundles.map(b => b.id),
       selectedActivityIds: template.selectedActivities.map(a => a.id),
-      permissions: permissions.map(p => ({
-        activityId: p.care_activity_id,
-        occupationId: p.occupation_id,
-        permission: p.permission,
-      })),
+      permissions: Array.from(copied.values()),
     };
+  }
+
+  /**
+   * The occupation scope recorded against a master template's activities, used
+   * as the baseline a copy of that master inherits.
+   *
+   * Rows carrying no unit are included: the CMS records an occupation's scope
+   * without one, and syncOccupationToAllTemplates likewise matches on activity
+   * alone, so excluding them would drop every permission added that way.
+   */
+  private async getUnitScopePermissions(template: CareSettingTemplate): Promise<
+    {
+      activityId: string;
+      occupationId: string;
+      permission: string;
+      limitId: null;
+      restrictionDescription: null;
+    }[]
+  > {
+    const activityIds = template.selectedActivities.map(activity => activity.id);
+
+    if (activityIds.length === 0) return [];
+
+    const rows = await this.allowedActivityRepo
+      .createQueryBuilder('aa')
+      .select('aa.care_activity_id', 'care_activity_id')
+      .addSelect('aa.occupation_id', 'occupation_id')
+      .addSelect('aa.permission', 'permission')
+      .where('aa.care_activity_id IN (:...activityIds)', { activityIds })
+      .andWhere('(aa.unit_id = :unitId OR aa.unit_id IS NULL)', { unitId: template.unit.id })
+      // The column's enum only holds Y and LC, so there is no N to filter out:
+      // absence of a row is what records N here.
+      .getRawMany();
+
+    return rows.map(r => ({
+      activityId: r.care_activity_id,
+      occupationId: r.occupation_id,
+      permission: r.permission,
+      limitId: null,
+      restrictionDescription: null,
+    }));
   }
 
   /**
@@ -404,6 +538,155 @@ export class CareSettingTemplateService {
     return occupations.map(o => new OccupationRO(o));
   }
 
+  private resolveCopyLevel(
+    source: CareSettingTemplate,
+    requested?: TemplateLevel | null,
+  ): TemplateLevel {
+    if (requested) return requested;
+
+    // A copy of a master belongs to a health authority; anything copied further
+    // down the chain is a site template.
+    return source.isMaster ? TemplateLevel.HEALTH_AUTHORITY : TemplateLevel.SITE;
+  }
+
+  /**
+   * Validate the limits attached to submitted permissions and return them in a
+   * form the permission rows can be written from.
+   *
+   * `legacyLcPairs` names the (activity, occupation) pairs already stored as LC
+   * with no limit. Those predate this feature and cannot be backfilled, so a
+   * resubmission of one unchanged is accepted; without this exemption a
+   * template containing a single untouched legacy cell could never be saved
+   * again, because every save resubmits every permission.
+   */
+  private async resolvePermissionLimits(
+    permissions: {
+      activityId: string;
+      occupationId: string;
+      permission: Permissions;
+      limitId?: string | null;
+      restrictionDescription?: string | null;
+    }[],
+    legacyLcPairs: Set<string>,
+  ): Promise<Map<string, { limit: LimitCondition | null; restrictionDescription: string | null }>> {
+    const resolved = new Map<
+      string,
+      { limit: LimitCondition | null; restrictionDescription: string | null }
+    >();
+
+    const requestedLimitIds = Array.from(
+      new Set(
+        permissions
+          .filter(p => p.permission === Permissions.LIMITS && p.limitId)
+          .map(p => p.limitId as string),
+      ),
+    );
+
+    const limits = requestedLimitIds.length
+      ? await this.limitConditionRepo.find({ where: { id: In(requestedLimitIds) } })
+      : [];
+    const limitMap = new Map(limits.map(l => [l.id, l]));
+
+    for (const p of permissions) {
+      const key = this.permissionKey(p.activityId, p.occupationId);
+
+      // Anything that is not LC carries no limit, whatever the client sent.
+      if (p.permission !== Permissions.LIMITS) {
+        resolved.set(key, { limit: null, restrictionDescription: null });
+        continue;
+      }
+
+      if (!p.limitId) {
+        if (!legacyLcPairs.has(key)) {
+          throw new BadRequestException(
+            'A limit must be selected for every permission set to limits and conditions.',
+          );
+        }
+
+        // Untouched legacy cell - preserve it exactly as it was.
+        resolved.set(key, { limit: null, restrictionDescription: null });
+        continue;
+      }
+
+      const limit = limitMap.get(p.limitId);
+      if (!limit) {
+        throw new BadRequestException('The selected limit is not a valid option.');
+      }
+
+      const description = p.restrictionDescription?.trim() || null;
+      if (description && description.length > 2000) {
+        throw new BadRequestException('Restriction description cannot exceed 2000 characters.');
+      }
+
+      resolved.set(key, { limit, restrictionDescription: description });
+    }
+
+    return resolved;
+  }
+
+  /**
+   * Read the (activity, occupation) pairs currently stored as LC with no limit.
+   */
+  private async getLegacyLcPairs(templateId: string): Promise<Set<string>> {
+    const rows = await this.permissionRepo
+      .createQueryBuilder('p')
+      .select('p.care_activity_id', 'care_activity_id')
+      .addSelect('p.occupation_id', 'occupation_id')
+      .where('p.template_id = :templateId', { templateId })
+      .andWhere('p.permission = :lc', { lc: Permissions.LIMITS })
+      .andWhere('p.limit_condition_id IS NULL')
+      .getRawMany();
+
+    return new Set(rows.map(r => this.permissionKey(r.care_activity_id, r.occupation_id)));
+  }
+
+  /** The catalogue of limits offered in the dialog. */
+  async getLimitConditions(): Promise<LimitConditionRO[]> {
+    const limits = await this.limitConditionRepo.find({
+      where: { isActive: true },
+      order: { sortOrder: 'ASC', name: 'ASC' },
+    });
+
+    return limits.map(l => new LimitConditionRO(l));
+  }
+
+  /**
+   * The direct parent's permissions, used as the baseline for the
+   * "Changes made by HA" badge. Limits are deliberately omitted: the badge
+   * compares permission levels only.
+   *
+   * Returns an empty array when the template has no parent, so a master or an
+   * orphan simply shows no badges.
+   */
+  async getParentPermissions(
+    id: string,
+  ): Promise<{ activityId: string; occupationId: string; permission: Permissions }[]> {
+    const template = await this.templateRepo.findOne({
+      where: { id },
+      relations: ['parent'],
+    });
+
+    if (!template) {
+      throw new NotFoundException({ message: 'Care Setting Template not found' });
+    }
+
+    if (!template.parent) return [];
+
+    const rows = await this.permissionRepo
+      .createQueryBuilder('p')
+      .select('p.care_activity_id', 'care_activity_id')
+      .addSelect('p.occupation_id', 'occupation_id')
+      .addSelect('p.permission', 'permission')
+      .where('p.template_id = :templateId', { templateId: template.parent.id })
+      .getRawMany();
+
+    return rows.map(r => ({
+      activityId: r.care_activity_id,
+      occupationId: r.occupation_id,
+      permission: r.permission,
+    }));
+  }
+
   /**
    * Create a copy of an existing template
    * Copies all selected bundles, activities, and permissions
@@ -411,6 +694,7 @@ export class CareSettingTemplateService {
    * @param sourceId - ID of template to copy
    * @param dto - Copy configuration (name)
    * @param healthAuthority - Health authority for the new template (from user's organization)
+   * @deprecated Use copyTemplateWithData instead
    */
   async copyTemplate(
     sourceId: string,
@@ -426,6 +710,7 @@ export class CareSettingTemplateService {
         'permissions',
         'permissions.careActivity',
         'permissions.occupation',
+        'permissions.limitCondition',
       ],
     });
 
@@ -441,6 +726,7 @@ export class CareSettingTemplateService {
       name: dto.name,
       isMaster: false,
       healthAuthority,
+      level: this.resolveCopyLevel(source, dto.level),
       unit: source.unit,
       parent: source,
       selectedBundles: source.selectedBundles,
@@ -456,6 +742,10 @@ export class CareSettingTemplateService {
         careActivity: p.careActivity,
         occupation: p.occupation,
         permission: p.permission,
+        // Inherited along with the permission, so a copy of an LC cell arrives
+        // already valid rather than needing the limit re-picked.
+        limitCondition: p.limitCondition ?? null,
+        restrictionDescription: p.restrictionDescription ?? null,
       }),
     );
 
@@ -509,46 +799,69 @@ export class CareSettingTemplateService {
       where: { id: In(dto.selectedActivityIds) },
     });
 
+    // Resolve every permission before anything is written, so an invalid
+    // payload is rejected before the template row exists. The exemption is
+    // taken from the SOURCE: the wizard resubmits inherited permissions
+    // verbatim, and an LC cell inherited from a template that predates limits
+    // carries none. Rejecting those would make such a template uncopyable,
+    // because an untouched cell shows no badge and cannot be opened in the
+    // limits dialog. A newly chosen LC is not in the set and still needs one.
+    const permissionInputs = dto.permissions ?? [];
+    const legacyLcPairs = await this.getLegacyLcPairs(sourceId);
+    const resolvedLimits = await this.resolvePermissionLimits(permissionInputs, legacyLcPairs);
+
+    const activities = permissionInputs.length
+      ? await this.careActivityRepo.find({
+          where: { id: In(permissionInputs.map(p => p.activityId)) },
+        })
+      : [];
+    const activityMap = new Map(activities.map(a => [a.id, a]));
+
+    const occupations = permissionInputs.length
+      ? await this.occupationRepo.find({
+          where: { id: In(permissionInputs.map(p => p.occupationId)) },
+        })
+      : [];
+    const occupationMap = new Map(occupations.map(o => [o.id, o]));
+
     // Create new template with provided data
     const newTemplate = this.templateRepo.create({
       name: dto.name,
       isMaster: false,
       healthAuthority,
+      level: this.resolveCopyLevel(source, dto.level),
       unit: source.unit,
       parent: source,
       selectedBundles,
       selectedActivities,
     });
 
-    const saved = await this.templateRepo.save(newTemplate);
+    // Template and permissions go in together: a failure part-way through must
+    // not leave an orphan template whose name then blocks the retry.
+    const saved = await this.templateRepo.manager.transaction(async manager => {
+      const persisted = await manager.save(CareSettingTemplate, newTemplate);
 
-    // Create permissions
-    if (dto.permissions && dto.permissions.length > 0) {
-      const activities = await this.careActivityRepo.find({
-        where: { id: In(dto.permissions.map(p => p.activityId)) },
-      });
-      const activityMap = new Map(activities.map(a => [a.id, a]));
-
-      const occupations = await this.occupationRepo.find({
-        where: { id: In(dto.permissions.map(p => p.occupationId)) },
-      });
-      const occupationMap = new Map(occupations.map(o => [o.id, o]));
-
-      const newPermissions = dto.permissions
+      const newPermissions = permissionInputs
         .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
-        .map(p =>
-          this.permissionRepo.create({
-            template: saved,
+        .map(p => {
+          const resolved = resolvedLimits.get(this.permissionKey(p.activityId, p.occupationId));
+
+          return manager.create(CareSettingTemplatePermission, {
+            template: persisted,
             careActivity: activityMap.get(p.activityId)!,
             occupation: occupationMap.get(p.occupationId)!,
             permission: p.permission,
-          }),
-        );
+            limitCondition: resolved?.limit ?? null,
+            restrictionDescription: resolved?.restrictionDescription ?? null,
+          });
+        });
 
       if (newPermissions.length > 0) {
-        await this.permissionRepo.save(newPermissions);
+        await manager.save(CareSettingTemplatePermission, newPermissions);
       }
-    }
+
+      return persisted;
+    });
 
     // Reload with relations
     const result = await this.templateRepo.findOne({
@@ -596,50 +909,225 @@ export class CareSettingTemplateService {
       template.name = dto.name;
     }
 
-    // Update selected bundles
+    // Resolve limits before touching anything, so an invalid payload is
+    // rejected while the stored permissions are still intact.
+    const legacyLcPairs = await this.getLegacyLcPairs(id);
+    const resolvedLimits = await this.resolvePermissionLimits(dto.permissions ?? [], legacyLcPairs);
+
     const selectedBundles = await this.bundleRepo.find({
       where: { id: In(dto.selectedBundleIds) },
     });
-    template.selectedBundles = selectedBundles;
 
-    // Update selected activities
     const selectedActivities = await this.careActivityRepo.find({
       where: { id: In(dto.selectedActivityIds) },
     });
-    template.selectedActivities = selectedActivities;
 
-    // updatedBy auto-set by AuditSubscriber
-    await this.templateRepo.save(template);
+    const activities = dto.permissions?.length
+      ? await this.careActivityRepo.find({
+          where: { id: In(dto.permissions.map(p => p.activityId)) },
+        })
+      : [];
+    const activityMap = new Map(activities.map(a => [a.id, a]));
 
-    // Update permissions - delete all and recreate
-    await this.permissionRepo.delete({ template: { id } });
+    const occupations = dto.permissions?.length
+      ? await this.occupationRepo.find({
+          where: { id: In(dto.permissions.map(p => p.occupationId)) },
+        })
+      : [];
+    const occupationMap = new Map(occupations.map(o => [o.id, o]));
 
-    if (dto.permissions && dto.permissions.length > 0) {
-      const activities = await this.careActivityRepo.find({
-        where: { id: In(dto.permissions.map(p => p.activityId)) },
-      });
-      const activityMap = new Map(activities.map(a => [a.id, a]));
+    // One transaction for the whole save. Two things depend on this: the
+    // version guard has to hold until the new permissions are written, and the
+    // delete-then-recreate must not be able to leave the template with no
+    // permissions if a later step fails.
+    await this.templateRepo.manager.transaction(async manager => {
+      const claimedVersion = await this.guardVersion(manager, id, dto.expectedVersion);
 
-      const occupations = await this.occupationRepo.find({
-        where: { id: In(dto.permissions.map(p => p.occupationId)) },
-      });
-      const occupationMap = new Map(occupations.map(o => [o.id, o]));
+      template.selectedBundles = selectedBundles;
+      template.selectedActivities = selectedActivities;
+      // Carry the claimed token onto the entity, or the save below would
+      // restore the pre-guard version and let a second editor claim it again.
+      template.version = claimedVersion;
 
-      const newPermissions = dto.permissions
-        .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
-        .map(p =>
-          this.permissionRepo.create({
-            template,
-            careActivity: activityMap.get(p.activityId)!,
-            occupation: occupationMap.get(p.occupationId)!,
-            permission: p.permission,
-          }),
-        );
+      // updatedBy auto-set by AuditSubscriber
+      await manager.save(CareSettingTemplate, template);
 
-      if (newPermissions.length > 0) {
-        await this.permissionRepo.save(newPermissions);
+      // Permissions are replaced wholesale, which is also how a limit removed
+      // from a cell disappears - no separate cleanup step is needed.
+      await manager.delete(CareSettingTemplatePermission, { template: { id } });
+
+      if (dto.permissions && dto.permissions.length > 0) {
+        const newPermissions = dto.permissions
+          .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
+          .map(p => {
+            const resolved = resolvedLimits.get(this.permissionKey(p.activityId, p.occupationId));
+
+            return manager.create(CareSettingTemplatePermission, {
+              template,
+              careActivity: activityMap.get(p.activityId)!,
+              occupation: occupationMap.get(p.occupationId)!,
+              permission: p.permission,
+              limitCondition: resolved?.limit ?? null,
+              restrictionDescription: resolved?.restrictionDescription ?? null,
+            });
+          });
+
+        if (newPermissions.length > 0) {
+          await manager.save(CareSettingTemplatePermission, newPermissions);
+        }
       }
+    });
+  }
+
+  /**
+   * Claim the right to write this template by advancing its version.
+   *
+   * Deliberately an explicit guarded UPDATE rather than TypeORM's @VersionColumn:
+   * a permission-only edit changes no scalar column on the template, so an
+   * entity save may issue no UPDATE at all and neither `version` nor
+   * `updatedAt` would move - leaving two concurrent editors both believing
+   * they were first.
+   *
+   * Must run before any destructive step, so a rejected save writes nothing.
+   *
+   * Returns the version just claimed. Callers must copy it onto the entity they
+   * are about to save, otherwise TypeORM writes the stale in-memory `version`
+   * back over the incremented one and the next editor's token still matches.
+   */
+  private async guardVersion(
+    manager: EntityManager,
+    id: string,
+    expectedVersion?: number,
+  ): Promise<number> {
+    if (expectedVersion === undefined || expectedVersion === null) {
+      // No token supplied - preserve existing behaviour for callers that
+      // predate optimistic locking. The web client always sends one.
+      const unguarded = await manager.query(
+        `UPDATE care_setting_template SET version = version + 1 WHERE id = $1 RETURNING version`,
+        [id],
+      );
+
+      const claimed = this.readClaimedVersion(unguarded);
+
+      if (claimed === undefined) {
+        throw new NotFoundException({ message: 'Care Setting Template not found' });
+      }
+
+      return claimed;
     }
+
+    const result = await manager.query(
+      `UPDATE care_setting_template SET version = version + 1 WHERE id = $1 AND version = $2 RETURNING version`,
+      [id, expectedVersion],
+    );
+
+    const claimed = this.readClaimedVersion(result);
+
+    if (claimed === undefined) {
+      const current = await manager.findOne(CareSettingTemplate, {
+        where: { id },
+        relations: ['updatedBy'],
+      });
+
+      if (!current) {
+        throw new NotFoundException({ message: 'Care Setting Template not found' });
+      }
+
+      throw new TemplateVersionConflictException({
+        currentVersion: current.version,
+        updatedBy: current.updatedBy?.displayName || current.updatedBy?.email || undefined,
+        updatedAt: current.updatedAt,
+      });
+    }
+
+    return claimed;
+  }
+
+  /**
+   * Pull the claimed version out of a guarded `UPDATE ... RETURNING version`.
+   *
+   * The postgres driver hands back `[rows, affectedCount]` for an UPDATE, but
+   * a structured QueryResult is returned when raw results are disabled, so both
+   * shapes are handled. `undefined` means no row matched the guard.
+   */
+  private readClaimedVersion(result: unknown): number | undefined {
+    const rows = Array.isArray(result)
+      ? Array.isArray(result[0])
+        ? result[0]
+        : result
+      : Array.isArray((result as { rows?: unknown[] } | undefined)?.rows)
+        ? (result as { rows: unknown[] }).rows
+        : Array.isArray((result as { records?: unknown[] } | undefined)?.records)
+          ? (result as { records: unknown[] }).records
+          : typeof result === 'object' && result !== null && 'version' in result
+            ? [result]
+            : [];
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return undefined;
+    }
+
+    const row = rows[0] as { version?: unknown } | undefined;
+    const version = Number(row?.version);
+
+    return Number.isFinite(version) ? version : undefined;
+  }
+
+  /**
+   * Update only a template's name and level, from the details dialog.
+   *
+   * Changing the level never reads or writes the parent link: a template that
+   * is reclassified keeps its ancestry and its inherited permissions.
+   */
+  async updateTemplateDetails(
+    id: string,
+    dto: UpdateCareSettingTemplateDetailsDto,
+    healthAuthority?: string,
+  ): Promise<CareSettingTemplateRO> {
+    const template = await this.templateRepo.findOne({
+      where: { id },
+      relations: ['unit', 'parent'],
+    });
+
+    if (!template) {
+      throw new NotFoundException({ message: 'Care Setting Template not found' });
+    }
+
+    if (template.isMaster) {
+      throw new BadRequestException('Cannot edit master templates. Create a copy instead.');
+    }
+
+    if (healthAuthority && template.healthAuthority !== healthAuthority) {
+      throw new ForbiddenException('Cannot modify templates belonging to another health authority');
+    }
+
+    const name = dto.name?.trim();
+    if (!name) {
+      throw new BadRequestException('Name is required');
+    }
+
+    if (name.toLowerCase() !== template.name.toLowerCase()) {
+      await this.checkDuplicateName(name, template.healthAuthority, id);
+    }
+
+    await this.templateRepo.manager.transaction(async manager => {
+      const claimedVersion = await this.guardVersion(manager, id, dto.expectedVersion);
+
+      template.name = name;
+      template.level = dto.level;
+      // Same reason as updateTemplate: the stale in-memory version must not be
+      // written back over the token this transaction just claimed.
+      template.version = claimedVersion;
+
+      await manager.save(CareSettingTemplate, template);
+    });
+
+    const updated = await this.templateRepo.findOne({
+      where: { id },
+      relations: ['unit', 'parent'],
+    });
+
+    return new CareSettingTemplateRO(updated);
   }
 
   /**

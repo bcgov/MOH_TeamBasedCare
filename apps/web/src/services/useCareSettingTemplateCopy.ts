@@ -38,7 +38,7 @@ export const useCareSettingTemplateCopy = () => {
       config,
       (response: CareSettingTemplateRO) => {
         result = response;
-        toast.info('Care setting copy created successfully.');
+        toast.success('Care setting copy created successfully.');
       },
       () => void 0,
     );
@@ -66,7 +66,7 @@ export const useCareSettingTemplateCopy = () => {
       config,
       (response: CareSettingTemplateRO) => {
         result = response;
-        toast.info('Care setting created successfully.');
+        toast.success('Care setting created successfully.');
       },
       () => void 0,
     );

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { CareSettingTemplateController } from './care-setting-template.controller';
 import { CareSettingTemplateService } from './care-setting-template.service';
-import { Role } from '@tbcm/common';
+import { Permissions, Role, TemplateLevel } from '@tbcm/common';
 
 describe('CareSettingTemplateController', () => {
   let controller: CareSettingTemplateController;
@@ -18,6 +18,9 @@ describe('CareSettingTemplateController', () => {
     copyTemplate: jest.fn(),
     copyTemplateWithData: jest.fn(),
     updateTemplate: jest.fn(),
+    updateTemplateDetails: jest.fn(),
+    getParentPermissions: jest.fn(),
+    getLimitConditions: jest.fn(),
     deleteTemplate: jest.fn(),
   };
 
@@ -301,5 +304,109 @@ describe('CareSettingTemplateController', () => {
 
       expect(mockTemplateService.deleteTemplate).toHaveBeenCalledWith('tmpl-1', 'Fraser Health');
     });
+  });
+});
+
+// ─── Template levels and permission overrides (feature 002) ───────────
+describe('CareSettingTemplateController - levels, limits, and concurrency', () => {
+  let controller: CareSettingTemplateController;
+
+  const service = {
+    findTemplates: jest.fn(),
+    getTemplateBasic: jest.fn(),
+    getParentPermissions: jest.fn(),
+    getLimitConditions: jest.fn(),
+    updateTemplateDetails: jest.fn(),
+  };
+
+  const request = (overrides: any = {}) =>
+    ({
+      user: {
+        id: 'user-1',
+        roles: [Role.CONTENT_ADMIN],
+        organization: 'Fraser Health',
+        ...overrides,
+      },
+    }) as any;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [CareSettingTemplateController],
+      providers: [{ provide: CareSettingTemplateService, useValue: service }],
+    }).compile();
+
+    controller = module.get<CareSettingTemplateController>(CareSettingTemplateController);
+  });
+
+  // Contract case 13
+  it('returns an empty parent baseline when the template has no parent', async () => {
+    service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Fraser Health' });
+    service.getParentPermissions.mockResolvedValue([]);
+
+    await expect(controller.getParentPermissions('t1', request())).resolves.toEqual([]);
+  });
+
+  it('passes through the parent baseline for a template that has one', async () => {
+    service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Fraser Health' });
+    service.getParentPermissions.mockResolvedValue([
+      { activityId: 'a1', occupationId: 'o1', permission: Permissions.PERFORM },
+    ]);
+
+    const result = await controller.getParentPermissions('t1', request());
+
+    expect(result).toHaveLength(1);
+    expect(service.getParentPermissions).toHaveBeenCalledWith('t1');
+  });
+
+  // Contract case 14 - access is checked against the child being viewed
+  it('rejects a parent-permissions read from another health authority', async () => {
+    service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Interior Health' });
+
+    await expect(controller.getParentPermissions('t1', request())).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(service.getParentPermissions).not.toHaveBeenCalled();
+  });
+
+  // Contract case 15
+  it('returns the limits catalogue', async () => {
+    service.getLimitConditions.mockResolvedValue([{ id: 'l1', name: 'Requires supervision' }]);
+
+    await expect(controller.getLimitConditions()).resolves.toEqual([
+      { id: 'l1', name: 'Requires supervision' },
+    ]);
+  });
+
+  // Contract case 20 - details save carries the concurrency token through
+  it('forwards name, level, and expectedVersion on a details save', async () => {
+    service.updateTemplateDetails.mockResolvedValue({ id: 't1' });
+
+    const dto = { name: 'Renamed', level: TemplateLevel.SITE, expectedVersion: 4 } as any;
+    await controller.updateTemplateDetails('t1', dto, request());
+
+    expect(service.updateTemplateDetails).toHaveBeenCalledWith('t1', dto, 'Fraser Health');
+  });
+
+  it('lets an ADMIN edit details across health authorities', async () => {
+    service.updateTemplateDetails.mockResolvedValue({ id: 't1' });
+
+    await controller.updateTemplateDetails(
+      't1',
+      { name: 'Renamed', level: TemplateLevel.SITE, expectedVersion: 1 } as any,
+      request({ roles: [Role.ADMIN] }),
+    );
+
+    expect(service.updateTemplateDetails).toHaveBeenCalledWith('t1', expect.anything(), undefined);
+  });
+
+  it('passes the level filter straight through to the query', async () => {
+    service.findTemplates.mockResolvedValue([[], 0]);
+
+    const query = { level: 'health authority' } as any;
+    await controller.findTemplates(query, request());
+
+    expect(service.findTemplates).toHaveBeenCalledWith(query, 'Fraser Health');
   });
 });

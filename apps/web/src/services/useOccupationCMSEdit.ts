@@ -19,7 +19,7 @@ export const useOccupationCMSEdit = () => {
         method: REQUEST_METHOD.PATCH,
         data: values,
       });
-      toast.info('Occupation updated successfully.');
+      toast.success('Occupation updated successfully.');
       onSuccess?.();
     } catch (err: any) {
       // Parse validation errors from API response

@@ -29,6 +29,7 @@ export enum UserManagementSortKeys {
 export enum CareSettingsCMSFindSortKeys {
   NAME = 'name',
   PARENT_NAME = 'parentName',
+  LEVEL = 'level',
   UPDATED_AT = 'updatedAt',
 }
 

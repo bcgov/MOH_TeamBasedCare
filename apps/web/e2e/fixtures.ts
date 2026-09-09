@@ -234,3 +234,297 @@ export function trackPageErrors(page: Page) {
 export async function expectNoRuntimeOverlay(page: Page) {
   await expect(page.getByRole('dialog', { name: /Runtime .*Error/i })).toHaveCount(0);
 }
+
+/* ------------------------------------------------------------------------- *
+ * Care setting template stubs (feature 002 — template levels)
+ *
+ * Added alongside the planning stubs rather than replacing them, so the
+ * inherited planning specs keep working unchanged.
+ * ------------------------------------------------------------------------- */
+
+export interface StubTemplate {
+  id: string;
+  name: string;
+  isMaster: boolean;
+  level: 'health authority' | 'site' | null;
+  parentId: string | null;
+  parentName: string | null;
+  healthAuthority: string | null;
+  version: number;
+  updatedAt: string;
+}
+
+export interface StubPermission {
+  activityId: string;
+  occupationId: string;
+  permission: 'Y' | 'N' | 'LC';
+  limitId?: string | null;
+  limitName?: string | null;
+  restrictionDescription?: string | null;
+}
+
+const PROVINCIAL_LABEL = 'Provincial';
+const HA_LABEL = 'Health Authority';
+const SITE_LABEL = 'Site / Care Settings';
+
+const levelLabelOf = (t: StubTemplate) =>
+  t.isMaster ? PROVINCIAL_LABEL : t.level === 'health authority' ? HA_LABEL : SITE_LABEL;
+
+export const buildTemplates = (): StubTemplate[] => [
+  {
+    id: 'tpl-master',
+    name: 'Provincial Medical Unit',
+    isMaster: true,
+    level: null,
+    parentId: null,
+    parentName: null,
+    healthAuthority: null,
+    version: 0,
+    updatedAt: '2026-01-10T08:00:00.000Z',
+  },
+  {
+    id: 'tpl-ha',
+    name: 'Island Health Medical Unit',
+    isMaster: false,
+    level: 'health authority',
+    parentId: 'tpl-master',
+    parentName: 'Provincial Medical Unit',
+    healthAuthority: 'Island Health',
+    version: 3,
+    updatedAt: '2026-01-12T08:00:00.000Z',
+  },
+  {
+    id: 'tpl-site',
+    name: 'Victoria General Medical Unit',
+    isMaster: false,
+    level: 'site',
+    parentId: 'tpl-ha',
+    parentName: 'Island Health Medical Unit',
+    healthAuthority: 'Island Health',
+    version: 1,
+    updatedAt: '2026-01-14T08:00:00.000Z',
+  },
+];
+
+export const STUB_LIMITS = [
+  { id: 'limit-1', name: 'Additional Training', description: null },
+  { id: 'limit-2', name: 'Additional Education', description: null },
+  { id: 'limit-3', name: 'Certification', description: null },
+];
+
+const STUB_BUNDLE = {
+  id: 'bundle-1',
+  name: 'Assessment',
+  displayName: 'Assessment',
+  careActivities: [
+    { id: 'activity-1', name: 'Initial assessment', displayName: 'Initial assessment' },
+    { id: 'activity-2', name: 'Vital signs', displayName: 'Vital signs' },
+  ],
+};
+
+const STUB_OCCUPATIONS = [
+  { id: 'occ-1', name: 'Registered Nurse', displayName: 'Registered Nurse' },
+  { id: 'occ-2', name: 'Licensed Practical Nurse', displayName: 'Licensed Practical Nurse' },
+];
+
+export interface CareSettingsStub {
+  templates: StubTemplate[];
+  /** Permissions per template id. */
+  permissions: Record<string, StubPermission[]>;
+  /** Bodies received by the two save endpoints, for asserting what was sent. */
+  saves: { id: string; body: any }[];
+  detailSaves: { id: string; body: any }[];
+  copies: any[];
+  /**
+   * When set, the next matching save is answered with a 409 carrying this
+   * payload. Cleared after it fires so a retry can succeed.
+   */
+  nextConflict: { currentVersion: number; updatedBy?: string; updatedAt?: string } | null;
+}
+
+/**
+ * The API wraps every handled error through `ErrorExceptionFilter`, so a 409
+ * reaches the client as `{ errorType, errorMessage, errorDetails }`. Stubbing
+ * the raw payload instead would let a client that cannot read the real shape
+ * pass its tests.
+ */
+const conflictBody = (payload: {
+  currentVersion: number;
+  updatedBy?: string;
+  updatedAt?: string;
+}) => ({
+  errorType: 'TemplateVersionConflict',
+  errorMessage: 'This template was changed by someone else. Nothing has been saved.',
+  errorDetails: payload,
+});
+
+export async function stubCareSettings(
+  page: Page,
+  initial: StubTemplate[] = buildTemplates(),
+): Promise<CareSettingsStub> {
+  const stub: CareSettingsStub = {
+    templates: [...initial],
+    permissions: {
+      'tpl-master': [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' }],
+      'tpl-ha': [
+        { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+        {
+          activityId: 'activity-2',
+          occupationId: 'occ-1',
+          permission: 'LC',
+          limitId: 'limit-2',
+          limitName: STUB_LIMITS[1].name,
+          restrictionDescription: 'Nights only',
+        },
+      ],
+      'tpl-site': [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' }],
+    },
+    saves: [],
+    detailSaves: [],
+    copies: [],
+    nextConflict: null,
+  };
+
+  await page.route('**/api/v1/care-settings/**', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname;
+    const method = request.method();
+
+    const json = (body: unknown, status = 200) =>
+      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+
+    if (path.endsWith('/care-settings/cms/limits-conditions')) {
+      return json(STUB_LIMITS);
+    }
+
+    if (path.endsWith('/care-settings/cms/find')) {
+      const searchText = (url.searchParams.get('searchText') ?? '').trim().toLowerCase();
+      const level = url.searchParams.get('level') ?? 'all';
+
+      let rows = stub.templates.filter(t => t.name.toLowerCase().includes(searchText));
+      if (level === 'provincial') rows = rows.filter(t => t.isMaster);
+      else if (level !== 'all') rows = rows.filter(t => !t.isMaster && t.level === level);
+
+      return json({
+        result: rows.map(t => ({ ...t, levelLabel: levelLabelOf(t) })),
+        total: rows.length,
+      });
+    }
+
+    const parentMatch = path.match(/\/care-settings\/([^/]+)\/parent-permissions$/);
+    if (parentMatch) {
+      const template = stub.templates.find(t => t.id === parentMatch[1]);
+      if (!template?.parentId) return json([]);
+      return json(
+        (stub.permissions[template.parentId] ?? []).map(p => ({
+          activityId: p.activityId,
+          occupationId: p.occupationId,
+          permission: p.permission,
+        })),
+      );
+    }
+
+    if (/\/care-settings\/[^/]+\/bundles$/.test(path)) {
+      return json([STUB_BUNDLE]);
+    }
+
+    if (/\/care-settings\/[^/]+\/occupations$/.test(path)) {
+      return json(STUB_OCCUPATIONS);
+    }
+
+    const copyDataMatch = path.match(/\/care-settings\/([^/]+)\/copy-data$/);
+    if (copyDataMatch) {
+      const template = stub.templates.find(t => t.id === copyDataMatch[1]);
+      return json({
+        id: template?.id,
+        name: template?.name,
+        unitId: 'unit-1',
+        selectedBundleIds: [STUB_BUNDLE.id],
+        selectedActivityIds: STUB_BUNDLE.careActivities.map(a => a.id),
+        permissions: stub.permissions[copyDataMatch[1]] ?? [],
+      });
+    }
+
+    const copyFullMatch = path.match(/\/care-settings\/([^/]+)\/copy-full$/);
+    if (copyFullMatch && method === 'POST') {
+      const body = request.postDataJSON();
+      stub.copies.push({ sourceId: copyFullMatch[1], body });
+      const created: StubTemplate = {
+        id: `tpl-copy-${stub.copies.length}`,
+        name: body.name,
+        isMaster: false,
+        level: body.level ?? 'site',
+        parentId: copyFullMatch[1],
+        parentName: stub.templates.find(t => t.id === copyFullMatch[1])?.name ?? null,
+        healthAuthority: 'Island Health',
+        version: 0,
+        updatedAt: new Date().toISOString(),
+      };
+      stub.templates.push(created);
+      return json(created);
+    }
+
+    const detailsMatch = path.match(/\/care-settings\/([^/]+)\/details$/);
+    if (detailsMatch && method === 'PATCH') {
+      const id = detailsMatch[1];
+      const body = request.postDataJSON();
+
+      if (stub.nextConflict) {
+        const conflict = stub.nextConflict;
+        stub.nextConflict = null;
+        return json(conflictBody(conflict), 409);
+      }
+
+      stub.detailSaves.push({ id, body });
+      const template = stub.templates.find(t => t.id === id);
+      if (template) {
+        template.name = body.name;
+        template.level = body.level;
+        template.version += 1;
+      }
+      return json({ ...template, levelLabel: template ? levelLabelOf(template) : '' });
+    }
+
+    const idMatch = path.match(/\/care-settings\/([^/]+)$/);
+    if (idMatch && method === 'PATCH') {
+      const id = idMatch[1];
+      const body = request.postDataJSON();
+
+      if (stub.nextConflict) {
+        const conflict = stub.nextConflict;
+        stub.nextConflict = null;
+        return json(conflictBody(conflict), 409);
+      }
+
+      stub.saves.push({ id, body });
+      const template = stub.templates.find(t => t.id === id);
+      if (template) {
+        template.name = body.name;
+        template.version += 1;
+      }
+      return json({ success: true });
+    }
+
+    if (idMatch && method === 'GET') {
+      const template = stub.templates.find(t => t.id === idMatch[1]);
+      if (!template) return json({ message: 'Not found' }, 404);
+
+      return json({
+        ...template,
+        levelLabel: levelLabelOf(template),
+        selectedBundles: [
+          {
+            bundleId: STUB_BUNDLE.id,
+            selectedActivityIds: STUB_BUNDLE.careActivities.map(a => a.id),
+          },
+        ],
+        permissions: stub.permissions[template.id] ?? [],
+      });
+    }
+
+    return json({ result: [], total: 0 });
+  });
+
+  return stub;
+}

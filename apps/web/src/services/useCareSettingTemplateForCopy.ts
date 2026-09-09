@@ -13,7 +13,13 @@ interface CopyTemplateData {
   unitId: string;
   selectedBundleIds: string[];
   selectedActivityIds: string[];
-  permissions: { activityId: string; occupationId: string; permission: string }[];
+  permissions: {
+    activityId: string;
+    occupationId: string;
+    permission: string;
+    limitId?: string | null;
+    restrictionDescription?: string | null;
+  }[];
 }
 
 export const useCareSettingTemplateForCopy = (sourceId: string) => {

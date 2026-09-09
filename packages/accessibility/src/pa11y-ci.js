@@ -1,3 +1,26 @@
+/**
+ * Pa11y CI configuration for the TBCM web application.
+ *
+ * Every route below belongs to `apps/web`. The suite signs in once per URL
+ * through Keycloak, because the app keeps its tokens in `localStorage` and
+ * Pa11y has no way to seed them the way the Playwright suite does.
+ *
+ * Related: `apps/web/e2e/accessibility.spec.ts` runs axe against the same
+ * WCAG 2.1 AA standard on stubbed routes and needs no live stack, so prefer it
+ * for fast feedback. This config is the full-stack pass.
+ */
+
+const BASE_URL = process.env.PA11Y_BASE_URL || 'http://localhost:3000';
+
+// Pa11y bundles Chrome 77, which cannot parse the modern syntax Next.js emits.
+// Under it the app never hydrates, so no `actions` below would ever fire. Drive
+// the locally installed Chrome instead, matching `apps/web/playwright.config.ts`.
+const CHROME_PATH =
+  process.env.PA11Y_CHROME_PATH ||
+  (process.platform === 'darwin'
+    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    : '/usr/bin/google-chrome');
+
 const defaults = {
   timeout: 30000,
   standard: 'WCAG2AA',
@@ -5,6 +28,10 @@ const defaults = {
   viewport: {
     width: 1300,
     height: 1200,
+  },
+  chromeLaunchConfig: {
+    executablePath: CHROME_PATH,
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
   },
 };
 
@@ -14,93 +41,50 @@ const log = {
   info: console.log,
 };
 
+// The landing page hands off to the API, which redirects to Keycloak. The
+// realm is expected to present its standard username/password form; a realm
+// configured with an identity-provider chooser needs an extra click here.
 const loginActions = [
-  'wait for path to be /login',
-  'screen capture captures/login.png',
-  'click element button',
+  'wait for element #landing-sign-in to be visible',
+  'click element #landing-sign-in',
   'wait for element #username to be visible',
-  'screen capture captures/login1.png',
   `set field #username to ${process.env.E2E_TEST_USERNAME}`,
-  'screen capture captures/login2.png',
   `set field #password to ${process.env.E2E_TEST_PASSWORD}`,
-  'screen capture captures/login3.png',
   'click element #kc-login',
-  'wait for url to be http://localhost:3000/applicants',
-  'wait for element table to be visible',
+  // Signing in drops the user on the planning wizard.
+  `wait for path to be /planning`,
   'wait for element .animate-spin to be removed',
 ];
 
+/** Signs in, then navigates to an authenticated route and waits for it to settle. */
+const visit = (path, extraActions = []) => ({
+  url: BASE_URL,
+  actions: [
+    ...loginActions,
+    `navigate to ${BASE_URL}${path}`,
+    `wait for path to be ${path}`,
+    'wait for element .animate-spin to be removed',
+    ...extraActions,
+  ],
+});
+
 const urls = [
   {
-    // applicants
-    url: 'http://localhost:3000',
-    actions: [...loginActions],
-    hideElements: 'div[class*="placeholder"], div[class*="singleValue"], .text-bcGreenHiredText',
+    // Landing page — the only route reachable without signing in.
+    url: BASE_URL,
+    actions: ['wait for element #landing-sign-in to be visible'],
   },
-  {
-    // details - recruitment
-    url: 'http://localhost:3000',
-    actions: [
-      ...loginActions,
-      'click element #details-0',
-      'wait for path to be /details',
-      'wait for element #tab-10003 to be visible',
-      'click element #tab-10003',
-      'screen capture captures/details.png',
-    ],
-    hideElements: 'div[class*="placeholder"], div[class*="singleValue"], .text-bcGreenHiredText',
-  },
-  {
-    // details - recruitment - job milestones
-    url: 'http://localhost:3000',
-    actions: [
-      ...loginActions,
-      'click element #details-0',
-      'wait for path to be /details',
-      'wait for element #tab-10003 to be visible',
-      'click element #tab-10003',
-      'wait for element button[class*="bg-bcBlueBar"] to be visible',
-      'click element button[class*="bg-bcBlueBar"]',
-      'wait for element form to be visible',
-      'screen capture captures/job.png',
-    ],
-    wait: 1000,
-    hideElements: 'div[class*="placeholder"], div[class*="singleValue"], .text-bcGreenHiredText',
-  },
-  {
-    // reporting
-    url: 'http://localhost:3000',
-    actions: [
-      ...loginActions,
-      'navigate to http://localhost:3000/reporting',
-      'wait for element .animate-spin to be removed',
-      'screen capture captures/reporting.png',
-    ],
-    hideElements: 'div[class*="placeholder"], div[class*="singleValue"]',
-  },
-  {
-    // user management
-    url: 'http://localhost:3000',
-    actions: [
-      ...loginActions,
-      'navigate to http://localhost:3000/user-management',
-      'wait for element .animate-spin to be removed',
-      'screen capture captures/user-management.png',
-    ],
-    hideElements: 'div[class*="placeholder"], div[class*="singleValue"]',
-  },
-  {
-    // user details
-    url: 'http://localhost:3000',
-    actions: [
-      ...loginActions,
-      'navigate to http://localhost:3000/user-management',
-      'wait for element .animate-spin to be removed',
-      'click element #details-0',
-      'wait for element .animate-spin to be removed',
-      'screen capture captures/user-details.png',
-    ],
-  },
+  visit('/planning', ['screen capture captures/planning.png']),
+  visit('/care-settings', [
+    'wait for element table to be visible',
+    'screen capture captures/care-settings.png',
+  ]),
+  visit('/care-settings/copy', ['screen capture captures/care-settings-copy.png']),
+  visit('/care-terminologies', ['screen capture captures/care-terminologies.png']),
+  visit('/occupational-scope', ['screen capture captures/occupational-scope.png']),
+  visit('/content-management', ['screen capture captures/content-management.png']),
+  visit('/user-management', ['screen capture captures/user-management.png']),
+  visit('/dashboard', ['screen capture captures/dashboard.png']),
 ];
 
 if (process.env.DEBUG) {

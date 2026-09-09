@@ -29,7 +29,7 @@ export const FeedbackForm = ({ setIsOpen }: FeedbackFormProps) => {
     // post feedback to BE
     createFeedback(values, () => {
       setIsOpen(false);
-      toast.info(`Your feedback recorded successfully. Thank you!`);
+      toast.success(`Your feedback recorded successfully. Thank you!`);
     });
   };
 

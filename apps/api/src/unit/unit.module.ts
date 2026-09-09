@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Unit } from './entity/unit.entity';
 import { CareSettingTemplate } from './entity/care-setting-template.entity';
 import { CareSettingTemplatePermission } from './entity/care-setting-template-permission.entity';
+import { LimitCondition } from './entity/limit-condition.entity';
 import { UnitController } from './unit.controller';
 import { CareSettingTemplateController } from './care-setting-template.controller';
 import { UnitService } from './unit.service';
@@ -11,6 +12,7 @@ import { UnitSubscriber } from './subscribers/unit.subscriber';
 import { Bundle } from '../care-activity/entity/bundle.entity';
 import { CareActivity } from '../care-activity/entity/care-activity.entity';
 import { Occupation } from '../occupation/entity/occupation.entity';
+import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.entity';
 
 @Module({
   imports: [
@@ -18,9 +20,11 @@ import { Occupation } from '../occupation/entity/occupation.entity';
       Unit,
       CareSettingTemplate,
       CareSettingTemplatePermission,
+      LimitCondition,
       Bundle,
       CareActivity,
       Occupation,
+      AllowedActivity,
     ]),
   ],
   exports: [UnitService, CareSettingTemplateService],

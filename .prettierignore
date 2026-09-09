@@ -12,6 +12,7 @@
 .next
 _next
 /out/
+apps/web/out
 .yarn
 
 # production

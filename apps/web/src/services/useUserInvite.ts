@@ -23,7 +23,7 @@ export const useUserInvite = () => {
       config,
       () => {
         cb?.();
-        toast.info(`User invitation successful.`);
+        toast.success(`User invitation successful.`);
       },
       () => void 0,
     );

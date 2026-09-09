@@ -17,6 +17,7 @@ import { CareActivity } from '../../care-activity/entity/care-activity.entity';
 import { BaseEntity } from '../../common/base.entity';
 import { Occupation } from '../../occupation/entity/occupation.entity';
 import { CareSettingTemplate } from './care-setting-template.entity';
+import { LimitCondition } from './limit-condition.entity';
 
 @Entity()
 @Unique('template_activity_occupation', ['template', 'careActivity', 'occupation'])
@@ -39,4 +40,16 @@ export class CareSettingTemplatePermission extends BaseEntity {
   /** The occupation this permission is granted to */
   @ManyToOne(() => Occupation, { nullable: false })
   occupation: Occupation;
+
+  /**
+   * The selected limit from the catalogue. At most one, and meaningful only
+   * when permission is LC. RESTRICT so a catalogue entry in use cannot be
+   * hard-deleted out from under a saved permission.
+   */
+  @ManyToOne(() => LimitCondition, { nullable: true, onDelete: 'RESTRICT' })
+  limitCondition: LimitCondition | null;
+
+  /** Optional free-text explanation, meaningful only when permission is LC */
+  @Column({ type: 'text', nullable: true })
+  restrictionDescription: string | null;
 }

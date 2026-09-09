@@ -16,7 +16,7 @@ import { CareSettingTemplateRO, Role } from '@tbcm/common';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import AppLayout from 'src/components/AppLayout';
-import { CareSettingsList } from 'src/components/care-settings';
+import { CareSettingsList, LevelFilter } from 'src/components/care-settings';
 import { Card } from 'src/components/generic/Card';
 import { SearchBar } from 'src/components/generic/SearchBar';
 import { ModalWrapper } from 'src/components/Modal';
@@ -57,6 +57,8 @@ const CareSettingsPage: NextPage = () => {
     sortOrder,
     onSortChange,
     onSearchTextChange,
+    level,
+    onLevelChange,
     isLoading,
     onRefreshList,
   } = useCareSettingsFind();
@@ -112,6 +114,10 @@ const CareSettingsPage: NextPage = () => {
                 />
               </div>
             </div>
+          </div>
+
+          <div className='mt-4'>
+            <LevelFilter value={level} onChange={onLevelChange} />
           </div>
 
           <div className='mt-4'>

@@ -1,7 +1,7 @@
 import { IsNumber, IsString, IsOptional, IsEnum, Length, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { CareSettingsCMSFindSortKeys, SortOrder } from '@tbcm/common';
+import { CareSettingsCMSFindSortKeys, SortOrder, TemplateLevelFilter } from '@tbcm/common';
 
 export class FindCareSettingTemplatesDto {
   @ApiProperty({
@@ -55,4 +55,13 @@ export class FindCareSettingTemplatesDto {
   @IsEnum(SortOrder)
   @IsOptional()
   readonly sortOrder?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: TemplateLevelFilter,
+    example: TemplateLevelFilter.ALL,
+  })
+  @IsEnum(TemplateLevelFilter)
+  @IsOptional()
+  readonly level?: TemplateLevelFilter = TemplateLevelFilter.ALL;
 }

@@ -21,6 +21,7 @@ import {
   SortOrder,
   CareSettingTemplateRO,
   CareSettingsCMSFindSortKeys,
+  TemplateLevelFilter,
 } from '@tbcm/common';
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -35,6 +36,7 @@ export const useCareSettingsFind = () => {
   const [sortKey, setSortKey] = useState<CareSettingsCMSFindSortKeys>();
   const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [searchText, setSearchText] = useState('');
+  const [level, setLevel] = useState<TemplateLevelFilter>(TemplateLevelFilter.ALL);
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {
     if (size !== pageSize) {
@@ -75,6 +77,14 @@ export const useCareSettingsFind = () => {
     resetPageIndex();
   };
 
+  // Narrowing the list can leave the current page out of range, so a filter
+  // change returns to page 1. The search text is deliberately untouched: the
+  // two filters compose.
+  const onLevelChange = (value: TemplateLevelFilter) => {
+    setLevel(value);
+    resetPageIndex();
+  };
+
   const onRefreshList = useCallback(() => {
     const config = {
       endpoint: API_ENDPOINT.findCareSettings({
@@ -83,6 +93,7 @@ export const useCareSettingsFind = () => {
         sortKey,
         sortOrder,
         searchText,
+        level,
       }),
     };
 
@@ -90,7 +101,7 @@ export const useCareSettingsFind = () => {
       setCareSettings(data.result);
       setTotal(data.total);
     });
-  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText]);
+  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText, level]);
 
   useEffect(() => {
     onRefreshList();
@@ -107,6 +118,8 @@ export const useCareSettingsFind = () => {
     onSortChange,
     searchText,
     onSearchTextChange,
+    level,
+    onLevelChange,
     isLoading,
     onRefreshList,
   };

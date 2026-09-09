@@ -9,14 +9,21 @@ interface PopoverProps {
   title: string | React.ReactElement;
   children: (close: () => void) => ReactNode;
   position?: 'bottom-right' | 'bottom-left';
+  /** Merged into the wrapper, e.g. to let a trigger shrink inside a flex row. */
+  className?: string;
 }
 
-export const Popover: React.FC<PopoverProps> = ({ title, children, position = 'bottom-right' }) => {
+export const Popover: React.FC<PopoverProps> = ({
+  title,
+  children,
+  position = 'bottom-right',
+  className = '',
+}) => {
   return (
-    <PopoverUI className='relative'>
+    <PopoverUI className={`relative ${className}`}>
       {({ open, close }) => (
         <>
-          <PopoverUI.Button className={`${open ? '' : 'text-opacity-90'}`}>
+          <PopoverUI.Button className={`max-w-full ${open ? '' : 'text-opacity-90'}`}>
             {title}
           </PopoverUI.Button>
 
