@@ -1,6 +1,5 @@
 import { debounce } from 'lodash';
 import { SearchBar } from '../generic/SearchBar';
-import { CareTerminologiesCommonSearchTerms } from './common-search-terms';
 import { useState } from 'react';
 
 interface CareTerminologiesSearchProps {
@@ -24,13 +23,15 @@ export const CareTerminologiesSearch: React.FC<CareTerminologiesSearchProps> = (
 
   return (
     <div className='flex flex-col p-4 gap-4 bg-white'>
+      <p className='text-sm text-gray-600'>
+        Understand what activities that can/cannot be performed by these occupations
+      </p>
       <SearchBar
         value={searchTerm}
         handleChange={debouncedSearch}
         placeholderText='Search'
         bgWhite
       />
-      <CareTerminologiesCommonSearchTerms handleSearch={handleSearch} />
     </div>
   );
 };

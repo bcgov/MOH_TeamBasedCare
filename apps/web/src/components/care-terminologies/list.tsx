@@ -60,16 +60,18 @@ const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
       {careActivities?.map((careActivity: CareActivityRO, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{careActivity.name}</td>
-          <td className={`${tdStyles} flex justify-end`}>
-            <Button
-              classes='gap-2 h-8'
-              variant='outline'
-              type='button'
-              onClick={() => onViewDetailsClick(careActivity.id)}
-            >
-              View details
-              <FontAwesomeIcon icon={faAngleRight} className='h-4 w-4 text-bcBluePrimary' />
-            </Button>
+          <td className={`${tdStyles} whitespace-nowrap`}>
+            <div className='flex justify-end'>
+              <Button
+                classes='gap-2 h-8 min-w-[112px] whitespace-nowrap'
+                variant='outline'
+                type='button'
+                onClick={() => onViewDetailsClick(careActivity.id)}
+              >
+                View details
+                <FontAwesomeIcon icon={faAngleRight} className='h-4 w-4 text-bcBluePrimary' />
+              </Button>
+            </div>
           </td>
         </tr>
       ))}
@@ -91,13 +93,17 @@ const TableFooter: React.FC<TableFooterProps> = ({
   onPageOptionsChange,
 }) => {
   return (
-    <td colSpan={100}>
-      <Pagination
-        id='tbcm-care-terminologies-list-table'
-        pageOptions={{ pageIndex, pageSize, total }}
-        onChange={onPageOptionsChange}
-      />
-    </td>
+    <tfoot>
+      <tr>
+        <td colSpan={2}>
+          <Pagination
+            id='tbcm-care-terminologies-list-table'
+            pageOptions={{ pageIndex, pageSize, total }}
+            onChange={onPageOptionsChange}
+          />
+        </td>
+      </tr>
+    </tfoot>
   );
 };
 
@@ -131,8 +137,12 @@ export const CareTerminologiesList: React.FC<CareTerminologiesListProps> = ({
 
   return (
     <div className='max-h-full w-full flex-1 flex flex-col overflow-auto gap-3 p-4 bg-white'>
-      <div>Showing {total} care activities.</div>
-      <table className='table-auto'>
+      <div>Filter By Alphabet, and you can change the setting based on preferences</div>
+      <table className='w-full table-fixed'>
+        <colgroup>
+          <col style={{ width: '75%' }} />
+          <col style={{ width: '25%' }} />
+        </colgroup>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
         <TableBody careActivities={careActivities} />
         <TableFooter
