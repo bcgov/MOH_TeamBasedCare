@@ -19,7 +19,7 @@ const CareTerminologies: NextPage = () => {
 
   return (
     <AppLayout>
-      <div className='flex flex-1 flex-col gap-3 mt-5'>
+      <div className='flex flex-1 flex-col gap-0 mt-5'>
         <CareTerminologiesSearch onSearchTextChange={onSearchTextChange} />
         <div className='flex-1'>
           <CareTerminologiesList
