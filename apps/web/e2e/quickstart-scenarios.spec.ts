@@ -8,9 +8,11 @@ import { seedAuth, stubApi, expectNoRuntimeOverlay, ApiStub } from './fixtures';
  */
 
 const ROW_ONE = 'Emergency Department Plan';
+const SAVED_DRAFT_OPTION = 'Continue working on a saved draft plan';
 
 async function openTable(page: Page) {
   await page.goto('/planning');
+  await page.getByRole('radio', { name: SAVED_DRAFT_OPTION }).check();
   await expect(page.getByText(ROW_ONE)).toBeVisible();
 }
 

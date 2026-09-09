@@ -18,6 +18,7 @@ export const usePlanningSessionsFind = () => {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
   const [total, setTotal] = useState(0);
+  const [unfilteredTotal, setUnfilteredTotal] = useState(0);
   const [sortKey, setSortKey] = useState<PlanningSessionsFindSortKeys>();
   const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [searchText, setSearchText] = useState('');
@@ -94,6 +95,10 @@ export const usePlanningSessionsFind = () => {
     fetchData(config, (data: PaginationRO<PlanningSessionSummaryRO>) => {
       setSessions(data.result);
       setTotal(data.total);
+
+      if (!searchText.trim()) {
+        setUnfilteredTotal(data.total);
+      }
     });
   }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText, refreshCounter]);
 
@@ -102,6 +107,7 @@ export const usePlanningSessionsFind = () => {
     pageIndex,
     pageSize,
     total,
+    unfilteredTotal,
     onPageOptionsChange,
     sortKey,
     sortOrder,
@@ -113,3 +119,5 @@ export const usePlanningSessionsFind = () => {
     isLoading,
   };
 };
+
+export type PlanningSessionsFindState = ReturnType<typeof usePlanningSessionsFind>;
