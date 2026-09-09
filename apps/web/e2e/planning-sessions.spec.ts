@@ -10,6 +10,7 @@ import { seedAuth, stubApi, trackPageErrors, expectNoRuntimeOverlay, ApiStub } f
  */
 test.describe('planning sessions table', () => {
   let stub: ApiStub;
+  const savedDraftOption = 'Continue working on a saved draft plan';
 
   test.beforeEach(async ({ page }) => {
     await seedAuth(page);
@@ -19,6 +20,7 @@ test.describe('planning sessions table', () => {
   test('lists the current user sessions', async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     await expect(page.getByText('Emergency Department Plan')).toBeVisible();
     await expect(page.getByText('Intensive Care Unit Plan')).toBeVisible();
@@ -30,6 +32,7 @@ test.describe('planning sessions table', () => {
   test('session names are display-only in the planning table', async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     await expect(
       page.getByRole('button', { name: 'Emergency Department Plan', exact: true }),
@@ -42,6 +45,7 @@ test.describe('planning sessions table', () => {
   test('sorting does not submit the surrounding form or reload the page', async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
     await expect(page.getByText('Emergency Department Plan')).toBeVisible();
 
     await page.evaluate(() => {
@@ -59,25 +63,32 @@ test.describe('planning sessions table', () => {
     expect(errors).toEqual([]);
   });
 
-  test('the sessions table is rendered below the Select Care Setting dropdown', async ({
+  test('the saved draft option shows the sessions table and hides the care setting dropdown', async ({
     page,
   }) => {
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
     await expect(page.getByText('Emergency Department Plan')).toBeVisible();
 
-    const order = await page.evaluate(() => {
-      const select = document.querySelector('select[name="careLocation"]');
-      const table = document.querySelector('table[aria-label="Your saved planning drafts"]');
-      if (!select || !table) return null;
-      // DOCUMENT_POSITION_FOLLOWING (4) means the table comes after the dropdown.
-      return Boolean(select.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING);
-    });
+    await expect(page.locator('select[name="careLocation"]')).toHaveCount(0);
+    await expect(page.locator('table[aria-label="Your saved planning drafts"]')).toBeVisible();
+    await expect(page.locator('button:text-is("Next")')).toBeDisabled();
+  });
 
-    expect(order).toBe(true);
+  test('an empty draft search result does not hide the saved draft option', async ({ page }) => {
+    await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
+
+    await page.getByRole('textbox', { name: /search/i }).fill('no matching draft');
+
+    await expect(page.getByText('No drafts found matching your search.')).toBeVisible();
+    await expect(page.getByRole('radio', { name: savedDraftOption })).toBeChecked();
+    await expect(page.locator('select[name="careLocation"]')).toHaveCount(0);
   });
 
   test('cells are vertically centred and dates use the short format', async ({ page }) => {
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     const row = page.locator('tbody tr').first();
     await expect(row).toBeVisible();
@@ -111,6 +122,7 @@ test.describe('planning sessions table', () => {
 
   test('the plan title presents a Rename action after continuing a draft', async ({ page }) => {
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     const longName = 'Emergency Department Plan';
     await page
@@ -121,6 +133,7 @@ test.describe('planning sessions table', () => {
 
     const title = page.getByRole('heading', { name: longName, exact: true });
     await expect(title).toBeVisible();
+    await expect(page.locator('button:text-is("Next")')).toBeEnabled();
     await page.getByRole('button', { name: 'Rename' }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Rename' });
@@ -137,26 +150,44 @@ test.describe('planning sessions table', () => {
 
   test('the name in the table is not an interactive control', async ({ page }) => {
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     await expect(
       page.getByRole('button', { name: 'Emergency Department Plan', exact: true }),
     ).toHaveCount(0);
   });
 
-  test('the auto-selected last draft remains available from the sessions table', async ({
+  test('the last draft is not pre-selected and the draft list stays visible until the user picks it', async ({
     page,
   }) => {
     stub.lastDraft = stub.sessions[0];
 
     await page.goto('/planning');
 
-    // The "continue your last draft" option is pre-selected...
     const lastDraftOption = page.getByRole('radio', {
-      name: /Continue working on your last draft/,
+      name: savedDraftOption,
     });
-    await expect(lastDraftOption).toBeChecked();
+    await expect(lastDraftOption).not.toBeChecked();
+    await expect(
+      page.getByRole('radio', { name: 'Start a new profile from scratch' }),
+    ).toBeChecked();
+    await expect(page.locator('table[aria-label="Your saved planning drafts"]')).toHaveCount(0);
 
+    await lastDraftOption.check();
     await expect(page.locator('tbody')).toContainText(stub.sessions[0].name);
+  });
+
+  test('the saved draft option is hidden when the user has no draft plans', async ({ page }) => {
+    stub.sessions = [];
+    stub.lastDraft = null;
+
+    await page.goto('/planning');
+
+    await expect(
+      page.getByRole('radio', { name: 'Start a new profile from scratch' }),
+    ).toBeChecked();
+    await expect(page.getByRole('radio', { name: savedDraftOption })).toHaveCount(0);
+    await expect(page.locator('table[aria-label="Your saved planning drafts"]')).toHaveCount(0);
   });
 
   test('starting from scratch names the draft, advances the stage, and lists the draft', async ({
@@ -165,6 +196,7 @@ test.describe('planning sessions table', () => {
     await page.goto('/planning');
 
     await page.getByRole('radio', { name: 'Start a new profile from scratch' }).check();
+    await expect(page.locator('table[aria-label="Your saved planning drafts"]')).toHaveCount(0);
     await page
       .locator('select[name="careLocation"]')
       .selectOption({ label: 'Emergency Department' });
@@ -192,6 +224,7 @@ test.describe('planning sessions table', () => {
 
     // Returning to Profile, the drafts table lists the newly created draft
     await page.locator('button:text-is("Previous")').click();
+    await page.getByRole('radio', { name: savedDraftOption }).check();
     await expect(page.locator('tbody')).toContainText('My Brand New Plan');
   });
 
@@ -229,6 +262,7 @@ test.describe('planning sessions table', () => {
     page,
   }) => {
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     await page.getByRole('button', { name: 'Continue Emergency Department Plan' }).click();
     await page.getByRole('button', { name: 'Rename' }).click();
@@ -277,6 +311,7 @@ test.describe('planning sessions table', () => {
     page,
   }) => {
     await page.goto('/planning');
+    await page.getByRole('radio', { name: savedDraftOption }).check();
 
     await expect(page.getByRole('heading', { name: 'Your drafts' })).toHaveCount(0);
 

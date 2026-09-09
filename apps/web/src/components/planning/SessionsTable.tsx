@@ -12,7 +12,7 @@ import { SearchBar } from '../generic/SearchBar';
 import { Spinner } from '../generic/Spinner';
 import { SortButton } from '../SortButton';
 import { usePlanningContext } from '../../services/usePlanningContext';
-import { usePlanningSessionsFind } from '../../services/usePlanningSessionsFind';
+import { PlanningSessionsFindState } from '../../services/usePlanningSessionsFind';
 import { usePlanningSessionMutations } from '../../services/usePlanningSessionMutations';
 
 /** Wizard step the Continue action lands on (Care Competencies) */
@@ -31,7 +31,11 @@ const headers: { label: string; name?: PlanningSessionsFindSortKeys }[] = [
   { label: '' },
 ];
 
-export const SessionsTable = () => {
+type SessionsTableProps = {
+  drafts: PlanningSessionsFindState;
+};
+
+export const SessionsTable = ({ drafts }: SessionsTableProps) => {
   const {
     sessions,
     pageIndex,
@@ -46,7 +50,7 @@ export const SessionsTable = () => {
     clearSearch,
     refreshSessions,
     isLoading,
-  } = usePlanningSessionsFind();
+  } = drafts;
 
   const {
     state: { sessionId, sessionsRefreshToken },

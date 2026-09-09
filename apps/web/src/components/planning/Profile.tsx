@@ -2,20 +2,18 @@ import { Radio } from '@components';
 import { Form, Formik, useFormikContext } from 'formik';
 import { usePlanningContent, usePlanningContext } from '../../services';
 import { useCareSettingTemplatesForPlanning } from '../../services/useCareSettingTemplatesForPlanning';
-import {
-  PlanningSessionRO,
-  ProfileOptions,
-  SaveProfileDTO,
-  formatDateFromNow,
-  formatDateTime,
-} from '@tbcm/common';
+import { PlanningSessionRO, ProfileOptions, SaveProfileDTO, formatDateTime } from '@tbcm/common';
 import { SessionsTable } from './SessionsTable';
 import { Button } from '../Button';
 import { dtoValidator } from '../../utils/dto-validator';
 import { RenderSelect } from '../generic/RenderSelect';
 import { usePlanningProfile } from '../../services/usePlanningProfile';
+import {
+  PlanningSessionsFindState,
+  usePlanningSessionsFind,
+} from '../../services/usePlanningSessionsFind';
 import { ModalWrapper } from '../Modal';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Spinner } from '../generic/Spinner';
 
 export interface ProfileProps {
@@ -29,9 +27,11 @@ interface ProfileFormProps {
 }
 
 const ProfileForm = ({
+  drafts,
   lastDraft,
   isLoading: isLoadingPlanningProfile,
 }: {
+  drafts: PlanningSessionsFindState;
   lastDraft?: PlanningSessionRO;
   isLoading: boolean;
 }) => {
@@ -39,32 +39,51 @@ const ProfileForm = ({
   const { careLocations, isValidating: isLoadingCareLocations } =
     useCareSettingTemplatesForPlanning();
   const [showModal, setShowModal] = useState(false);
-  const { updateSessionId, updateSessionName } = usePlanningContext();
-  const [lastDraftUpdatedFromNow, setLastDraftUpdatedFromNow] = useState('');
+  const {
+    state: {
+      profileOption: selectedProfileOption,
+      sessionId: selectedSessionId,
+      sessionName: selectedSessionName,
+      sessionToName,
+    },
+    updateSessionId,
+    updateSessionName,
+    updateProfileOption,
+  } = usePlanningContext();
+  const previousProfileOption = useRef(values.profileOption);
 
-  const handleLastDraft = useCallback(() => {
-    if (!lastDraft) return;
+  const handleScratch = useCallback(
+    (changedToScratch: boolean) => {
+      if (!sessionToName && selectedSessionId) {
+        updateSessionId(); // reset session id
+      }
 
-    updateSessionId(lastDraft.id);
-    // Keep the selected draft name available when the wizard advances.
-    updateSessionName(lastDraft.name);
+      if (!sessionToName && selectedSessionName) {
+        updateSessionName(''); // a new draft has no name yet
+      }
 
-    setValues({
-      profileOption: ProfileOptions.DRAFT,
-      careLocation: lastDraft.careSetting.id,
-    });
-  }, [lastDraft]);
-
-  const handleScratch = useCallback(() => {
-    updateSessionId(); // reset session id
-    updateSessionName(''); // a new draft has no name yet
-
-    // reset care location to default value
-    setValues({
-      profileOption: ProfileOptions.FROM_SCRATCH,
-      careLocation: '',
-    });
-  }, []);
+      if (
+        changedToScratch &&
+        (values.profileOption !== ProfileOptions.FROM_SCRATCH || values.careLocation !== '')
+      ) {
+        // reset care location to default value
+        setValues({
+          profileOption: ProfileOptions.FROM_SCRATCH,
+          careLocation: '',
+        });
+      }
+    },
+    [
+      selectedSessionId,
+      selectedSessionName,
+      sessionToName,
+      setValues,
+      updateSessionId,
+      updateSessionName,
+      values.profileOption,
+      values.careLocation,
+    ],
+  );
 
   // handle Loading state
   const [isLoading, setIsLoading] = useState(false);
@@ -72,17 +91,37 @@ const ProfileForm = ({
     setIsLoading(isLoadingPlanningProfile || isLoadingCareLocations);
   }, [isLoadingCareLocations, isLoadingPlanningProfile]);
 
+  const hasSavedDrafts = drafts.unfilteredTotal > 0;
+
+  useEffect(() => {
+    if (hasSavedDrafts || drafts.isLoading || values.profileOption !== ProfileOptions.DRAFT) {
+      return;
+    }
+
+    setValues({
+      profileOption: ProfileOptions.FROM_SCRATCH,
+      careLocation: '',
+    });
+  }, [drafts.isLoading, hasSavedDrafts, setValues, values.profileOption]);
+
   // handle profileOption change
   useEffect(() => {
+    const previousOption = previousProfileOption.current;
+
+    if (selectedProfileOption !== values.profileOption) {
+      updateProfileOption(values.profileOption);
+    }
+
     switch (values.profileOption) {
       case ProfileOptions.FROM_SCRATCH:
-        return handleScratch();
-      case ProfileOptions.DRAFT:
-        return handleLastDraft();
+        handleScratch(previousOption !== ProfileOptions.FROM_SCRATCH);
+        break;
       default:
-        return handleLastDraft();
+        break;
     }
-  }, [values.profileOption, lastDraft]);
+
+    previousProfileOption.current = values.profileOption;
+  }, [handleScratch, selectedProfileOption, updateProfileOption, values.profileOption]);
 
   usePlanningContent();
 
@@ -95,23 +134,6 @@ const ProfileForm = ({
     }
   }, [initialValues.careLocation, values.careLocation]);
 
-  useEffect(() => {
-    if (!lastDraft?.updatedAt) return;
-
-    const updatedAt = lastDraft.updatedAt;
-
-    const interval = () => {
-      setLastDraftUpdatedFromNow(formatDateFromNow(updatedAt) || '');
-    };
-
-    interval(); // run immediately
-    const intervalId = setInterval(interval, 10000); // re-evaluate every 10s
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [lastDraft?.updatedAt]);
-
   const profileOptions = useMemo(
     () => [
       {
@@ -119,10 +141,12 @@ const ProfileForm = ({
         value: ProfileOptions.FROM_SCRATCH,
       },
       {
-        label: `Continue working on your last draft (Last saved ${lastDraftUpdatedFromNow})`,
-        hoverText: `Last saved - ${formatDateTime(lastDraft?.updatedAt)}`,
+        label: 'Continue working on a saved draft plan',
+        hoverText: lastDraft?.updatedAt
+          ? `Last saved - ${formatDateTime(lastDraft.updatedAt)}`
+          : undefined,
         value: ProfileOptions.DRAFT,
-        hidden: !lastDraft,
+        hidden: !hasSavedDrafts,
       },
       {
         label: 'Start from a generic profile',
@@ -130,7 +154,7 @@ const ProfileForm = ({
         disabled: true,
       },
     ],
-    [lastDraft, lastDraftUpdatedFromNow],
+    [hasSavedDrafts, lastDraft],
   );
 
   return (
@@ -154,19 +178,22 @@ const ProfileForm = ({
         <div>
           <div>
             {isLoading && <Spinner show />}
-            {values.profileOption !== ProfileOptions.GENERIC && !isLoading && (
-              <div className='planning-form-box'>
-                <RenderSelect
-                  label={'Select Care Setting'}
-                  options={careLocations}
-                  name='careLocation'
-                />
-              </div>
-            )}
+            {values.profileOption !== ProfileOptions.GENERIC &&
+              values.profileOption !== ProfileOptions.DRAFT &&
+              !isLoading && (
+                <div className='planning-form-box mt-4'>
+                  <RenderSelect
+                    label={'Select Care Setting'}
+                    options={careLocations}
+                    name='careLocation'
+                  />
+                </div>
+              )}
           </div>
         </div>
 
-        <SessionsTable />
+        {values.profileOption !== ProfileOptions.FROM_SCRATCH &&
+          values.profileOption !== ProfileOptions.GENERIC && <SessionsTable drafts={drafts} />}
       </div>
 
       <ModalWrapper
@@ -185,6 +212,7 @@ export const Profile: React.FC<ProfileProps> = () => {
   // that creates a draft also advances the stage, which would unmount this component.
   const { handleSubmit, initialValues, lastDraft, isLoading, hasFailedSave, retryFailedSave } =
     usePlanningProfile();
+  const drafts = usePlanningSessionsFind();
 
   return (
     <Formik
@@ -212,7 +240,7 @@ export const Profile: React.FC<ProfileProps> = () => {
           </div>
         )}
 
-        <ProfileForm lastDraft={lastDraft} isLoading={isLoading} />
+        <ProfileForm drafts={drafts} lastDraft={lastDraft} isLoading={isLoading} />
       </>
     </Formik>
   );

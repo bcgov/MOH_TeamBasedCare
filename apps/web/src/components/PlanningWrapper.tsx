@@ -1,4 +1,5 @@
 import { Stepper, Button, PlanningContent } from '@components';
+import { ProfileOptions } from '@tbcm/common';
 import { PlanningSteps } from '../common/constants';
 import { usePlanningContext } from '../services';
 import { ExportButton } from './ExportButton';
@@ -7,12 +8,14 @@ import { SessionNamePrompt } from './planning/SessionNamePrompt';
 
 const WrapperContent = () => {
   const {
-    state: { sessionId, currentStep },
+    state: { sessionId, currentStep, profileOption },
     updateNextTriggered,
     updateCurrentStep,
   } = usePlanningContext();
 
   const isFirstStep = currentStep === 1;
+  const isNextDisabled =
+    (isFirstStep && profileOption === ProfileOptions.DRAFT) || currentStep >= PlanningSteps.length;
 
   const handleNextStep = () => {
     updateNextTriggered();
@@ -50,7 +53,7 @@ const WrapperContent = () => {
               variant='primary'
               type='button'
               classes={`ml-2`}
-              disabled={currentStep >= PlanningSteps.length}
+              disabled={isNextDisabled}
               onClick={handleNextStep}
             >
               Next

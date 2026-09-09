@@ -19,6 +19,7 @@ import { seedAuth, stubApi, stubCareSettings } from './fixtures';
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 const TABLE = 'table[aria-label="Your saved planning drafts"]';
+const SAVED_DRAFT_OPTION = 'Continue working on a saved draft plan';
 
 const scanTable = (page: Page) => new AxeBuilder({ page }).include(TABLE).withTags(WCAG).analyze();
 
@@ -27,6 +28,7 @@ test.describe('planning sessions table accessibility', () => {
     await seedAuth(page);
     await stubApi(page);
     await page.goto('/planning');
+    await page.getByRole('radio', { name: SAVED_DRAFT_OPTION }).check();
     await expect(page.getByText('Emergency Department Plan')).toBeVisible();
   });
 

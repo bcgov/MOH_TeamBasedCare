@@ -21,7 +21,7 @@ export const usePlanningProfile = () => {
   const [failedSave, setFailedSave] = useState<SaveProfileDTO>();
 
   const [initialValues] = useState<SaveProfileDTO>({
-    profileOption: '',
+    profileOption: ProfileOptions.FROM_SCRATCH,
     careLocation: '',
   });
 
