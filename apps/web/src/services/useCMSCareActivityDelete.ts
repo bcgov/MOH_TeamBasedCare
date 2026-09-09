@@ -15,7 +15,7 @@ export const useCMSCareActivityDelete = () => {
       config,
       () => {
         cb?.();
-        toast.info(`Care activity delete successful`);
+        toast.success(`Care activity delete successful`);
       },
       () => void 0,
       'Care activity delete failed',

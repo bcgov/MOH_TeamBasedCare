@@ -36,7 +36,7 @@ export const useOccupationCMSCreate = () => {
         method: REQUEST_METHOD.POST,
         data: values,
       });
-      toast.info('Occupation created successfully.');
+      toast.success('Occupation created successfully.');
       onSuccess?.(data.id);
     } catch (err: any) {
       // Parse validation errors from API response

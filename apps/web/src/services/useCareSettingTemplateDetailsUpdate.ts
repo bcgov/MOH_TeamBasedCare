@@ -51,7 +51,7 @@ export const useUpdateTemplateDetails = () => {
         data,
       });
 
-      toast.info('Care setting details updated successfully.');
+      toast.success('Care setting details updated successfully.');
       return { status: 'success', template: response.data };
     } catch (err: any) {
       const conflict = parseVersionConflict(err);

@@ -22,7 +22,7 @@ export const useUserEdit = (user: UserRO) => {
       config,
       () => {
         cb?.();
-        toast.info(`User update successful.`);
+        toast.success(`User update successful.`);
       },
       () => void 0,
       'User update failed',

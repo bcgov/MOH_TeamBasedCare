@@ -163,9 +163,13 @@ export const SessionsTable = () => {
           {isSearching ? (
             <>
               <p>No drafts found matching your search.</p>
-              <Button variant='outline' type='button' classes='mt-2' onClick={clearSearch}>
-                Clear search
-              </Button>
+              {/* Wrapping div, not Button's `classes`: buttonBase's `sm:mt-0` would
+                  override an `mt-*` passed directly to the button at `sm` and up. */}
+              <div className='mt-4'>
+                <Button variant='outline' type='button' onClick={clearSearch}>
+                  Clear search
+                </Button>
+              </div>
             </>
           ) : (
             <p>You don&apos;t have any saved drafts yet.</p>

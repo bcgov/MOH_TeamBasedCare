@@ -24,7 +24,7 @@ export const useCareSettingTemplateDelete = () => {
       config,
       () => {
         cb?.();
-        toast.info('Care setting deleted successfully.');
+        toast.success('Care setting deleted successfully.');
       },
       () => void 0,
       // Let useHttp extract backend error message (e.g., "Cannot delete template: it is referenced by X draft care plan(s).")
