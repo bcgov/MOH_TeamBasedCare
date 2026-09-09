@@ -9,6 +9,7 @@ interface SessionNameModalProps {
   currentName: string;
   onConfirm: (name: string) => void;
   onCancel?: () => void;
+  onDiscard?: () => void;
   isLoading?: boolean;
   error?: string;
 }
@@ -24,6 +25,7 @@ export const SessionNameModal = ({
   currentName,
   onConfirm,
   onCancel,
+  onDiscard,
   isLoading,
   error,
 }: SessionNameModalProps) => {
@@ -122,6 +124,18 @@ export const SessionNameModal = ({
         classes: 'min-w-[112px]',
         onClick: () => (onCancel ? onCancel() : setIsOpen(false)),
       }}
+      extraButton={
+        onDiscard
+          ? {
+              title: 'Discard',
+              variant: 'secondary',
+              classes:
+                'min-w-[112px] !border-none !shadow-none !bg-transparent !text-[#d8292f] hover:!text-[#a3181d]',
+              isDisabled: isLoading,
+              onClick: onDiscard,
+            }
+          : undefined
+      }
       actionButton={{
         isLoading,
         title: 'Save',
