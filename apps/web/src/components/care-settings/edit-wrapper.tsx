@@ -149,6 +149,7 @@ const EditContent: React.FC = () => {
           templateId: id,
           templateName: source.name,
           parentName: source.parentName ?? '',
+          hasParent: Boolean(source.parentId),
           level: source.level ?? null,
           version: source.version ?? 0,
           selectedBundleIds,

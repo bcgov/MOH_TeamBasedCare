@@ -99,6 +99,7 @@ const CopyContent: React.FC = () => {
           templateId: '', // No template ID yet - copy not created
           templateName: '', // The copy has no name of its own until it is saved
           parentName: sourceTemplate.name,
+          hasParent: true,
           level: null,
           version: 0,
           selectedBundleIds,

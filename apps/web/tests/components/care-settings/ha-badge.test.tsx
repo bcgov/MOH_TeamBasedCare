@@ -136,6 +136,7 @@ describe('Changes made by HA comparison', () => {
   it('flags a cell whose permission differs from the parent (UI case 15)', () => {
     initialise({
       permissions: new Map([[KEY, Permissions.LIMITS]]),
+      hasParent: true,
       parentPermissions: new Map([[KEY, Permissions.PERFORM]]),
     });
 
@@ -145,6 +146,7 @@ describe('Changes made by HA comparison', () => {
   it('leaves a cell matching the parent unflagged (UI case 15)', () => {
     initialise({
       permissions: new Map([[KEY, Permissions.PERFORM]]),
+      hasParent: true,
       parentPermissions: new Map([[KEY, Permissions.PERFORM]]),
     });
 
@@ -154,6 +156,7 @@ describe('Changes made by HA comparison', () => {
   it('treats a pair absent from both sides as N so an untouched cell is unflagged (UI case 16)', () => {
     initialise({
       permissions: new Map(),
+      hasParent: true,
       parentPermissions: new Map([[`${ACTIVITY}::occupation-9`, Permissions.PERFORM]]),
     });
 
@@ -163,6 +166,7 @@ describe('Changes made by HA comparison', () => {
   it('flags a cell the parent does not have when this template permits it (UI case 16)', () => {
     initialise({
       permissions: new Map([[KEY, Permissions.PERFORM]]),
+      hasParent: true,
       parentPermissions: new Map([[`${ACTIVITY}::occupation-9`, Permissions.PERFORM]]),
     });
 
@@ -172,9 +176,20 @@ describe('Changes made by HA comparison', () => {
   it('never flags anything on a template with no parent', () => {
     initialise({
       permissions: new Map([[KEY, Permissions.PERFORM]]),
+      hasParent: false,
       parentPermissions: new Map(),
     });
 
     expect(ctx.isChangedFromParent(ACTIVITY, OCCUPATION)).toBe(false);
+  });
+
+  it('flags a permission added to a parent that has no permission rows', () => {
+    initialise({
+      permissions: new Map([[KEY, Permissions.PERFORM]]),
+      hasParent: true,
+      parentPermissions: new Map(),
+    });
+
+    expect(ctx.isChangedFromParent(ACTIVITY, OCCUPATION)).toBe(true);
   });
 });

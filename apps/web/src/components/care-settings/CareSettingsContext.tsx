@@ -53,9 +53,11 @@ export interface CareSettingsState {
   permissions: Map<string, Permissions>;
   /** Limits attached to LC permissions, keyed the same way as `permissions` */
   permissionLimits: Map<string, PermissionLimit>;
+  /** Whether this template has a direct parent, even if that parent has no permission rows. */
+  hasParent: boolean;
   /**
    * The direct parent's permissions, used only to decide whether to show the
-   * "Changes made by HA" badge. Empty for a template with no parent.
+   * "Changes made by HA" badge.
    */
   parentPermissions: Map<string, Permissions>;
   /** Current wizard step: 1 = Select Competencies, 2 = Finalize */
@@ -78,6 +80,7 @@ const initialState: CareSettingsState = {
   selectedActivityIds: new Set(),
   permissions: new Map(),
   permissionLimits: new Map(),
+  hasParent: false,
   parentPermissions: new Map(),
   currentStep: 1,
   selectedBundleId: null,
@@ -295,7 +298,7 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const isChangedFromParent = (activityId: string, occupationId: string): boolean => {
     // A template with no parent has nothing to differ from.
-    if (state.parentPermissions.size === 0) return false;
+    if (!state.hasParent) return false;
     const key = `${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`;
     // Absence means "not permitted" on both sides, matching how the wizard
     // and the API both model N as a missing row.
