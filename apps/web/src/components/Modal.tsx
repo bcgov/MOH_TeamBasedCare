@@ -104,6 +104,8 @@ interface ModalWrapperProps {
   description?: string | React.ReactElement;
   closeButton?: ModalButtonProps;
   actionButton?: ModalButtonProps;
+  /** Rendered to the left of closeButton (row is reversed, so this is added last in the DOM). */
+  extraButton?: ModalButtonProps;
   children?: ReactNode;
   headerRight?: ReactNode;
   titleClassName?: string;
@@ -119,6 +121,7 @@ export const ModalWrapper = ({
   description,
   closeButton,
   actionButton,
+  extraButton,
   children,
   headerRight,
   titleClassName,
@@ -152,7 +155,7 @@ export const ModalWrapper = ({
 
       {children}
 
-      {(actionButton || closeButton) && (
+      {(actionButton || closeButton || extraButton) && (
         <ModalFooter className={footerClassName}>
           {actionButton && (
             <Button
@@ -179,6 +182,19 @@ export const ModalWrapper = ({
               classes={`${modalButtonClasses} ${closeButton.classes ?? ''}`}
             >
               {closeButton?.title || 'Ok'}
+            </Button>
+          )}
+
+          {extraButton && (
+            <Button
+              onClick={() => extraButton?.onClick?.()}
+              variant={extraButton.variant ?? (extraButton.isError ? 'error' : 'secondary')}
+              type={extraButton?.type || 'button'}
+              disabled={extraButton.isDisabled}
+              loading={extraButton.isLoading}
+              classes={`${modalButtonClasses} ${extraButton.classes ?? ''}`}
+            >
+              {extraButton.title}
             </Button>
           )}
         </ModalFooter>
