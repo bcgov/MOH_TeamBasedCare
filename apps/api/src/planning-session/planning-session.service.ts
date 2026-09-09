@@ -270,12 +270,17 @@ export class PlanningSessionService {
 
     const sortOrder = (query.sortOrder as SortOrder) || SortOrder.ASC;
 
+    // Expressions must be exposed as select aliases: with skip/take TypeORM builds a
+    // distinct-id subquery and treats any dotted ORDER BY criteria as `alias.property`,
+    // so a raw `LOWER(ps.name)` is misread as an alias named `LOWER(ps`.
     switch (query.sortBy) {
       case PlanningSessionsFindSortKeys.NAME:
-        queryBuilder.orderBy('LOWER(ps.name)', sortOrder);
+        queryBuilder.addSelect('LOWER(ps.name)', 'sort_name').orderBy('sort_name', sortOrder);
         break;
       case PlanningSessionsFindSortKeys.CARE_SETTING_NAME:
-        queryBuilder.orderBy('LOWER(COALESCE(cst.name, cl.display_name))', sortOrder);
+        queryBuilder
+          .addSelect('LOWER(COALESCE(cst.name, cl.display_name))', 'sort_care_setting_name')
+          .orderBy('sort_care_setting_name', sortOrder);
         break;
       case PlanningSessionsFindSortKeys.CREATED_AT:
         queryBuilder.orderBy('ps.createdAt', sortOrder);

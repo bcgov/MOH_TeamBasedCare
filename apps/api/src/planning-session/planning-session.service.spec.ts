@@ -387,21 +387,31 @@ describe('PlanningSessionService', () => {
 
     // FR-045
     it.each([
-      [PlanningSessionsFindSortKeys.NAME, 'LOWER(ps.name)'],
+      [PlanningSessionsFindSortKeys.NAME, 'sort_name', 'LOWER(ps.name)'],
       [
         PlanningSessionsFindSortKeys.CARE_SETTING_NAME,
+        'sort_care_setting_name',
         'LOWER(COALESCE(cst.name, cl.display_name))',
       ],
-      [PlanningSessionsFindSortKeys.CREATED_AT, 'ps.createdAt'],
-      [PlanningSessionsFindSortKeys.UPDATED_AT, 'ps.updatedAt'],
-    ])('should sort by %s in the requested direction', async (sortBy, expression) => {
-      await service.findPlanningSessions(
-        { ...baseQuery, sortBy, sortOrder: SortOrder.DESC } as any,
-        user,
-      );
+      [PlanningSessionsFindSortKeys.CREATED_AT, 'ps.createdAt', undefined],
+      [PlanningSessionsFindSortKeys.UPDATED_AT, 'ps.updatedAt', undefined],
+    ])(
+      'should sort by %s in the requested direction',
+      async (sortBy, expression, selectExpression) => {
+        await service.findPlanningSessions(
+          { ...baseQuery, sortBy, sortOrder: SortOrder.DESC } as any,
+          user,
+        );
 
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(expression, SortOrder.DESC);
-    });
+        expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(expression, SortOrder.DESC);
+
+        // Computed sorts must be selected under an alias, otherwise TypeORM's
+        // paginated distinct-id subquery reads `LOWER(ps` as a table alias.
+        if (selectExpression) {
+          expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(selectExpression, expression);
+        }
+      },
+    );
 
     // FR-043
     it('should match the search term case-insensitively on name only', async () => {
