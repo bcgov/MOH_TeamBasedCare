@@ -17,7 +17,7 @@ export const useCareActivityEdit = () => {
       config,
       () => {
         cb?.();
-        toast.info(`Care activity updated successful.`);
+        toast.success(`Care activity updated successful.`);
       },
       () => void 0,
       'Care activity failed to be updated.',

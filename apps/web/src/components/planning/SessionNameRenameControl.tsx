@@ -1,4 +1,5 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { PLANNING_NAME_MAX_LENGTH, RenamePlanningSessionDTO } from '@tbcm/common';
 import { dtoValidator } from '../../utils/dto-validator';
 import { usePlanningSessionMutations } from '../../services/usePlanningSessionMutations';
@@ -82,6 +83,7 @@ export const SessionNameRenameControl = ({
 
     onRenamed?.(trimmed);
     setIsRenameDialogOpen(false);
+    toast.success('Changes saved automatically.');
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -174,13 +176,13 @@ export const SessionNameRenameControl = ({
   ) : null;
 
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
-      <h1 className='text-[36px] font-bold text-gray-800'>{name}</h1>
+    <div className={`flex items-center justify-between gap-4 ${className}`}>
+      <h1 className='text-[36px] font-bold text-gray-800 truncate'>{name}</h1>
       <button
         ref={displayRef}
         type='button'
         onClick={openRenameDialog}
-        className='h-8 rounded border border-gray-400 bg-white px-4 text-sm font-bold shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-bcBluePrimary focus:ring-offset-2'
+        className='shrink-0 h-8 rounded border border-gray-400 bg-white px-4 text-sm font-bold shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-bcBluePrimary focus:ring-offset-2'
       >
         Rename
       </button>

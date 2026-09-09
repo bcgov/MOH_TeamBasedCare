@@ -19,7 +19,7 @@ export const useCareActivityCMSEdit = () => {
         method: REQUEST_METHOD.PATCH,
         data: values,
       });
-      toast.info('Care activity updated successfully.');
+      toast.success('Care activity updated successfully.');
       onSuccess?.();
     } catch (err: any) {
       let errorMessage = 'Failed to update care activity.';

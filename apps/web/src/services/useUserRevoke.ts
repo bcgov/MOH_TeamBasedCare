@@ -16,7 +16,7 @@ export const useUserRevoke = () => {
       config,
       () => {
         cb?.();
-        toast.info(`User access revoke successful.`);
+        toast.success(`User access revoke successful.`);
       },
       () => void 0,
       'User access revoke failed',

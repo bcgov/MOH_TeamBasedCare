@@ -45,7 +45,7 @@ export const useCareSettingTemplateUpdate = () => {
       config,
       () => {
         success = true;
-        toast.info('Care setting updated successfully.');
+        toast.success('Care setting updated successfully.');
         onSuccess?.();
       },
       () => {
@@ -86,7 +86,7 @@ export const useCareSettingTemplateUpdate = () => {
         data,
       });
 
-      toast.info('Care setting updated successfully.');
+      toast.success('Care setting updated successfully.');
       return { status: 'success' };
     } catch (err: any) {
       const conflict = parseVersionConflict(err);

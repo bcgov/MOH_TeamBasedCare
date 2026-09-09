@@ -16,7 +16,7 @@ export const useOccupationCMSDelete = () => {
       config,
       () => {
         cb?.();
-        toast.info('Occupation deleted successfully.');
+        toast.success('Occupation deleted successfully.');
       },
       () => void 0,
       'Failed to delete occupation.',

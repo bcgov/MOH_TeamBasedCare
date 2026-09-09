@@ -16,7 +16,7 @@ export const useUserReProvision = () => {
       config,
       () => {
         cb?.();
-        toast.info(`User access re-provision successful.`);
+        toast.success(`User access re-provision successful.`);
       },
       () => void 0,
       'User access re-provision failed',
