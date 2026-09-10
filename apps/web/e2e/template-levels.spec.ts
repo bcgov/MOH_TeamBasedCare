@@ -187,7 +187,7 @@ test.describe('template levels', () => {
     ).toBeVisible();
     await page.getByRole('button', { name: 'Next', exact: true }).click();
 
-    await page.getByRole('button', { name: 'Assessment', exact: true }).click();
+    await page.getByRole('button', { name: 'Assessment' }).click();
     const permission = page.locator('#permission-activity-1-occ-1');
     await expect(permission).toBeVisible();
 
