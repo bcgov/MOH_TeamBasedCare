@@ -50,6 +50,7 @@ import {
   TemplateLevel,
   TemplateLevelFilter,
   getTemplatePermissionKey,
+  MAX_TEMPLATE_CHANGE_ITEMS,
   normalizeRestrictionDescription,
 } from '@tbcm/common';
 import _ from 'lodash';
@@ -682,6 +683,21 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Rejects an oversized incremental collection before it reaches a database write loop.
+   *
+   * @param values - Changes submitted for one delta collection.
+   * @param collectionName - Human-readable name used in the validation message.
+   * @throws {BadRequestException} When the collection exceeds the supported limit.
+   */
+  private assertMaximumTemplateChanges(values: unknown, collectionName: string): void {
+    if (!Array.isArray(values) || values.length > MAX_TEMPLATE_CHANGE_ITEMS) {
+      throw new BadRequestException(
+        `${collectionName} cannot exceed ${MAX_TEMPLATE_CHANGE_ITEMS} entries.`,
+      );
+    }
+  }
+
+  /**
    * Ensures every permission pair is changed once and never both upserted and removed.
    *
    * @param upserts - Permission triples requested for insertion or replacement.
@@ -742,6 +758,24 @@ export class CareSettingTemplateService {
       }
 
       const changes = dto.changes;
+      this.assertMaximumTemplateChanges(changes.permissionUpserts, 'Permission upserts');
+      this.assertMaximumTemplateChanges(changes.permissionRemovals, 'Permission removals');
+      this.assertMaximumTemplateChanges(
+        changes.selectedBundleIdsToAdd,
+        'Selected bundle additions',
+      );
+      this.assertMaximumTemplateChanges(
+        changes.selectedBundleIdsToRemove,
+        'Selected bundle removals',
+      );
+      this.assertMaximumTemplateChanges(
+        changes.selectedActivityIdsToAdd,
+        'Selected activity additions',
+      );
+      this.assertMaximumTemplateChanges(
+        changes.selectedActivityIdsToRemove,
+        'Selected activity removals',
+      );
       this.assertDisjointIds(
         changes.selectedBundleIdsToAdd,
         changes.selectedBundleIdsToRemove,
@@ -972,14 +1006,14 @@ export class CareSettingTemplateService {
       { limit: LimitCondition | null; restrictionDescription: string | null }
     >,
   ): Promise<void> {
-    for (const upsertsBatch of _.chunk(upserts, 5000)) {
-      const values = upsertsBatch
+    if (upserts.length > 0) {
+      const values = upserts
         .map(
           (_, index) =>
             `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`,
         )
         .join(', ');
-      const parameters = upsertsBatch.flatMap(permission => {
+      const parameters = upserts.flatMap(permission => {
         const resolved = resolvedLimits.get(
           getTemplatePermissionKey(permission.activityId, permission.occupationId),
         );
@@ -1006,7 +1040,9 @@ export class CareSettingTemplateService {
       );
     }
 
-    for (const removalsBatch of _.chunk(removals, 100)) {
+    for (let offset = 0; offset < MAX_TEMPLATE_CHANGE_ITEMS; offset += 100) {
+      const removalsBatch = removals.slice(offset, offset + 100);
+      if (removalsBatch.length === 0) break;
       const conditions = removalsBatch
         .map(
           (_, index) =>
@@ -1044,11 +1080,11 @@ export class CareSettingTemplateService {
     table: 'care_setting_template_bundles' | 'care_setting_template_activities',
     relationColumn: 'bundle_id' | 'care_activity_id',
   ): Promise<void> {
-    for (const additionsBatch of _.chunk(additions, 5000)) {
-      const values = additionsBatch
+    if (additions.length > 0) {
+      const values = additions
         .map((_, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
         .join(', ');
-      const parameters = additionsBatch.flatMap(id => [templateId, id]);
+      const parameters = additions.flatMap(id => [templateId, id]);
       await manager.query(
         `INSERT INTO ${table} (care_setting_template_id, ${relationColumn})
          VALUES ${values} ON CONFLICT DO NOTHING`,
@@ -1056,7 +1092,9 @@ export class CareSettingTemplateService {
       );
     }
 
-    for (const removalsBatch of _.chunk(removals, 1000)) {
+    for (let offset = 0; offset < MAX_TEMPLATE_CHANGE_ITEMS; offset += 1000) {
+      const removalsBatch = removals.slice(offset, offset + 1000);
+      if (removalsBatch.length === 0) break;
       const placeholders = removalsBatch.map((_, index) => `$${index + 2}`).join(', ');
       await manager.query(
         `DELETE FROM ${table}

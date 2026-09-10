@@ -1,7 +1,10 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { UpdateCareSettingTemplateDTO } from './care-setting-template.dto';
+import {
+  MAX_TEMPLATE_CHANGE_ITEMS,
+  UpdateCareSettingTemplateDTO,
+} from './care-setting-template.dto';
 
 const ids = {
   activity: '11111111-1111-4111-8111-111111111111',
@@ -59,6 +62,20 @@ describe('UpdateCareSettingTemplateDTO', () => {
         selectedBundleIdsToAdd: [],
         selectedBundleIdsToRemove: [],
         selectedActivityIdsToAdd: [],
+      },
+    });
+
+    expect(await validate(dto)).not.toHaveLength(0);
+  });
+
+  it('rejects a delta collection larger than the supported maximum', async () => {
+    const dto = plainToInstance(UpdateCareSettingTemplateDTO, {
+      changes: {
+        ...changes(),
+        selectedActivityIdsToAdd: Array.from(
+          { length: MAX_TEMPLATE_CHANGE_ITEMS + 1 },
+          (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+        ),
       },
     });
 

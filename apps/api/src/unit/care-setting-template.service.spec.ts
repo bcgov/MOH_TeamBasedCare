@@ -12,6 +12,7 @@ import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.ent
 import { LimitCondition } from './entity/limit-condition.entity';
 import {
   CareSettingsCMSFindSortKeys,
+  MAX_TEMPLATE_CHANGE_ITEMS,
   Permissions,
   SortOrder,
   TemplateLevel,
@@ -1195,6 +1196,28 @@ describe('CareSettingTemplateService', () => {
             permissionUpserts: [],
             permissionRemovals: [],
             selectedBundleIdsToAdd: [],
+            selectedBundleIdsToRemove: [],
+            selectedActivityIdsToAdd: [],
+            selectedActivityIdsToRemove: [],
+          },
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
+    });
+
+    it('rejects an oversized delta collection before claiming a version', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+
+      await expect(
+        service.updateTemplate('tmpl-1', {
+          changes: {
+            permissionUpserts: [],
+            permissionRemovals: [],
+            selectedBundleIdsToAdd: Array.from(
+              { length: MAX_TEMPLATE_CHANGE_ITEMS + 1 },
+              (_, index) => `bundle-${index}`,
+            ),
             selectedBundleIdsToRemove: [],
             selectedActivityIdsToAdd: [],
             selectedActivityIdsToRemove: [],

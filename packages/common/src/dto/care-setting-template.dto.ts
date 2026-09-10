@@ -5,6 +5,7 @@
  * Used by both frontend and backend for request validation.
  */
 import {
+  ArrayMaxSize,
   IsArray,
   IsEnum,
   IsIn,
@@ -25,6 +26,9 @@ import {
 import { Type } from 'class-transformer';
 import { Permissions } from '../constants/permissions';
 import { TemplateLevel } from '../constants/templateLevel';
+
+/** Maximum number of changes accepted in each incremental template-save collection. */
+export const MAX_TEMPLATE_CHANGE_ITEMS = 5000;
 
 /** Permission assignment for a single activity-occupation pair */
 export class TemplatePermissionDTO {
@@ -66,28 +70,34 @@ export class TemplatePermissionUpsertDTO extends TemplatePermissionDTO {
 /** Incremental changes for one template save. Every array is required and may be empty. */
 export class TemplateChangesDTO {
   @IsArray()
+  @ArrayMaxSize(MAX_TEMPLATE_CHANGE_ITEMS)
   @ValidateNested({ each: true })
   @Type(() => TemplatePermissionUpsertDTO)
   permissionUpserts!: TemplatePermissionUpsertDTO[];
 
   @IsArray()
+  @ArrayMaxSize(MAX_TEMPLATE_CHANGE_ITEMS)
   @ValidateNested({ each: true })
   @Type(() => TemplatePermissionRemovalDTO)
   permissionRemovals!: TemplatePermissionRemovalDTO[];
 
   @IsArray()
+  @ArrayMaxSize(MAX_TEMPLATE_CHANGE_ITEMS)
   @IsUUID('all', { each: true })
   selectedBundleIdsToAdd!: string[];
 
   @IsArray()
+  @ArrayMaxSize(MAX_TEMPLATE_CHANGE_ITEMS)
   @IsUUID('all', { each: true })
   selectedBundleIdsToRemove!: string[];
 
   @IsArray()
+  @ArrayMaxSize(MAX_TEMPLATE_CHANGE_ITEMS)
   @IsUUID('all', { each: true })
   selectedActivityIdsToAdd!: string[];
 
   @IsArray()
+  @ArrayMaxSize(MAX_TEMPLATE_CHANGE_ITEMS)
   @IsUUID('all', { each: true })
   selectedActivityIdsToRemove!: string[];
 }

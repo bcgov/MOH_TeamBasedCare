@@ -191,6 +191,6 @@ test.describe('limits and conditions', () => {
     );
     expect(saved).toMatchObject({ permission: 'Y' });
     expect(saved.limitId).toBeUndefined();
-    expect(saved.restrictionDescription).toBeUndefined();
+    expect(saved.restrictionDescription).toBeNull();
   });
 });
