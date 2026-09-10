@@ -26,6 +26,7 @@ interface TooltipProps {
   placement?: Placement;
   triggerClassName?: string;
   panelClassName?: string;
+  onClick?: () => void;
   /** A button trigger keeps the tooltip keyboard reachable; only opt out for triggers already focusable */
   triggerAs?: 'button' | 'span';
 }
@@ -36,6 +37,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   placement = 'top',
   triggerClassName,
   panelClassName,
+  onClick,
   triggerAs = 'button',
 }) => {
   const [open, setOpen] = useState(false);
@@ -70,7 +72,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           ref={refs.setReference}
           type='button'
           className={triggerClassName}
-          {...getReferenceProps()}
+          {...getReferenceProps({ onClick })}
         >
           {children}
         </button>

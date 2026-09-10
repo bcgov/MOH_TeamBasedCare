@@ -124,8 +124,14 @@ test.describe('limits and conditions', () => {
     await expect(target.locator('select')).toHaveValue('LC');
 
     // The parent (the master) has no entry for this pair, so it differs and the
-    // badge is the way back into the dialog.
-    await target.getByRole('button', { name: 'Changes made by HA' }).click();
+    // badge presents the comparison on hover and is the way back into the dialog on click.
+    const badge = target.getByRole('button', { name: 'Changes made by HA' });
+    await badge.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(
+      'Changes made by HA — Parent: Not permitted → This template: Limits and conditions',
+    );
+
+    await badge.click();
 
     await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toBeVisible();
     await expect(page.locator('#limits-conditions-list')).toHaveText(STUB_LIMITS[1].name);
@@ -140,9 +146,18 @@ test.describe('limits and conditions', () => {
     const target = cell(page, 'Initial assessment', 'Registered Nurse');
     await target.locator('select').selectOption('N');
 
-    await target.getByRole('button', { name: 'Changes made by HA' }).click();
+    await target.getByRole('button', { name: 'Changes made by HA' }).hover();
 
-    await expect(page.getByText('Parent: Perform → This template: Not permitted')).toBeVisible();
+    const tooltip = page.getByRole('tooltip');
+    await expect(tooltip).toHaveText(
+      'Changes made by HA — Parent: Perform → This template: Not permitted',
+    );
+    await expect(tooltip).toHaveCSS('background-color', 'rgb(56, 89, 138)');
+    await expect(tooltip.locator('span')).toHaveCSS('white-space', 'normal');
+    expect(
+      await tooltip.locator('span').evaluate(element => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+
     // The limits dialog is never opened for a non-LC cell.
     await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toHaveCount(0);
   });

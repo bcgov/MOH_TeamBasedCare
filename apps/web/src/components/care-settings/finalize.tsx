@@ -27,7 +27,7 @@ import { useCareSettingsContext } from './CareSettingsContext';
 import { Card } from '../generic/Card';
 import { ModalWrapper } from '../Modal';
 import { Button } from '../Button';
-import { Popover } from '../generic/Popover';
+import { Tooltip } from '../generic/Tooltip';
 import { LimitsConditionsModal, PermissionLimitValue } from './limits-conditions-modal';
 import { useLimitsConditions } from 'src/services/useLimitConditions';
 
@@ -117,38 +117,19 @@ const ChangedByHaBadge: React.FC<{
 
   const label = 'Changes made by HA';
 
-  if (isLc) {
-    return (
-      <button
-        type='button'
-        title='Changes made by HA'
-        className={badgeClasses}
-        onClick={onOpenLimits}
-      >
-        {label}
-      </button>
-    );
-  }
-
-  // Nothing to edit on a non-LC cell, so the badge only explains itself.
   return (
-    <Popover
-      // Flex, so the trigger button does not sit on a text baseline and drop
-      // the badge below the centre of the select behind it.
-      className='flex min-w-0 max-w-full items-center'
-      title={
-        <span title='Changes made by HA' className={badgeClasses}>
-          {label}
+    <Tooltip
+      triggerClassName={badgeClasses}
+      onClick={isLc ? onOpenLimits : undefined}
+      content={
+        <span className='block'>
+          Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission} →
+          This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
         </span>
       }
     >
-      {() => (
-        <div className='bg-white p-3 text-sm text-gray-700 whitespace-nowrap'>
-          Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission} →
-          This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
-        </div>
-      )}
-    </Popover>
+      {label}
+    </Tooltip>
   );
 };
 

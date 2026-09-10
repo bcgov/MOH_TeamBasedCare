@@ -91,19 +91,6 @@ const ProfileForm = ({
     setIsLoading(isLoadingPlanningProfile || isLoadingCareLocations);
   }, [isLoadingCareLocations, isLoadingPlanningProfile]);
 
-  const hasSavedDrafts = drafts.unfilteredTotal > 0;
-
-  useEffect(() => {
-    if (hasSavedDrafts || drafts.isLoading || values.profileOption !== ProfileOptions.DRAFT) {
-      return;
-    }
-
-    setValues({
-      profileOption: ProfileOptions.FROM_SCRATCH,
-      careLocation: '',
-    });
-  }, [drafts.isLoading, hasSavedDrafts, setValues, values.profileOption]);
-
   // handle profileOption change
   useEffect(() => {
     const previousOption = previousProfileOption.current;
@@ -146,7 +133,6 @@ const ProfileForm = ({
           ? `Last saved - ${formatDateTime(lastDraft.updatedAt)}`
           : undefined,
         value: ProfileOptions.DRAFT,
-        hidden: !hasSavedDrafts,
       },
       {
         label: 'Start from a generic profile',
@@ -154,7 +140,7 @@ const ProfileForm = ({
         disabled: true,
       },
     ],
-    [hasSavedDrafts, lastDraft],
+    [lastDraft],
   );
 
   return (

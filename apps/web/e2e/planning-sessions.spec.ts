@@ -177,7 +177,9 @@ test.describe('planning sessions table', () => {
     await expect(page.locator('tbody')).toContainText(stub.sessions[0].name);
   });
 
-  test('the saved draft option is hidden when the user has no draft plans', async ({ page }) => {
+  test('the saved draft option stays enabled when the user has no draft plans', async ({
+    page,
+  }) => {
     stub.sessions = [];
     stub.lastDraft = null;
 
@@ -186,8 +188,13 @@ test.describe('planning sessions table', () => {
     await expect(
       page.getByRole('radio', { name: 'Start a new profile from scratch' }),
     ).toBeChecked();
-    await expect(page.getByRole('radio', { name: savedDraftOption })).toHaveCount(0);
+    const draftOption = page.getByRole('radio', { name: savedDraftOption });
+    await expect(draftOption).toBeEnabled();
     await expect(page.locator('table[aria-label="Your saved planning drafts"]')).toHaveCount(0);
+
+    await draftOption.check();
+    await expect(draftOption).toBeChecked();
+    await expect(page.getByText("You don't have any saved drafts yet.")).toBeVisible();
   });
 
   test('starting from scratch names the draft, advances the stage, and lists the draft', async ({

@@ -17,8 +17,8 @@ test.describe('changed-by-HA badge alignment', () => {
     await page.getByRole('button', { name: 'Assessment' }).click();
     await expect(page.locator('select').first()).toBeVisible();
 
-    // A badge on an LC cell is a plain button; on any other value it is a
-    // popover trigger, so both wrappers have to be measured.
+    // A badge on an LC cell opens its edit dialog; on any other value it
+    // triggers an explanatory tooltip, so both buttons have to be measured.
     await page.locator('select').nth(0).selectOption('LC');
     await page.locator('select').nth(1).selectOption('Y');
 
@@ -27,7 +27,9 @@ test.describe('changed-by-HA badge alignment', () => {
 
       document.querySelectorAll('select').forEach(select => {
         const cell = select.parentElement;
-        const badge = cell?.querySelector('[title="Changes made by HA"]');
+        const badge = Array.from(cell?.querySelectorAll('button') ?? []).find(
+          button => button.textContent === 'Changes made by HA',
+        );
         if (!badge) return;
 
         const s = select.getBoundingClientRect();
