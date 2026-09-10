@@ -283,6 +283,52 @@ describe('CareSettingTemplateController', () => {
         'Fraser Health',
       );
     });
+
+    it('delegates a delta save payload unchanged', async () => {
+      mockTemplateService.updateTemplate.mockResolvedValue(undefined);
+      const dto = {
+        expectedVersion: 3,
+        changes: {
+          permissionUpserts: [
+            {
+              activityId: 'activity-1',
+              occupationId: 'occupation-1',
+              permission: Permissions.PERFORM,
+            },
+          ],
+          permissionRemovals: [],
+          selectedBundleIdsToAdd: [],
+          selectedBundleIdsToRemove: [],
+          selectedActivityIdsToAdd: [],
+          selectedActivityIdsToRemove: [],
+        },
+      } as any;
+
+      await controller.updateTemplate('tmpl-1', dto, createMockRequest());
+
+      expect(mockTemplateService.updateTemplate).toHaveBeenCalledWith(
+        'tmpl-1',
+        dto,
+        'Fraser Health',
+      );
+    });
+
+    it('delegates a compatible complete-grid payload unchanged', async () => {
+      mockTemplateService.updateTemplate.mockResolvedValue(undefined);
+      const dto = {
+        selectedBundleIds: [],
+        selectedActivityIds: [],
+        permissions: [],
+      } as any;
+
+      await controller.updateTemplate('tmpl-1', dto, createMockRequest());
+
+      expect(mockTemplateService.updateTemplate).toHaveBeenCalledWith(
+        'tmpl-1',
+        dto,
+        'Fraser Health',
+      );
+    });
   });
 
   // ─── deleteTemplate ────────────────────────────────────────────────

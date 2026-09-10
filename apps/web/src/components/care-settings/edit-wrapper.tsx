@@ -63,7 +63,7 @@ const EditContent: React.FC = () => {
   const router = useRouter();
   const { id } = router.query as { id: string };
 
-  const { state, dispatch, getPermissionsArray } = useCareSettingsContext();
+  const { state, dispatch, getTemplateChanges } = useCareSettingsContext();
   const { me, hasUserRole } = useMe();
   const {
     template,
@@ -291,10 +291,8 @@ const EditContent: React.FC = () => {
   const handleSaveConfirm = async (name: string) => {
     await submitUpdate({
       name,
-      selectedBundleIds: Array.from(state.selectedBundleIds),
-      selectedActivityIds: Array.from(state.selectedActivityIds),
-      permissions: getPermissionsArray(),
       expectedVersion: state.version,
+      changes: getTemplateChanges(),
     });
   };
 

@@ -186,11 +186,11 @@ test.describe('limits and conditions', () => {
     await page.getByRole('button', { name: 'Save', exact: true }).click();
 
     await expect(page).toHaveURL(/\/care-settings$/);
-    const saved = stub.saves[0].body.permissions.find(
+    const saved = stub.saves[0].body.changes.permissionUpserts.find(
       (p: any) => p.activityId === 'activity-2' && p.occupationId === 'occ-1',
     );
     expect(saved).toMatchObject({ permission: 'Y' });
     expect(saved.limitId).toBeUndefined();
-    expect(saved.restrictionDescription).toBeUndefined();
+    expect(saved.restrictionDescription).toBeNull();
   });
 });

@@ -12,6 +12,7 @@ import { AllowedActivity } from '../allowed-activity/entity/allowed-activity.ent
 import { LimitCondition } from './entity/limit-condition.entity';
 import {
   CareSettingsCMSFindSortKeys,
+  MAX_TEMPLATE_CHANGE_ITEMS,
   Permissions,
   SortOrder,
   TemplateLevel,
@@ -74,6 +75,7 @@ describe('CareSettingTemplateService', () => {
     create: jest.fn(),
     save: jest.fn(),
     delete: jest.fn(),
+    find: jest.fn(),
   };
 
   const mockUnitRepo = { find: jest.fn() };
@@ -117,6 +119,8 @@ describe('CareSettingTemplateService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+
+    mockPermissionRepo.find.mockResolvedValue([]);
 
     mockTemplateQB = createMockQueryBuilder();
     mockPermissionQB = createMockQueryBuilder();
@@ -324,6 +328,44 @@ describe('CareSettingTemplateService', () => {
 
       expect(result).toBeDefined();
       expect(result.permissions).toHaveLength(1);
+    });
+
+    it('should suppress limit details on non-LC permissions', async () => {
+      // A stale limit column left behind by an older write must not be read
+      // back as an active limit; edit-wrapper keys off limitId alone.
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockBundleQB.getMany.mockResolvedValue([]);
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'a-1',
+          occupation_id: 'o-1',
+          permission: Permissions.PERFORM,
+          limit_condition_id: 'limit-1',
+          limit_name: 'Supervision required',
+          restriction_description: 'Stale text',
+        },
+        {
+          care_activity_id: 'a-2',
+          occupation_id: 'o-2',
+          permission: Permissions.LIMITS,
+          limit_condition_id: 'limit-2',
+          limit_name: 'Day shift only',
+          restriction_description: 'Kept',
+        },
+      ]);
+
+      const result = await service.getTemplateById('tmpl-1');
+
+      const performing = result.permissions.find(p => p.activityId === 'a-1');
+      expect(performing?.limitId).toBeNull();
+      expect(performing?.limitName).toBeNull();
+      expect(performing?.restrictionDescription).toBeNull();
+
+      // An LC cell keeps its curated details.
+      const limited = result.permissions.find(p => p.activityId === 'a-2');
+      expect(limited?.limitId).toBe('limit-2');
+      expect(limited?.limitName).toBe('Day shift only');
+      expect(limited?.restrictionDescription).toBe('Kept');
     });
 
     it('should throw NotFoundException when not found', async () => {
@@ -914,42 +956,220 @@ describe('CareSettingTemplateService', () => {
         name: 'Test Template',
         selectedBundleIds: [],
         selectedActivityIds: [],
+        permissions: [],
       } as any);
 
       // checkDuplicateName should NOT have been called (name didn't change)
       expect(mockTemplateQB.getOne).not.toHaveBeenCalled();
     });
 
-    it('should delete and recreate permissions', async () => {
+    it('should upsert submitted permissions without a wholesale delete', async () => {
       mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
       mockTemplateRepo.save.mockResolvedValue(mockTemplate);
       mockBundleRepo.find.mockResolvedValue([]);
-      mockCareActivityRepo.find
-        .mockResolvedValueOnce([]) // selectedActivities
-        .mockResolvedValueOnce([mockActivity]); // permissions activities
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
       mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
-      mockPermissionRepo.delete.mockResolvedValue({});
-      mockPermissionRepo.create.mockReturnValue({});
-      mockPermissionRepo.save.mockResolvedValue([]);
-
       await service.updateTemplate('tmpl-1', {
         selectedBundleIds: [],
         selectedActivityIds: [],
         permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' }],
       } as any);
 
-      expect(mockManager.delete).toHaveBeenCalledWith(CareSettingTemplatePermission, {
+      expect(mockManager.delete).not.toHaveBeenCalledWith(CareSettingTemplatePermission, {
         template: { id: 'tmpl-1' },
       });
-      expect(mockManager.create).toHaveBeenCalled();
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+        expect.arrayContaining(['tmpl-1', 'activity-1', 'occ-1', Permissions.PERFORM]),
+      );
     });
 
-    it('should skip permissions recreation when empty', async () => {
+    it('should skip permission writes when the full grid is unchanged and empty', async () => {
       mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
       mockTemplateRepo.save.mockResolvedValue(mockTemplate);
       mockBundleRepo.find.mockResolvedValue([]);
       mockCareActivityRepo.find.mockResolvedValue([]);
-      mockPermissionRepo.delete.mockResolvedValue({});
+      await service.updateTemplate('tmpl-1', {
+        selectedBundleIds: [],
+        selectedActivityIds: [],
+        permissions: [],
+      } as any);
+
+      expect(
+        mockManager.query.mock.calls.some(([sql]) =>
+          String(sql).includes('DELETE FROM care_setting_template_permission'),
+        ),
+      ).toBe(false);
+      expect(mockManager.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('writes only an explicit delta permission upsert', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+
+      await service.updateTemplate('tmpl-1', {
+        changes: {
+          permissionUpserts: [
+            { activityId: 'activity-1', occupationId: 'occ-1', permission: Permissions.PERFORM },
+          ],
+          permissionRemovals: [],
+          selectedBundleIdsToAdd: [],
+          selectedBundleIdsToRemove: [],
+          selectedActivityIdsToAdd: [],
+          selectedActivityIdsToRemove: [],
+        },
+      } as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+        ['tmpl-1', 'activity-1', 'occ-1', Permissions.PERFORM, null, null],
+      );
+      expect(
+        mockManager.query.mock.calls.some(([sql]) =>
+          String(sql).startsWith('DELETE FROM care_setting_template_permission'),
+        ),
+      ).toBe(false);
+    });
+
+    it('deletes only an explicit delta permission pair', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+
+      await service.updateTemplate('tmpl-1', {
+        changes: {
+          permissionUpserts: [],
+          permissionRemovals: [{ activityId: 'activity-1', occupationId: 'occ-1' }],
+          selectedBundleIdsToAdd: [],
+          selectedBundleIdsToRemove: [],
+          selectedActivityIdsToAdd: [],
+          selectedActivityIdsToRemove: [],
+        },
+      } as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'DELETE FROM care_setting_template_permission WHERE (template_id = $1 AND care_activity_id = $2 AND occupation_id = $3)',
+        ),
+        ['tmpl-1', 'activity-1', 'occ-1'],
+      );
+    });
+
+    it('writes an LC detail-only delta as a single upsert', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockLimitConditionRepo.find.mockResolvedValue([{ id: 'limit-1', name: 'Supervision' }]);
+
+      await service.updateTemplate('tmpl-1', {
+        changes: {
+          permissionUpserts: [
+            {
+              activityId: 'activity-1',
+              occupationId: 'occ-1',
+              permission: Permissions.LIMITS,
+              limitId: 'limit-1',
+              restrictionDescription: 'Supervision required',
+            },
+          ],
+          permissionRemovals: [],
+          selectedBundleIdsToAdd: [],
+          selectedBundleIdsToRemove: [],
+          selectedActivityIdsToAdd: [],
+          selectedActivityIdsToRemove: [],
+        },
+      } as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+        ['tmpl-1', 'activity-1', 'occ-1', Permissions.LIMITS, 'limit-1', 'Supervision required'],
+      );
+    });
+
+    it('applies only explicit delta relation additions and removals', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockBundleRepo.find.mockResolvedValue([mockBundle]);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+
+      await service.updateTemplate('tmpl-1', {
+        changes: {
+          permissionUpserts: [],
+          permissionRemovals: [],
+          selectedBundleIdsToAdd: ['bundle-1'],
+          selectedBundleIdsToRemove: [],
+          selectedActivityIdsToAdd: [],
+          selectedActivityIdsToRemove: ['activity-1'],
+        },
+      } as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO care_setting_template_bundles'),
+        ['tmpl-1', 'bundle-1'],
+      );
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM care_setting_template_activities'),
+        ['tmpl-1', 'activity-1'],
+      );
+    });
+
+    it('does not write unchanged full-grid permissions', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        if (String(sql).includes('SELECT care_activity_id')) {
+          return [
+            {
+              care_activity_id: 'activity-1',
+              occupation_id: 'occ-1',
+              permission: Permissions.PERFORM,
+              limit_condition_id: null,
+              restriction_description: null,
+            },
+          ];
+        }
+        return [];
+      });
+
+      await service.updateTemplate('tmpl-1', {
+        selectedBundleIds: [],
+        selectedActivityIds: [],
+        permissions: [
+          { activityId: 'activity-1', occupationId: 'occ-1', permission: Permissions.PERFORM },
+        ],
+      } as any);
+
+      expect(
+        mockManager.query.mock.calls.some(([sql]) =>
+          String(sql).includes('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+        ),
+      ).toBe(false);
+      expect(
+        mockManager.query.mock.calls.some(([sql]) =>
+          String(sql).startsWith('DELETE FROM care_setting_template_permission'),
+        ),
+      ).toBe(false);
+    });
+
+    it('deletes a permission omitted from a compatible full-grid save', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        if (String(sql).includes('SELECT care_activity_id')) {
+          return [
+            {
+              care_activity_id: 'activity-1',
+              occupation_id: 'occ-1',
+              permission: Permissions.PERFORM,
+              limit_condition_id: null,
+              restriction_description: null,
+            },
+          ];
+        }
+        return [];
+      });
 
       await service.updateTemplate('tmpl-1', {
         selectedBundleIds: [],
@@ -957,9 +1177,96 @@ describe('CareSettingTemplateService', () => {
         permissions: [],
       } as any);
 
-      expect(mockManager.delete).toHaveBeenCalled();
-      // only the template row is saved; no permission rows to write
-      expect(mockManager.save).toHaveBeenCalledTimes(1);
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'DELETE FROM care_setting_template_permission WHERE (template_id = $1 AND care_activity_id = $2 AND occupation_id = $3)',
+        ),
+        ['tmpl-1', 'activity-1', 'occ-1'],
+      );
+    });
+
+    it('upserts a changed compatible full-grid permission value', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockLimitConditionRepo.find.mockResolvedValue([{ id: 'limit-1', name: 'Supervision' }]);
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        if (String(sql).includes('SELECT care_activity_id')) {
+          return [
+            {
+              care_activity_id: 'activity-1',
+              occupation_id: 'occ-1',
+              permission: Permissions.PERFORM,
+              limit_condition_id: null,
+              restriction_description: null,
+            },
+          ];
+        }
+        return [];
+      });
+
+      await service.updateTemplate('tmpl-1', {
+        selectedBundleIds: [],
+        selectedActivityIds: [],
+        permissions: [
+          {
+            activityId: 'activity-1',
+            occupationId: 'occ-1',
+            permission: Permissions.LIMITS,
+            limitId: 'limit-1',
+          },
+        ],
+      } as any);
+
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+        ['tmpl-1', 'activity-1', 'occ-1', Permissions.LIMITS, 'limit-1', null],
+      );
+    });
+
+    it('rejects a mixed full-grid and delta service payload before claiming a version', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+
+      await expect(
+        service.updateTemplate('tmpl-1', {
+          selectedBundleIds: [],
+          selectedActivityIds: [],
+          permissions: [],
+          changes: {
+            permissionUpserts: [],
+            permissionRemovals: [],
+            selectedBundleIdsToAdd: [],
+            selectedBundleIdsToRemove: [],
+            selectedActivityIdsToAdd: [],
+            selectedActivityIdsToRemove: [],
+          },
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
+    });
+
+    it('rejects an oversized delta collection before claiming a version', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+
+      await expect(
+        service.updateTemplate('tmpl-1', {
+          changes: {
+            permissionUpserts: [],
+            permissionRemovals: [],
+            selectedBundleIdsToAdd: Array.from(
+              { length: MAX_TEMPLATE_CHANGE_ITEMS + 1 },
+              (_, index) => `bundle-${index}`,
+            ),
+            selectedBundleIdsToRemove: [],
+            selectedActivityIdsToAdd: [],
+            selectedActivityIdsToRemove: [],
+          },
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
     });
   });
 
@@ -1181,6 +1488,92 @@ describe('CareSettingTemplateService', () => {
     });
   });
 
+  // ─── Batched writes ───────────────────────────────────────────────
+  describe('updateTemplate - write batching', () => {
+    beforeEach(() => {
+      mockTemplateQB.getOne.mockResolvedValue(null);
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate });
+      mockTemplateRepo.save.mockResolvedValue(mockTemplate);
+      mockBundleRepo.find.mockResolvedValue([]);
+    });
+
+    /** Collects every parameter array passed to a matching SQL statement. */
+    const parametersFor = (fragment: string) =>
+      mockManager.query.mock.calls
+        .filter(([sql]) => String(sql).includes(fragment))
+        .map(([, params]) => params as unknown[]);
+
+    it('deletes every removal when the full grid exceeds the delta cap', async () => {
+      // The full-grid path derives removals from stored rows, so it is not
+      // bounded by MAX_TEMPLATE_CHANGE_ITEMS the way a delta save is.
+      const storedCount = MAX_TEMPLATE_CHANGE_ITEMS + 600;
+      const storedRows = Array.from({ length: storedCount }, (_value, index) => ({
+        care_activity_id: `activity-${index}`,
+        occupation_id: 'occ-1',
+        permission: Permissions.PERFORM,
+        limit_condition_id: null,
+        restriction_description: null,
+      }));
+
+      mockCareActivityRepo.find.mockResolvedValue([]);
+      mockOccupationRepo.find.mockResolvedValue([]);
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        if (String(sql).includes('SELECT care_activity_id')) return storedRows;
+        return [];
+      });
+
+      await service.updateTemplate('tmpl-1', {
+        selectedBundleIds: [],
+        selectedActivityIds: [],
+        permissions: [],
+      } as any);
+
+      const deletedActivityIds = new Set<unknown>();
+      for (const params of parametersFor('DELETE FROM care_setting_template_permission')) {
+        for (let index = 1; index < params.length; index += 3) {
+          deletedActivityIds.add(params[index]);
+        }
+      }
+
+      expect(deletedActivityIds.size).toBe(storedCount);
+      expect(deletedActivityIds.has(`activity-${storedCount - 1}`)).toBe(true);
+    });
+
+    it('chunks upserts so a large full grid stays under the bind parameter limit', async () => {
+      const upsertCount = MAX_TEMPLATE_CHANGE_ITEMS + 1;
+      const permissions = Array.from({ length: upsertCount }, (_value, index) => ({
+        activityId: `activity-${index}`,
+        occupationId: 'occ-1',
+        permission: Permissions.PERFORM,
+      }));
+
+      mockCareActivityRepo.find.mockResolvedValue(
+        permissions.map(permission => ({ id: permission.activityId })),
+      );
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        return [];
+      });
+
+      await service.updateTemplate('tmpl-1', {
+        selectedBundleIds: [],
+        selectedActivityIds: [],
+        permissions,
+      } as any);
+
+      const insertParameters = parametersFor('ON CONFLICT ON CONSTRAINT');
+      expect(insertParameters.length).toBeGreaterThan(1);
+      for (const params of insertParameters) {
+        expect(params.length).toBeLessThanOrEqual(65535);
+      }
+      // 6 bind parameters per row, so every row must be accounted for.
+      const insertedRows = insertParameters.reduce((total, params) => total + params.length / 6, 0);
+      expect(insertedRows).toBe(upsertCount);
+    });
+  });
+
   // ─── syncOccupationToAllTemplates ─────────────────────────────────
   describe('syncOccupationToAllTemplates', () => {
     it('should delete existing permissions and create new ones for all templates', async () => {
@@ -1197,7 +1590,7 @@ describe('CareSettingTemplateService', () => {
       mockTemplateRepo.find.mockResolvedValue(mockTemplates);
       mockPermissionRepo.delete.mockResolvedValue({});
       mockPermissionRepo.create.mockImplementation(data => data);
-      mockPermissionRepo.save.mockResolvedValue([]);
+      mockManager.save.mockResolvedValue([]);
 
       const permissions = [
         { careActivityId: 'a-1', permission: 'Y' },
@@ -1207,7 +1600,9 @@ describe('CareSettingTemplateService', () => {
       await service.syncOccupationToAllTemplates('occ-1', permissions);
 
       // Should delete all existing permissions for this occupation
-      expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ occupation: { id: 'occ-1' } });
+      expect(mockManager.delete).toHaveBeenCalledWith(CareSettingTemplatePermission, {
+        occupation: { id: 'occ-1' },
+      });
 
       // Should load all templates with selectedActivities
       expect(mockTemplateRepo.find).toHaveBeenCalledWith({
@@ -1217,8 +1612,8 @@ describe('CareSettingTemplateService', () => {
       // Should create permissions:
       // - tmpl-1: a-1(Y), a-2(LC) - both activities are in template
       // - tmpl-2: a-1(Y) only - a-2 is not in this template, a-3 has no permission
-      expect(mockPermissionRepo.save).toHaveBeenCalled();
-      const savedPermissions = mockPermissionRepo.save.mock.calls[0][0];
+      expect(mockManager.save).toHaveBeenCalled();
+      const savedPermissions = mockManager.save.mock.calls[0][1];
       expect(savedPermissions).toHaveLength(3); // 2 for tmpl-1, 1 for tmpl-2
     });
 
@@ -1227,9 +1622,11 @@ describe('CareSettingTemplateService', () => {
 
       await service.syncOccupationToAllTemplates('occ-1', []);
 
-      expect(mockPermissionRepo.delete).toHaveBeenCalledWith({ occupation: { id: 'occ-1' } });
+      expect(mockManager.delete).toHaveBeenCalledWith(CareSettingTemplatePermission, {
+        occupation: { id: 'occ-1' },
+      });
       expect(mockTemplateRepo.find).not.toHaveBeenCalled();
-      expect(mockPermissionRepo.save).not.toHaveBeenCalled();
+      expect(mockManager.save).not.toHaveBeenCalled();
     });
 
     it('should filter out N permissions (only sync Y and LC)', async () => {
@@ -1242,7 +1639,7 @@ describe('CareSettingTemplateService', () => {
       mockTemplateRepo.find.mockResolvedValue(mockTemplates);
       mockPermissionRepo.delete.mockResolvedValue({});
       mockPermissionRepo.create.mockImplementation(data => data);
-      mockPermissionRepo.save.mockResolvedValue([]);
+      mockManager.save.mockResolvedValue([]);
 
       const permissions = [
         { careActivityId: 'a-1', permission: 'Y' },
@@ -1251,7 +1648,7 @@ describe('CareSettingTemplateService', () => {
 
       await service.syncOccupationToAllTemplates('occ-1', permissions);
 
-      const savedPermissions = mockPermissionRepo.save.mock.calls[0][0];
+      const savedPermissions = mockManager.save.mock.calls[0][1];
       expect(savedPermissions).toHaveLength(1); // Only Y permission
       expect(savedPermissions[0].careActivity.id).toBe('a-1');
     });
@@ -1270,7 +1667,163 @@ describe('CareSettingTemplateService', () => {
 
       await service.syncOccupationToAllTemplates('occ-1', permissions);
 
-      expect(mockPermissionRepo.save).not.toHaveBeenCalled();
+      expect(mockManager.save).not.toHaveBeenCalled();
+    });
+
+    it('should preserve curated limits when a cell stays LC', async () => {
+      const mockTemplates = [{ id: 'tmpl-1', selectedActivities: [{ id: 'a-1' }, { id: 'a-2' }] }];
+      const limit = { id: 'limit-1', name: 'Supervision required' };
+      mockTemplateRepo.find.mockResolvedValue(mockTemplates);
+      mockPermissionRepo.delete.mockResolvedValue({});
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockManager.save.mockResolvedValue([]);
+      mockPermissionRepo.find.mockResolvedValue([
+        {
+          template: { id: 'tmpl-1' },
+          careActivity: { id: 'a-2' },
+          permission: Permissions.LIMITS,
+          limitCondition: limit,
+          restrictionDescription: 'Only during day shift',
+        },
+      ]);
+
+      await service.syncOccupationToAllTemplates('occ-1', [
+        { careActivityId: 'a-1', permission: 'Y' },
+        { careActivityId: 'a-2', permission: 'LC' },
+      ]);
+
+      // Limits must be read before the bulk delete removes the rows.
+      expect(mockPermissionRepo.find).toHaveBeenCalled();
+      const saved = mockManager.save.mock.calls[0][1];
+      const restored = saved.find((p: any) => p.careActivity.id === 'a-2');
+      expect(restored.limitCondition).toBe(limit);
+      expect(restored.restrictionDescription).toBe('Only during day shift');
+
+      // A Y cell must never carry a limit.
+      const performing = saved.find((p: any) => p.careActivity.id === 'a-1');
+      expect(performing.limitCondition).toBeNull();
+      expect(performing.restrictionDescription).toBeNull();
+    });
+
+    it('should drop the limit when a cell moves from LC to Y', async () => {
+      const mockTemplates = [{ id: 'tmpl-1', selectedActivities: [{ id: 'a-1' }] }];
+      mockTemplateRepo.find.mockResolvedValue(mockTemplates);
+      mockPermissionRepo.delete.mockResolvedValue({});
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockManager.save.mockResolvedValue([]);
+      mockPermissionRepo.find.mockResolvedValue([
+        {
+          template: { id: 'tmpl-1' },
+          careActivity: { id: 'a-1' },
+          permission: Permissions.LIMITS,
+          limitCondition: { id: 'limit-1' },
+          restrictionDescription: 'Stale',
+        },
+      ]);
+
+      await service.syncOccupationToAllTemplates('occ-1', [
+        { careActivityId: 'a-1', permission: 'Y' },
+        { careActivityId: 'a-9', permission: 'LC' },
+      ]);
+
+      const saved = mockManager.save.mock.calls[0][1];
+      expect(saved[0].limitCondition).toBeNull();
+      expect(saved[0].restrictionDescription).toBeNull();
+    });
+
+    it('should not query for limits when no incoming permission is LC', async () => {
+      mockTemplateRepo.find.mockResolvedValue([
+        { id: 'tmpl-1', selectedActivities: [{ id: 'a-1' }] },
+      ]);
+      mockPermissionRepo.delete.mockResolvedValue({});
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockManager.save.mockResolvedValue([]);
+
+      await service.syncOccupationToAllTemplates('occ-1', [
+        { careActivityId: 'a-1', permission: 'Y' },
+      ]);
+
+      expect(mockPermissionRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('should delete and re-insert inside a single transaction', async () => {
+      mockTemplateRepo.find.mockResolvedValue([
+        { id: 'tmpl-1', selectedActivities: [{ id: 'a-1' }] },
+      ]);
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockManager.save.mockResolvedValue([]);
+
+      await service.syncOccupationToAllTemplates('occ-1', [
+        { careActivityId: 'a-1', permission: 'Y' },
+      ]);
+
+      // A partial failure must not leave the occupation with no permissions.
+      expect(mockTemplateRepo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(mockManager.delete).toHaveBeenCalled();
+      expect(mockManager.save).toHaveBeenCalled();
+    });
+
+    it('should chunk the re-insert so a large rebuild stays under the parameter limit', async () => {
+      const activityCount = MAX_TEMPLATE_CHANGE_ITEMS + 400;
+      const activities = Array.from({ length: activityCount }, (_value, index) => ({
+        id: `a-${index}`,
+      }));
+      mockTemplateRepo.find.mockResolvedValue([{ id: 'tmpl-1', selectedActivities: activities }]);
+      mockPermissionRepo.create.mockImplementation(data => data);
+      mockManager.save.mockResolvedValue([]);
+
+      await service.syncOccupationToAllTemplates(
+        'occ-1',
+        activities.map(activity => ({ careActivityId: activity.id, permission: 'Y' })),
+      );
+
+      const batches = mockManager.save.mock.calls.map(([, batch]) => batch as unknown[]);
+      expect(batches.length).toBeGreaterThan(1);
+      // 6 bind parameters per row once limit columns are written explicitly.
+      for (const batch of batches) {
+        expect(batch.length * 6).toBeLessThanOrEqual(65535);
+      }
+      expect(batches.reduce((total, batch) => total + batch.length, 0)).toBe(activityCount);
+    });
+  });
+
+  // ─── syncBulkUploadToTemplates ────────────────────────────────────
+  describe('syncBulkUploadToTemplates', () => {
+    it('clears limits only when an upload moves a row away from LC', async () => {
+      mockManager.query.mockResolvedValue([]);
+
+      await service.syncBulkUploadToTemplates(
+        mockManager as any,
+        new Map([['unit-1', 'tmpl-1']]),
+        [],
+        new Map(),
+        new Map(),
+        [
+          {
+            unit: { id: 'unit-1' },
+            careActivity: { id: 'activity-1' },
+            occupation: { id: 'occ-1' },
+            permission: Permissions.PERFORM,
+          } as any,
+        ],
+        [],
+      );
+
+      const [sql] = mockManager.query.mock.calls.find(([statement]) =>
+        String(statement).includes('ON CONFLICT ON CONSTRAINT'),
+      ) as [string, unknown];
+
+      // Stale limits are cleared for non-LC rows, but a row that stays LC keeps
+      // its curated values rather than becoming a limit-less LC row. Assert the
+      // THEN branch specifically: an inverted CASE would satisfy a bare
+      // "contains CASE" check while reintroducing the defect.
+      expect(sql).toMatch(
+        /limit_condition_id = CASE WHEN EXCLUDED\.permission = 'LC'\s+THEN care_setting_template_permission\.limit_condition_id END/,
+      );
+      expect(sql).toMatch(
+        /restriction_description = CASE WHEN EXCLUDED\.permission = 'LC'\s+THEN care_setting_template_permission\.restriction_description END/,
+      );
+      expect(sql).not.toMatch(/THEN NULL/);
     });
   });
 
@@ -1476,20 +2029,38 @@ describe('CareSettingTemplateService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('rejects before deleting anything, so a bad payload leaves the stored permissions intact', async () => {
+    it('rejects before targeted permission writes, so a bad payload leaves stored permissions intact', async () => {
       await expect(
         service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
       ).rejects.toThrow(BadRequestException);
 
       expect(mockManager.delete).not.toHaveBeenCalled();
-      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
+      expect(
+        mockManager.query.mock.calls.some(
+          ([sql]) =>
+            String(sql).includes('ON CONFLICT ON CONSTRAINT template_activity_occupation') ||
+            String(sql).startsWith('DELETE FROM care_setting_template_permission'),
+        ),
+      ).toBe(false);
     });
 
     // Contract case 9a - legacy LC exemption
-    it('accepts an untouched legacy LC cell that was already stored without a limit', async () => {
-      mockPermissionQB.getRawMany.mockResolvedValue([
-        { care_activity_id: 'activity-1', occupation_id: 'occ-1' },
-      ]);
+    it('accepts an unchanged legacy LC cell without a limit in a compatible full-grid save', async () => {
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        if (String(sql).includes('SELECT care_activity_id')) {
+          return [
+            {
+              care_activity_id: 'activity-1',
+              occupation_id: 'occ-1',
+              permission: Permissions.LIMITS,
+              limit_condition_id: null,
+              restriction_description: null,
+            },
+          ];
+        }
+        return [];
+      });
 
       await expect(
         service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
@@ -1499,9 +2070,21 @@ describe('CareSettingTemplateService', () => {
     });
 
     it('still rejects a different cell newly set to LC even when a legacy cell exists', async () => {
-      mockPermissionQB.getRawMany.mockResolvedValue([
-        { care_activity_id: 'other-activity', occupation_id: 'other-occ' },
-      ]);
+      mockManager.query.mockImplementation(async sql => {
+        if (String(sql).includes('version = version + 1')) return [[{ version: 4 }], 1];
+        if (String(sql).includes('SELECT care_activity_id')) {
+          return [
+            {
+              care_activity_id: 'other-activity',
+              occupation_id: 'other-occ',
+              permission: Permissions.LIMITS,
+              limit_condition_id: null,
+              restriction_description: null,
+            },
+          ];
+        }
+        return [];
+      });
 
       await expect(
         service.updateTemplate('tmpl-1', baseDto([lcPermission()]) as any),
@@ -1527,12 +2110,16 @@ describe('CareSettingTemplateService', () => {
         ]) as any,
       );
 
-      expect(mockManager.create).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          limitCondition: { id: 'limit-1', name: 'Supervision' },
-          restrictionDescription: 'Only overnight.',
-        }),
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+        expect.arrayContaining([
+          'tmpl-1',
+          'activity-1',
+          'occ-1',
+          Permissions.LIMITS,
+          'limit-1',
+          'Only overnight.',
+        ]),
       );
     });
 
@@ -1553,9 +2140,24 @@ describe('CareSettingTemplateService', () => {
           ]) as any,
         );
 
-        expect(mockManager.create).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({ limitCondition: null, restrictionDescription: null }),
+        if (permission === Permissions.NO) {
+          expect(mockManager.query).not.toHaveBeenCalledWith(
+            expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+            expect.anything(),
+          );
+          return;
+        }
+
+        expect(mockManager.query).toHaveBeenCalledWith(
+          expect.stringContaining('ON CONFLICT ON CONSTRAINT template_activity_occupation'),
+          expect.arrayContaining([
+            'tmpl-1',
+            'activity-1',
+            'occ-1',
+            Permissions.PERFORM,
+            null,
+            null,
+          ]),
         );
       },
     );

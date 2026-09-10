@@ -331,6 +331,10 @@ export interface CareSettingsStub {
   templates: StubTemplate[];
   /** Permissions per template id. */
   permissions: Record<string, StubPermission[]>;
+  /** Selected bundle IDs per template id. */
+  selectedBundleIds: Record<string, string[]>;
+  /** Selected activity IDs per template id. */
+  selectedActivityIds: Record<string, string[]>;
   /** Bodies received by the two save endpoints, for asserting what was sent. */
   saves: { id: string; body: any }[];
   detailSaves: { id: string; body: any }[];
@@ -379,6 +383,13 @@ export async function stubCareSettings(
       ],
       'tpl-site': [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' }],
     },
+    selectedBundleIds: Object.fromEntries(initial.map(template => [template.id, [STUB_BUNDLE.id]])),
+    selectedActivityIds: Object.fromEntries(
+      initial.map(template => [
+        template.id,
+        STUB_BUNDLE.careActivities.map(activity => activity.id),
+      ]),
+    ),
     saves: [],
     detailSaves: [],
     copies: [],
@@ -503,6 +514,46 @@ export async function stubCareSettings(
         template.name = body.name;
         template.version += 1;
       }
+      if (body.changes) {
+        const changes = body.changes;
+        const permissions = new Map(
+          (stub.permissions[id] ?? []).map(permission => [
+            `${permission.activityId}::${permission.occupationId}`,
+            permission,
+          ]),
+        );
+        changes.permissionUpserts.forEach((permission: StubPermission) => {
+          permissions.set(`${permission.activityId}::${permission.occupationId}`, permission);
+        });
+        changes.permissionRemovals.forEach(
+          (permission: Pick<StubPermission, 'activityId' | 'occupationId'>) => {
+            permissions.delete(`${permission.activityId}::${permission.occupationId}`);
+          },
+        );
+        stub.permissions[id] = Array.from(permissions.values());
+
+        const applySelectionChanges = (
+          current: string[],
+          added: string[],
+          removed: string[],
+        ): string[] =>
+          Array.from(new Set([...current.filter(value => !removed.includes(value)), ...added]));
+
+        stub.selectedBundleIds[id] = applySelectionChanges(
+          stub.selectedBundleIds[id] ?? [],
+          changes.selectedBundleIdsToAdd,
+          changes.selectedBundleIdsToRemove,
+        );
+        stub.selectedActivityIds[id] = applySelectionChanges(
+          stub.selectedActivityIds[id] ?? [],
+          changes.selectedActivityIdsToAdd,
+          changes.selectedActivityIdsToRemove,
+        );
+      } else {
+        stub.permissions[id] = body.permissions ?? [];
+        stub.selectedBundleIds[id] = body.selectedBundleIds ?? [];
+        stub.selectedActivityIds[id] = body.selectedActivityIds ?? [];
+      }
       return json({ success: true });
     }
 
@@ -513,12 +564,12 @@ export async function stubCareSettings(
       return json({
         ...template,
         levelLabel: levelLabelOf(template),
-        selectedBundles: [
-          {
-            bundleId: STUB_BUNDLE.id,
-            selectedActivityIds: STUB_BUNDLE.careActivities.map(a => a.id),
-          },
-        ],
+        selectedBundles: (stub.selectedBundleIds[template.id] ?? []).map(bundleId => ({
+          bundleId,
+          selectedActivityIds: (stub.selectedActivityIds[template.id] ?? []).filter(activityId =>
+            STUB_BUNDLE.careActivities.some(activity => activity.id === activityId),
+          ),
+        })),
         permissions: stub.permissions[template.id] ?? [],
       });
     }
