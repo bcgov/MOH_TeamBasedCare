@@ -153,6 +153,10 @@ test.describe('limits and conditions', () => {
       'Changes made by HA — Parent: Perform → This template: Not permitted',
     );
     await expect(tooltip).toHaveCSS('background-color', 'rgb(56, 89, 138)');
+    await expect(tooltip.locator('span')).toHaveCSS('white-space', 'normal');
+    expect(
+      await tooltip.locator('span').evaluate(element => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
 
     // The limits dialog is never opened for a non-LC cell.
     await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toHaveCount(0);

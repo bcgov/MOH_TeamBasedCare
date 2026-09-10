@@ -122,7 +122,7 @@ const ChangedByHaBadge: React.FC<{
       triggerClassName={badgeClasses}
       onClick={isLc ? onOpenLimits : undefined}
       content={
-        <span className='block whitespace-nowrap'>
+        <span className='block'>
           Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission}{' '}
           → This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
         </span>
