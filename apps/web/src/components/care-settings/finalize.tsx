@@ -123,8 +123,8 @@ const ChangedByHaBadge: React.FC<{
       onClick={isLc ? onOpenLimits : undefined}
       content={
         <span className='block'>
-          Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission}{' '}
-          → This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
+          Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission} →
+          This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
         </span>
       }
     >

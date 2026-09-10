@@ -182,6 +182,9 @@ test.describe('template levels', () => {
 
   test('editing details preserves expanded finalize accordions', async ({ page }) => {
     await page.goto('/care-settings/tpl-site/edit');
+    await expect(
+      page.getByRole('heading', { name: 'Victoria General Medical Unit' }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Next', exact: true }).click();
 
     await page.getByRole('button', { name: 'Assessment', exact: true }).click();
