@@ -341,7 +341,10 @@ const EditContent: React.FC = () => {
   const isLoading = isLoadingTemplate || isLoadingBundles || isLoadingOccupations;
   const hasError = templateError || bundlesError || occupationsError;
 
-  if (isLoading) {
+  // A details save revalidates the template through SWR. Keep the mounted
+  // wizard visible during that background refresh so its local UI state, such
+  // as expanded Finalize accordions, is not reset.
+  if (isLoading && !isInitialized) {
     return <Spinner show={true} fullScreen />;
   }
 

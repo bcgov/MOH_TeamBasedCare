@@ -179,4 +179,22 @@ test.describe('template levels', () => {
     await expect(page.getByRole('heading', { name: 'Victoria General — Ward 4' })).toBeVisible();
     await expect(page.getByText('Health Authority')).toBeVisible();
   });
+
+  test('editing details preserves expanded finalize accordions', async ({ page }) => {
+    await page.goto('/care-settings/tpl-site/edit');
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+
+    await page.getByRole('button', { name: 'Assessment', exact: true }).click();
+    const permission = page.locator('#permission-activity-1-occ-1');
+    await expect(permission).toBeVisible();
+
+    await page.getByRole('button', { name: 'Edit Details' }).click();
+    await page.locator('#edit-details-name').fill('Victoria General Medical Unit Updated');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Victoria General Medical Unit Updated' }),
+    ).toBeVisible();
+    await expect(permission).toBeVisible();
+  });
 });
