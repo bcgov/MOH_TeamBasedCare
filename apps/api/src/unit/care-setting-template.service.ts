@@ -1062,8 +1062,11 @@ export class CareSettingTemplateService {
       );
     }
 
-    for (let offset = 0; offset < removals.length; offset += PERMISSION_REMOVAL_BATCH_SIZE) {
-      const removalsBatch = removals.slice(offset, offset + PERMISSION_REMOVAL_BATCH_SIZE);
+    // Iterate the chunks rather than indexing to removals.length: the delta
+    // path validates the collection to MAX_TEMPLATE_CHANGE_ITEMS before it gets
+    // here and the full-grid path derives it from stored rows, but a bare
+    // `.length` loop bound reads as user-controlled to static analysis.
+    for (const removalsBatch of _.chunk(removals, PERMISSION_REMOVAL_BATCH_SIZE)) {
       const conditions = removalsBatch
         .map(
           (_, index) =>
@@ -1113,8 +1116,7 @@ export class CareSettingTemplateService {
       );
     }
 
-    for (let offset = 0; offset < removals.length; offset += RELATION_BATCH_SIZE) {
-      const removalsBatch = removals.slice(offset, offset + RELATION_BATCH_SIZE);
+    for (const removalsBatch of _.chunk(removals, RELATION_BATCH_SIZE)) {
       const placeholders = removalsBatch.map((_value, index) => `$${index + 2}`).join(', ');
       await manager.query(
         `DELETE FROM ${table}
