@@ -107,6 +107,47 @@ test.describe('save conflict', () => {
 
     await expect(page).toHaveURL(/\/care-settings$/);
     expect(stub.saves[0].body.expectedVersion).toBe(1);
+    expect(stub.saves[0].body).not.toHaveProperty('permissions');
+    expect(stub.saves[0].body.changes).toEqual({
+      permissionUpserts: [],
+      permissionRemovals: [],
+      selectedBundleIdsToAdd: [],
+      selectedBundleIdsToRemove: [],
+      selectedActivityIdsToAdd: [],
+      selectedActivityIdsToRemove: [],
+    });
+  });
+
+  test('a one-cell permission edit sends only its delta removal', async ({ page }) => {
+    await page.goto('/care-settings/tpl-site/edit');
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('button', { name: 'Assessment' }).click();
+    await page.locator('#permission-activity-1-occ-1').selectOption('N');
+    await page.getByRole('button', { name: 'Save & Close', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/care-settings$/);
+    expect(stub.saves[0].body.changes).toEqual({
+      permissionUpserts: [],
+      permissionRemovals: [{ activityId: 'activity-1', occupationId: 'occ-1' }],
+      selectedBundleIdsToAdd: [],
+      selectedBundleIdsToRemove: [],
+      selectedActivityIdsToAdd: [],
+      selectedActivityIdsToRemove: [],
+    });
+  });
+
+  test('a selected activity removal is sent without replacing selections', async ({ page }) => {
+    await page.goto('/care-settings/tpl-site/edit');
+    await page.getByText('Assessment', { exact: true }).first().click();
+    await page.locator('#activity-activity-2').uncheck();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('button', { name: 'Save & Close', exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/care-settings$/);
+    expect(stub.saves[0].body.changes.selectedActivityIdsToRemove).toEqual(['activity-2']);
+    expect(stub.saves[0].body).not.toHaveProperty('selectedActivityIds');
   });
 
   test('a details save conflict opens the same dialog', async ({ page }) => {

@@ -15,16 +15,20 @@
  * 2. Use useCareSettingsContext() hook to access state and dispatch
  */
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { BundleRO, OccupationRO, Permissions, TemplateLevel } from '@tbcm/common';
+import {
+  BundleRO,
+  getTemplatePermissionKey,
+  normalizeRestrictionDescription,
+  OccupationRO,
+  Permissions,
+  splitTemplatePermissionKey,
+  TemplateChangesDTO,
+  TemplateLevel,
+  TemplatePermissionDTO,
+} from '@tbcm/common';
 
-/** Permission entry for API submission */
-export interface PermissionEntry {
-  activityId: string;
-  occupationId: string;
-  permission: Permissions;
-  limitId?: string;
-  restrictionDescription?: string;
-}
+/** Permission entry shared with the template-save API contract. */
+export type PermissionEntry = TemplatePermissionDTO;
 
 /** Limits and conditions attached to a single LC permission */
 export interface PermissionLimit {
@@ -32,8 +36,48 @@ export interface PermissionLimit {
   restrictionDescription?: string;
 }
 
-// Separator for permission map keys - using :: because UUIDs contain dashes
-const PERMISSION_KEY_SEPARATOR = '::';
+/**
+ * Captures only persisted Y/LC rows, including their LC details, at template load time.
+ *
+ * @param permissions - Current permission values indexed by activity-occupation key.
+ * @param limits - Current LC details indexed by the same key.
+ * @returns A detached snapshot of rows that the API persists.
+ */
+const snapshotPermissions = (
+  permissions: Map<string, Permissions>,
+  limits: Map<string, PermissionLimit>,
+): Map<string, PermissionEntry> => {
+  const snapshot = new Map<string, PermissionEntry>();
+
+  permissions.forEach((permission, key) => {
+    if (permission === Permissions.NO) return;
+
+    const [activityId, occupationId] = splitTemplatePermissionKey(key);
+    const limit = permission === Permissions.LIMITS ? limits.get(key) : undefined;
+    snapshot.set(key, {
+      activityId,
+      occupationId,
+      permission,
+      limitId: limit?.limitId,
+      restrictionDescription: normalizeRestrictionDescription(limit?.restrictionDescription),
+    });
+  });
+
+  return snapshot;
+};
+
+/**
+ * Compares persisted permission values so LC limit-only and description-only edits are retained.
+ *
+ * @param left - Snapshot or current permission entry.
+ * @param right - Snapshot or current permission entry.
+ * @returns `true` when both entries would persist identically.
+ */
+const permissionsMatch = (left: PermissionEntry, right: PermissionEntry): boolean =>
+  left.permission === right.permission &&
+  (left.limitId ?? null) === (right.limitId ?? null) &&
+  normalizeRestrictionDescription(left.restrictionDescription) ===
+    normalizeRestrictionDescription(right.restrictionDescription);
 
 /** State shape for the care settings edit wizard */
 export interface CareSettingsState {
@@ -47,12 +91,18 @@ export interface CareSettingsState {
   version: number;
   /** IDs of bundles (care competencies) selected for this template */
   selectedBundleIds: Set<string>;
+  /** Selected bundle IDs when the template was last loaded. */
+  initialSelectedBundleIds: Set<string>;
   /** IDs of activities selected from the bundles */
   selectedActivityIds: Set<string>;
+  /** Selected activity IDs when the template was last loaded. */
+  initialSelectedActivityIds: Set<string>;
   /** Permission map: key is `activityId::occupationId`, value is permission level */
   permissions: Map<string, Permissions>;
   /** Limits attached to LC permissions, keyed the same way as `permissions` */
   permissionLimits: Map<string, PermissionLimit>;
+  /** Full permission values when the template was last loaded. */
+  initialPermissions: Map<string, PermissionEntry>;
   /** Whether this template has a direct parent, even if that parent has no permission rows. */
   hasParent: boolean;
   /**
@@ -77,9 +127,12 @@ const initialState: CareSettingsState = {
   level: null,
   version: 0,
   selectedBundleIds: new Set(),
+  initialSelectedBundleIds: new Set(),
   selectedActivityIds: new Set(),
+  initialSelectedActivityIds: new Set(),
   permissions: new Map(),
   permissionLimits: new Map(),
+  initialPermissions: new Map(),
   hasParent: false,
   parentPermissions: new Map(),
   currentStep: 1,
@@ -132,7 +185,7 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
 
     case 'SET_PERMISSION_LIMIT': {
       const { activityId, occupationId, limit } = action.payload;
-      const key = `${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`;
+      const key = getTemplatePermissionKey(activityId, occupationId);
       const newLimits = new Map(state.permissionLimits);
       newLimits.set(key, limit);
       return { ...state, permissionLimits: newLimits };
@@ -215,7 +268,7 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
 
     case 'SET_PERMISSION': {
       const { activityId, occupationId, permission } = action.payload;
-      const key = `${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`;
+      const key = getTemplatePermissionKey(activityId, occupationId);
       const newPermissions = new Map(state.permissions);
       newPermissions.set(key, permission);
 
@@ -232,7 +285,7 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
 
     case 'REMOVE_PERMISSION': {
       const { activityId, occupationId } = action.payload;
-      const key = `${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`;
+      const key = getTemplatePermissionKey(activityId, occupationId);
       const newPermissions = new Map(state.permissions);
       newPermissions.delete(key);
       const newLimits = new Map(state.permissionLimits);
@@ -246,8 +299,20 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
     case 'SET_SELECTED_BUNDLE_ID':
       return { ...state, selectedBundleId: action.payload };
 
-    case 'INITIALIZE_STATE':
-      return { ...state, ...action.payload };
+    case 'INITIALIZE_STATE': {
+      const initialized = { ...state, ...action.payload };
+      const selectedBundleIds = action.payload.selectedBundleIds ?? state.selectedBundleIds;
+      const selectedActivityIds = action.payload.selectedActivityIds ?? state.selectedActivityIds;
+      const permissions = action.payload.permissions ?? state.permissions;
+      const permissionLimits = action.payload.permissionLimits ?? state.permissionLimits;
+
+      return {
+        ...initialized,
+        initialSelectedBundleIds: new Set(selectedBundleIds),
+        initialSelectedActivityIds: new Set(selectedActivityIds),
+        initialPermissions: snapshotPermissions(permissions, permissionLimits),
+      };
+    }
 
     default:
       return state;
@@ -259,6 +324,7 @@ interface CareSettingsContextType {
   dispatch: React.Dispatch<Action>;
   getPermission: (activityId: string, occupationId: string) => Permissions | undefined;
   getPermissionsArray: () => PermissionEntry[];
+  getTemplateChanges: () => TemplateChangesDTO;
   getPermissionLimit: (activityId: string, occupationId: string) => PermissionLimit | undefined;
   isChangedFromParent: (activityId: string, occupationId: string) => boolean;
 }
@@ -269,13 +335,13 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const getPermission = (activityId: string, occupationId: string): Permissions | undefined => {
-    return state.permissions.get(`${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`);
+    return state.permissions.get(getTemplatePermissionKey(activityId, occupationId));
   };
 
   const getPermissionsArray = (): PermissionEntry[] => {
     const entries: PermissionEntry[] = [];
     state.permissions.forEach((permission, key) => {
-      const [activityId, occupationId] = key.split(PERMISSION_KEY_SEPARATOR);
+      const [activityId, occupationId] = splitTemplatePermissionKey(key);
       // Only include Y and LC — the template system represents N as absence of a row
       if (permission !== Permissions.NO) {
         const limit =
@@ -293,13 +359,58 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const getPermissionLimit = (activityId: string, occupationId: string) => {
-    return state.permissionLimits.get(`${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`);
+    return state.permissionLimits.get(getTemplatePermissionKey(activityId, occupationId));
+  };
+
+  /**
+   * Compares wizard state with its immutable loaded snapshot and returns every
+   * required delta collection, including empty collections for unchanged areas.
+   *
+   * @returns The incremental request payload for the current wizard state.
+   */
+  const getTemplateChanges = (): TemplateChangesDTO => {
+    const currentPermissions = snapshotPermissions(state.permissions, state.permissionLimits);
+    const permissionUpserts: PermissionEntry[] = [];
+    const permissionRemovals: { activityId: string; occupationId: string }[] = [];
+
+    currentPermissions.forEach((permission, key) => {
+      const initial = state.initialPermissions.get(key);
+      if (!initial || !permissionsMatch(initial, permission)) {
+        permissionUpserts.push(permission);
+      }
+    });
+
+    state.initialPermissions.forEach((permission, key) => {
+      if (!currentPermissions.has(key)) {
+        permissionRemovals.push({
+          activityId: permission.activityId,
+          occupationId: permission.occupationId,
+        });
+      }
+    });
+
+    return {
+      permissionUpserts,
+      permissionRemovals,
+      selectedBundleIdsToAdd: Array.from(state.selectedBundleIds).filter(
+        id => !state.initialSelectedBundleIds.has(id),
+      ),
+      selectedBundleIdsToRemove: Array.from(state.initialSelectedBundleIds).filter(
+        id => !state.selectedBundleIds.has(id),
+      ),
+      selectedActivityIdsToAdd: Array.from(state.selectedActivityIds).filter(
+        id => !state.initialSelectedActivityIds.has(id),
+      ),
+      selectedActivityIdsToRemove: Array.from(state.initialSelectedActivityIds).filter(
+        id => !state.selectedActivityIds.has(id),
+      ),
+    };
   };
 
   const isChangedFromParent = (activityId: string, occupationId: string): boolean => {
     // A template with no parent has nothing to differ from.
     if (!state.hasParent) return false;
-    const key = `${activityId}${PERMISSION_KEY_SEPARATOR}${occupationId}`;
+    const key = getTemplatePermissionKey(activityId, occupationId);
     // Absence means "not permitted" on both sides, matching how the wizard
     // and the API both model N as a missing row.
     const mine = state.permissions.get(key) ?? Permissions.NO;
@@ -314,6 +425,7 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
         dispatch,
         getPermission,
         getPermissionsArray,
+        getTemplateChanges,
         getPermissionLimit,
         isChangedFromParent,
       }}

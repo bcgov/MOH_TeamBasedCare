@@ -44,10 +44,26 @@ import {
   Permissions,
   MASTER_TEMPLATE_SUFFIX,
   LimitConditionRO,
+  TemplateChangesDTO,
+  TemplatePermissionDTO,
+  TemplatePermissionRemovalDTO,
   TemplateLevel,
   TemplateLevelFilter,
+  getTemplatePermissionKey,
+  normalizeRestrictionDescription,
 } from '@tbcm/common';
 import _ from 'lodash';
+
+type PermissionInput = TemplatePermissionDTO;
+type PermissionRemoval = TemplatePermissionRemovalDTO;
+
+interface StoredPermission {
+  activityId: string;
+  occupationId: string;
+  permission: Permissions;
+  limitId: string | null;
+  restrictionDescription: string | null;
+}
 
 @Injectable()
 export class CareSettingTemplateService {
@@ -69,11 +85,6 @@ export class CareSettingTemplateService {
     @InjectRepository(LimitCondition)
     private readonly limitConditionRepo: Repository<LimitCondition>,
   ) {}
-
-  /** Key for comparing a permission across templates. */
-  private permissionKey(activityId: string, occupationId: string): string {
-    return `${activityId}::${occupationId}`;
-  }
 
   /**
    * Get basic template info for authorization checks
@@ -391,12 +402,12 @@ export class CareSettingTemplateService {
     // the template's own rows are applied over it below.
     if (template.isMaster) {
       for (const scoped of await this.getUnitScopePermissions(template)) {
-        copied.set(this.permissionKey(scoped.activityId, scoped.occupationId), scoped);
+        copied.set(getTemplatePermissionKey(scoped.activityId, scoped.occupationId), scoped);
       }
     }
 
     for (const p of permissions) {
-      copied.set(this.permissionKey(p.care_activity_id, p.occupation_id), {
+      copied.set(getTemplatePermissionKey(p.care_activity_id, p.occupation_id), {
         activityId: p.care_activity_id,
         occupationId: p.occupation_id,
         permission: p.permission,
@@ -588,7 +599,7 @@ export class CareSettingTemplateService {
     const limitMap = new Map(limits.map(l => [l.id, l]));
 
     for (const p of permissions) {
-      const key = this.permissionKey(p.activityId, p.occupationId);
+      const key = getTemplatePermissionKey(p.activityId, p.occupationId);
 
       // Anything that is not LC carries no limit, whatever the client sent.
       if (p.permission !== Permissions.LIMITS) {
@@ -637,7 +648,422 @@ export class CareSettingTemplateService {
       .andWhere('p.limit_condition_id IS NULL')
       .getRawMany();
 
-    return new Set(rows.map(r => this.permissionKey(r.care_activity_id, r.occupation_id)));
+    return new Set(rows.map(r => getTemplatePermissionKey(r.care_activity_id, r.occupation_id)));
+  }
+
+  /**
+   * Rejects repeated relation IDs before any transaction can apply an ambiguous change.
+   *
+   * @param ids - Relation IDs submitted for one operation.
+   * @param message - Validation message returned when an ID is repeated.
+   * @throws {BadRequestException} When an ID appears more than once.
+   */
+  private assertUniqueIds(ids: string[], message: string): void {
+    if (new Set(ids).size !== ids.length) {
+      throw new BadRequestException(message);
+    }
+  }
+
+  /**
+   * Rejects relation deltas that repeat an ID or both add and remove the same ID.
+   *
+   * @param additions - Relation IDs requested for insertion.
+   * @param removals - Relation IDs requested for deletion.
+   * @param message - Validation message returned for duplicate or overlapping IDs.
+   * @throws {BadRequestException} When either collection is duplicated or they overlap.
+   */
+  private assertDisjointIds(additions: string[], removals: string[], message: string): void {
+    this.assertUniqueIds(additions, message);
+    this.assertUniqueIds(removals, message);
+
+    if (additions.some(id => removals.includes(id))) {
+      throw new BadRequestException(message);
+    }
+  }
+
+  /**
+   * Ensures every permission pair is changed once and never both upserted and removed.
+   *
+   * @param upserts - Permission triples requested for insertion or replacement.
+   * @param removals - Permission pairs requested for deletion.
+   * @throws {BadRequestException} When a pair is repeated, overlaps, or an upsert uses `N`.
+   */
+  private assertUniquePermissionChanges(
+    upserts: PermissionInput[],
+    removals: PermissionRemoval[],
+  ): void {
+    const upsertKeys = new Set<string>();
+    for (const upsert of upserts) {
+      const key = getTemplatePermissionKey(upsert.activityId, upsert.occupationId);
+      if (upsert.permission !== Permissions.PERFORM && upsert.permission !== Permissions.LIMITS) {
+        throw new BadRequestException('Permission upserts must be Y or LC.');
+      }
+      if (upsertKeys.has(key)) {
+        throw new BadRequestException('Each permission can be updated only once per save.');
+      }
+      upsertKeys.add(key);
+    }
+
+    const removalKeys = new Set<string>();
+    for (const removal of removals) {
+      const key = getTemplatePermissionKey(removal.activityId, removal.occupationId);
+      if (upsertKeys.has(key) || removalKeys.has(key)) {
+        throw new BadRequestException('A permission cannot be both updated and removed.');
+      }
+      removalKeys.add(key);
+    }
+  }
+
+  /**
+   * Selects the mutually exclusive incremental or compatible full-save path.
+   * Runtime validation protects service callers that bypass the Nest DTO pipe.
+   *
+   * @param dto - Template save request received by the service.
+   * @returns The validated delta or complete-grid save mode.
+   * @throws {BadRequestException} When the request mixes modes or omits required legacy arrays.
+   */
+  private resolveUpdateMode(dto: UpdateCareSettingTemplateDTO):
+    | { kind: 'delta'; changes: TemplateChangesDTO }
+    | {
+        kind: 'full';
+        selectedBundleIds: string[];
+        selectedActivityIds: string[];
+        permissions: TemplatePermissionDTO[];
+      } {
+    const legacyValues = [dto.selectedBundleIds, dto.selectedActivityIds, dto.permissions];
+    const hasLegacyValue = legacyValues.some(value => value !== undefined);
+    const hasCompleteLegacyMode = legacyValues.every(value => value !== undefined);
+
+    if (dto.changes) {
+      if (hasLegacyValue) {
+        throw new BadRequestException(
+          'Provide either incremental changes or complete template selections and permissions.',
+        );
+      }
+
+      const changes = dto.changes;
+      this.assertDisjointIds(
+        changes.selectedBundleIdsToAdd,
+        changes.selectedBundleIdsToRemove,
+        'A selected bundle cannot be both added and removed.',
+      );
+      this.assertDisjointIds(
+        changes.selectedActivityIdsToAdd,
+        changes.selectedActivityIdsToRemove,
+        'A selected activity cannot be both added and removed.',
+      );
+      this.assertUniquePermissionChanges(changes.permissionUpserts, changes.permissionRemovals);
+
+      return { kind: 'delta', changes };
+    }
+
+    if (!hasCompleteLegacyMode) {
+      throw new BadRequestException(
+        'Provide either incremental changes or complete template selections and permissions.',
+      );
+    }
+
+    const permissions = dto.permissions!;
+    this.assertUniquePermissionChanges(
+      permissions.filter(permission => permission.permission !== Permissions.NO),
+      permissions
+        .filter(permission => permission.permission === Permissions.NO)
+        .map(permission => ({
+          activityId: permission.activityId,
+          occupationId: permission.occupationId,
+        })),
+    );
+
+    return {
+      kind: 'full',
+      selectedBundleIds: dto.selectedBundleIds!,
+      selectedActivityIds: dto.selectedActivityIds!,
+      permissions,
+    };
+  }
+
+  /**
+   * Loads the stored permission baseline needed to diff a compatible full-grid save.
+   *
+   * @param manager - Transaction manager used for a consistent read before writes.
+   * @param templateId - Template whose persisted permission rows are needed.
+   * @returns Normalized stored permission values keyed by activity and occupation in the caller.
+   */
+  private async getStoredPermissions(
+    manager: EntityManager,
+    templateId: string,
+  ): Promise<StoredPermission[]> {
+    const result = await manager.query(
+      `SELECT care_activity_id, occupation_id, permission, limit_condition_id, restriction_description
+       FROM care_setting_template_permission
+       WHERE template_id = $1`,
+      [templateId],
+    );
+    const rows = Array.isArray(result) && Array.isArray(result[0]) ? result[0] : result;
+
+    return (Array.isArray(rows) ? rows : [])
+      .filter(
+        row =>
+          typeof row.care_activity_id === 'string' &&
+          typeof row.occupation_id === 'string' &&
+          typeof row.permission === 'string',
+      )
+      .map(row => ({
+        activityId: row.care_activity_id,
+        occupationId: row.occupation_id,
+        permission: row.permission as Permissions,
+        limitId: row.limit_condition_id ?? null,
+        restrictionDescription: row.restriction_description ?? null,
+      }));
+  }
+
+  /**
+   * Reads legacy limit-less LC pairs through the active transaction connection.
+   *
+   * @param manager - Transaction manager used for the read.
+   * @param templateId - Template containing legacy permissions.
+   * @returns Keys for LC rows that may remain valid without a selected limit.
+   */
+  private async getLegacyLcPairsInTransaction(
+    manager: EntityManager,
+    templateId: string,
+  ): Promise<Set<string>> {
+    const result = await manager.query(
+      `SELECT care_activity_id, occupation_id
+       FROM care_setting_template_permission
+       WHERE template_id = $1 AND permission = $2 AND limit_condition_id IS NULL`,
+      [templateId, Permissions.LIMITS],
+    );
+    const rows = Array.isArray(result) && Array.isArray(result[0]) ? result[0] : result;
+    return new Set(
+      (Array.isArray(rows) ? rows : []).map(row =>
+        getTemplatePermissionKey(row.care_activity_id, row.occupation_id),
+      ),
+    );
+  }
+
+  /**
+   * Resolves affected LC limits from the already-fetched catalogue and permits
+   * limit-less LC values only for a previously stored legacy pair.
+   *
+   * @param permissions - Permission upserts requiring persisted LC details.
+   * @param legacyLcPairs - Existing limit-less LC keys eligible for compatibility handling.
+   * @param limits - Referenced limit conditions fetched during validation.
+   * @returns Resolved limits and normalized descriptions for each permission key.
+   * @throws {BadRequestException} When an LC permission has no valid limit or description.
+   */
+  private async resolvePermissionLimitsFromCatalogue(
+    permissions: PermissionInput[],
+    legacyLcPairs: Set<string>,
+    limits: LimitCondition[],
+  ): Promise<Map<string, { limit: LimitCondition | null; restrictionDescription: string | null }>> {
+    const resolved = new Map<
+      string,
+      { limit: LimitCondition | null; restrictionDescription: string | null }
+    >();
+    const limitMap = new Map(limits.map(limit => [limit.id, limit]));
+
+    for (const permission of permissions) {
+      const key = getTemplatePermissionKey(permission.activityId, permission.occupationId);
+
+      if (permission.permission !== Permissions.LIMITS) {
+        resolved.set(key, { limit: null, restrictionDescription: null });
+        continue;
+      }
+
+      if (!permission.limitId) {
+        if (!legacyLcPairs.has(key)) {
+          throw new BadRequestException(
+            'A limit must be selected for every permission set to limits and conditions.',
+          );
+        }
+        resolved.set(key, { limit: null, restrictionDescription: null });
+        continue;
+      }
+
+      const limit = limitMap.get(permission.limitId);
+      if (!limit) {
+        throw new BadRequestException('The selected limit is not a valid option.');
+      }
+
+      const restrictionDescription = normalizeRestrictionDescription(
+        permission.restrictionDescription,
+      );
+      if (restrictionDescription && restrictionDescription.length > 2000) {
+        throw new BadRequestException('Restriction description cannot exceed 2000 characters.');
+      }
+      resolved.set(key, { limit, restrictionDescription });
+    }
+
+    return resolved;
+  }
+
+  /**
+   * Reduces a complete submitted grid to upserts and removals relative to its
+   * stored baseline, preserving the delta writer for legacy callers.
+   *
+   * @param submittedPermissions - Complete permission grid from a compatibility caller.
+   * @param storedPermissions - Current permission rows read after the version claim.
+   * @returns The net upserts and removals required to reach the submitted grid.
+   */
+  private deriveFullPermissionChanges(
+    submittedPermissions: PermissionInput[],
+    storedPermissions: StoredPermission[],
+  ): { upserts: PermissionInput[]; removals: PermissionRemoval[] } {
+    const submitted = new Map<string, PermissionInput>();
+    for (const permission of submittedPermissions) {
+      if (permission.permission !== Permissions.NO) {
+        submitted.set(
+          getTemplatePermissionKey(permission.activityId, permission.occupationId),
+          permission,
+        );
+      }
+    }
+
+    const stored = new Map(
+      storedPermissions.map(permission => [
+        getTemplatePermissionKey(permission.activityId, permission.occupationId),
+        permission,
+      ]),
+    );
+    const upserts = Array.from(submitted.values()).filter(permission => {
+      const existing = stored.get(
+        getTemplatePermissionKey(permission.activityId, permission.occupationId),
+      );
+      return (
+        !existing ||
+        existing.permission !== permission.permission ||
+        existing.limitId !== (permission.limitId ?? null) ||
+        existing.restrictionDescription !==
+          normalizeRestrictionDescription(permission.restrictionDescription)
+      );
+    });
+    const removals = Array.from(stored.values())
+      .filter(
+        permission =>
+          !submitted.has(getTemplatePermissionKey(permission.activityId, permission.occupationId)),
+      )
+      .map(permission => ({
+        activityId: permission.activityId,
+        occupationId: permission.occupationId,
+      }));
+
+    return { upserts, removals };
+  }
+
+  /**
+   * Persists only changed permission triples with bounded parameter batches.
+   * Upserts replace LC details atomically; deletions name each removed triple.
+   *
+   * @param manager - Transaction manager that owns the version claim and all writes.
+   * @param templateId - Template receiving the permission changes.
+   * @param upserts - Changed permission rows to insert or replace.
+   * @param removals - Permission pairs to delete explicitly.
+   * @param resolvedLimits - Validated LC details indexed by permission pair.
+   * @returns A promise resolved after all targeted permission writes complete.
+   */
+  private async writePermissionChanges(
+    manager: EntityManager,
+    templateId: string,
+    upserts: PermissionInput[],
+    removals: PermissionRemoval[],
+    resolvedLimits: Map<
+      string,
+      { limit: LimitCondition | null; restrictionDescription: string | null }
+    >,
+  ): Promise<void> {
+    for (const upsertsBatch of _.chunk(upserts, 5000)) {
+      const values = upsertsBatch
+        .map(
+          (_, index) =>
+            `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`,
+        )
+        .join(', ');
+      const parameters = upsertsBatch.flatMap(permission => {
+        const resolved = resolvedLimits.get(
+          getTemplatePermissionKey(permission.activityId, permission.occupationId),
+        );
+        return [
+          templateId,
+          permission.activityId,
+          permission.occupationId,
+          permission.permission,
+          resolved?.limit?.id ?? null,
+          resolved?.restrictionDescription ?? null,
+        ];
+      });
+      await manager.query(
+        `INSERT INTO care_setting_template_permission
+           (template_id, care_activity_id, occupation_id, permission, limit_condition_id, restriction_description)
+         VALUES ${values}
+         ON CONFLICT ON CONSTRAINT template_activity_occupation
+         DO UPDATE SET
+           permission = EXCLUDED.permission,
+           limit_condition_id = EXCLUDED.limit_condition_id,
+           restriction_description = EXCLUDED.restriction_description,
+           updated_at = NOW()`,
+        parameters,
+      );
+    }
+
+    for (const removalsBatch of _.chunk(removals, 100)) {
+      const conditions = removalsBatch
+        .map(
+          (_, index) =>
+            `(template_id = $${index * 3 + 1} AND care_activity_id = $${index * 3 + 2} AND occupation_id = $${index * 3 + 3})`,
+        )
+        .join(' OR ');
+      const parameters = removalsBatch.flatMap(removal => [
+        templateId,
+        removal.activityId,
+        removal.occupationId,
+      ]);
+      await manager.query(
+        `DELETE FROM care_setting_template_permission WHERE ${conditions}`,
+        parameters,
+      );
+    }
+  }
+
+  /**
+   * Applies explicit bundle or activity join-table deltas without replacing unrelated rows.
+   *
+   * @param manager - Transaction manager that owns the version claim and relation writes.
+   * @param templateId - Template receiving the selected-content changes.
+   * @param additions - Relation IDs to insert.
+   * @param removals - Relation IDs to delete.
+   * @param table - Allowed join table to update.
+   * @param relationColumn - Foreign-key column containing the related ID.
+   * @returns A promise resolved after all targeted relation writes complete.
+   */
+  private async writeRelationChanges(
+    manager: EntityManager,
+    templateId: string,
+    additions: string[],
+    removals: string[],
+    table: 'care_setting_template_bundles' | 'care_setting_template_activities',
+    relationColumn: 'bundle_id' | 'care_activity_id',
+  ): Promise<void> {
+    for (const additionsBatch of _.chunk(additions, 5000)) {
+      const values = additionsBatch
+        .map((_, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
+        .join(', ');
+      const parameters = additionsBatch.flatMap(id => [templateId, id]);
+      await manager.query(
+        `INSERT INTO ${table} (care_setting_template_id, ${relationColumn})
+         VALUES ${values} ON CONFLICT DO NOTHING`,
+        parameters,
+      );
+    }
+
+    for (const removalsBatch of _.chunk(removals, 1000)) {
+      const placeholders = removalsBatch.map((_, index) => `$${index + 2}`).join(', ');
+      await manager.query(
+        `DELETE FROM ${table}
+         WHERE care_setting_template_id = $1 AND ${relationColumn} IN (${placeholders})`,
+        [templateId, ...removalsBatch],
+      );
+    }
   }
 
   /** The catalogue of limits offered in the dialog. */
@@ -844,7 +1270,9 @@ export class CareSettingTemplateService {
       const newPermissions = permissionInputs
         .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
         .map(p => {
-          const resolved = resolvedLimits.get(this.permissionKey(p.activityId, p.occupationId));
+          const resolved = resolvedLimits.get(
+            getTemplatePermissionKey(p.activityId, p.occupationId),
+          );
 
           return manager.create(CareSettingTemplatePermission, {
             template: persisted,
@@ -873,12 +1301,9 @@ export class CareSettingTemplateService {
   }
 
   /**
-   * Update a template's name, selected bundles/activities, and permissions
-   * @throws BadRequestException if attempting to edit a master template
-   * @throws ForbiddenException if user's HA doesn't match template's HA
-   * @throws NotFoundException if template doesn't exist
-   *
-   * Note: Permissions are replaced entirely (delete all, then recreate)
+   * Update a template's name, selected bundles/activities, and permissions.
+   * Incremental updates touch only submitted changes; legacy full requests are
+   * reduced to their net permission changes inside the guarded transaction.
    */
   async updateTemplate(
     id: string,
@@ -887,7 +1312,6 @@ export class CareSettingTemplateService {
   ): Promise<void> {
     const template = await this.templateRepo.findOne({
       where: { id },
-      relations: ['unit'],
     });
 
     if (!template) {
@@ -909,73 +1333,153 @@ export class CareSettingTemplateService {
       template.name = dto.name;
     }
 
-    // Resolve limits before touching anything, so an invalid payload is
-    // rejected while the stored permissions are still intact.
-    const legacyLcPairs = await this.getLegacyLcPairs(id);
-    const resolvedLimits = await this.resolvePermissionLimits(dto.permissions ?? [], legacyLcPairs);
+    const mode = this.resolveUpdateMode(dto);
 
-    const selectedBundles = await this.bundleRepo.find({
-      where: { id: In(dto.selectedBundleIds) },
-    });
+    const relationBundleIds =
+      mode.kind === 'delta'
+        ? [...mode.changes.selectedBundleIdsToAdd, ...mode.changes.selectedBundleIdsToRemove]
+        : mode.selectedBundleIds;
+    const relationActivityIds =
+      mode.kind === 'delta'
+        ? [...mode.changes.selectedActivityIdsToAdd, ...mode.changes.selectedActivityIdsToRemove]
+        : mode.selectedActivityIds;
+    const permissionUpserts =
+      mode.kind === 'delta'
+        ? mode.changes.permissionUpserts
+        : mode.permissions.filter(permission => permission.permission !== Permissions.NO);
+    const permissionRemovals =
+      mode.kind === 'delta'
+        ? mode.changes.permissionRemovals
+        : mode.permissions
+            .filter(permission => permission.permission === Permissions.NO)
+            .map(permission => ({
+              activityId: permission.activityId,
+              occupationId: permission.occupationId,
+            }));
+    const permissionActivityIds = Array.from(
+      new Set([
+        ...permissionUpserts.map(permission => permission.activityId),
+        ...permissionRemovals.map(permission => permission.activityId),
+      ]),
+    );
+    const permissionOccupationIds = Array.from(
+      new Set([
+        ...permissionUpserts.map(permission => permission.occupationId),
+        ...permissionRemovals.map(permission => permission.occupationId),
+      ]),
+    );
+    const requestedLimitIds = Array.from(
+      new Set(
+        permissionUpserts
+          .filter(permission => permission.permission === Permissions.LIMITS && permission.limitId)
+          .map(permission => permission.limitId as string),
+      ),
+    );
+    const uniqueBundleIds = Array.from(new Set(relationBundleIds));
+    const uniqueActivityIds = Array.from(new Set(relationActivityIds));
 
-    const selectedActivities = await this.careActivityRepo.find({
-      where: { id: In(dto.selectedActivityIds) },
-    });
+    const [selectedBundles, selectedActivities, activities, occupations, limits] =
+      await Promise.all([
+        uniqueBundleIds.length
+          ? this.bundleRepo.find({ where: { id: In(uniqueBundleIds) } })
+          : Promise.resolve([]),
+        uniqueActivityIds.length
+          ? this.careActivityRepo.find({ where: { id: In(uniqueActivityIds) } })
+          : Promise.resolve([]),
+        permissionActivityIds.length
+          ? this.careActivityRepo.find({ where: { id: In(permissionActivityIds) } })
+          : Promise.resolve([]),
+        permissionOccupationIds.length
+          ? this.occupationRepo.find({ where: { id: In(permissionOccupationIds) } })
+          : Promise.resolve([]),
+        requestedLimitIds.length
+          ? this.limitConditionRepo.find({ where: { id: In(requestedLimitIds) } })
+          : Promise.resolve([]),
+      ]);
 
-    const activities = dto.permissions?.length
-      ? await this.careActivityRepo.find({
-          where: { id: In(dto.permissions.map(p => p.activityId)) },
-        })
-      : [];
-    const activityMap = new Map(activities.map(a => [a.id, a]));
+    if (selectedBundles.length !== uniqueBundleIds.length) {
+      throw new BadRequestException('One or more selected bundles are not valid options.');
+    }
+    if (selectedActivities.length !== uniqueActivityIds.length) {
+      throw new BadRequestException('One or more selected activities are not valid options.');
+    }
+    if (activities.length !== permissionActivityIds.length) {
+      throw new BadRequestException('One or more permission activities are not valid options.');
+    }
+    if (occupations.length !== permissionOccupationIds.length) {
+      throw new BadRequestException('One or more permission occupations are not valid options.');
+    }
+    if (limits.length !== requestedLimitIds.length) {
+      throw new BadRequestException('The selected limit is not a valid option.');
+    }
 
-    const occupations = dto.permissions?.length
-      ? await this.occupationRepo.find({
-          where: { id: In(dto.permissions.map(p => p.occupationId)) },
-        })
-      : [];
-    const occupationMap = new Map(occupations.map(o => [o.id, o]));
-
-    // One transaction for the whole save. Two things depend on this: the
-    // version guard has to hold until the new permissions are written, and the
-    // delete-then-recreate must not be able to leave the template with no
-    // permissions if a later step fails.
+    const needsLegacyLcPairs = permissionUpserts.some(
+      permission => permission.permission === Permissions.LIMITS && !permission.limitId,
+    );
     await this.templateRepo.manager.transaction(async manager => {
       const claimedVersion = await this.guardVersion(manager, id, dto.expectedVersion);
 
-      template.selectedBundles = selectedBundles;
-      template.selectedActivities = selectedActivities;
-      // Carry the claimed token onto the entity, or the save below would
-      // restore the pre-guard version and let a second editor claim it again.
-      template.version = claimedVersion;
+      const storedPermissions =
+        mode.kind === 'full' ? await this.getStoredPermissions(manager, id) : [];
+      const legacyLcPairs = needsLegacyLcPairs
+        ? mode.kind === 'full'
+          ? new Set(
+              storedPermissions
+                .filter(
+                  permission =>
+                    permission.permission === Permissions.LIMITS && permission.limitId === null,
+                )
+                .map(permission =>
+                  getTemplatePermissionKey(permission.activityId, permission.occupationId),
+                ),
+            )
+          : await this.getLegacyLcPairsInTransaction(manager, id)
+        : new Set<string>();
+      const changes =
+        mode.kind === 'full'
+          ? this.deriveFullPermissionChanges(mode.permissions, storedPermissions)
+          : {
+              upserts: permissionUpserts,
+              removals: permissionRemovals,
+            };
+      const resolvedLimits = await this.resolvePermissionLimitsFromCatalogue(
+        changes.upserts,
+        legacyLcPairs,
+        limits,
+      );
 
-      // updatedBy auto-set by AuditSubscriber
+      template.version = claimedVersion;
+      if (mode.kind === 'full') {
+        template.selectedBundles = selectedBundles;
+        template.selectedActivities = selectedActivities;
+      }
       await manager.save(CareSettingTemplate, template);
 
-      // Permissions are replaced wholesale, which is also how a limit removed
-      // from a cell disappears - no separate cleanup step is needed.
-      await manager.delete(CareSettingTemplatePermission, { template: { id } });
-
-      if (dto.permissions && dto.permissions.length > 0) {
-        const newPermissions = dto.permissions
-          .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
-          .map(p => {
-            const resolved = resolvedLimits.get(this.permissionKey(p.activityId, p.occupationId));
-
-            return manager.create(CareSettingTemplatePermission, {
-              template,
-              careActivity: activityMap.get(p.activityId)!,
-              occupation: occupationMap.get(p.occupationId)!,
-              permission: p.permission,
-              limitCondition: resolved?.limit ?? null,
-              restrictionDescription: resolved?.restrictionDescription ?? null,
-            });
-          });
-
-        if (newPermissions.length > 0) {
-          await manager.save(CareSettingTemplatePermission, newPermissions);
-        }
+      if (mode.kind === 'delta') {
+        await this.writeRelationChanges(
+          manager,
+          id,
+          mode.changes.selectedBundleIdsToAdd,
+          mode.changes.selectedBundleIdsToRemove,
+          'care_setting_template_bundles',
+          'bundle_id',
+        );
+        await this.writeRelationChanges(
+          manager,
+          id,
+          mode.changes.selectedActivityIdsToAdd,
+          mode.changes.selectedActivityIdsToRemove,
+          'care_setting_template_activities',
+          'care_activity_id',
+        );
       }
+      await this.writePermissionChanges(
+        manager,
+        id,
+        changes.upserts,
+        changes.removals,
+        resolvedLimits,
+      );
     });
   }
 
