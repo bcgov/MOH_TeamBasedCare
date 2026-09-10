@@ -58,6 +58,24 @@ import _ from 'lodash';
 type PermissionInput = TemplatePermissionDTO;
 type PermissionRemoval = TemplatePermissionRemovalDTO;
 
+/**
+ * Statement batch sizes. Postgres refuses more than 65535 bind parameters in a
+ * single statement, so every write below is chunked by its own parameter cost.
+ * These are deliberately independent of MAX_TEMPLATE_CHANGE_ITEMS: the
+ * full-grid save path derives its change lists from stored rows and is not
+ * bounded by the request DTO.
+ */
+/** Permission upserts cost 6 parameters per row. */
+const PERMISSION_UPSERT_BATCH_SIZE = 5000;
+/** Permission removals cost 3 parameters per pair. */
+const PERMISSION_REMOVAL_BATCH_SIZE = 100;
+/** Relation inserts and deletes cost 2 and 1 parameters per ID respectively. */
+const RELATION_BATCH_SIZE = 1000;
+
+/** Keys a permission row by template and activity, for a single occupation. */
+const getTemplateOccupationPermissionKey = (templateId: string, activityId: string) =>
+  `${templateId}::${activityId}`;
+
 interface StoredPermission {
   activityId: string;
   occupationId: string;
@@ -329,9 +347,13 @@ export class CareSettingTemplateService {
           activityId: p.care_activity_id,
           occupationId: p.occupation_id,
           permission: p.permission,
-          limitId: p.limit_condition_id ?? null,
-          limitName: p.limit_name ?? null,
-          restrictionDescription: p.restriction_description ?? null,
+          // Limits describe an LC cell only. Never surface them for other
+          // permissions, so a stale column left by an older write cannot be
+          // read back as an active limit by the editor.
+          limitId: p.permission === Permissions.LIMITS ? p.limit_condition_id ?? null : null,
+          limitName: p.permission === Permissions.LIMITS ? p.limit_name ?? null : null,
+          restrictionDescription:
+            p.permission === Permissions.LIMITS ? p.restriction_description ?? null : null,
         }),
     );
 
@@ -1006,14 +1028,14 @@ export class CareSettingTemplateService {
       { limit: LimitCondition | null; restrictionDescription: string | null }
     >,
   ): Promise<void> {
-    if (upserts.length > 0) {
-      const values = upserts
+    for (const upsertsBatch of _.chunk(upserts, PERMISSION_UPSERT_BATCH_SIZE)) {
+      const values = upsertsBatch
         .map(
-          (_, index) =>
+          (_value, index) =>
             `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`,
         )
         .join(', ');
-      const parameters = upserts.flatMap(permission => {
+      const parameters = upsertsBatch.flatMap(permission => {
         const resolved = resolvedLimits.get(
           getTemplatePermissionKey(permission.activityId, permission.occupationId),
         );
@@ -1040,9 +1062,8 @@ export class CareSettingTemplateService {
       );
     }
 
-    for (let offset = 0; offset < MAX_TEMPLATE_CHANGE_ITEMS; offset += 100) {
-      const removalsBatch = removals.slice(offset, offset + 100);
-      if (removalsBatch.length === 0) break;
+    for (let offset = 0; offset < removals.length; offset += PERMISSION_REMOVAL_BATCH_SIZE) {
+      const removalsBatch = removals.slice(offset, offset + PERMISSION_REMOVAL_BATCH_SIZE);
       const conditions = removalsBatch
         .map(
           (_, index) =>
@@ -1080,11 +1101,11 @@ export class CareSettingTemplateService {
     table: 'care_setting_template_bundles' | 'care_setting_template_activities',
     relationColumn: 'bundle_id' | 'care_activity_id',
   ): Promise<void> {
-    if (additions.length > 0) {
-      const values = additions
-        .map((_, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
+    for (const additionsBatch of _.chunk(additions, RELATION_BATCH_SIZE)) {
+      const values = additionsBatch
+        .map((_value, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
         .join(', ');
-      const parameters = additions.flatMap(id => [templateId, id]);
+      const parameters = additionsBatch.flatMap(id => [templateId, id]);
       await manager.query(
         `INSERT INTO ${table} (care_setting_template_id, ${relationColumn})
          VALUES ${values} ON CONFLICT DO NOTHING`,
@@ -1092,10 +1113,9 @@ export class CareSettingTemplateService {
       );
     }
 
-    for (let offset = 0; offset < MAX_TEMPLATE_CHANGE_ITEMS; offset += 1000) {
-      const removalsBatch = removals.slice(offset, offset + 1000);
-      if (removalsBatch.length === 0) break;
-      const placeholders = removalsBatch.map((_, index) => `$${index + 2}`).join(', ');
+    for (let offset = 0; offset < removals.length; offset += RELATION_BATCH_SIZE) {
+      const removalsBatch = removals.slice(offset, offset + RELATION_BATCH_SIZE);
+      const placeholders = removalsBatch.map((_value, index) => `$${index + 2}`).join(', ');
       await manager.query(
         `DELETE FROM ${table}
          WHERE care_setting_template_id = $1 AND ${relationColumn} IN (${placeholders})`,
@@ -1847,6 +1867,54 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Collects the curated LC details this occupation already holds so a
+   * scope-driven rebuild can restore them after the bulk delete.
+   *
+   * Only rows that are LC today and remain LC under the incoming scope are
+   * worth keeping; a cell moving to Y is meant to lose its limit.
+   *
+   * @param occupationId - The occupation about to be re-synced.
+   * @param permissionMap - Incoming Y/LC scope keyed by care activity ID.
+   * @returns Limit details keyed by template and activity.
+   */
+  private async getLimitsToPreserveForOccupation(
+    occupationId: string,
+    permissionMap: Map<string, string>,
+  ): Promise<
+    Map<string, { limitCondition: LimitCondition | null; restrictionDescription: string | null }>
+  > {
+    const preserved = new Map<
+      string,
+      { limitCondition: LimitCondition | null; restrictionDescription: string | null }
+    >();
+
+    const hasIncomingLc = Array.from(permissionMap.values()).some(
+      permission => permission === Permissions.LIMITS,
+    );
+    if (!hasIncomingLc) return preserved;
+
+    const existing = await this.permissionRepo.find({
+      where: { occupation: { id: occupationId }, permission: Permissions.LIMITS },
+      relations: ['template', 'careActivity', 'limitCondition'],
+    });
+
+    for (const row of existing ?? []) {
+      const templateId = row.template?.id;
+      const activityId = row.careActivity?.id;
+      if (!templateId || !activityId) continue;
+      if (permissionMap.get(activityId) !== Permissions.LIMITS) continue;
+      if (!row.limitCondition && !row.restrictionDescription) continue;
+
+      preserved.set(getTemplateOccupationPermissionKey(templateId, activityId), {
+        limitCondition: row.limitCondition ?? null,
+        restrictionDescription: row.restrictionDescription ?? null,
+      });
+    }
+
+    return preserved;
+  }
+
+  /**
    * Sync occupation permissions to ALL templates.
    * Called when CMS creates or updates occupation scope permissions.
    *
@@ -1861,21 +1929,7 @@ export class CareSettingTemplateService {
     occupationId: string,
     permissions: { careActivityId: string; permission: string }[],
   ): Promise<void> {
-    // 1. Delete ALL existing permissions for this occupation across ALL templates
-    // This is efficient: single DELETE query instead of N queries
-    await this.permissionRepo.delete({ occupation: { id: occupationId } });
-
-    // 2. If no permissions to add (occupation cleared), we're done
-    if (permissions.length === 0) {
-      return;
-    }
-
-    // 3. Get all templates with their selected activities
-    const templates = await this.templateRepo.find({
-      relations: ['selectedActivities'],
-    });
-
-    // 4. Build a map of activity IDs to permissions for quick lookup
+    // 1. Build a map of activity IDs to permissions for quick lookup
     // Only include Y and LC permissions (N means "no permission" = no record)
     const permissionMap = new Map<string, string>();
     for (const p of permissions) {
@@ -1884,30 +1938,60 @@ export class CareSettingTemplateService {
       }
     }
 
-    // 5. Collect all new permissions to insert across all templates
+    // 2. This sync rebuilds rows from the occupation scope, which carries no
+    // limit details. Curated limits therefore have to be carried across the
+    // delete by hand, otherwise every LC cell for this occupation comes back
+    // limit-less and permanently qualifies for the legacy exemption in
+    // resolvePermissionLimitsFromCatalogue.
+    const preservedLimits = await this.getLimitsToPreserveForOccupation(
+      occupationId,
+      permissionMap,
+    );
+
+    // 3. Collect the replacement rows before touching the database, so the
+    // delete and the re-insert can share one transaction.
     const newPermissions: CareSettingTemplatePermission[] = [];
 
-    for (const template of templates) {
-      // For each activity in this template, check if the occupation has permission
-      for (const activity of template.selectedActivities) {
-        const permission = permissionMap.get(activity.id);
-        if (permission) {
-          newPermissions.push(
-            this.permissionRepo.create({
-              template: { id: template.id },
-              occupation: { id: occupationId },
-              careActivity: { id: activity.id },
-              permission: permission as Permissions,
-            }),
-          );
+    if (permissions.length > 0) {
+      // Get all templates with their selected activities
+      const templates = await this.templateRepo.find({
+        relations: ['selectedActivities'],
+      });
+
+      for (const template of templates) {
+        // For each activity in this template, check if the occupation has permission
+        for (const activity of template.selectedActivities) {
+          const permission = permissionMap.get(activity.id);
+          if (permission) {
+            const preserved = preservedLimits.get(
+              getTemplateOccupationPermissionKey(template.id, activity.id),
+            );
+            newPermissions.push(
+              this.permissionRepo.create({
+                template: { id: template.id },
+                occupation: { id: occupationId },
+                careActivity: { id: activity.id },
+                permission: permission as Permissions,
+                limitCondition: preserved?.limitCondition ?? null,
+                restrictionDescription: preserved?.restrictionDescription ?? null,
+              }),
+            );
+          }
         }
       }
     }
 
-    // 6. Batch insert all new permissions (efficient: single INSERT with multiple rows)
-    if (newPermissions.length > 0) {
-      await this.permissionRepo.save(newPermissions);
-    }
+    // 4. Replace the occupation's rows atomically. A partial failure here would
+    // otherwise leave the occupation with no permissions at all, destroying the
+    // very limits step 2 collected. Inserts are chunked because every row now
+    // binds 6 parameters and the row count grows with templates x activities.
+    await this.templateRepo.manager.transaction(async manager => {
+      await manager.delete(CareSettingTemplatePermission, { occupation: { id: occupationId } });
+
+      for (const batch of _.chunk(newPermissions, PERMISSION_UPSERT_BATCH_SIZE)) {
+        await manager.save(CareSettingTemplatePermission, batch);
+      }
+    });
   }
 
   /**
@@ -2084,11 +2168,21 @@ export class CareSettingTemplateService {
           p.permission,
         ]);
         await manager.query(
+          // Limits are meaningful only for LC. Clear them when an upload flips a
+          // row away from LC, but keep curated values on rows that stay LC -
+          // blanking those would create limit-less LC rows that then qualify for
+          // the legacy exemption in resolvePermissionLimitsFromCatalogue.
           `INSERT INTO care_setting_template_permission
              (template_id, care_activity_id, occupation_id, permission)
            VALUES ${values}
            ON CONFLICT ON CONSTRAINT template_activity_occupation
-           DO UPDATE SET permission = EXCLUDED.permission, updated_at = NOW()`,
+           DO UPDATE SET
+             permission = EXCLUDED.permission,
+             limit_condition_id = CASE WHEN EXCLUDED.permission = 'LC'
+               THEN care_setting_template_permission.limit_condition_id END,
+             restriction_description = CASE WHEN EXCLUDED.permission = 'LC'
+               THEN care_setting_template_permission.restriction_description END,
+             updated_at = NOW()`,
           params,
         );
       }
