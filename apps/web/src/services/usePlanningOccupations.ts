@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { useHttp } from './useHttp';
 import { usePlanningContext } from './usePlanningContext';
+import { toast } from 'react-toastify';
 
 interface usePlanningOccupationsProps {
   proceedToNextOnSubmit?: boolean;
@@ -34,6 +35,7 @@ export const usePlanningOccupations = ({
         endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
       },
       () => {
+        toast.success('Changes saved automatically.');
         // proceed to next step (planning context changes) if requested
         if (proceedToNextOnSubmit) {
           updateProceedToNext();

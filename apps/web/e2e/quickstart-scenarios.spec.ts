@@ -45,6 +45,7 @@ test.describe('quickstart scenarios', () => {
     await save.click();
 
     await expect(page.getByText('Renamed Care Plan')).toBeVisible();
+    await expect(page.getByText('Changes saved automatically.')).toBeVisible();
     expect(stub.renames.at(-1)?.name).toBe('Renamed Care Plan');
     await expectNoRuntimeOverlay(page);
   });

@@ -3,6 +3,7 @@ import { API_ENDPOINT, REQUEST_METHOD } from '../common';
 import { useHttp } from './useHttp';
 import { usePlanningContext } from './usePlanningContext';
 import { SaveCareActivityDTO } from '@tbcm/common';
+import { toast } from 'react-toastify';
 
 export const usePlanningCareActivities = () => {
   const {
@@ -24,6 +25,7 @@ export const usePlanningCareActivities = () => {
         endpoint: API_ENDPOINT.getPlanningCareActivity(sessionId),
       },
       () => {
+        toast.success('Changes saved automatically.');
         updateProceedToNext();
       },
     );
