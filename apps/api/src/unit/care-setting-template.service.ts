@@ -1008,6 +1008,42 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Runs `handle` over `items` in fixed-size batches.
+   *
+   * Deliberately iterates the collection directly and sizes each batch from a
+   * locally built array. Bounding a loop with `items.length`, or handing the
+   * collection to a lodash iterator, reads as an unbounded user-controlled
+   * loop to static analysis (js/loop-bound-injection) - which is what led to
+   * an earlier fix bounding these loops by a constant and silently dropping
+   * every row past it.
+   *
+   * @param items - Collection to process in full.
+   * @param size - Maximum rows per batch, chosen from the statement's bind-parameter cost.
+   * @param handle - Receives each batch in order.
+   * @returns A promise resolved once every batch has been handled.
+   */
+  private async forEachBatch<T>(
+    items: Iterable<T>,
+    size: number,
+    handle: (batch: T[]) => Promise<void>,
+  ): Promise<void> {
+    let batch: T[] = [];
+
+    for (const item of items) {
+      batch.push(item);
+
+      if (batch.length >= size) {
+        await handle(batch);
+        batch = [];
+      }
+    }
+
+    if (batch.length > 0) {
+      await handle(batch);
+    }
+  }
+
+  /**
    * Persists only changed permission triples with bounded parameter batches.
    * Upserts replace LC details atomically; deletions name each removed triple.
    *
@@ -1028,7 +1064,7 @@ export class CareSettingTemplateService {
       { limit: LimitCondition | null; restrictionDescription: string | null }
     >,
   ): Promise<void> {
-    for (const upsertsBatch of _.chunk(upserts, PERMISSION_UPSERT_BATCH_SIZE)) {
+    await this.forEachBatch(upserts, PERMISSION_UPSERT_BATCH_SIZE, async upsertsBatch => {
       const values = upsertsBatch
         .map(
           (_value, index) =>
@@ -1060,13 +1096,9 @@ export class CareSettingTemplateService {
            updated_at = NOW()`,
         parameters,
       );
-    }
+    });
 
-    // Iterate the chunks rather than indexing to removals.length: the delta
-    // path validates the collection to MAX_TEMPLATE_CHANGE_ITEMS before it gets
-    // here and the full-grid path derives it from stored rows, but a bare
-    // `.length` loop bound reads as user-controlled to static analysis.
-    for (const removalsBatch of _.chunk(removals, PERMISSION_REMOVAL_BATCH_SIZE)) {
+    await this.forEachBatch(removals, PERMISSION_REMOVAL_BATCH_SIZE, async removalsBatch => {
       const conditions = removalsBatch
         .map(
           (_, index) =>
@@ -1082,7 +1114,7 @@ export class CareSettingTemplateService {
         `DELETE FROM care_setting_template_permission WHERE ${conditions}`,
         parameters,
       );
-    }
+    });
   }
 
   /**
@@ -1104,7 +1136,7 @@ export class CareSettingTemplateService {
     table: 'care_setting_template_bundles' | 'care_setting_template_activities',
     relationColumn: 'bundle_id' | 'care_activity_id',
   ): Promise<void> {
-    for (const additionsBatch of _.chunk(additions, RELATION_BATCH_SIZE)) {
+    await this.forEachBatch(additions, RELATION_BATCH_SIZE, async additionsBatch => {
       const values = additionsBatch
         .map((_value, index) => `($${index * 2 + 1}, $${index * 2 + 2})`)
         .join(', ');
@@ -1114,16 +1146,16 @@ export class CareSettingTemplateService {
          VALUES ${values} ON CONFLICT DO NOTHING`,
         parameters,
       );
-    }
+    });
 
-    for (const removalsBatch of _.chunk(removals, RELATION_BATCH_SIZE)) {
+    await this.forEachBatch(removals, RELATION_BATCH_SIZE, async removalsBatch => {
       const placeholders = removalsBatch.map((_value, index) => `$${index + 2}`).join(', ');
       await manager.query(
         `DELETE FROM ${table}
          WHERE care_setting_template_id = $1 AND ${relationColumn} IN (${placeholders})`,
         [templateId, ...removalsBatch],
       );
-    }
+    });
   }
 
   /** The catalogue of limits offered in the dialog. */
@@ -1990,9 +2022,9 @@ export class CareSettingTemplateService {
     await this.templateRepo.manager.transaction(async manager => {
       await manager.delete(CareSettingTemplatePermission, { occupation: { id: occupationId } });
 
-      for (const batch of _.chunk(newPermissions, PERMISSION_UPSERT_BATCH_SIZE)) {
+      await this.forEachBatch(newPermissions, PERMISSION_UPSERT_BATCH_SIZE, async batch => {
         await manager.save(CareSettingTemplatePermission, batch);
-      }
+      });
     });
   }
 
