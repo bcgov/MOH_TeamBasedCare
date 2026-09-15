@@ -24,6 +24,7 @@ node_modules
 .specify
 .github/skills
 docs/ai
+specs
 
 # Tests
 **/test-results

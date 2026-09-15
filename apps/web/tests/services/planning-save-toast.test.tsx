@@ -58,4 +58,32 @@ describe('planning draft save notifications', () => {
 
     expect(mockToastSuccess).toHaveBeenCalledWith('Changes saved automatically.');
   });
+
+  it.each([true, false])(
+    'waits for the care-activity request and returns its outcome (%s)',
+    async saved => {
+      let finish = () => {};
+      mockSendApiRequest.mockImplementation(
+        (_config, onSuccess) =>
+          new Promise<void>(resolve => {
+            finish = () => {
+              if (saved) onSuccess();
+              resolve();
+            };
+          }),
+      );
+      const { result } = renderHook(() => usePlanningCareActivities());
+      let settled = false;
+      const submission = result.current.handleSubmit({
+        careActivityBundle: {},
+      });
+      submission.then(() => {
+        settled = true;
+      });
+      await act(async () => {});
+      expect(settled).toBe(false);
+      await act(async () => finish());
+      await expect(submission).resolves.toBe(saved);
+    },
+  );
 });

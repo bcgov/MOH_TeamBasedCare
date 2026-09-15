@@ -5,8 +5,11 @@
  * being edited, what it came from, and what level it sits at.
  *
  * Both the edit and copy wrappers render this so their titles and labels cannot
- * drift apart, which is what happened before — the edit wizard's "Edited from"
- * line showed the template's own name rather than its parent's.
+ * drift apart, which is what happened before — the edit wizard's source line
+ * showed the template's own name rather than its parent's.
+ *
+ * The source line always reads "Copy created from", saved or not, because the
+ * parent is where the template's content came from in both wizards.
  */
 import { getTemplateLevelLabel, Role, TemplateLevel } from '@tbcm/common';
 import { Button } from '../Button';
@@ -20,8 +23,11 @@ interface TemplateDetailsCardProps {
   level?: TemplateLevel | null;
   /** False for a copy that has not been persisted yet. */
   isSaved: boolean;
-  /** Sub-heading naming the current wizard step. */
-  stepDescription: string;
+  /**
+   * Sub-heading naming the current wizard step. Omitted on steps that already
+   * carry their own heading, so the same label is not shown twice.
+   */
+  stepDescription?: string;
   onEditDetailsClick?: () => void;
 }
 
@@ -50,7 +56,7 @@ export const TemplateDetailsCard: React.FC<TemplateDetailsCardProps> = ({
 
           {parentName && (
             <p className='text-base text-gray-600 mt-1'>
-              Edited from: <span className='font-semibold'>{parentName}</span>
+              Copy created from: <span className='font-semibold'>{parentName}</span>
             </p>
           )}
 
@@ -71,7 +77,7 @@ export const TemplateDetailsCard: React.FC<TemplateDetailsCardProps> = ({
         )}
       </div>
 
-      <p className='text-base text-gray-500 mt-2'>{stepDescription}</p>
+      {stepDescription && <p className='text-base text-gray-500 mt-2'>{stepDescription}</p>}
     </Card>
   );
 };

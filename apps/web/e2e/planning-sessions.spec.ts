@@ -208,8 +208,8 @@ test.describe('planning sessions table', () => {
       .locator('select[name="careLocation"]')
       .selectOption({ label: 'Emergency Department' });
 
-    // the stepper toolbar is aria-hidden, so match on text rather than role
-    await page.locator('button:text-is("Next")').click();
+    // `exact` keeps this off Next.js' dev tools button, whose name contains "Next".
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
 
     // The first-save naming modal appears...
     const modalInput = page.locator('#session-name');

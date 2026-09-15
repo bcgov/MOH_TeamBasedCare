@@ -125,6 +125,8 @@ This step displays the **Activity Gap Matrix** - a table showing which occupatio
 
 - Your progress is automatically saved as a draft
 - You can navigate between steps using the Previous and Next buttons
+- Leaving Planning for another page (for example Care Settings) also saves the step you were editing
+- If navigation is cancelled, you can keep editing and saving; a save already in progress will not move you to another step
 - Only one active draft is maintained at a time
 
 ---

@@ -10,9 +10,8 @@ import { seedAuth, stubApi, stubCareSettings } from './fixtures';
  * coverage for this feature instead.
  *
  * Scans are scoped to this feature's own UI. The surrounding page carries
- * pre-existing violations that predate this work (a focusable `aria-hidden`
- * wizard toolbar in `PlanningWrapper`, an unlabelled sidebar toggle, an
- * unlabelled care-setting `select`); scanning the whole document would mean
+ * pre-existing violations that predate this work (an unlabelled sidebar toggle,
+ * an unlabelled care-setting `select`); scanning the whole document would mean
  * these tests fail for reasons unrelated to the sessions table.
  */
 
@@ -179,5 +178,49 @@ test.describe('template levels accessibility', () => {
       .analyze();
 
     expect(results.violations).toEqual([]);
+  });
+});
+
+/**
+ * Automated WCAG 2.1 A/AA checks for the planning wizard toolbar.
+ *
+ * The toolbar carried a blanket `aria-hidden`, which took its Previous/Next
+ * buttons out of the accessibility tree while leaving them in the tab order --
+ * a screen reader user could focus a control that announced nothing (WCAG
+ * 4.1.2). It also swallowed the Stepper's own `sr-only` "Form step X of Y"
+ * progress text, so the wizard reported no progress at all.
+ */
+test.describe('planning wizard toolbar accessibility', () => {
+  const TOOLBAR = '#planning-wizard-toolbar';
+
+  test.beforeEach(async ({ page }) => {
+    await seedAuth(page);
+    await stubApi(page);
+    await page.goto('/planning');
+    await page.getByRole('radio', { name: SAVED_DRAFT_OPTION }).check();
+    await page.getByRole('button', { name: 'Continue Emergency Department Plan' }).click();
+    await expect(page.locator(TOOLBAR)).toBeVisible();
+  });
+
+  test('the wizard toolbar has no WCAG A/AA violations', async ({ page }) => {
+    const results = await new AxeBuilder({ page }).include(TOOLBAR).withTags(WCAG).analyze();
+
+    expect(results.violations).toEqual([]);
+  });
+
+  test('the step controls are reachable by role', async ({ page }) => {
+    // WCAG 4.1.2: these are the wizard's primary controls. Hiding them from the
+    // accessibility tree left them focusable but nameless.
+    await expect(page.getByRole('button', { name: 'Previous', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeVisible();
+  });
+
+  test('the wizard announces which step the planner is on', async ({ page }) => {
+    const progress = page.locator(`${TOOLBAR} .sr-only`);
+    await expect(progress).toHaveText('Form step 2 of 4');
+
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+
+    await expect(progress).toHaveText('Form step 3 of 4');
   });
 });

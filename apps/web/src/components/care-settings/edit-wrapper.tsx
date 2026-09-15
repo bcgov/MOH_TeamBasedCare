@@ -398,9 +398,7 @@ const EditContent: React.FC = () => {
         level={state.level}
         isSaved
         stepDescription={
-          state.currentStep === 1
-            ? 'Select the Care Competencies and Activities'
-            : 'Care Competencies and Corresponding Activities'
+          state.currentStep === 1 ? 'Select the Care Competencies and Activities' : undefined
         }
         onEditDetailsClick={() => {
           setDetailsNameError(undefined);

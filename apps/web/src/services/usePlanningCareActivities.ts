@@ -17,18 +17,21 @@ export const usePlanningCareActivities = () => {
   });
   const { sendApiRequest, fetchData } = useHttp();
 
-  const handleSubmit = (values: SaveCareActivityDTO) => {
-    sendApiRequest(
+  const handleSubmit = async (values: SaveCareActivityDTO) => {
+    let saved = false;
+    await sendApiRequest(
       {
         method: REQUEST_METHOD.PATCH,
         data: values,
         endpoint: API_ENDPOINT.getPlanningCareActivity(sessionId),
       },
       () => {
+        saved = true;
         toast.success('Changes saved automatically.');
         updateProceedToNext();
       },
     );
+    return saved;
   };
 
   useEffect(() => {

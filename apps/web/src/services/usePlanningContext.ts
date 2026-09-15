@@ -15,6 +15,7 @@ export const usePlanningContext = () => {
     refreshSessionsList,
     promptForSessionName,
     clearSessionNamePrompt,
+    beginLeaveSave,
   } = useContext(PlanningContext) as PlanningContextType;
 
   return {
@@ -29,6 +30,9 @@ export const usePlanningContext = () => {
     refreshSessionsList: () => refreshSessionsList(),
     promptForSessionName: (session: { id: string; name: string }) => promptForSessionName(session),
     clearSessionNamePrompt: () => clearSessionNamePrompt(),
+    // Passed through rather than re-wrapped: the leave-save listener depends on it, and a
+    // fresh identity each render would tear down and re-register that listener.
+    beginLeaveSave,
     state,
   };
 };
