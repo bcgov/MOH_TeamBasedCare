@@ -112,6 +112,53 @@ test.describe('template levels', () => {
     await expect(page.locator('#permission-activity-1-occ-2')).toHaveValue('N');
   });
 
+  test('copy waits for persistence and retains the wizard on an invalid-reference error', async ({
+    page,
+  }) => {
+    let releaseRequest: () => void = () => {};
+    const responseGate = new Promise<void>(resolve => {
+      releaseRequest = resolve;
+    });
+    const message =
+      'One or more permission occupations are not valid options. Reload the source care setting and review your selections.';
+    await page.route('**/care-settings/tpl-ha/copy-full', async route => {
+      await responseGate;
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({ errorType: 'Bad Request', errorMessage: message }),
+      });
+    });
+    await page.goto('/care-settings/copy?sourceId=tpl-ha');
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('button', { name: 'Save & Close', exact: true }).click();
+    await page.locator('#edit-details-name').fill('Nanaimo Medical Unit');
+    await page.getByRole('radio', { name: /Site \/ Care Setting Template/ }).check();
+
+    const request = page.waitForRequest('**/care-settings/tpl-ha/copy-full');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await request;
+    try {
+      await expect(page).toHaveURL(/\/care-settings\/copy/);
+      await expect(
+        page.getByRole('dialog', { name: 'Care Setting Details' }).locator('[data-icon="spinner"]'),
+      ).toBeVisible();
+      expect(stub.copies).toHaveLength(0);
+    } finally {
+      releaseRequest();
+    }
+    await expect(page.getByText(message, { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/care-settings\/copy/);
+    await expect(page.locator('#edit-details-name')).toHaveValue('Nanaimo Medical Unit');
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
+    expect(stub.copies).toHaveLength(0);
+
+    await page.unroute('**/care-settings/tpl-ha/copy-full');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page).toHaveURL(/\/care-settings$/);
+    expect(stub.copies).toHaveLength(1);
+  });
+
   test('cancelling the details prompt abandons the save and creates nothing (UI case 9b)', async ({
     page,
   }) => {

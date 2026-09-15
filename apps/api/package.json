@@ -29,7 +29,9 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d ./src/ormconfig.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d ./src/ormconfig.ts",
     "migration:show": "typeorm-ts-node-commonjs migration:show -d ./src/ormconfig.ts",
-    "db:seed-care-activities": "SEED_TYPE=SEED_CARE_ACTIVITIES ts-node ./src/database/scripts/seed.ts"
+    "db:seed-care-activities": "SEED_TYPE=SEED_CARE_ACTIVITIES ts-node ./src/database/scripts/seed.ts",
+    "db:copy-performance:fixture": "ts-node -r tsconfig-paths/register ./src/database/scripts/seed-care-setting-copy-performance.ts",
+    "db:copy-performance:benchmark": "ts-node -r tsconfig-paths/register ./src/database/scripts/benchmark-care-setting-copy.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.887.0",

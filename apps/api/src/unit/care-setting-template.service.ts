@@ -71,6 +71,7 @@ const PERMISSION_UPSERT_BATCH_SIZE = 5000;
 const PERMISSION_REMOVAL_BATCH_SIZE = 100;
 /** Relation inserts and deletes cost 2 and 1 parameters per ID respectively. */
 const RELATION_BATCH_SIZE = 1000;
+const REFERENCE_LOOKUP_BATCH_SIZE = 5000;
 
 /** Keys a permission row by template and activity, for a single occupation. */
 const getTemplateOccupationPermissionKey = (templateId: string, activityId: string) =>
@@ -584,81 +585,6 @@ export class CareSettingTemplateService {
   }
 
   /**
-   * Validate the limits attached to submitted permissions and return them in a
-   * form the permission rows can be written from.
-   *
-   * `legacyLcPairs` names the (activity, occupation) pairs already stored as LC
-   * with no limit. Those predate this feature and cannot be backfilled, so a
-   * resubmission of one unchanged is accepted; without this exemption a
-   * template containing a single untouched legacy cell could never be saved
-   * again, because every save resubmits every permission.
-   */
-  private async resolvePermissionLimits(
-    permissions: {
-      activityId: string;
-      occupationId: string;
-      permission: Permissions;
-      limitId?: string | null;
-      restrictionDescription?: string | null;
-    }[],
-    legacyLcPairs: Set<string>,
-  ): Promise<Map<string, { limit: LimitCondition | null; restrictionDescription: string | null }>> {
-    const resolved = new Map<
-      string,
-      { limit: LimitCondition | null; restrictionDescription: string | null }
-    >();
-
-    const requestedLimitIds = Array.from(
-      new Set(
-        permissions
-          .filter(p => p.permission === Permissions.LIMITS && p.limitId)
-          .map(p => p.limitId as string),
-      ),
-    );
-
-    const limits = requestedLimitIds.length
-      ? await this.limitConditionRepo.find({ where: { id: In(requestedLimitIds) } })
-      : [];
-    const limitMap = new Map(limits.map(l => [l.id, l]));
-
-    for (const p of permissions) {
-      const key = getTemplatePermissionKey(p.activityId, p.occupationId);
-
-      // Anything that is not LC carries no limit, whatever the client sent.
-      if (p.permission !== Permissions.LIMITS) {
-        resolved.set(key, { limit: null, restrictionDescription: null });
-        continue;
-      }
-
-      if (!p.limitId) {
-        if (!legacyLcPairs.has(key)) {
-          throw new BadRequestException(
-            'A limit must be selected for every permission set to limits and conditions.',
-          );
-        }
-
-        // Untouched legacy cell - preserve it exactly as it was.
-        resolved.set(key, { limit: null, restrictionDescription: null });
-        continue;
-      }
-
-      const limit = limitMap.get(p.limitId);
-      if (!limit) {
-        throw new BadRequestException('The selected limit is not a valid option.');
-      }
-
-      const description = p.restrictionDescription?.trim() || null;
-      if (description && description.length > 2000) {
-        throw new BadRequestException('Restriction description cannot exceed 2000 characters.');
-      }
-
-      resolved.set(key, { limit, restrictionDescription: description });
-    }
-
-    return resolved;
-  }
-
-  /**
    * Read the (activity, occupation) pairs currently stored as LC with no limit.
    */
   private async getLegacyLcPairs(templateId: string): Promise<Set<string>> {
@@ -1044,6 +970,31 @@ export class CareSettingTemplateService {
   }
 
   /**
+   * Load distinct references in sequential, bounded queries rather than sending
+   * repeated IDs or an unbounded IN clause to PostgreSQL. Empty input performs
+   * no queries. Missing references are left for the caller to detect and reject.
+   *
+   * @template T - Reference row returned by the lookup, typically an ID-only entity.
+   * @param ids - IDs to deduplicate by exact string equality. Callers must normalize
+   * UUID casing first; this helper does not canonicalize or validate identifiers.
+   * @param find - Lookup for each nonempty batch of at most
+   * REFERENCE_LOOKUP_BATCH_SIZE IDs, including any required visibility filters.
+   * @returns All returned rows, concatenated in batch order. Row order within a
+   * batch is determined by the lookup and need not match the requested ID order.
+   * @throws Propagates lookup failures immediately without querying later batches.
+   */
+  private async findReferencesInBatches<T>(
+    ids: Iterable<string>,
+    find: (batch: string[]) => Promise<T[]>,
+  ): Promise<T[]> {
+    const rows: T[] = [];
+    await this.forEachBatch(new Set(ids), REFERENCE_LOOKUP_BATCH_SIZE, async batch => {
+      rows.push(...(await find(batch)));
+    });
+    return rows;
+  }
+
+  /**
    * Persists only changed permission triples with bounded parameter batches.
    * Upserts replace LC details atomically; deletions name each removed triple.
    *
@@ -1064,39 +1015,7 @@ export class CareSettingTemplateService {
       { limit: LimitCondition | null; restrictionDescription: string | null }
     >,
   ): Promise<void> {
-    await this.forEachBatch(upserts, PERMISSION_UPSERT_BATCH_SIZE, async upsertsBatch => {
-      const values = upsertsBatch
-        .map(
-          (_value, index) =>
-            `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`,
-        )
-        .join(', ');
-      const parameters = upsertsBatch.flatMap(permission => {
-        const resolved = resolvedLimits.get(
-          getTemplatePermissionKey(permission.activityId, permission.occupationId),
-        );
-        return [
-          templateId,
-          permission.activityId,
-          permission.occupationId,
-          permission.permission,
-          resolved?.limit?.id ?? null,
-          resolved?.restrictionDescription ?? null,
-        ];
-      });
-      await manager.query(
-        `INSERT INTO care_setting_template_permission
-           (template_id, care_activity_id, occupation_id, permission, limit_condition_id, restriction_description)
-         VALUES ${values}
-         ON CONFLICT ON CONSTRAINT template_activity_occupation
-         DO UPDATE SET
-           permission = EXCLUDED.permission,
-           limit_condition_id = EXCLUDED.limit_condition_id,
-           restriction_description = EXCLUDED.restriction_description,
-           updated_at = NOW()`,
-        parameters,
-      );
-    });
+    await this.insertPermissions(manager, templateId, upserts, resolvedLimits, 'update');
 
     await this.forEachBatch(removals, PERMISSION_REMOVAL_BATCH_SIZE, async removalsBatch => {
       const conditions = removalsBatch
@@ -1112,6 +1031,81 @@ export class CareSettingTemplateService {
       ]);
       await manager.query(
         `DELETE FROM care_setting_template_permission WHERE ${conditions}`,
+        parameters,
+      );
+    });
+  }
+
+  /**
+   * Persist flat permission tuples without hydrating permission entities or
+   * traversing the template's relation graph. Each sequential batch uses six
+   * parameters per row and at most PERMISSION_UPSERT_BATCH_SIZE rows.
+   *
+   * This helper does not start or commit a transaction. The caller must supply
+   * the same transactional manager used for the template and relation writes so
+   * any later-batch failure rolls back the entire operation.
+   *
+   * @param manager - Entity manager belonging to the caller's active transaction.
+   * @param templateId - Existing destination template's canonical UUID.
+   * @param permissions - Validated, uniquely keyed activity/occupation permissions
+   * with normalized UUIDs. An empty array performs no SQL.
+   * @param resolvedLimits - Complete map keyed by getTemplatePermissionKey, including
+   * null limit/description entries for non-LC permissions and permitted legacy LC.
+   * @param onConflict - `error` uses strict inserts for copies; `update` preserves
+   * edit behavior by replacing permission/LC details and refreshing updated_at.
+   * @returns Resolves after every batch executes, without committing or returning
+   * hydrated rows. New row IDs and timestamps come from database defaults.
+   * @throws {Error} If any permission lacks a resolved-limits entry.
+   * @throws Propagates database failures, including duplicate-key errors in strict
+   * mode, for the caller's transaction to roll back.
+   */
+  private async insertPermissions(
+    manager: EntityManager,
+    templateId: string,
+    permissions: PermissionInput[],
+    resolvedLimits: Map<
+      string,
+      { limit: LimitCondition | null; restrictionDescription: string | null }
+    >,
+    onConflict: 'error' | 'update',
+  ): Promise<void> {
+    const conflictClause =
+      onConflict === 'update'
+        ? `ON CONFLICT ON CONSTRAINT template_activity_occupation
+           DO UPDATE SET
+             permission = EXCLUDED.permission,
+             limit_condition_id = EXCLUDED.limit_condition_id,
+             restriction_description = EXCLUDED.restriction_description,
+             updated_at = NOW()`
+        : '';
+
+    await this.forEachBatch(permissions, PERMISSION_UPSERT_BATCH_SIZE, async batch => {
+      const values = batch
+        .map(
+          (_value, index) =>
+            `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`,
+        )
+        .join(', ');
+      const parameters = batch.flatMap(permission => {
+        const resolved = resolvedLimits.get(
+          getTemplatePermissionKey(permission.activityId, permission.occupationId),
+        );
+        if (!resolved) {
+          throw new Error('Permission limits must be resolved before persistence.');
+        }
+        return [
+          templateId,
+          permission.activityId,
+          permission.occupationId,
+          permission.permission,
+          resolved.limit?.id ?? null,
+          resolved.restrictionDescription,
+        ];
+      });
+      await manager.query(
+        `INSERT INTO care_setting_template_permission
+           (template_id, care_activity_id, occupation_id, permission, limit_condition_id, restriction_description)
+         VALUES ${values} ${conflictClause}`,
         parameters,
       );
     });
@@ -1307,51 +1301,89 @@ export class CareSettingTemplateService {
     // Check for duplicate name (scoped to HA)
     await this.checkDuplicateName(dto.name, healthAuthority);
 
-    // Get selected bundles
-    const selectedBundles = await this.bundleRepo.find({
-      where: { id: In(dto.selectedBundleIds) },
-    });
+    // PostgreSQL returns UUIDs in lowercase, regardless of request casing.
+    const permissionInputs = (dto.permissions ?? []).map(permission => ({
+      ...permission,
+      activityId: permission.activityId.toLowerCase(),
+      occupationId: permission.occupationId.toLowerCase(),
+      limitId: permission.limitId?.toLowerCase() ?? permission.limitId,
+    }));
+    this.assertUniqueIds(
+      permissionInputs.map(p => getTemplatePermissionKey(p.activityId, p.occupationId)),
+      'Each permission can be included only once per copy.',
+    );
+    const selectedBundleIds = Array.from(
+      new Set(dto.selectedBundleIds.map(id => id.toLowerCase())),
+    );
+    const selectedActivityIds = Array.from(
+      new Set(dto.selectedActivityIds.map(id => id.toLowerCase())),
+    );
+    const activityIds = new Set([
+      ...selectedActivityIds,
+      ...permissionInputs.map(p => p.activityId),
+    ]);
+    const occupationIds = new Set(permissionInputs.map(p => p.occupationId));
+    const limitIds = permissionInputs.flatMap(p =>
+      p.permission === Permissions.LIMITS && p.limitId ? [p.limitId] : [],
+    );
+    const needsLegacyLcPairs = permissionInputs.some(
+      p => p.permission === Permissions.LIMITS && !p.limitId,
+    );
 
-    // Get selected activities
-    const selectedActivities = await this.careActivityRepo.find({
-      where: { id: In(dto.selectedActivityIds) },
-    });
+    const [bundles, activities, occupations, limits, legacyLcPairs] = await Promise.all([
+      this.findReferencesInBatches(selectedBundleIds, ids =>
+        this.bundleRepo.find({ select: ['id'], where: { id: In(ids) } }),
+      ),
+      this.findReferencesInBatches(activityIds, ids =>
+        this.careActivityRepo.find({ select: ['id'], where: { id: In(ids) } }),
+      ),
+      this.findReferencesInBatches(occupationIds, ids =>
+        this.occupationRepo.find({ select: ['id'], where: { id: In(ids) } }),
+      ),
+      this.findReferencesInBatches(limitIds, ids =>
+        this.limitConditionRepo.find({ select: ['id'], where: { id: In(ids) } }),
+      ),
+      needsLegacyLcPairs ? this.getLegacyLcPairs(sourceId) : Promise.resolve(new Set<string>()),
+    ]);
 
-    // Resolve every permission before anything is written, so an invalid
-    // payload is rejected before the template row exists. The exemption is
-    // taken from the SOURCE: the wizard resubmits inherited permissions
-    // verbatim, and an LC cell inherited from a template that predates limits
-    // carries none. Rejecting those would make such a template uncopyable,
-    // because an untouched cell shows no badge and cannot be opened in the
-    // limits dialog. A newly chosen LC is not in the set and still needs one.
-    const permissionInputs = dto.permissions ?? [];
-    const legacyLcPairs = await this.getLegacyLcPairs(sourceId);
-    const resolvedLimits = await this.resolvePermissionLimits(permissionInputs, legacyLcPairs);
+    const validBundleIds = new Set(bundles.map(bundle => bundle.id));
+    const validActivityIds = new Set(activities.map(activity => activity.id));
+    const validOccupationIds = new Set(occupations.map(occupation => occupation.id));
+    const retryHint = ' Reload the source care setting and review your selections.';
+    if (selectedBundleIds.some(id => !validBundleIds.has(id))) {
+      throw new BadRequestException(
+        'One or more selected bundles are not valid options.' + retryHint,
+      );
+    }
+    if (selectedActivityIds.some(id => !validActivityIds.has(id))) {
+      throw new BadRequestException(
+        'One or more selected activities are not valid options.' + retryHint,
+      );
+    }
+    if (permissionInputs.some(p => !validActivityIds.has(p.activityId))) {
+      throw new BadRequestException(
+        'One or more permission activities are not valid options.' + retryHint,
+      );
+    }
+    if (permissionInputs.some(p => !validOccupationIds.has(p.occupationId))) {
+      throw new BadRequestException(
+        'One or more permission occupations are not valid options.' + retryHint,
+      );
+    }
+    // Limit-less LC compatibility is inherited from the source, never from the new copy.
+    const resolvedLimits = await this.resolvePermissionLimitsFromCatalogue(
+      permissionInputs,
+      legacyLcPairs,
+      limits,
+    );
 
-    const activities = permissionInputs.length
-      ? await this.careActivityRepo.find({
-          where: { id: In(permissionInputs.map(p => p.activityId)) },
-        })
-      : [];
-    const activityMap = new Map(activities.map(a => [a.id, a]));
-
-    const occupations = permissionInputs.length
-      ? await this.occupationRepo.find({
-          where: { id: In(permissionInputs.map(p => p.occupationId)) },
-        })
-      : [];
-    const occupationMap = new Map(occupations.map(o => [o.id, o]));
-
-    // Create new template with provided data
     const newTemplate = this.templateRepo.create({
       name: dto.name,
       isMaster: false,
       healthAuthority,
       level: this.resolveCopyLevel(source, dto.level),
-      unit: source.unit,
-      parent: source,
-      selectedBundles,
-      selectedActivities,
+      unit: { id: source.unit.id },
+      parent: { id: source.id },
     });
 
     // Template and permissions go in together: a failure part-way through must
@@ -1359,26 +1391,29 @@ export class CareSettingTemplateService {
     const saved = await this.templateRepo.manager.transaction(async manager => {
       const persisted = await manager.save(CareSettingTemplate, newTemplate);
 
-      const newPermissions = permissionInputs
-        .filter(p => activityMap.has(p.activityId) && occupationMap.has(p.occupationId))
-        .map(p => {
-          const resolved = resolvedLimits.get(
-            getTemplatePermissionKey(p.activityId, p.occupationId),
-          );
-
-          return manager.create(CareSettingTemplatePermission, {
-            template: persisted,
-            careActivity: activityMap.get(p.activityId)!,
-            occupation: occupationMap.get(p.occupationId)!,
-            permission: p.permission,
-            limitCondition: resolved?.limit ?? null,
-            restrictionDescription: resolved?.restrictionDescription ?? null,
-          });
-        });
-
-      if (newPermissions.length > 0) {
-        await manager.save(CareSettingTemplatePermission, newPermissions);
-      }
+      await this.writeRelationChanges(
+        manager,
+        persisted.id,
+        selectedBundleIds,
+        [],
+        'care_setting_template_bundles',
+        'bundle_id',
+      );
+      await this.writeRelationChanges(
+        manager,
+        persisted.id,
+        selectedActivityIds,
+        [],
+        'care_setting_template_activities',
+        'care_activity_id',
+      );
+      await this.insertPermissions(
+        manager,
+        persisted.id,
+        permissionInputs,
+        resolvedLimits,
+        'error',
+      );
 
       return persisted;
     });
