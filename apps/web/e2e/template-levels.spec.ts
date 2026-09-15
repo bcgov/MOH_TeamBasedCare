@@ -151,7 +151,7 @@ test.describe('template levels', () => {
   test('the details card names the parent and the level once saved', async ({ page }) => {
     await page.goto('/care-settings/tpl-site/edit');
 
-    await expect(page.getByText('Edited from:')).toBeVisible();
+    await expect(page.getByText('Copy created from:')).toBeVisible();
     await expect(page.getByText('Island Health Medical Unit')).toBeVisible();
     await expect(page.getByText('Template level:')).toBeVisible();
     await expect(page.getByText('Site / Care Settings')).toBeVisible();

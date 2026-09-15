@@ -3,8 +3,8 @@
  *
  * The card is the only place the wizard states what is being edited and where
  * it came from, so its title, source line, and level row are pinned here. The
- * edit wizard previously showed the template's *own* name on the "Edited from"
- * line; case 7 exists to stop that returning.
+ * edit wizard previously showed the template's *own* name on the source line;
+ * case 7 exists to stop that returning.
  */
 import { render, screen } from '@testing-library/react';
 import { TemplateLevel } from '@tbcm/common';
@@ -18,7 +18,7 @@ describe('TemplateDetailsCard', () => {
   const baseProps = {
     templateName: 'Medical Unit — West',
     parentName: 'Medical Unit',
-    stepDescription: 'Care Competencies and Corresponding Activities',
+    stepDescription: 'Select the Care Competencies and Activities',
   };
 
   it('titles an unsaved copy after its parent (UI case 5)', () => {
@@ -35,18 +35,37 @@ describe('TemplateDetailsCard', () => {
     expect(screen.queryByText(/Template$/)).not.toBeInTheDocument();
   });
 
-  it('shows the parent name — not its own — on the Edited from line (UI case 7)', () => {
+  it('shows the parent name — not its own — on the source line (UI case 7)', () => {
     render(<TemplateDetailsCard {...baseProps} isSaved level={TemplateLevel.SITE} />);
 
-    const line = screen.getByText(/Edited from:/).closest('p');
-    expect(line).toHaveTextContent('Edited from: Medical Unit');
+    const line = screen.getByText(/Copy created from:/).closest('p');
+    expect(line).toHaveTextContent('Copy created from: Medical Unit');
     expect(line).not.toHaveTextContent('Medical Unit — West');
   });
 
-  it('omits the Edited from line when the template has no parent', () => {
+  it('keeps the Copy created from wording whether or not the copy is saved', () => {
+    const { rerender } = render(<TemplateDetailsCard {...baseProps} isSaved={false} />);
+    expect(screen.getByText(/Copy created from:/).closest('p')).toHaveTextContent(
+      'Copy created from: Medical Unit',
+    );
+
+    rerender(<TemplateDetailsCard {...baseProps} isSaved />);
+    expect(screen.getByText(/Copy created from:/).closest('p')).toHaveTextContent(
+      'Copy created from: Medical Unit',
+    );
+    expect(screen.queryByText(/Edited from:/)).not.toBeInTheDocument();
+  });
+
+  it('omits the source line when the template has no parent', () => {
     render(<TemplateDetailsCard {...baseProps} parentName={undefined} isSaved />);
 
-    expect(screen.queryByText(/Edited from:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Copy created from:/)).not.toBeInTheDocument();
+  });
+
+  it('omits the source line on an unsaved copy with no parent', () => {
+    render(<TemplateDetailsCard {...baseProps} parentName={undefined} isSaved={false} />);
+
+    expect(screen.queryByText(/Copy created from:/)).not.toBeInTheDocument();
   });
 
   it('hides the level row until the template is saved (UI case 7a)', () => {
@@ -63,7 +82,7 @@ describe('TemplateDetailsCard', () => {
     );
   });
 
-  it('renders the step description so the card works on every wizard step', () => {
+  it('renders the step description only when the wizard supplies one', () => {
     const { rerender } = render(
       <TemplateDetailsCard
         {...baseProps}
@@ -73,14 +92,11 @@ describe('TemplateDetailsCard', () => {
     );
     expect(screen.getByText('Select the Care Competencies and Activities')).toBeInTheDocument();
 
-    rerender(
-      <TemplateDetailsCard
-        {...baseProps}
-        isSaved
-        stepDescription='Care Competencies and Corresponding Activities'
-      />,
-    );
-    expect(screen.getByText('Care Competencies and Corresponding Activities')).toBeInTheDocument();
+    // The finalize step prints its own heading, so the card stays quiet there.
+    rerender(<TemplateDetailsCard {...baseProps} isSaved stepDescription={undefined} />);
+    expect(
+      screen.queryByText('Select the Care Competencies and Activities'),
+    ).not.toBeInTheDocument();
   });
 
   it('offers Edit Details only when the wizard supplies a handler', () => {

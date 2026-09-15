@@ -28,8 +28,8 @@ const WrapperContent = () => {
   return (
     <div className='flex-1 flex flex-col min-h-0'>
       <div
+        id='planning-wizard-toolbar'
         className='w-full overflow-x-auto flex items-center justify-between print:hidden rounded border-2 bg-white p-4 mt-4'
-        aria-hidden
       >
         <Stepper steps={PlanningSteps} currentStep={currentStep} />
         <div className='flex'>

@@ -265,9 +265,7 @@ const CopyContent: React.FC = () => {
         level={state.level}
         isSaved={false}
         stepDescription={
-          state.currentStep === 1
-            ? 'Select the Care Competencies and Activities'
-            : 'Care Competencies and Corresponding Activities'
+          state.currentStep === 1 ? 'Select the Care Competencies and Activities' : undefined
         }
       />
 

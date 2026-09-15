@@ -73,7 +73,66 @@ export interface ApiStub {
   /** When set, GET /sessions/last_draft returns this session instead of null */
   lastDraft: StubSession | null;
   created: StubSession[];
+  /** PATCHes to /sessions/:id/care-activity, i.e. every care competency save */
+  careActivitySaves: { id: string; body: Record<string, string[]> }[];
 }
+
+/** One bundle with two activities: enough for the Care Competencies stage to render. */
+export const STUB_PLANNING_BUNDLE = {
+  id: 'bundle-1',
+  name: 'Assessment',
+  careActivities: [
+    { id: 'activity-1', name: 'Take vital signs', activityType: 'Task', clinicalType: null },
+    { id: 'activity-2', name: 'Record intake', activityType: 'Task', clinicalType: null },
+  ],
+};
+
+/**
+ * The draft opens with one activity already picked. An empty stage fails the stage's own
+ * "at least 1 Care Activity" rule, which would stop a save before it was ever attempted
+ * and make the "nothing is written" cases pass without proving anything.
+ */
+export const STUB_PLANNING_SAVED_ACTIVITY = 'activity-2';
+
+/** Roles offered on the Occupations stage, and used as the gap grid's columns. */
+export const STUB_PLANNING_OCCUPATIONS = [
+  { id: 'occ-1', name: 'Registered Nurse', description: 'Provides direct nursing care.' },
+  { id: 'occ-2', name: 'Licensed Practical Nurse', description: 'Provides practical nursing.' },
+];
+
+export const GAP_ACTIVITY_COLUMN = 'Care Competencies and Corresponding Activities';
+
+/**
+ * The Gaps, Optimizations and Suggestions grid. The bundle row rolls up to MIXED for the RN
+ * because its activities disagree (Y vs LC), which is exactly the pairing whose tooltips need
+ * room for their long explanatory copy.
+ */
+export const STUB_ACTIVITY_GAP = {
+  headers: [
+    { title: GAP_ACTIVITY_COLUMN, description: '' },
+    ...STUB_PLANNING_OCCUPATIONS.map(o => ({ title: o.name, description: o.description })),
+  ],
+  overview: { inScope: '1', limits: '1', outOfScope: '0' },
+  data: [
+    {
+      name: STUB_PLANNING_BUNDLE.name,
+      [STUB_PLANNING_OCCUPATIONS[0].name]: 'MIXED',
+      [STUB_PLANNING_OCCUPATIONS[1].name]: 'LC',
+      careActivities: [
+        {
+          [GAP_ACTIVITY_COLUMN]: 'Take vital signs',
+          [STUB_PLANNING_OCCUPATIONS[0].name]: 'Y',
+          [STUB_PLANNING_OCCUPATIONS[1].name]: 'LC',
+        },
+        {
+          [GAP_ACTIVITY_COLUMN]: 'Record intake',
+          [STUB_PLANNING_OCCUPATIONS[0].name]: 'LC',
+          [STUB_PLANNING_OCCUPATIONS[1].name]: 'LC',
+        },
+      ],
+    },
+  ],
+};
 
 export async function stubApi(page: Page, initial = buildSessions()): Promise<ApiStub> {
   const stub: ApiStub = {
@@ -82,6 +141,7 @@ export async function stubApi(page: Page, initial = buildSessions()): Promise<Ap
     renames: [],
     lastDraft: null,
     created: [],
+    careActivitySaves: [],
   };
 
   await page.route('**/api/v1/**', async route => {
@@ -149,6 +209,48 @@ export async function stubApi(page: Page, initial = buildSessions()): Promise<Ap
     // PATCH /sessions/:id/profile
     if (/\/sessions\/[^/]+\/profile$/.test(path) && method === 'PATCH') {
       return json({ success: true });
+    }
+
+    // GET /sessions/:id/care-activity/bundle -- competencies shown on stage 2
+    const bundlesMatch = path.match(/\/sessions\/([^/]+)\/care-activity\/bundle$/);
+    if (bundlesMatch) {
+      return json([STUB_PLANNING_BUNDLE]);
+    }
+
+    // /sessions/:id/care-activity -- the draft's selected activities per bundle
+    const careActivityMatch = path.match(/\/sessions\/([^/]+)\/care-activity$/);
+    if (careActivityMatch) {
+      if (method === 'PATCH') {
+        const body = (request.postDataJSON() ?? {}) as {
+          careActivityBundle?: Record<string, string[]>;
+        };
+        stub.careActivitySaves.push({
+          id: careActivityMatch[1],
+          body: body.careActivityBundle ?? {},
+        });
+        return json({ success: true });
+      }
+
+      return json({ [STUB_PLANNING_BUNDLE.id]: [STUB_PLANNING_SAVED_ACTIVITY] });
+    }
+
+    // GET /occupations -- the pickable roles on the Occupations stage. Anchored to the API
+    // root so it cannot swallow /care-settings/:id/occupations, handled further down.
+    if (/\/v1\/occupations$/.test(path)) {
+      return json(STUB_PLANNING_OCCUPATIONS);
+    }
+
+    // /sessions/:id/occupation -- the draft's chosen roles
+    if (/\/sessions\/[^/]+\/occupation$/.test(path)) {
+      if (method === 'PATCH') {
+        return json({ success: true });
+      }
+      return json([STUB_PLANNING_OCCUPATIONS[0].id]);
+    }
+
+    // GET /sessions/:id/activities-gap -- the Gaps, Optimizations and Suggestions grid
+    if (/\/sessions\/[^/]+\/activities-gap$/.test(path)) {
+      return json(STUB_ACTIVITY_GAP);
     }
 
     // PATCH /sessions/:id/name

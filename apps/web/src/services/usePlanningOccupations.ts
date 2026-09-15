@@ -27,14 +27,16 @@ export const usePlanningOccupations = ({
 
   const { sendApiRequest, fetchData } = useHttp();
 
-  const handleSubmit = (values: PlanningOccupation) => {
-    sendApiRequest(
+  const handleSubmit = async (values: PlanningOccupation) => {
+    let saved = false;
+    await sendApiRequest(
       {
         method: REQUEST_METHOD.PATCH,
         data: values,
         endpoint: API_ENDPOINT.getPlanningOccupation(sessionId),
       },
       () => {
+        saved = true;
         toast.success('Changes saved automatically.');
         // proceed to next step (planning context changes) if requested
         if (proceedToNextOnSubmit) {
@@ -42,6 +44,7 @@ export const usePlanningOccupations = ({
         }
       },
     );
+    return saved;
   };
 
   const updateOccupationsForSessionId = useCallback(() => {

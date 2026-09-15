@@ -42,6 +42,7 @@ export const usePlanningProfile = () => {
   }, []);
 
   const handleSubmit = async (values: SaveProfileDTO) => {
+    let saved = false;
     // BE does not need to store draft as Profile Option :: So, reset before submitting
     const data: SaveProfileDTO = {
       ...values,
@@ -62,6 +63,7 @@ export const usePlanningProfile = () => {
       await sendApiRequest(
         config,
         (created: PlanningSessionRO) => {
+          saved = true;
           setFailedSave(undefined);
           updateSessionId(created.id);
           updateSessionName(created.name);
@@ -74,7 +76,7 @@ export const usePlanningProfile = () => {
         () => setFailedSave(values),
       );
 
-      return;
+      return saved;
     }
 
     // patch the result if session already exists
@@ -85,11 +87,13 @@ export const usePlanningProfile = () => {
         endpoint: API_ENDPOINT.getPlanningProfile(sessionId),
       },
       () => {
+        saved = true;
         setFailedSave(undefined);
         updateProceedToNext();
       },
       () => setFailedSave(values),
     );
+    return saved;
   };
 
   const retryFailedSave = useCallback(() => {

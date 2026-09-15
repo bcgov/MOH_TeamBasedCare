@@ -1,4 +1,4 @@
-import { createContext, useEffect, useReducer } from 'react';
+import { createContext, useCallback, useEffect, useReducer, useRef } from 'react';
 import { ProfileOptions } from '@tbcm/common';
 import { PlanningSteps } from '../../common/constants';
 
@@ -51,6 +51,11 @@ export type PlanningContextType = {
   refreshSessionsList: () => void;
   promptForSessionName: (session: { id: string; name: string }) => void;
   clearSessionNamePrompt: () => void;
+  /**
+   * Suppress advancement for a departure's submissions. Release the returned claim
+   * when submission settles, including validation or API failure.
+   */
+  beginLeaveSave: () => () => void;
 };
 
 const enum PlanningActions {
@@ -148,8 +153,22 @@ export const PlanningContext = createContext<PlanningContextType | null>(null);
 export const PlanningProvider = ({ children }: { children: React.ReactElement }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // Claims last until submission settles, even if navigation is cancelled first.
+  const pendingLeaveSaves = useRef(new Set<symbol>());
+
+  const beginLeaveSave = useCallback(() => {
+    const claim = Symbol();
+    pendingLeaveSaves.current.add(claim);
+    return () => {
+      pendingLeaveSaves.current.delete(claim);
+    };
+  }, []);
+
   const updateNextTriggered = () => dispatch({ type: PlanningActions.NEXT_TRIGGERED });
-  const updateProceedToNext = () => dispatch({ type: PlanningActions.PROCEED_TO_NEXT });
+  const updateProceedToNext = () => {
+    if (pendingLeaveSaves.current.size > 0) return;
+    dispatch({ type: PlanningActions.PROCEED_TO_NEXT });
+  };
   const updateWaitForValidation = () => dispatch({ type: PlanningActions.WAIT_FOR_VALIDATION });
   const updateProfileOption = (profileOption: string) =>
     dispatch({ type: PlanningActions.UPDATE_PROFILE_OPTION, payload: { profileOption } });
@@ -202,6 +221,7 @@ export const PlanningProvider = ({ children }: { children: React.ReactElement })
         refreshSessionsList,
         promptForSessionName,
         clearSessionNamePrompt,
+        beginLeaveSave,
       }}
     >
       {children}

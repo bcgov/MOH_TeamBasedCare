@@ -33,7 +33,7 @@ export const TooltipIcon = ({
                   position === PopoverPosition.BOTTOM_LEFT && 'right-0'
                 }`}
               ></div>
-              <div className='w-[200px] w-auto p-3 text-sm text-white bg-bcBlueAccent shadow-xl rounded-lg'>
+              <div className='w-max max-w-[22rem] lg:max-w-[30rem] p-3 text-sm text-white bg-bcBlueAccent shadow-xl rounded-lg'>
                 {textWithOccupation.replaceAll('<OCCUPATION>', occupation)}
               </div>
             </>

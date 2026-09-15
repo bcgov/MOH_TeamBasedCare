@@ -15,7 +15,9 @@ export interface CareActivitiesBundleProps {
 }
 
 const CareActivitiesBundleWrapper: React.FC<CareActivitiesBundleProps> = ({ title }) => {
-  usePlanningContent();
+  // `careActivityID` and `careActivities` track what the planner is looking at, not what
+  // the draft stores, so only the bundle decides whether leaving is worth a save.
+  usePlanningContent({ persistedFields: ['careActivityBundle'] });
 
   return (
     <Form className='flex flex-1 flex-col min-h-0'>
