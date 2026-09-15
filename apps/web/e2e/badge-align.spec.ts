@@ -6,7 +6,7 @@ import { seedAuth, stubApi, stubCareSettings } from './fixtures';
  * wrapper pushes it off the select's vertical centre. Only a real layout
  * engine can show that, so it is measured here.
  */
-test.describe('changed-by-HA badge alignment', () => {
+test.describe('permission badge alignment', () => {
   test('every badge is centred on its select', async ({ page }) => {
     await seedAuth(page);
     await stubApi(page);
@@ -28,7 +28,7 @@ test.describe('changed-by-HA badge alignment', () => {
       document.querySelectorAll('select').forEach(select => {
         const cell = select.parentElement;
         const badge = Array.from(cell?.querySelectorAll('button') ?? []).find(
-          button => button.textContent === 'Changes made by HA',
+          button => button.textContent === 'Changes made' || button.textContent === 'View details',
         );
         if (!badge) return;
 

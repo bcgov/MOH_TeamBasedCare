@@ -113,6 +113,70 @@ export class TemplatePermissionRO {
   }
 }
 
+/**
+ * One permission cell of the direct parent template, used as the baseline the
+ * permission badge compares against.
+ *
+ * Limits are included because an LC cell is only "unchanged" when the selected
+ * limit and the restriction description also match the parent's.
+ */
+@Exclude()
+export class ParentPermissionRO {
+  @Expose()
+  activityId!: string;
+
+  @Expose()
+  occupationId!: string;
+
+  @Expose()
+  permission!: Permissions;
+
+  @Expose()
+  limitId?: string | null;
+
+  /** Inlined so a parent limit can be named even once it is deactivated. */
+  @Expose()
+  limitName?: string | null;
+
+  @Expose()
+  restrictionDescription?: string | null;
+
+  constructor(data: Partial<ParentPermissionRO>) {
+    Object.assign(this, data);
+  }
+}
+
+/** Lightweight copy data, with a persisted source baseline distinct from scope defaults. */
+@Exclude()
+export class CareSettingTemplateCopyRO {
+  @Expose()
+  id!: string;
+
+  @Expose()
+  name!: string;
+
+  @Expose()
+  unitId!: string;
+
+  @Expose()
+  selectedBundleIds!: string[];
+
+  @Expose()
+  selectedActivityIds!: string[];
+
+  /** Initial copy permissions, including occupation-scope gaps for masters. */
+  @Expose()
+  permissions!: TemplatePermissionRO[];
+
+  /** Only persisted source rows, matching the saved copy's direct-parent baseline. */
+  @Expose()
+  parentPermissions!: ParentPermissionRO[];
+
+  constructor(data: Partial<CareSettingTemplateCopyRO>) {
+    Object.assign(this, data);
+  }
+}
+
 /** Detailed template with full bundle selections and permissions */
 @Exclude()
 export class CareSettingTemplateDetailRO extends CareSettingTemplateRO {

@@ -433,6 +433,8 @@ export interface CareSettingsStub {
   templates: StubTemplate[];
   /** Permissions per template id. */
   permissions: Record<string, StubPermission[]>;
+  /** Optional scope-enriched copy data, separate from persisted parent rows. */
+  copyPermissions: Record<string, StubPermission[]>;
   /** Selected bundle IDs per template id. */
   selectedBundleIds: Record<string, string[]>;
   /** Selected activity IDs per template id. */
@@ -485,6 +487,7 @@ export async function stubCareSettings(
       ],
       'tpl-site': [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' }],
     },
+    copyPermissions: {},
     selectedBundleIds: Object.fromEntries(initial.map(template => [template.id, [STUB_BUNDLE.id]])),
     selectedActivityIds: Object.fromEntries(
       initial.map(template => [
@@ -534,6 +537,9 @@ export async function stubCareSettings(
           activityId: p.activityId,
           occupationId: p.occupationId,
           permission: p.permission,
+          limitId: p.permission === 'LC' ? p.limitId ?? null : null,
+          limitName: p.permission === 'LC' ? p.limitName ?? null : null,
+          restrictionDescription: p.permission === 'LC' ? p.restrictionDescription ?? null : null,
         })),
       );
     }
@@ -555,7 +561,9 @@ export async function stubCareSettings(
         unitId: 'unit-1',
         selectedBundleIds: [STUB_BUNDLE.id],
         selectedActivityIds: STUB_BUNDLE.careActivities.map(a => a.id),
-        permissions: stub.permissions[copyDataMatch[1]] ?? [],
+        permissions:
+          stub.copyPermissions[copyDataMatch[1]] ?? stub.permissions[copyDataMatch[1]] ?? [],
+        parentPermissions: stub.permissions[copyDataMatch[1]] ?? [],
       });
     }
 
@@ -575,6 +583,9 @@ export async function stubCareSettings(
         updatedAt: new Date().toISOString(),
       };
       stub.templates.push(created);
+      stub.permissions[created.id] = body.permissions;
+      stub.selectedBundleIds[created.id] = body.selectedBundleIds;
+      stub.selectedActivityIds[created.id] = body.selectedActivityIds;
       return json(created);
     }
 

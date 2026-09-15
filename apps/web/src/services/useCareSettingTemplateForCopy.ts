@@ -4,30 +4,16 @@
  * permission entity loading that can timeout on master templates.
  */
 import useSWR from 'swr';
+import { CareSettingTemplateCopyRO } from '@tbcm/common';
 import { API_ENDPOINT } from 'src/common';
 import { AxiosPublic } from 'src/utils';
-
-interface CopyTemplateData {
-  id: string;
-  name: string;
-  unitId: string;
-  selectedBundleIds: string[];
-  selectedActivityIds: string[];
-  permissions: {
-    activityId: string;
-    occupationId: string;
-    permission: string;
-    limitId?: string | null;
-    restrictionDescription?: string | null;
-  }[];
-}
 
 export const useCareSettingTemplateForCopy = (sourceId: string) => {
   const {
     data: template,
     isValidating: isLoading,
     error,
-  } = useSWR<CopyTemplateData>(
+  } = useSWR<CareSettingTemplateCopyRO>(
     sourceId ? API_ENDPOINT.getCareSettingTemplateForCopy(sourceId) : null,
     sourceId ? (url: string) => AxiosPublic(url).then(res => res.data) : null,
     { revalidateOnFocus: false, revalidateOnMount: true },

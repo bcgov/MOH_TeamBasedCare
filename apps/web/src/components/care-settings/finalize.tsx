@@ -22,8 +22,8 @@ import {
   faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Permissions } from '@tbcm/common';
-import { useCareSettingsContext } from './CareSettingsContext';
+import { normalizeRestrictionDescription, Permissions } from '@tbcm/common';
+import { useCareSettingsContext, ParentComparison, PermissionLimit } from './CareSettingsContext';
 import { Card } from '../generic/Card';
 import { ModalWrapper } from '../Modal';
 import { Button } from '../Button';
@@ -32,7 +32,7 @@ import { LimitsConditionsModal, PermissionLimitValue } from './limits-conditions
 import { useLimitsConditions } from 'src/services/useLimitConditions';
 
 const PERMISSION_DISPLAY: Record<string, string> = {
-  [Permissions.PERFORM]: 'Perform',
+  [Permissions.PERFORM]: 'Permitted',
   [Permissions.NO]: 'Not permitted',
   [Permissions.LIMITS]: 'Limits and conditions',
 };
@@ -98,35 +98,89 @@ const PermissionSelect: React.FC<{
 };
 
 /**
- * Marks a cell whose permission differs from the parent template's. Doubles as
- * the way back into the Limits and Conditions dialog for an LC cell, which is
- * otherwise unreachable once the dialog has been saved.
+ * Marks a permission cell.
+ *
+ * A Y/N cell that overrides its parent shows an amber "Changes made". Every LC
+ * cell shows "View details" — green when it matches the parent (or has no
+ * parent), amber when it differs — and doubles as the way back into the Limits
+ * and Conditions dialog, which is otherwise unreachable once it has been saved.
  */
-const ChangedByHaBadge: React.FC<{
-  isLc: boolean;
-  parentPermission: Permissions;
+const PermissionBadge: React.FC<{
+  comparison: ParentComparison;
   ownPermission: Permissions;
+  ownLimit?: PermissionLimit;
+  /** Resolves a limit id to its catalogue name for the tooltip. */
+  getLimitName: (limitId?: string | null) => string | undefined;
   onOpenLimits: () => void;
-}> = ({ isLc, parentPermission, ownPermission, onOpenLimits }) => {
-  // The badge shares the cell with the select, and cells can be as narrow as
-  // 150px, so it carries the full wording but is allowed to shrink and clip it
-  // to an ellipsis rather than push the permission value out of view. The
-  // tooltip restores the wording when it is clipped.
-  const badgeClasses =
-    'block min-w-0 max-w-full truncate rounded-full bg-amber-100 text-amber-800 text-[10px] font-semibold leading-none px-1.5 py-1 hover:bg-amber-200';
+}> = ({ comparison, ownPermission, ownLimit, getLimitName, onOpenLimits }) => {
+  const { kind, parent } = comparison;
 
-  const label = 'Changes made by HA';
+  if (kind === 'none') return null;
+
+  const isLc = ownPermission === Permissions.LIMITS;
+  const isUnchanged = kind === 'lc-unchanged';
+  const isUnavailable = kind === 'lc-unavailable';
+
+  // The badge shares the cell with the select, and cells can be as narrow as
+  // 150px, so it is allowed to shrink and clip to an ellipsis rather than push
+  // the permission value out of view. The tooltip restores the wording.
+  const badgeClasses = `block min-w-0 max-w-full truncate rounded-full text-[10px] font-semibold leading-none px-1.5 py-1 ${
+    isUnavailable
+      ? 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+      : isUnchanged
+        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+        : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+  }`;
+
+  const label = isLc ? 'View details' : 'Changes made';
+
+  // A parent LC is named so a limit-only change reads as an actual change
+  // rather than "Limits and conditions → Limits and conditions".
+  const describeParent = (): string => {
+    if (!parent) return '';
+    const display = PERMISSION_DISPLAY[parent.permission] ?? parent.permission;
+    if (parent.permission !== Permissions.LIMITS) return display;
+    const parentLimitName = parent.limitName ?? getLimitName(parent.limitId);
+    return parentLimitName ? `${display} (${parentLimitName})` : display;
+  };
+
+  const ownLimitName = getLimitName(ownLimit?.limitId) ?? ownLimit?.limitName;
+  const restriction = normalizeRestrictionDescription(ownLimit?.restrictionDescription);
+  const parentRestriction = normalizeRestrictionDescription(parent?.restrictionDescription);
+  const restrictionChanged =
+    kind === 'lc-changed' &&
+    parent?.permission === Permissions.LIMITS &&
+    parentRestriction !== restriction;
+
+  const content = (
+    <span className='block space-y-1'>
+      {isUnchanged || isUnavailable ? (
+        <span className='block'>{PERMISSION_DISPLAY[Permissions.LIMITS]}</span>
+      ) : (
+        <span className='block'>
+          Change made: {describeParent()} → {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
+        </span>
+      )}
+      {isUnavailable && <span className='block'>Parent comparison unavailable.</span>}
+      {isLc && ownLimitName && <span className='block'>Selected LC: {ownLimitName}</span>}
+      {restrictionChanged ? (
+        <span className='block'>
+          <span className='block font-semibold'>Restriction description changed:</span>
+          <span className='block whitespace-pre-wrap'>From: {parentRestriction ?? 'None'}</span>
+          <span className='block whitespace-pre-wrap'>To: {restriction ?? 'None'}</span>
+        </span>
+      ) : (
+        isLc && restriction && <span className='block whitespace-pre-wrap'>{restriction}</span>
+      )}
+    </span>
+  );
 
   return (
     <Tooltip
       triggerClassName={badgeClasses}
       onClick={isLc ? onOpenLimits : undefined}
-      content={
-        <span className='block'>
-          Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission} →
-          This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
-        </span>
-      }
+      content={content}
+      scrollableContentLabel='Permission details'
     >
       {label}
     </Tooltip>
@@ -137,9 +191,11 @@ const ActivityOccupationGrid: React.FC<{
   activityId: string;
   activityName: string;
   hasNoPermissions: boolean;
+  getLimitName: (limitId?: string | null) => string | undefined;
   onEditLimits: (target: LimitsEditTarget) => void;
-}> = ({ activityId, activityName, hasNoPermissions, onEditLimits }) => {
-  const { state, dispatch, getPermission, isChangedFromParent } = useCareSettingsContext();
+}> = ({ activityId, activityName, hasNoPermissions, getLimitName, onEditLimits }) => {
+  const { state, dispatch, getPermission, getPermissionLimit, getParentComparison } =
+    useCareSettingsContext();
 
   const handlePermissionChange = (
     occupationId: string,
@@ -187,8 +243,7 @@ const ActivityOccupationGrid: React.FC<{
         <div className='grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 min-w-[320px]'>
           {state.occupations.map(occupation => {
             const permission = getPermission(activityId, occupation.id) || Permissions.NO;
-            const parentPermission =
-              state.parentPermissions.get(`${activityId}::${occupation.id}`) ?? Permissions.NO;
+            const comparison = getParentComparison(activityId, occupation.id);
 
             return (
               <div key={occupation.id} className='flex min-w-0 flex-col'>
@@ -206,11 +261,12 @@ const ActivityOccupationGrid: React.FC<{
                     handlePermissionChange(occupation.id, getName(occupation), value)
                   }
                   badge={
-                    isChangedFromParent(activityId, occupation.id) ? (
-                      <ChangedByHaBadge
-                        isLc={permission === Permissions.LIMITS}
-                        parentPermission={parentPermission}
+                    comparison.kind === 'none' ? undefined : (
+                      <PermissionBadge
+                        comparison={comparison}
                         ownPermission={permission}
+                        ownLimit={getPermissionLimit(activityId, occupation.id)}
+                        getLimitName={getLimitName}
                         onOpenLimits={() =>
                           onEditLimits({
                             activityId,
@@ -222,7 +278,7 @@ const ActivityOccupationGrid: React.FC<{
                           })
                         }
                       />
-                    ) : undefined
+                    )
                   }
                 />
               </div>
@@ -238,8 +294,9 @@ const BundleAccordion: React.FC<{
   bundleId: string;
   bundleName: string;
   activitiesWithoutPermissions: Set<string>;
+  getLimitName: (limitId?: string | null) => string | undefined;
   onEditLimits: (target: LimitsEditTarget) => void;
-}> = ({ bundleId, bundleName, activitiesWithoutPermissions, onEditLimits }) => {
+}> = ({ bundleId, bundleName, activitiesWithoutPermissions, getLimitName, onEditLimits }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { state } = useCareSettingsContext();
 
@@ -288,6 +345,7 @@ const BundleAccordion: React.FC<{
               activityId={activity.id}
               activityName={getName(activity)}
               hasNoPermissions={activitiesWithoutPermissions.has(activity.id)}
+              getLimitName={getLimitName}
               onEditLimits={onEditLimits}
             />
           ))}
@@ -351,6 +409,16 @@ export const Finalize: React.FC = () => {
   }, [state.selectedActivityIds, state.occupations, state.permissions, getPermission]);
 
   const missingCount = activitiesWithoutPermissions.size;
+
+  // The catalogue is already loaded for the dialog, so badge tooltips resolve
+  // limit names from it rather than issuing a request of their own.
+  const limitNamesById = useMemo(
+    () => new Map(limits.map(limit => [limit.id, limit.name])),
+    [limits],
+  );
+
+  const getLimitName = (limitId?: string | null) =>
+    limitId ? limitNamesById.get(limitId) : undefined;
 
   const handleLimitsConfirm = (value: PermissionLimitValue) => {
     if (!limitsTarget) return;
@@ -426,6 +494,7 @@ export const Finalize: React.FC = () => {
               bundleId={bundle.id}
               bundleName={getName(bundle)}
               activitiesWithoutPermissions={activitiesWithoutPermissions}
+              getLimitName={getLimitName}
               onEditLimits={setLimitsTarget}
             />
           ))

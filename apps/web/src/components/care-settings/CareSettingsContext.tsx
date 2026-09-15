@@ -33,7 +33,40 @@ export type PermissionEntry = TemplatePermissionDTO;
 /** Limits and conditions attached to a single LC permission */
 export interface PermissionLimit {
   limitId: string;
+  limitName?: string | null;
   restrictionDescription?: string;
+}
+
+/** One parent cell used as the badge baseline, including its LC details. */
+export interface ParentPermissionEntry {
+  permission: Permissions;
+  limitId?: string | null;
+  /** Kept so a parent limit can still be named once it is deactivated. */
+  limitName?: string | null;
+  restrictionDescription?: string | null;
+}
+
+/**
+ * How a cell compares with the direct parent, and therefore which badge it
+ * gets. Kept as one value so the badge component holds no comparison logic.
+ *
+ * - `none`: nothing to show.
+ * - `changed`: a Y/N cell whose permission differs from the parent's.
+ * - `lc-changed`: an LC cell whose level, limit, or description differs.
+ * - `lc-unchanged`: an LC cell identical to the parent's, or with no parent.
+ * - `lc-unavailable`: LC details are available, but the parent baseline is not.
+ */
+export type ParentComparisonKind =
+  | 'none'
+  | 'changed'
+  | 'lc-changed'
+  | 'lc-unchanged'
+  | 'lc-unavailable';
+
+export interface ParentComparison {
+  kind: ParentComparisonKind;
+  /** The parent's cell, absent when the template has no parent. */
+  parent?: ParentPermissionEntry;
 }
 
 /**
@@ -106,10 +139,11 @@ export interface CareSettingsState {
   /** Whether this template has a direct parent, even if that parent has no permission rows. */
   hasParent: boolean;
   /**
-   * The direct parent's permissions, used only to decide whether to show the
-   * "Changes made by HA" badge.
+   * The direct parent's permissions, including LC details, used to decide
+   * which permission badge a cell gets. Null means the baseline is unavailable,
+   * not that the parent has no permission rows.
    */
-  parentPermissions: Map<string, Permissions>;
+  parentPermissions: Map<string, ParentPermissionEntry> | null;
   /** Current wizard step: 1 = Select Competencies, 2 = Finalize */
   currentStep: number;
   /** Currently viewed bundle in left panel (for activity display) */
@@ -134,7 +168,7 @@ const initialState: CareSettingsState = {
   permissionLimits: new Map(),
   initialPermissions: new Map(),
   hasParent: false,
-  parentPermissions: new Map(),
+  parentPermissions: null,
   currentStep: 1,
   selectedBundleId: null,
   bundles: [],
@@ -146,7 +180,7 @@ type Action =
   | { type: 'SET_TEMPLATE_NAME'; payload: string }
   | { type: 'SET_TEMPLATE_DETAILS'; payload: { name: string; level: TemplateLevel | null } }
   | { type: 'SET_VERSION'; payload: number }
-  | { type: 'SET_PARENT_PERMISSIONS'; payload: Map<string, Permissions> }
+  | { type: 'SET_PARENT_PERMISSIONS'; payload: Map<string, ParentPermissionEntry> | null }
   | {
       type: 'SET_PERMISSION_LIMIT';
       payload: { activityId: string; occupationId: string; limit: PermissionLimit };
@@ -327,6 +361,7 @@ interface CareSettingsContextType {
   getTemplateChanges: () => TemplateChangesDTO;
   getPermissionLimit: (activityId: string, occupationId: string) => PermissionLimit | undefined;
   isChangedFromParent: (activityId: string, occupationId: string) => boolean;
+  getParentComparison: (activityId: string, occupationId: string) => ParentComparison;
 }
 
 const CareSettingsContext = createContext<CareSettingsContextType | null>(null);
@@ -408,14 +443,53 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const isChangedFromParent = (activityId: string, occupationId: string): boolean => {
-    // A template with no parent has nothing to differ from.
-    if (!state.hasParent) return false;
+    const { kind } = getParentComparison(activityId, occupationId);
+    return kind === 'changed' || kind === 'lc-changed';
+  };
+
+  /**
+   * Decides which badge a cell gets by comparing it with the direct parent.
+   *
+   * An LC cell always carries a badge — green when it matches the parent (or
+   * when there is no parent to differ from), amber when anything about it
+   * differs — because the badge doubles as the only way back into the Limits
+   * and Conditions dialog. A Y/N cell is badged only when it overrides a
+   * parent.
+   *
+   * @param activityId - Care activity identifier.
+   * @param occupationId - Occupation identifier.
+   * @returns The badge kind and the parent cell it was compared against.
+   */
+  const getParentComparison = (activityId: string, occupationId: string): ParentComparison => {
     const key = getTemplatePermissionKey(activityId, occupationId);
     // Absence means "not permitted" on both sides, matching how the wizard
     // and the API both model N as a missing row.
-    const mine = state.permissions.get(key) ?? Permissions.NO;
-    const theirs = state.parentPermissions.get(key) ?? Permissions.NO;
-    return mine !== theirs;
+    const own = state.permissions.get(key) ?? Permissions.NO;
+    if (state.hasParent && state.parentPermissions === null) {
+      return { kind: own === Permissions.LIMITS ? 'lc-unavailable' : 'none' };
+    }
+    const parent = state.hasParent
+      ? state.parentPermissions?.get(key) ?? { permission: Permissions.NO }
+      : undefined;
+
+    if (own === Permissions.LIMITS) {
+      const ownLimit = state.permissionLimits.get(key);
+      const isUnchanged =
+        parent !== undefined &&
+        parent.permission === Permissions.LIMITS &&
+        (parent.limitId ?? null) === (ownLimit?.limitId ?? null) &&
+        normalizeRestrictionDescription(parent.restrictionDescription) ===
+          normalizeRestrictionDescription(ownLimit?.restrictionDescription);
+
+      // With no parent there is no override to report, but the cell still
+      // needs its way into the dialog, so it reads as unchanged.
+      return { kind: !parent || isUnchanged ? 'lc-unchanged' : 'lc-changed', parent };
+    }
+
+    // A template with no parent has nothing to differ from.
+    if (!parent) return { kind: 'none' };
+
+    return { kind: own === parent.permission ? 'none' : 'changed', parent };
   };
 
   return (
@@ -428,6 +502,7 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
         getTemplateChanges,
         getPermissionLimit,
         isChangedFromParent,
+        getParentComparison,
       }}
     >
       {children}

@@ -2,39 +2,34 @@
  * Parent Permissions Hook
  *
  * Loads the direct parent's permissions, used as the baseline for the
- * "Changes made by HA" badge. Returns an empty list for a template with no
- * parent, so no badge is ever shown on one.
+ * permission badge. LC details travel with each row so a limit-only or
+ * description-only difference can be detected. An undefined baseline means
+ * unavailable; only a successful response can establish an empty parent.
  */
-import { useCallback, useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { API_ENDPOINT } from '../common';
-import { useHttp } from './useHttp';
-import { Permissions } from '@tbcm/common';
+import { AxiosPublic } from 'src/utils';
+import { ParentPermissionRO } from '@tbcm/common';
 
-export interface ParentPermission {
-  activityId: string;
-  occupationId: string;
-  permission: Permissions;
-}
+export type ParentPermission = ParentPermissionRO;
 
 export const useParentPermissions = (templateId?: string) => {
-  const { fetchData, isLoading } = useHttp();
-  const [parentPermissions, setParentPermissions] = useState<ParentPermission[]>([]);
+  const { data, error, isValidating, mutate } = useSWR<ParentPermission[]>(
+    templateId ? API_ENDPOINT.getCareSettingParentPermissions(templateId) : null,
+    (url: string) => AxiosPublic(url).then(response => response.data),
+    {
+      revalidateOnFocus: false,
+      revalidateOnMount: true,
+      shouldRetryOnError: false,
+    },
+  );
 
-  const onRefresh = useCallback(() => {
-    if (!templateId) {
-      setParentPermissions([]);
-      return;
-    }
-
-    fetchData(
-      { endpoint: API_ENDPOINT.getCareSettingParentPermissions(templateId) },
-      (data: ParentPermission[]) => setParentPermissions(data ?? []),
-    );
-  }, [fetchData, templateId]);
-
-  useEffect(() => {
-    onRefresh();
-  }, [onRefresh]);
-
-  return { parentPermissions, isLoading, onRefresh };
+  // An unavailable baseline is not an empty parent. Invalidate comparisons
+  // during refreshes too, rather than asserting equality against stale data.
+  return {
+    parentPermissions: !error && !isValidating ? data : undefined,
+    isLoading: Boolean(templateId && !error && (isValidating || data === undefined)),
+    error,
+    onRefresh: mutate,
+  };
 };

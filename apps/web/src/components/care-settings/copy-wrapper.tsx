@@ -20,7 +20,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Stepper, Button } from '@components';
-import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsContext';
+import {
+  CareSettingsProvider,
+  useCareSettingsContext,
+  ParentPermissionEntry,
+  PermissionLimit,
+} from './CareSettingsContext';
 import { SelectCompetencies } from './select-competencies';
 import { Finalize } from './finalize';
 import { EditDetailsModal } from './edit-details-modal';
@@ -32,7 +37,7 @@ import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateC
 import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
-import { Permissions, Role, TemplateLevel } from '@tbcm/common';
+import { getTemplatePermissionKey, Permissions, Role, TemplateLevel } from '@tbcm/common';
 import { CareSettingsSteps } from 'src/common/constants';
 
 const CopyContent: React.FC = () => {
@@ -73,25 +78,26 @@ const CopyContent: React.FC = () => {
 
       // Copy permissions from source template
       const permissions = new Map<string, Permissions>();
-      const permissionLimits = new Map<
-        string,
-        { limitId: string; restrictionDescription?: string }
-      >();
+      const permissionLimits = new Map<string, PermissionLimit>();
+      // Initial copy permissions can include scope-derived master defaults.
+      // Only persisted source rows form the direct-parent comparison baseline.
+      const parentPermissionsMap = new Map<string, ParentPermissionEntry>(
+        sourceTemplate.parentPermissions.map(p => [
+          getTemplatePermissionKey(p.activityId, p.occupationId),
+          p,
+        ]),
+      );
       sourceTemplate.permissions?.forEach(p => {
-        // Using :: as separator because UUIDs contain dashes
-        const key = `${p.activityId}::${p.occupationId}`;
-        permissions.set(key, p.permission as Permissions);
+        const key = getTemplatePermissionKey(p.activityId, p.occupationId);
+        permissions.set(key, p.permission);
         if (p.limitId) {
           permissionLimits.set(key, {
             limitId: p.limitId,
+            limitName: p.limitName,
             restrictionDescription: p.restrictionDescription ?? undefined,
           });
         }
       });
-
-      // The source template is this copy's parent, so it is also the baseline
-      // the "Changes made by HA" badge compares against.
-      const parentPermissionsMap = new Map(permissions);
 
       dispatch({
         type: 'INITIALIZE_STATE',

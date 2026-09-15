@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { CareSettingTemplateController } from './care-setting-template.controller';
 import { CareSettingTemplateService } from './care-setting-template.service';
-import { Permissions, Role, TemplateLevel } from '@tbcm/common';
+import { CareSettingTemplateCopyRO, Permissions, Role, TemplateLevel } from '@tbcm/common';
+import { instanceToPlain } from 'class-transformer';
 
 describe('CareSettingTemplateController', () => {
   let controller: CareSettingTemplateController;
@@ -183,13 +184,64 @@ describe('CareSettingTemplateController', () => {
         id: 'tmpl-1',
         healthAuthority: 'GLOBAL',
       });
-      mockTemplateService.getTemplateForCopy.mockResolvedValue({ id: 'tmpl-1' });
+      const copyData = new CareSettingTemplateCopyRO({
+        id: 'tmpl-1',
+        name: 'Master template',
+        unitId: 'unit-1',
+        selectedBundleIds: ['bundle-1'],
+        selectedActivityIds: ['activity-1'],
+        permissions: [
+          {
+            activityId: 'activity-1',
+            occupationId: 'occ-1',
+            permission: Permissions.LIMITS,
+            limitId: 'retired-limit',
+            limitName: 'Retired certification',
+            restrictionDescription: 'Requires certification',
+          },
+        ],
+        parentPermissions: [],
+      });
+      mockTemplateService.getTemplateForCopy.mockResolvedValue(copyData);
 
       const req = createMockRequest();
       const result = await controller.getTemplateForCopy('tmpl-1', req);
 
-      expect(result).toEqual({ id: 'tmpl-1' });
+      expect(result).toBe(copyData);
+      expect(instanceToPlain(result)).toEqual({ ...copyData });
       expect(mockTemplateService.getTemplateBasic).toHaveBeenCalledWith('tmpl-1');
+      expect(mockTemplateService.getTemplateForCopy).toHaveBeenCalledWith('tmpl-1');
+    });
+
+    it('passes persisted LC details through the copy parent baseline', async () => {
+      mockTemplateService.getTemplateBasic.mockResolvedValue({
+        id: 'tmpl-1',
+        healthAuthority: 'GLOBAL',
+      });
+      const permission = {
+        activityId: 'activity-1',
+        occupationId: 'occ-1',
+        permission: Permissions.LIMITS,
+        limitId: 'retired-limit',
+        limitName: 'Retired certification',
+        restrictionDescription: 'Requires certification',
+      };
+      mockTemplateService.getTemplateForCopy.mockResolvedValue(
+        new CareSettingTemplateCopyRO({
+          id: 'tmpl-1',
+          name: 'Source template',
+          unitId: 'unit-1',
+          selectedBundleIds: [],
+          selectedActivityIds: ['activity-1'],
+          permissions: [permission],
+          parentPermissions: [permission],
+        }),
+      );
+
+      const result = await controller.getTemplateForCopy('tmpl-1', createMockRequest());
+
+      expect(instanceToPlain(result).permissions).toEqual([permission]);
+      expect(instanceToPlain(result).parentPermissions).toEqual([permission]);
     });
 
     it('should throw ForbiddenException for wrong HA', async () => {
@@ -200,7 +252,10 @@ describe('CareSettingTemplateController', () => {
 
       const req = createMockRequest({ organization: 'Fraser Health' });
 
-      await expect(controller.getTemplateForCopy('tmpl-1', req)).rejects.toThrow();
+      await expect(controller.getTemplateForCopy('tmpl-1', req)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(mockTemplateService.getTemplateForCopy).not.toHaveBeenCalled();
     });
   });
 
@@ -397,12 +452,20 @@ describe('CareSettingTemplateController - levels, limits, and concurrency', () =
   it('passes through the parent baseline for a template that has one', async () => {
     service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Fraser Health' });
     service.getParentPermissions.mockResolvedValue([
-      { activityId: 'a1', occupationId: 'o1', permission: Permissions.PERFORM },
+      {
+        activityId: 'a1',
+        occupationId: 'o1',
+        permission: Permissions.LIMITS,
+        limitId: 'l1',
+        limitName: 'Certification',
+        restrictionDescription: 'needs cert',
+      },
     ]);
 
     const result = await controller.getParentPermissions('t1', request());
 
     expect(result).toHaveLength(1);
+    expect(result[0].limitId).toBe('l1');
     expect(service.getParentPermissions).toHaveBeenCalledWith('t1');
   });
 
