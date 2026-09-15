@@ -32,7 +32,7 @@ import { LimitsConditionsModal, PermissionLimitValue } from './limits-conditions
 import { useLimitsConditions } from 'src/services/useLimitConditions';
 
 const PERMISSION_DISPLAY: Record<string, string> = {
-  [Permissions.PERFORM]: 'Perform',
+  [Permissions.PERFORM]: 'Permitted',
   [Permissions.NO]: 'Not permitted',
   [Permissions.LIMITS]: 'Limits and conditions',
 };
@@ -98,16 +98,50 @@ const PermissionSelect: React.FC<{
 };
 
 /**
- * Marks a cell whose permission differs from the parent template's. Doubles as
- * the way back into the Limits and Conditions dialog for an LC cell, which is
- * otherwise unreachable once the dialog has been saved.
+ * Opens the Limits and Conditions dialog for a cell already set to LC.
+ *
+ * Shown for every LC cell, whether or not it differs from the provincial
+ * master. The dialog is otherwise unreachable once saved, and gating this on
+ * inheritance left two kinds of cell stranded: an LC cell matching the
+ * baseline, and every LC cell on a template with no baseline at all, so the
+ * limit could be neither reviewed nor corrected.
+ */
+const LimitsBadge: React.FC<{
+  restrictionDescription?: string;
+  cellLabel: string;
+  onOpenLimits: () => void;
+}> = ({ restrictionDescription, cellLabel, onOpenLimits }) => {
+  return (
+    <Tooltip
+      triggerClassName='block shrink-0 rounded-full bg-bcBlueAccent text-white text-[10px] font-semibold leading-none px-1.5 py-1 hover:bg-bcBluePrimary'
+      triggerLabel={`Limits and conditions for ${cellLabel}`}
+      onClick={onOpenLimits}
+      content={
+        <span className='block'>
+          {restrictionDescription
+            ? `Limits and conditions — ${restrictionDescription}`
+            : 'Limits and conditions'}
+          <span className='block mt-1 opacity-80'>Select to view or edit.</span>
+        </span>
+      }
+    >
+      LC
+    </Tooltip>
+  );
+};
+
+/**
+ * Marks a cell whose permission differs from the provincial master's.
+ *
+ * Purely informational: reopening the Limits and Conditions dialog belongs to
+ * `LimitsBadge`, so this no longer changes between a button that acts and one
+ * that does not depending on the permission.
  */
 const ChangedByHaBadge: React.FC<{
-  isLc: boolean;
-  parentPermission: Permissions;
+  masterPermission: Permissions;
   ownPermission: Permissions;
-  onOpenLimits: () => void;
-}> = ({ isLc, parentPermission, ownPermission, onOpenLimits }) => {
+  cellLabel: string;
+}> = ({ masterPermission, ownPermission, cellLabel }) => {
   // The badge shares the cell with the select, and cells can be as narrow as
   // 150px, so it carries the full wording but is allowed to shrink and clip it
   // to an ellipsis rather than push the permission value out of view. The
@@ -120,11 +154,11 @@ const ChangedByHaBadge: React.FC<{
   return (
     <Tooltip
       triggerClassName={badgeClasses}
-      onClick={isLc ? onOpenLimits : undefined}
+      triggerLabel={`Changes made by HA for ${cellLabel}`}
       content={
         <span className='block'>
-          Changes made by HA — Parent: {PERMISSION_DISPLAY[parentPermission] ?? parentPermission} →
-          This template: {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
+          Changes made by HA — {PERMISSION_DISPLAY[masterPermission] ?? masterPermission} →{' '}
+          {PERMISSION_DISPLAY[ownPermission] ?? ownPermission}
         </span>
       }
     >
@@ -139,7 +173,8 @@ const ActivityOccupationGrid: React.FC<{
   hasNoPermissions: boolean;
   onEditLimits: (target: LimitsEditTarget) => void;
 }> = ({ activityId, activityName, hasNoPermissions, onEditLimits }) => {
-  const { state, dispatch, getPermission, isChangedFromParent } = useCareSettingsContext();
+  const { state, dispatch, getPermission, getPermissionLimit, isChangedFromMaster } =
+    useCareSettingsContext();
 
   const handlePermissionChange = (
     occupationId: string,
@@ -187,8 +222,16 @@ const ActivityOccupationGrid: React.FC<{
         <div className='grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 min-w-[320px]'>
           {state.occupations.map(occupation => {
             const permission = getPermission(activityId, occupation.id) || Permissions.NO;
-            const parentPermission =
-              state.parentPermissions.get(`${activityId}::${occupation.id}`) ?? Permissions.NO;
+            const masterPermission =
+              state.masterPermissions.get(`${activityId}::${occupation.id}`) ?? Permissions.NO;
+            // The two badges answer different questions -- "can I edit this
+            // cell's limit?" and "did the HA change this cell?" -- so each is
+            // decided on its own and both can show at once.
+            const isLc = permission === Permissions.LIMITS;
+            const isChanged = isChangedFromMaster(activityId, occupation.id);
+            // Every badge in the grid otherwise reads the same two words, so a
+            // screen reader gives no way to tell which cell is focused.
+            const cellLabel = `${getName(occupation)} — ${activityName}`;
 
             return (
               <div key={occupation.id} className='flex min-w-0 flex-col'>
@@ -206,22 +249,34 @@ const ActivityOccupationGrid: React.FC<{
                     handlePermissionChange(occupation.id, getName(occupation), value)
                   }
                   badge={
-                    isChangedFromParent(activityId, occupation.id) ? (
-                      <ChangedByHaBadge
-                        isLc={permission === Permissions.LIMITS}
-                        parentPermission={parentPermission}
-                        ownPermission={permission}
-                        onOpenLimits={() =>
-                          onEditLimits({
-                            activityId,
-                            occupationId: occupation.id,
-                            activityName,
-                            occupationName: getName(occupation),
-                            previousPermission: permission,
-                            isExisting: true,
-                          })
-                        }
-                      />
+                    isLc || isChanged ? (
+                      <div className='flex min-w-0 items-center gap-1'>
+                        {isLc && (
+                          <LimitsBadge
+                            cellLabel={cellLabel}
+                            restrictionDescription={
+                              getPermissionLimit(activityId, occupation.id)?.restrictionDescription
+                            }
+                            onOpenLimits={() =>
+                              onEditLimits({
+                                activityId,
+                                occupationId: occupation.id,
+                                activityName,
+                                occupationName: getName(occupation),
+                                previousPermission: permission,
+                                isExisting: true,
+                              })
+                            }
+                          />
+                        )}
+                        {isChanged && (
+                          <ChangedByHaBadge
+                            cellLabel={cellLabel}
+                            masterPermission={masterPermission}
+                            ownPermission={permission}
+                          />
+                        )}
+                      </div>
                     ) : undefined
                   }
                 />
@@ -407,6 +462,25 @@ export const Finalize: React.FC = () => {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {state.masterBaselineStatus === 'failed' && (
+        <div
+          role='status'
+          className='mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center gap-3'
+        >
+          <FontAwesomeIcon icon={faExclamationTriangle} className='h-5 w-5 text-amber-500' />
+          <div>
+            <span className='font-semibold text-amber-800'>
+              Comparison with the provincial standard is unavailable
+            </span>
+            <p className='text-sm text-amber-700'>
+              &quot;Changes made by HA&quot; labels are hidden, so this page cannot show what
+              differs from provincial. Reload the page to try again. Your permissions are unaffected
+              and can still be edited and saved.
+            </p>
+          </div>
         </div>
       )}
 

@@ -36,12 +36,12 @@ import {
   BundleRO,
   CareSettingTemplateRO,
   CareSettingTemplateDetailRO,
+  CareSettingMasterPermissionsRO,
   CreateCareSettingTemplateCopyDTO,
   CreateCareSettingTemplateCopyFullDTO,
   OccupationRO,
   PaginationRO,
   LimitConditionRO,
-  Permissions,
   Role,
   UpdateCareSettingTemplateDTO,
 } from '@tbcm/common';
@@ -189,22 +189,23 @@ export class CareSettingTemplateController {
   }
 
   /**
-   * Get the direct parent's permissions, used as the baseline for the
+   * Get the provincial master's permissions, used as the baseline for the
    * "Changes made by HA" badge.
    *
-   * Access is validated against the child template being viewed, not the
-   * parent: an administrator entitled to edit the child is entitled to see
-   * what it was derived from.
+   * Access is validated against the template being viewed, not the master: an
+   * administrator entitled to edit the template is entitled to see the
+   * provincial standard it was derived from, which is visible to every health
+   * authority in any case.
    */
-  @Get(':id/parent-permissions')
-  async getParentPermissions(
+  @Get(':id/master-permissions')
+  async getMasterPermissions(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: IRequest,
-  ): Promise<{ activityId: string; occupationId: string; permission: Permissions }[]> {
+  ): Promise<CareSettingMasterPermissionsRO> {
     const template = await this.templateService.getTemplateBasic(id);
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     this.validateTemplateAccess(template, req.user.organization, isAdmin);
-    return this.templateService.getParentPermissions(id);
+    return this.templateService.getMasterPermissions(id);
   }
 
   /**

@@ -12,7 +12,7 @@ export * from './useCareSettingTemplatesForPlanning';
 export * from './useCareSettingTemplatesForCMS';
 export * from './useGlossary';
 export * from './useCareSettingTemplateDetailsUpdate';
-export * from './useCareSettingParentPermissions';
+export * from './useCareSettingMasterPermissions';
 export * from './useLimitConditions';
 export * from './templateVersionConflict';
 export * from './useHttp';

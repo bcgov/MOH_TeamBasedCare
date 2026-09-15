@@ -29,6 +29,12 @@ interface TooltipProps {
   onClick?: () => void;
   /** A button trigger keeps the tooltip keyboard reachable; only opt out for triggers already focusable */
   triggerAs?: 'button' | 'span';
+  /**
+   * Accessible name for the trigger. Needed where the visible text repeats
+   * across many triggers — a grid of badges reading only "LC" gives a screen
+   * reader no way to tell one cell from another (WCAG 2.4.4).
+   */
+  triggerLabel?: string;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -39,6 +45,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   panelClassName,
   onClick,
   triggerAs = 'button',
+  triggerLabel,
 }) => {
   const [open, setOpen] = useState(false);
   const arrowRef = useRef(null);
@@ -72,12 +79,18 @@ export const Tooltip: React.FC<TooltipProps> = ({
           ref={refs.setReference}
           type='button'
           className={triggerClassName}
+          aria-label={triggerLabel}
           {...getReferenceProps({ onClick })}
         >
           {children}
         </button>
       ) : (
-        <span ref={refs.setReference} className={triggerClassName} {...getReferenceProps()}>
+        <span
+          ref={refs.setReference}
+          className={triggerClassName}
+          aria-label={triggerLabel}
+          {...getReferenceProps()}
+        >
           {children}
         </span>
       )}

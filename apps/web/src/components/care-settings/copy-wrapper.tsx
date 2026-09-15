@@ -29,6 +29,7 @@ import { useCareSettingTemplateForCopy } from 'src/services/useCareSettingTempla
 import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
 import { useCareSettingTemplateCopy } from 'src/services/useCareSettingTemplateCopy';
+import { useMasterPermissions } from 'src/services/useCareSettingMasterPermissions';
 import { useMe } from 'src/services/useMe';
 import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
@@ -59,6 +60,10 @@ const CopyContent: React.FC = () => {
     error: occupationsError,
   } = useCareSettingOccupations(sourceId);
   const { handleCopyWithData, isLoading: isCreating } = useCareSettingTemplateCopy();
+  // The copy joins the source's chain, so it shares the source's provincial
+  // master. Asking for the source's baseline therefore gives the copy's own,
+  // and the badges shown here are the same ones it will carry once saved.
+  const { masterPermissions, status: masterBaselineStatus } = useMasterPermissions(sourceId);
 
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -89,24 +94,18 @@ const CopyContent: React.FC = () => {
         }
       });
 
-      // The source template is this copy's parent, so it is also the baseline
-      // the "Changes made by HA" badge compares against.
-      const parentPermissionsMap = new Map(permissions);
-
       dispatch({
         type: 'INITIALIZE_STATE',
         payload: {
           templateId: '', // No template ID yet - copy not created
           templateName: '', // The copy has no name of its own until it is saved
           parentName: sourceTemplate.name,
-          hasParent: true,
           level: null,
           version: 0,
           selectedBundleIds,
           selectedActivityIds,
           permissions,
           permissionLimits,
-          parentPermissions: parentPermissionsMap,
           bundles,
           occupations,
           selectedBundleId: bundles.length > 0 ? bundles[0].id : null,
@@ -115,6 +114,21 @@ const CopyContent: React.FC = () => {
       setIsInitialized(true);
     }
   }, [sourceTemplate, bundles, occupations, dispatch, isInitialized]);
+
+  // Feed the provincial baseline in separately: it arrives on its own request
+  // and must not delay initialising the wizard. Status and permissions arrive
+  // together so a ready, empty master is not mistaken for a pending request.
+  useEffect(() => {
+    const map = new Map<string, Permissions>();
+    masterPermissions.forEach(p => {
+      map.set(`${p.activityId}::${p.occupationId}`, p.permission);
+    });
+
+    dispatch({
+      type: 'SET_MASTER_BASELINE',
+      payload: { permissions: map, status: masterBaselineStatus },
+    });
+  }, [masterPermissions, masterBaselineStatus, dispatch]);
 
   // Track changes to mark form as dirty
   useEffect(() => {

@@ -26,6 +26,7 @@ import {
   TemplateLevel,
   TemplatePermissionDTO,
 } from '@tbcm/common';
+import type { MasterBaselineStatus } from 'src/services/useCareSettingMasterPermissions';
 
 /** Permission entry shared with the template-save API contract. */
 export type PermissionEntry = TemplatePermissionDTO;
@@ -83,7 +84,7 @@ const permissionsMatch = (left: PermissionEntry, right: PermissionEntry): boolea
 export interface CareSettingsState {
   templateId: string;
   templateName: string;
-  /** Name of the template this one was copied from; drives the unsaved title and the "Edited from" line */
+  /** Name of the template this one was copied from; drives the unsaved title and the source line */
   parentName: string;
   /** Level of this template. Null until it is chosen on first save. */
   level: TemplateLevel | null;
@@ -103,13 +104,13 @@ export interface CareSettingsState {
   permissionLimits: Map<string, PermissionLimit>;
   /** Full permission values when the template was last loaded. */
   initialPermissions: Map<string, PermissionEntry>;
-  /** Whether this template has a direct parent, even if that parent has no permission rows. */
-  hasParent: boolean;
   /**
-   * The direct parent's permissions, used only to decide whether to show the
-   * "Changes made by HA" badge.
+   * The provincial master's permissions, used only to decide whether to show
+   * the "Changes made by HA" badge. Map size does not indicate master existence.
    */
-  parentPermissions: Map<string, Permissions>;
+  masterPermissions: Map<string, Permissions>;
+  /** Only a ready baseline can be compared, including an existing empty master. */
+  masterBaselineStatus: MasterBaselineStatus;
   /** Current wizard step: 1 = Select Competencies, 2 = Finalize */
   currentStep: number;
   /** Currently viewed bundle in left panel (for activity display) */
@@ -133,8 +134,8 @@ const initialState: CareSettingsState = {
   permissions: new Map(),
   permissionLimits: new Map(),
   initialPermissions: new Map(),
-  hasParent: false,
-  parentPermissions: new Map(),
+  masterPermissions: new Map(),
+  masterBaselineStatus: 'loading',
   currentStep: 1,
   selectedBundleId: null,
   bundles: [],
@@ -146,7 +147,10 @@ type Action =
   | { type: 'SET_TEMPLATE_NAME'; payload: string }
   | { type: 'SET_TEMPLATE_DETAILS'; payload: { name: string; level: TemplateLevel | null } }
   | { type: 'SET_VERSION'; payload: number }
-  | { type: 'SET_PARENT_PERMISSIONS'; payload: Map<string, Permissions> }
+  | {
+      type: 'SET_MASTER_BASELINE';
+      payload: { permissions: Map<string, Permissions>; status: MasterBaselineStatus };
+    }
   | {
       type: 'SET_PERMISSION_LIMIT';
       payload: { activityId: string; occupationId: string; limit: PermissionLimit };
@@ -180,8 +184,12 @@ function reducer(state: CareSettingsState, action: Action): CareSettingsState {
     case 'SET_VERSION':
       return { ...state, version: action.payload };
 
-    case 'SET_PARENT_PERMISSIONS':
-      return { ...state, parentPermissions: action.payload };
+    case 'SET_MASTER_BASELINE':
+      return {
+        ...state,
+        masterPermissions: action.payload.permissions,
+        masterBaselineStatus: action.payload.status,
+      };
 
     case 'SET_PERMISSION_LIMIT': {
       const { activityId, occupationId, limit } = action.payload;
@@ -326,7 +334,7 @@ interface CareSettingsContextType {
   getPermissionsArray: () => PermissionEntry[];
   getTemplateChanges: () => TemplateChangesDTO;
   getPermissionLimit: (activityId: string, occupationId: string) => PermissionLimit | undefined;
-  isChangedFromParent: (activityId: string, occupationId: string) => boolean;
+  isChangedFromMaster: (activityId: string, occupationId: string) => boolean;
 }
 
 const CareSettingsContext = createContext<CareSettingsContextType | null>(null);
@@ -407,14 +415,13 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
   };
 
-  const isChangedFromParent = (activityId: string, occupationId: string): boolean => {
-    // A template with no parent has nothing to differ from.
-    if (!state.hasParent) return false;
+  const isChangedFromMaster = (activityId: string, occupationId: string): boolean => {
+    if (state.masterBaselineStatus !== 'ready') return false;
     const key = getTemplatePermissionKey(activityId, occupationId);
     // Absence means "not permitted" on both sides, matching how the wizard
     // and the API both model N as a missing row.
     const mine = state.permissions.get(key) ?? Permissions.NO;
-    const theirs = state.parentPermissions.get(key) ?? Permissions.NO;
+    const theirs = state.masterPermissions.get(key) ?? Permissions.NO;
     return mine !== theirs;
   };
 
@@ -427,7 +434,7 @@ export const CareSettingsProvider: React.FC<{ children: ReactNode }> = ({ childr
         getPermissionsArray,
         getTemplateChanges,
         getPermissionLimit,
-        isChangedFromParent,
+        isChangedFromMaster,
       }}
     >
       {children}

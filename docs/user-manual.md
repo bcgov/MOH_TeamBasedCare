@@ -231,6 +231,19 @@ Manage care setting templates that define which occupations can perform which ac
 
 **Note:** A warning dialog appears if you try to navigate away with unsaved changes.
 
+### Comparing Permissions with Provincial
+
+In both copy and edit mode, **Changes made by HA** badges compare permission levels
+with the provincial master at the top of the template's chain, not its immediate
+parent. A missing permission means **N** (not permitted). If the provincial master
+exists but has no permitted activities, descendant **Y** and **LC** permissions
+still receive badges; **N** remains unflagged.
+
+Badges stay hidden while the baseline loads and when the chain has no provincial
+master. If loading fails, a visible **Comparison with the provincial standard is
+unavailable** notice explains that badges are hidden. Reload to retry; the
+template's permissions are unaffected.
+
 ### Deleting a Template
 
 1. Click the **Delete** button on a non-master template

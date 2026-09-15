@@ -32,7 +32,7 @@ import { useCareSettingBundles } from 'src/services/useCareSettingBundles';
 import { useCareSettingOccupations } from 'src/services/useCareSettingOccupations';
 import { useCareSettingTemplateUpdate } from 'src/services/useCareSettingTemplateUpdate';
 import { useUpdateTemplateDetails } from 'src/services/useCareSettingTemplateDetailsUpdate';
-import { useParentPermissions } from 'src/services/useCareSettingParentPermissions';
+import { useMasterPermissions } from 'src/services/useCareSettingMasterPermissions';
 import {
   describeConflictAuthor,
   TemplateVersionConflict,
@@ -79,7 +79,7 @@ const EditContent: React.FC = () => {
   } = useCareSettingOccupations(id);
   const { handleUpdateWithConflict, isLoading: isUpdating } = useCareSettingTemplateUpdate();
   const { handleUpdateDetails, isLoading: isUpdatingDetails } = useUpdateTemplateDetails();
-  const { parentPermissions } = useParentPermissions(id);
+  const { masterPermissions, status: masterBaselineStatus } = useMasterPermissions(id);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showEditDetailsModal, setShowEditDetailsModal] = useState(false);
@@ -149,7 +149,6 @@ const EditContent: React.FC = () => {
           templateId: id,
           templateName: source.name,
           parentName: source.parentName ?? '',
-          hasParent: Boolean(source.parentId),
           level: source.level ?? null,
           version: source.version ?? 0,
           selectedBundleIds,
@@ -173,16 +172,18 @@ const EditContent: React.FC = () => {
     }
   }, [template, bundles, occupations, isInitialized, initializeFromTemplate]);
 
-  // Feed the parent baseline in separately: it arrives on its own request and
-  // must not delay initialising the wizard.
+  // Feed the provincial baseline in separately: it arrives on its own request
+  // and must not delay initialising the wizard.
   useEffect(() => {
-    if (!parentPermissions) return;
     const map = new Map<string, Permissions>();
-    parentPermissions.forEach(p => {
+    masterPermissions.forEach(p => {
       map.set(`${p.activityId}::${p.occupationId}`, p.permission);
     });
-    dispatch({ type: 'SET_PARENT_PERMISSIONS', payload: map });
-  }, [parentPermissions, dispatch]);
+    dispatch({
+      type: 'SET_MASTER_BASELINE',
+      payload: { permissions: map, status: masterBaselineStatus },
+    });
+  }, [masterPermissions, masterBaselineStatus, dispatch]);
 
   // Track changes to mark form as dirty
   useEffect(() => {

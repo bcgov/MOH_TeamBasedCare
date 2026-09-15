@@ -2190,32 +2190,184 @@ describe('CareSettingTemplateService', () => {
     });
   });
 
-  describe('getParentPermissions', () => {
-    // Contract case 13
-    it('returns an empty baseline when the template has no parent', async () => {
-      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: null });
+  describe('getMasterPermissions', () => {
+    /**
+     * The baseline is found by walking up parent by parent, so the repository
+     * is read once per level. Each test lays out a chain and lets findOne
+     * resolve whichever link the walk asks for next.
+     */
+    const chainOf = (...templates: any[]) => {
+      const byId = new Map(templates.map(t => [t.id, t]));
+      mockTemplateRepo.findOne.mockImplementation(({ where }: any) => {
+        const found = byId.get(where.id);
+        return Promise.resolve(found ? { ...found } : null);
+      });
+    };
 
-      await expect(service.getParentPermissions('tmpl-1')).resolves.toEqual([]);
+    const master = (over: any = {}) => ({
+      id: 'master-1',
+      isMaster: true,
+      parent: null,
+      unit: { id: 'unit-1' },
+      selectedActivities: [{ id: 'activity-1' }],
+      ...over,
     });
 
-    it('returns the parent permission triples without limits', async () => {
-      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: { id: 'parent-1' } });
-      mockPermissionQB.getRawMany.mockResolvedValue([
-        { care_activity_id: 'a1', occupation_id: 'o1', permission: Permissions.LIMITS },
-      ]);
+    const descendant = (id: string, parentId: string | null, over: any = {}) => ({
+      ...mockTemplate,
+      id,
+      isMaster: false,
+      parent: parentId ? { id: parentId } : null,
+      unit: { id: 'unit-1' },
+      selectedActivities: [{ id: 'activity-1' }],
+      ...over,
+    });
 
-      const result = await service.getParentPermissions('tmpl-1');
+    // Contract case 13
+    it('explicitly reports a missing master when the chain has none', async () => {
+      chainOf(descendant('tmpl-1', null));
 
-      expect(result).toEqual([
-        { activityId: 'a1', occupationId: 'o1', permission: Permissions.LIMITS },
-      ]);
-      expect(result[0]).not.toHaveProperty('limitId');
+      await expect(service.getMasterPermissions('tmpl-1')).resolves.toEqual({
+        masterId: null,
+        permissions: [],
+      });
+    });
+
+    it('identifies an existing empty master as a valid implicit-N baseline', async () => {
+      chainOf(descendant('tmpl-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      await expect(service.getMasterPermissions('tmpl-1')).resolves.toEqual({
+        masterId: 'master-1',
+        permissions: [],
+      });
+    });
+
+    it('propagates a failed baseline read instead of reporting a missing or empty master', async () => {
+      chainOf(descendant('tmpl-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockRejectedValue(new Error('baseline read failed'));
+
+      await expect(service.getMasterPermissions('tmpl-1')).rejects.toThrow('baseline read failed');
     });
 
     it('throws when the template does not exist', async () => {
       mockTemplateRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getParentPermissions('ghost')).rejects.toThrow(NotFoundException);
+      await expect(service.getMasterPermissions('ghost')).rejects.toThrow(NotFoundException);
+    });
+
+    it('returns the master permission triples without limits', async () => {
+      chainOf(descendant('tmpl-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'a1', occupation_id: 'o1', permission: Permissions.LIMITS },
+      ]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      const result = await service.getMasterPermissions('tmpl-1');
+
+      expect(result).toEqual({
+        masterId: 'master-1',
+        permissions: [{ activityId: 'a1', occupationId: 'o1', permission: Permissions.LIMITS }],
+      });
+      expect(result.permissions[0]).not.toHaveProperty('limitId');
+    });
+
+    /**
+     * The point of the whole method: a site sits two levels below provincial,
+     * and its badges must measure against provincial rather than against the
+     * health authority immediately above it.
+     */
+    it('walks past the health authority to the master for a site template', async () => {
+      chainOf(descendant('site-1', 'ha-1'), descendant('ha-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'a1', occupation_id: 'o1', permission: Permissions.PERFORM },
+      ]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      const result = await service.getMasterPermissions('site-1');
+
+      expect(result).toEqual({
+        masterId: 'master-1',
+        permissions: [{ activityId: 'a1', occupationId: 'o1', permission: Permissions.PERFORM }],
+      });
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'master-1',
+      });
+    });
+
+    it('keeps walking however deep the chain runs', async () => {
+      chainOf(
+        descendant('sub-site-1', 'site-1'),
+        descendant('site-1', 'ha-1'),
+        descendant('ha-1', 'master-1'),
+        master(),
+      );
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      await service.getMasterPermissions('sub-site-1');
+
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'master-1',
+      });
+    });
+
+    /**
+     * Each level costs a query, so the walk must not drag the activity join
+     * along with it. Only the master is re-read with the relations
+     * getUnitScopePermissions needs.
+     */
+    it('carries no activity join through the intermediate levels', async () => {
+      chainOf(descendant('site-1', 'ha-1'), descendant('ha-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      await service.getMasterPermissions('site-1');
+
+      const relationsFor = (id: string) =>
+        mockTemplateRepo.findOne.mock.calls
+          .filter(([arg]: any) => arg.where.id === id)
+          .map(([arg]: any) => arg.relations);
+
+      expect(relationsFor('site-1')).toEqual([['parent']]);
+      expect(relationsFor('ha-1')).toEqual([['parent']]);
+      // The master is walked to, then re-read for its activity scope.
+      expect(relationsFor('master-1')).toEqual([['parent'], ['unit', 'selectedActivities']]);
+    });
+
+    /**
+     * A master is its own baseline, so every cell matches and nothing is
+     * badged. That falls out of the walk rather than needing a special case.
+     */
+    it('treats a master as its own baseline', async () => {
+      chainOf(master({ id: 'tmpl-1' }));
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'a1', occupation_id: 'o1', permission: Permissions.PERFORM },
+      ]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      const result = await service.getMasterPermissions('tmpl-1');
+
+      expect(result).toEqual({
+        masterId: 'tmpl-1',
+        permissions: [{ activityId: 'a1', occupationId: 'o1', permission: Permissions.PERFORM }],
+      });
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'tmpl-1',
+      });
+    });
+
+    // Parents are set once at copy time and never repointed, so a loop means
+    // corrupt data. Returning an empty baseline drops the badges; hanging the
+    // request would take the whole wizard down with it.
+    it('gives up rather than looping when the chain forms a cycle', async () => {
+      chainOf(descendant('tmpl-1', 'tmpl-2'), descendant('tmpl-2', 'tmpl-1'));
+
+      await expect(service.getMasterPermissions('tmpl-1')).resolves.toEqual({
+        masterId: null,
+        permissions: [],
+      });
     });
 
     // The badge compares every cell in the grid against this baseline, so the
@@ -2223,7 +2375,7 @@ describe('CareSettingTemplateService', () => {
     // per-occupation query here would put hundreds of round trips behind a
     // single wizard step.
     it('fetches the whole baseline in a single query regardless of its size', async () => {
-      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: { id: 'parent-1' } });
+      chainOf(descendant('tmpl-1', 'master-1'), master());
       mockPermissionQB.getRawMany.mockResolvedValue(
         Array.from({ length: 1500 }, (_, i) => ({
           care_activity_id: `a${i}`,
@@ -2231,14 +2383,53 @@ describe('CareSettingTemplateService', () => {
           permission: Permissions.PERFORM,
         })),
       );
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
 
-      const result = await service.getParentPermissions('tmpl-1');
+      const result = await service.getMasterPermissions('tmpl-1');
 
-      expect(result).toHaveLength(1500);
+      expect(result.masterId).toBe('master-1');
+      expect(result.permissions).toHaveLength(1500);
       expect(mockPermissionQB.getRawMany).toHaveBeenCalledTimes(1);
-      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
-        templateId: 'parent-1',
-      });
+    });
+
+    /**
+     * getTemplateForCopy fills a master's gaps from the occupation scope because
+     * a master is read-only, so a missing pair is a sync gap rather than a
+     * decision. The badge baseline has to agree, or the copy shows "Changes made
+     * by HA" on cells the health authority never touched.
+     */
+    it('fills the master gaps from the occupation scope', async () => {
+      chainOf(descendant('tmpl-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'activity-1', occupation_id: 'occ-1', permission: Permissions.PERFORM },
+      ]);
+
+      const result = await service.getMasterPermissions('tmpl-1');
+
+      expect(result.masterId).toBe('master-1');
+      expect(result.permissions).toEqual([
+        { activityId: 'activity-1', occupationId: 'occ-1', permission: Permissions.PERFORM },
+      ]);
+    });
+
+    it('lets a stored master permission win over the occupation scope', async () => {
+      chainOf(descendant('tmpl-1', 'master-1'), master());
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'activity-1', occupation_id: 'occ-1', permission: Permissions.LIMITS },
+      ]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'activity-1', occupation_id: 'occ-1', permission: Permissions.PERFORM },
+        { care_activity_id: 'activity-1', occupation_id: 'occ-2', permission: Permissions.PERFORM },
+      ]);
+
+      const result = await service.getMasterPermissions('tmpl-1');
+
+      expect(result.masterId).toBe('master-1');
+      expect(result.permissions).toEqual([
+        { activityId: 'activity-1', occupationId: 'occ-1', permission: Permissions.LIMITS },
+        { activityId: 'activity-1', occupationId: 'occ-2', permission: Permissions.PERFORM },
+      ]);
     });
   });
 

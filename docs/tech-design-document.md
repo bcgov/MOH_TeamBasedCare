@@ -391,6 +391,7 @@ Base URL: `/api/v1`
 | GET | `/cms/find` | Admin/Content Admin | Search templates (paginated) |
 | GET | `/cms/templates-for-filter` | Admin/Content Admin | Templates for dropdown |
 | GET | `/:id` | Authenticated | Template detail |
+| GET | `/:id/master-permissions` | Authenticated | Provincial comparison baseline (access checked against requested template) |
 | GET | `/:id/bundles` | Authenticated | Template bundles |
 | GET | `/:id/occupations` | Authenticated | Template occupations |
 | GET | `/:id/copy-data` | Admin/Content Admin | Get template data for copy |
@@ -398,6 +399,17 @@ Base URL: `/api/v1`
 | POST | `/:id/copy-full` | Admin/Content Admin | Full copy with permissions |
 | PATCH | `/:id` | Admin/Content Admin | Update template |
 | DELETE | `/:id` | Admin/Content Admin | Delete template |
+
+The master-permissions response uses `CareSettingMasterPermissionsRO`:
+`{ masterId: string | null, permissions: [{ activityId, occupationId, permission }] }`.
+The API resolves the provincial master at the top of the chain, merges occupation
+scope with stored master permissions (stored rows take precedence), and omits LC
+details because badges compare permission levels only. `masterId: null` means
+there is no master; a non-null ID with `permissions: []` is a valid all-N baseline.
+Copy and edit screens distinguish loading, ready, missing, and failed baselines.
+Only a ready baseline produces badges, including Y/LC differences from an empty
+master. Failures display an unavailable-comparison notice rather than silently
+claiming that permissions match.
 
 ### Planning Sessions (`/sessions`) - User Only
 

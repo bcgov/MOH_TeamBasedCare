@@ -123,19 +123,118 @@ test.describe('limits and conditions', () => {
     const target = cell(page, 'Vital signs', 'Registered Nurse');
     await expect(target.locator('select')).toHaveValue('LC');
 
-    // The parent (the master) has no entry for this pair, so it differs and the
-    // badge presents the comparison on hover and is the way back into the dialog on click.
-    const badge = target.getByRole('button', { name: 'Changes made by HA' });
-    await badge.hover();
+    // The parent (the master) has no entry for this pair, so it differs: the HA
+    // badge presents that comparison and nothing else.
+    const haBadge = target.getByRole('button', { name: 'Changes made by HA' });
+    await haBadge.hover();
     await expect(page.getByRole('tooltip')).toHaveText(
-      'Changes made by HA — Parent: Not permitted → This template: Limits and conditions',
+      'Changes made by HA — Not permitted → Limits and conditions',
     );
 
-    await badge.click();
+    // Reopening the dialog belongs to the LC badge, which every LC cell carries.
+    await target.getByRole('button', { name: /^Limits and conditions for/ }).click();
 
     await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toBeVisible();
     await expect(page.locator('#limits-conditions-list')).toHaveText(STUB_LIMITS[1].name);
     await expect(page.locator('#restriction-description')).toHaveValue('Nights only');
+  });
+
+  /**
+   * Reopening the dialog used to hang off the "Changes made by HA" badge, so it
+   * was reachable only while the cell differed from the baseline. The two are
+   * now separate: the LC badge is on every LC cell, the HA badge on every
+   * differing cell, and either can appear without the other.
+   */
+  test('an LC cell matching the provincial master can still be reopened', async ({ page }) => {
+    const inheritedLc = {
+      activityId: 'activity-2',
+      occupationId: 'occ-1',
+      permission: 'LC' as const,
+      limitId: 'limit-2',
+      limitName: STUB_LIMITS[1].name,
+      restrictionDescription: 'Nights only',
+    };
+
+    // The LC originates at provincial and is carried down untouched, so the
+    // site matches the baseline and nothing is badged.
+    stub.permissions['tpl-master'] = [
+      { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+      inheritedLc,
+    ];
+    stub.permissions['tpl-ha'] = [
+      { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+      inheritedLc,
+    ];
+    stub.permissions['tpl-site'] = [
+      { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+      inheritedLc,
+    ];
+
+    await openFinalizeStep(page, 'tpl-site');
+
+    const target = cell(page, 'Vital signs', 'Registered Nurse');
+    await expect(target.locator('select')).toHaveValue('LC');
+    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+
+    await target.getByRole('button', { name: /^Limits and conditions for/ }).click();
+
+    await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toBeVisible();
+    await expect(page.locator('#restriction-description')).toHaveValue('Nights only');
+  });
+
+  test('an LC cell with no baseline to differ from can still be reopened', async ({ page }) => {
+    // A copy of the provincial master is its own baseline, so no cell ever
+    // differs and the HA badge never appears anywhere on the step.
+    stub.permissions['tpl-master'] = [
+      { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+      {
+        activityId: 'activity-2',
+        occupationId: 'occ-1',
+        permission: 'LC',
+        limitId: 'limit-2',
+        limitName: STUB_LIMITS[1].name,
+        restrictionDescription: 'Nights only',
+      },
+    ];
+
+    await openCopyFinalizeStep(page, 'tpl-master');
+
+    const target = cell(page, 'Vital signs', 'Registered Nurse');
+    await expect(target.locator('select')).toHaveValue('LC');
+    await expect(page.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+
+    await target.getByRole('button', { name: /^Limits and conditions for/ }).click();
+
+    await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toBeVisible();
+    await expect(page.locator('#restriction-description')).toHaveValue('Nights only');
+  });
+
+  test('the LC badge appears and disappears with the permission, not the comparison', async ({
+    page,
+  }) => {
+    await openFinalizeStep(page, 'tpl-ha');
+
+    // Y matching the parent: neither badge.
+    const target = cell(page, 'Initial assessment', 'Registered Nurse');
+    await expect(target.getByRole('button', { name: /^Limits and conditions for/ })).toHaveCount(0);
+    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+
+    // N differs from the parent but is not LC: the HA badge alone.
+    await target.locator('select').selectOption('N');
+    await expect(target.getByRole('button', { name: /^Limits and conditions for/ })).toHaveCount(0);
+    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toBeVisible();
+
+    // LC differs and is LC: both, each doing its own job.
+    await target.locator('select').selectOption('LC');
+    await page.locator('#limits-conditions-list').click();
+    await page.getByRole('option', { name: STUB_LIMITS[0].name, exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toHaveCount(0);
+
+    await expect(target.getByRole('button', { name: /^Limits and conditions for/ })).toBeVisible();
+    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toBeVisible();
+
+    await expectNoRuntimeOverlay(page);
   });
 
   test('a badge on a non-LC cell shows a read-only comparison instead (UI case 17a)', async ({
@@ -149,9 +248,7 @@ test.describe('limits and conditions', () => {
     await target.getByRole('button', { name: 'Changes made by HA' }).hover();
 
     const tooltip = page.getByRole('tooltip');
-    await expect(tooltip).toHaveText(
-      'Changes made by HA — Parent: Perform → This template: Not permitted',
-    );
+    await expect(tooltip).toHaveText('Changes made by HA — Permitted → Not permitted');
     await expect(tooltip).toHaveCSS('background-color', 'rgb(56, 89, 138)');
     await expect(tooltip.locator('span')).toHaveCSS('white-space', 'normal');
     expect(
@@ -193,4 +290,234 @@ test.describe('limits and conditions', () => {
     expect(saved.limitId).toBeUndefined();
     expect(saved.restrictionDescription).toBeNull();
   });
+
+  /**
+   * A copy joins its source's chain, so it shares the source's provincial
+   * master and is measured against that. Comparing a copy against the source it
+   * came from would mark nothing, hiding the health authority's existing
+   * departures from provincial.
+   */
+  const openCopyFinalizeStep = async (page: any, sourceId: string) => {
+    await page.goto(`/care-settings/copy?sourceId=${sourceId}`);
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('button', { name: 'Assessment' }).click();
+  };
+
+  test('a copy keeps the badge on an LC the source set over the provincial value', async ({
+    page,
+  }) => {
+    await openCopyFinalizeStep(page, 'tpl-ha');
+
+    // tpl-ha turned this cell into LC; the provincial master has no entry for it.
+    const overridden = cell(page, 'Vital signs', 'Registered Nurse');
+    await expect(overridden.locator('select')).toHaveValue('LC');
+
+    const badge = overridden.getByRole('button', { name: 'Changes made by HA' });
+    await badge.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(
+      'Changes made by HA — Not permitted → Limits and conditions',
+    );
+
+    // A value the source left as the provincial one is not an override.
+    await expect(
+      cell(page, 'Initial assessment', 'Registered Nurse').getByRole('button', {
+        name: 'Changes made by HA',
+      }),
+    ).toHaveCount(0);
+
+    await expectNoRuntimeOverlay(page);
+  });
+
+  /**
+   * The baseline is provincial at every level, so a site is measured two steps
+   * up rather than against the health authority directly above it. Without the
+   * walk this cell would match its parent exactly and show nothing, hiding an
+   * override the site has inherited and is subject to.
+   */
+  test('a site is measured against provincial, not against its health authority', async ({
+    page,
+  }) => {
+    // tpl-ha turned this cell into LC over a provincial value of N, and the
+    // site inherited that LC verbatim.
+    stub.permissions['tpl-site'] = [
+      { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+      {
+        activityId: 'activity-2',
+        occupationId: 'occ-1',
+        permission: 'LC',
+        limitId: 'limit-2',
+        limitName: STUB_LIMITS[1].name,
+        restrictionDescription: 'Nights only',
+      },
+    ];
+
+    await openFinalizeStep(page, 'tpl-site');
+
+    const inherited = cell(page, 'Vital signs', 'Registered Nurse');
+    const badge = inherited.getByRole('button', { name: 'Changes made by HA' });
+    await badge.hover();
+    await expect(page.getByRole('tooltip')).toHaveText(
+      'Changes made by HA — Not permitted → Limits and conditions',
+    );
+  });
+
+  /**
+   * The copy screen and the saved template now read the same baseline, so the
+   * badges an administrator sees while copying are the ones that remain after
+   * saving. They used to be measured against different templates.
+   */
+  test('a copy shows the same badges once it is saved', async ({ page }) => {
+    await openCopyFinalizeStep(page, 'tpl-ha');
+
+    const whileCopying = cell(page, 'Vital signs', 'Registered Nurse');
+    await expect(whileCopying.getByRole('button', { name: 'Changes made by HA' })).toBeVisible();
+
+    // tpl-site is that copy once saved: same chain, same inherited LC.
+    stub.permissions['tpl-site'] = [
+      { activityId: 'activity-1', occupationId: 'occ-1', permission: 'Y' },
+      {
+        activityId: 'activity-2',
+        occupationId: 'occ-1',
+        permission: 'LC',
+        limitId: 'limit-2',
+        limitName: STUB_LIMITS[1].name,
+        restrictionDescription: 'Nights only',
+      },
+    ];
+
+    await openFinalizeStep(page, 'tpl-site');
+
+    await expect(
+      cell(page, 'Vital signs', 'Registered Nurse').getByRole('button', {
+        name: 'Changes made by HA',
+      }),
+    ).toBeVisible();
+  });
+
+  test('copying the provincial master marks only what the user changes', async ({ page }) => {
+    await openCopyFinalizeStep(page, 'tpl-master');
+
+    const target = cell(page, 'Initial assessment', 'Registered Nurse');
+    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+
+    await target.locator('select').selectOption('N');
+    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toBeVisible();
+  });
+
+  test('each badge names the cell it belongs to', async ({ page }) => {
+    await openFinalizeStep(page);
+
+    // Two overridden cells, so there is more than one badge to tell apart.
+    await cell(page, 'Initial assessment', 'Registered Nurse').locator('select').selectOption('N');
+    await cell(page, 'Vital signs', 'Registered Nurse').locator('select').selectOption('Y');
+
+    // Without a per-cell name every badge in the grid announces the same two
+    // words, leaving a screen reader user no way to tell them apart.
+    const names = await page
+      .getByRole('button', { name: /^Changes made by HA for / })
+      .evaluateAll((nodes: Element[]) => nodes.map(n => n.getAttribute('aria-label')));
+
+    expect(names.length).toBeGreaterThan(1);
+    expect(new Set(names).size).toBe(names.length);
+    expect(names).toContain('Changes made by HA for Registered Nurse \u2014 Initial assessment');
+
+    expect(names).toContain('Changes made by HA for Registered Nurse \u2014 Vital signs');
+  });
+
+  for (const mode of ['edit', 'copy'] as const) {
+    const openBaselineStep = async (page: any) => {
+      if (mode === 'edit') await openFinalizeStep(page, 'tpl-ha');
+      else await openCopyFinalizeStep(page, 'tpl-ha');
+    };
+
+    test(`${mode}: an existing empty provincial master badges Y and LC, but not N`, async ({
+      page,
+    }) => {
+      stub.permissions['tpl-master'] = [];
+      await openBaselineStep(page);
+
+      const permitted = cell(page, 'Initial assessment', 'Registered Nurse');
+      await expect(permitted.locator('select')).toHaveValue('Y');
+      await permitted.getByRole('button', { name: 'Changes made by HA' }).hover();
+      await expect(page.getByRole('tooltip')).toHaveText(
+        'Changes made by HA — Not permitted → Permitted',
+      );
+
+      const limited = cell(page, 'Vital signs', 'Registered Nurse');
+      await expect(limited.locator('select')).toHaveValue('LC');
+      await expect(limited.getByRole('button', { name: 'Changes made by HA' })).toBeVisible();
+      const notPermitted = cell(page, 'Initial assessment', 'Licensed Practical Nurse');
+      await expect(notPermitted.locator('select')).toHaveValue('N');
+      await expect(notPermitted.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+
+      await permitted.locator('select').selectOption('N');
+      await expect(permitted.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+      await expectNoRuntimeOverlay(page);
+    });
+
+    test(`${mode}: a chain with no provincial master shows no badges or failure notice`, async ({
+      page,
+    }) => {
+      const source = stub.templates.find(template => template.id === 'tpl-ha')!;
+      source.parentId = null;
+      source.parentName = null;
+      await openBaselineStep(page);
+
+      await expect(
+        cell(page, 'Initial assessment', 'Registered Nurse').locator('select'),
+      ).toHaveValue('Y');
+      await expect(cell(page, 'Vital signs', 'Registered Nurse').locator('select')).toHaveValue(
+        'LC',
+      );
+      await expect(page.getByRole('button', { name: /^Changes made by HA/ })).toHaveCount(0);
+      await expect(
+        page.getByRole('status').filter({ hasText: 'Comparison with the provincial standard' }),
+      ).toHaveCount(0);
+    });
+
+    test(`${mode}: a failed baseline says so instead of silently dropping the labels`, async ({
+      page,
+    }) => {
+      await page.route('**/care-settings/tpl-ha/master-permissions', route =>
+        route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }),
+      );
+      await openBaselineStep(page);
+
+      await expect(
+        page.getByRole('status').filter({ hasText: 'Comparison with the provincial standard' }),
+      ).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Changes made by HA/ })).toHaveCount(0);
+    });
+
+    for (const emptyMaster of [false, true]) {
+      test(`${mode}: loading a ${emptyMaster ? 'empty' : 'nonempty'} baseline does not flash badges`, async ({
+        page,
+      }) => {
+        if (emptyMaster) stub.permissions['tpl-master'] = [];
+        let release = () => {};
+        const held = new Promise<void>(resolve => {
+          release = resolve;
+        });
+        await page.route('**/care-settings/tpl-ha/master-permissions', async route => {
+          await held;
+          await route.fallback();
+        });
+
+        await openBaselineStep(page);
+        const permitted = cell(page, 'Initial assessment', 'Registered Nurse');
+        await expect(permitted.locator('select')).toHaveValue('Y');
+        await expect(page.getByRole('button', { name: /^Changes made by HA/ })).toHaveCount(0);
+
+        release();
+        await expect(
+          cell(page, 'Vital signs', 'Registered Nurse').getByRole('button', {
+            name: 'Changes made by HA',
+          }),
+        ).toBeVisible();
+        await expect(permitted.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(
+          emptyMaster ? 1 : 0,
+        );
+      });
+    }
+  }
 });

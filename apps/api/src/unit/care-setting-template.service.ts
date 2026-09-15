@@ -33,6 +33,7 @@ import {
   CareSettingsCMSFindSortKeys,
   CareSettingTemplateRO,
   CareSettingTemplateDetailRO,
+  CareSettingMasterPermissionsRO,
   BundleSelectionRO,
   TemplatePermissionRO,
   CreateCareSettingTemplateCopyDTO,
@@ -1169,40 +1170,112 @@ export class CareSettingTemplateService {
   }
 
   /**
-   * The direct parent's permissions, used as the baseline for the
-   * "Changes made by HA" badge. Limits are deliberately omitted: the badge
-   * compares permission levels only.
+   * The provincial master at the top of a template's chain, or null if the
+   * chain has none.
    *
-   * Returns an empty array when the template has no parent, so a master or an
-   * orphan simply shows no badges.
+   * Inclusive of the template itself: a master is its own baseline, which
+   * leaves it nothing to differ from and so no badges, without a special case.
+   * Walks parent by parent rather than assuming a fixed depth, so a site three
+   * levels down resolves the same way as a health authority one level down.
    */
-  async getParentPermissions(
-    id: string,
-  ): Promise<{ activityId: string; occupationId: string; permission: Permissions }[]> {
-    const template = await this.templateRepo.findOne({
-      where: { id },
-      relations: ['parent'],
-    });
+  private async findMasterAncestor(id: string): Promise<CareSettingTemplate | null> {
+    // The walk only needs the parent link. `unit` and `selectedActivities` are
+    // wanted for the master alone, and loading them on every hop would join the
+    // activity table once per level and discard the rows — measurably costly on
+    // templates whose activity lists are already large enough to need an
+    // IDs-only copy endpoint.
+    let current = await this.templateRepo.findOne({ where: { id }, relations: ['parent'] });
 
-    if (!template) {
+    if (!current) {
       throw new NotFoundException({ message: 'Care Setting Template not found' });
     }
 
-    if (!template.parent) return [];
+    // A cycle would otherwise loop forever. Parents are set once at copy time
+    // and never repointed, so this is a guard against corrupt data rather than
+    // an expected case.
+    const seen = new Set<string>();
+
+    while (current) {
+      if (seen.has(current.id)) return null;
+      seen.add(current.id);
+
+      if (current.isMaster) {
+        // Re-read with what getUnitScopePermissions needs, now that there is
+        // exactly one template left to load it for.
+        return this.templateRepo.findOne({
+          where: { id: current.id },
+          relations: ['unit', 'selectedActivities'],
+        });
+      }
+
+      if (!current.parent) return null;
+
+      current = await this.templateRepo.findOne({
+        where: { id: current.parent.id },
+        relations: ['parent'],
+      });
+    }
+
+    return null;
+  }
+
+  /**
+   * The provincial master's permissions, used as the baseline for the
+   * "Changes made by HA" badge. Limits are deliberately omitted: the badge
+   * compares permission levels only.
+   *
+   * The baseline is the master at the top of the chain whatever the depth, so a
+   * site template is measured against provincial rather than against the health
+   * authority directly above it. That keeps the badge meaning one thing at
+   * every level, and keeps a copy's badges identical before and after it is
+   * saved, since a copy joins the same chain as its source.
+   *
+   * A null masterId identifies a chain with no master. An existing master with
+   * no permission rows is still a valid baseline of implicit N for every cell.
+   */
+  async getMasterPermissions(id: string): Promise<CareSettingMasterPermissionsRO> {
+    const master = await this.findMasterAncestor(id);
+
+    if (!master) return new CareSettingMasterPermissionsRO({ masterId: null, permissions: [] });
 
     const rows = await this.permissionRepo
       .createQueryBuilder('p')
       .select('p.care_activity_id', 'care_activity_id')
       .addSelect('p.occupation_id', 'occupation_id')
       .addSelect('p.permission', 'permission')
-      .where('p.template_id = :templateId', { templateId: template.parent.id })
+      .where('p.template_id = :templateId', { templateId: master.id })
       .getRawMany();
 
-    return rows.map(r => ({
-      activityId: r.care_activity_id,
-      occupationId: r.occupation_id,
-      permission: r.permission,
-    }));
+    const baseline = new Map<
+      string,
+      { activityId: string; occupationId: string; permission: Permissions }
+    >();
+
+    // A master is read-only, so a pair it is missing is a gap left by an earlier
+    // sync rather than a decision to withhold it. getTemplateForCopy lays the
+    // occupation scope down first for that reason, and the two have to agree on
+    // what a master's baseline is: treating a gap here as "not permitted" badges
+    // cells as "Changes made by HA" that the health authority never touched.
+    for (const scoped of await this.getUnitScopePermissions(master)) {
+      baseline.set(getTemplatePermissionKey(scoped.activityId, scoped.occupationId), {
+        activityId: scoped.activityId,
+        occupationId: scoped.occupationId,
+        permission: scoped.permission as Permissions,
+      });
+    }
+
+    for (const r of rows) {
+      baseline.set(getTemplatePermissionKey(r.care_activity_id, r.occupation_id), {
+        activityId: r.care_activity_id,
+        occupationId: r.occupation_id,
+        permission: r.permission,
+      });
+    }
+
+    return new CareSettingMasterPermissionsRO({
+      masterId: master.id,
+      permissions: Array.from(baseline.values()),
+    });
   }
 
   /**

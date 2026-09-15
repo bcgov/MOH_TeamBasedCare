@@ -19,7 +19,7 @@ describe('CareSettingTemplateController', () => {
     copyTemplateWithData: jest.fn(),
     updateTemplate: jest.fn(),
     updateTemplateDetails: jest.fn(),
-    getParentPermissions: jest.fn(),
+    getMasterPermissions: jest.fn(),
     getLimitConditions: jest.fn(),
     deleteTemplate: jest.fn(),
   };
@@ -360,7 +360,7 @@ describe('CareSettingTemplateController - levels, limits, and concurrency', () =
   const service = {
     findTemplates: jest.fn(),
     getTemplateBasic: jest.fn(),
-    getParentPermissions: jest.fn(),
+    getMasterPermissions: jest.fn(),
     getLimitConditions: jest.fn(),
     updateTemplateDetails: jest.fn(),
   };
@@ -387,33 +387,41 @@ describe('CareSettingTemplateController - levels, limits, and concurrency', () =
   });
 
   // Contract case 13
-  it('returns an empty parent baseline when the template has no parent', async () => {
+  it.each([null, 'master-1'])(
+    'preserves master identity %p for an empty baseline',
+    async masterId => {
+      service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Fraser Health' });
+      service.getMasterPermissions.mockResolvedValue({ masterId, permissions: [] });
+
+      await expect(controller.getMasterPermissions('t1', request())).resolves.toEqual({
+        masterId,
+        permissions: [],
+      });
+    },
+  );
+
+  it('passes through the provincial baseline for a template that has one', async () => {
     service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Fraser Health' });
-    service.getParentPermissions.mockResolvedValue([]);
+    service.getMasterPermissions.mockResolvedValue({
+      masterId: 'master-1',
+      permissions: [{ activityId: 'a1', occupationId: 'o1', permission: Permissions.PERFORM }],
+    });
 
-    await expect(controller.getParentPermissions('t1', request())).resolves.toEqual([]);
-  });
+    const result = await controller.getMasterPermissions('t1', request());
 
-  it('passes through the parent baseline for a template that has one', async () => {
-    service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Fraser Health' });
-    service.getParentPermissions.mockResolvedValue([
-      { activityId: 'a1', occupationId: 'o1', permission: Permissions.PERFORM },
-    ]);
-
-    const result = await controller.getParentPermissions('t1', request());
-
-    expect(result).toHaveLength(1);
-    expect(service.getParentPermissions).toHaveBeenCalledWith('t1');
+    expect(result.masterId).toBe('master-1');
+    expect(result.permissions).toHaveLength(1);
+    expect(service.getMasterPermissions).toHaveBeenCalledWith('t1');
   });
 
   // Contract case 14 - access is checked against the child being viewed
-  it('rejects a parent-permissions read from another health authority', async () => {
+  it('rejects a master-permissions read from another health authority', async () => {
     service.getTemplateBasic.mockResolvedValue({ id: 't1', healthAuthority: 'Interior Health' });
 
-    await expect(controller.getParentPermissions('t1', request())).rejects.toThrow(
+    await expect(controller.getMasterPermissions('t1', request())).rejects.toThrow(
       ForbiddenException,
     );
-    expect(service.getParentPermissions).not.toHaveBeenCalled();
+    expect(service.getMasterPermissions).not.toHaveBeenCalled();
   });
 
   // Contract case 15

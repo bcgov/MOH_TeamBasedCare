@@ -113,6 +113,21 @@ export class TemplatePermissionRO {
   }
 }
 
+/** Provincial comparison baseline; an existing master may have no permission rows. */
+@Exclude()
+export class CareSettingMasterPermissionsRO {
+  /** Null only when the template's chain has no provincial master. */
+  @Expose()
+  masterId!: string | null;
+
+  @Expose()
+  permissions!: Pick<TemplatePermissionRO, 'activityId' | 'occupationId' | 'permission'>[];
+
+  constructor(data: CareSettingMasterPermissionsRO) {
+    Object.assign(this, data);
+  }
+}
+
 /** Detailed template with full bundle selections and permissions */
 @Exclude()
 export class CareSettingTemplateDetailRO extends CareSettingTemplateRO {

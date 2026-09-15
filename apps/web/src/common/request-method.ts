@@ -119,7 +119,7 @@ export const API_ENDPOINT = {
   copyCareSettingTemplateFull: (sourceId: string) => `/care-settings/${sourceId}/copy-full`,
   updateCareSettingTemplate: (id: string) => `/care-settings/${id}`,
   updateCareSettingTemplateDetails: (id: string) => `/care-settings/${id}/details`,
-  getCareSettingParentPermissions: (id: string) => `/care-settings/${id}/parent-permissions`,
+  getCareSettingMasterPermissions: (id: string) => `/care-settings/${id}/master-permissions`,
   CMS_LIMITS_CONDITIONS: '/care-settings/cms/limits-conditions',
   deleteCareSettingTemplate: (id: string) => `/care-settings/${id}`,
 

@@ -525,17 +525,35 @@ export async function stubCareSettings(
       });
     }
 
-    const parentMatch = path.match(/\/care-settings\/([^/]+)\/parent-permissions$/);
-    if (parentMatch) {
-      const template = stub.templates.find(t => t.id === parentMatch[1]);
-      if (!template?.parentId) return json([]);
-      return json(
-        (stub.permissions[template.parentId] ?? []).map(p => ({
+    const masterMatch = path.match(/\/care-settings\/([^/]+)\/master-permissions$/);
+    if (masterMatch) {
+      // Mirrors the API: walk up to the master at the top of the chain,
+      // inclusive, so a master is its own baseline and a chain without one
+      // explicitly reports no master, distinct from a master with no rows.
+      const seen = new Set<string>();
+      let current = stub.templates.find(t => t.id === masterMatch[1]);
+
+      while (current && !current.isMaster) {
+        if (seen.has(current.id)) {
+          current = undefined;
+          break;
+        }
+        seen.add(current.id);
+        current = current.parentId
+          ? stub.templates.find(t => t.id === current?.parentId)
+          : undefined;
+      }
+
+      if (!current) return json({ masterId: null, permissions: [] });
+
+      return json({
+        masterId: current.id,
+        permissions: (stub.permissions[current.id] ?? []).map(p => ({
           activityId: p.activityId,
           occupationId: p.occupationId,
           permission: p.permission,
         })),
-      );
+      });
     }
 
     if (/\/care-settings\/[^/]+\/bundles$/.test(path)) {
