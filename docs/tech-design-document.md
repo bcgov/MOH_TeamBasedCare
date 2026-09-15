@@ -399,6 +399,21 @@ Base URL: `/api/v1`
 | PATCH | `/:id` | Admin/Content Admin | Update template |
 | DELETE | `/:id` | Admin/Content Admin | Delete template |
 
+The copy wizard submits its complete edited snapshot to `copy-full` only on final
+confirmation. UUID references are normalized to lowercase before deduplication
+and bounded validation lookups, so accepted uppercase UUIDs behave identically.
+The template is saved through TypeORM, while selected bundle/activity links and
+permission rows use bounded bulk inserts in the same transaction. Permission
+batches contain at most 5,000 rows (six bind parameters each), independently of
+the incremental edit request limit. New copies use strict permission inserts,
+not upserts: duplicate pairs and missing/deleted references must not silently
+produce an incomplete copy. A failed batch rolls back the entire copy.
+
+Permission values, LC catalogue references, normalized restriction descriptions,
+and inherited legacy LC cells without a limit are preserved. The response remains
+lightweight, and the browser navigates only after the transaction commits. The
+deprecated simple-copy endpoint and ordinary edit semantics are unchanged.
+
 ### Planning Sessions (`/sessions`) - User Only
 
 | Method | Endpoint | Description |

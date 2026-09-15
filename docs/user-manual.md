@@ -221,6 +221,11 @@ Manage care setting templates that define which occupations can perform which ac
 6. Enter a unique name for the new template
 7. Click **Confirm**
 
+If a selected competency, activity, or occupation is no longer available, saving
+the copy shows an error instead of silently omitting it. No incomplete copy is
+created. Your wizard stays open; note any changes you need to keep, reload the
+source care setting, and review your selections before trying again.
+
 ### Editing a Template
 
 1. Click the **Edit** button on a non-master template
