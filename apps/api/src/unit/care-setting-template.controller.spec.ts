@@ -175,6 +175,21 @@ describe('CareSettingTemplateController', () => {
 
       expect(mockTemplateService.copyTemplateWithData).toHaveBeenCalledWith('tmpl-1', {}, 'GLOBAL');
     });
+
+    it('surfaces invalid-reference errors without returning a successful copy', async () => {
+      const failure = new BadRequestException(
+        'One or more permission occupations are not valid options. Reload the source care setting and review your selections.',
+      );
+      mockTemplateService.copyTemplateWithData.mockRejectedValueOnce(failure);
+
+      await expect(
+        controller.copyTemplateWithData(
+          'tmpl-1',
+          { name: 'Copy', selectedBundleIds: [], selectedActivityIds: [], permissions: [] },
+          createMockRequest({ roles: [Role.CONTENT_ADMIN] }),
+        ),
+      ).rejects.toBe(failure);
+    });
   });
 
   // ─── getTemplateForCopy ────────────────────────────────────────────

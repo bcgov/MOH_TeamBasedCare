@@ -19,6 +19,7 @@ import {
   TemplateLevelFilter,
 } from '@tbcm/common';
 import { TemplateVersionConflictException } from './template-version-conflict.exception';
+import { FindOperator } from 'typeorm';
 
 describe('CareSettingTemplateService', () => {
   let service: CareSettingTemplateService;
@@ -822,9 +823,16 @@ describe('CareSettingTemplateService', () => {
   describe('copyTemplateWithData', () => {
     beforeEach(() => {
       mockTemplateQB.getOne.mockResolvedValue(null); // no duplicate name
-      // Template and permissions are now written through the transaction manager
       mockManager.save.mockResolvedValue({ id: 'new-1' });
+      mockBundleRepo.find.mockReset().mockResolvedValue([]);
+      mockCareActivityRepo.find.mockReset().mockResolvedValue([]);
+      mockOccupationRepo.find.mockReset().mockResolvedValue([]);
     });
+
+    const permissionWrites = () =>
+      mockManager.query.mock.calls.filter(([sql]) =>
+        String(sql).includes('INSERT INTO care_setting_template_permission'),
+      );
 
     it('should create copy with custom data', async () => {
       mockTemplateRepo.findOne
@@ -884,13 +892,24 @@ describe('CareSettingTemplateService', () => {
 
       await service.copyTemplateWithData('tmpl-1', dto as any, 'Fraser Health');
 
-      expect(mockManager.create).toHaveBeenCalledWith(
-        CareSettingTemplatePermission,
-        expect.objectContaining({ permission: 'Y' }),
+      expect(permissionWrites()).toEqual([
+        [
+          expect.not.stringContaining('ON CONFLICT'),
+          ['new-1', 'activity-1', 'occ-1', 'Y', null, null],
+        ],
+      ]);
+      expect(mockManager.create).not.toHaveBeenCalled();
+      expect(mockManager.save).toHaveBeenCalledTimes(1);
+      expect(mockTemplateRepo.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({ selectedActivities: expect.any(Array) }),
       );
-      expect(mockManager.save).toHaveBeenCalledWith(
-        CareSettingTemplatePermission,
-        expect.any(Array),
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO care_setting_template_bundles'),
+        ['new-1', 'bundle-1'],
+      );
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO care_setting_template_activities'),
+        ['new-1', 'activity-1'],
       );
     });
 
@@ -973,10 +992,7 @@ describe('CareSettingTemplateService', () => {
       expect(mockPermissionQB.where).toHaveBeenCalledWith(expect.any(String), {
         templateId: 'tmpl-1',
       });
-      expect(mockManager.create).toHaveBeenCalledWith(
-        CareSettingTemplatePermission,
-        expect.objectContaining({ permission: 'LC', limitCondition: null }),
-      );
+      expect(permissionWrites()[0][1]).toEqual(['new-1', 'activity-1', 'occ-1', 'LC', null, null]);
     });
 
     it('still rejects a cell newly set to LC when the source exempts a different cell', async () => {
@@ -1005,7 +1021,7 @@ describe('CareSettingTemplateService', () => {
       expect(mockManager.save).not.toHaveBeenCalled();
     });
 
-    it('should skip invalid permissions where activity/occupation not found', async () => {
+    it('rejects missing permission references instead of silently omitting them', async () => {
       mockTemplateRepo.findOne
         .mockResolvedValueOnce(mockTemplate)
         .mockResolvedValueOnce({ ...mockTemplate, id: 'new-1' });
@@ -1023,11 +1039,388 @@ describe('CareSettingTemplateService', () => {
         permissions: [{ activityId: 'missing-a', occupationId: 'missing-o', permission: 'Y' }],
       };
 
-      await service.copyTemplateWithData('tmpl-1', dto as any, 'Fraser Health');
-
-      // No permissions created since activity/occupation not found
+      await expect(
+        service.copyTemplateWithData('tmpl-1', dto as any, 'Fraser Health'),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
       expect(mockManager.create).not.toHaveBeenCalled();
     });
+
+    it.each([0, 1, 5000, 5001, 10001])(
+      'persists all %i permissions in bounded strict inserts',
+      async count => {
+        mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+        mockTemplateRepo.create.mockReturnValue({ name: 'Copy' });
+        const findIds = ({ where }: { where: { id: FindOperator<string[]> } }) =>
+          Promise.resolve(where.id.value.map(id => ({ id })));
+        mockCareActivityRepo.find.mockImplementation(findIds);
+        mockOccupationRepo.find.mockImplementation(findIds);
+        const permissions = Array.from({ length: count }, (_, index) => ({
+          activityId: `activity-${Math.floor(index / 20)}`,
+          occupationId: `occupation-${index % 20}`,
+          permission: Permissions.PERFORM,
+        }));
+
+        await service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Copy',
+            selectedBundleIds: [],
+            selectedActivityIds: [],
+            permissions,
+          },
+          'Fraser Health',
+        );
+
+        const writes = permissionWrites();
+        expect(writes).toHaveLength(Math.ceil(count / 5000));
+        const actualKeys: string[] = [];
+        for (const [sql, parameters] of writes) {
+          expect(sql).not.toContain('ON CONFLICT');
+          expect(parameters.length).toBeLessThanOrEqual(65535);
+          for (let index = 0; index < parameters.length; index += 6) {
+            expect(parameters[index]).toBe('new-1');
+            actualKeys.push(`${parameters[index + 1]}::${parameters[index + 2]}`);
+            expect(parameters.slice(index + 3, index + 6)).toEqual(['Y', null, null]);
+          }
+        }
+        expect(actualKeys).toEqual(permissions.map(p => `${p.activityId}::${p.occupationId}`));
+        for (const repo of [mockCareActivityRepo, mockOccupationRepo]) {
+          const lookupIds = repo.find.mock.calls.flatMap(([options]) => options.where.id.value);
+          expect(new Set(lookupIds).size).toBe(lookupIds.length);
+          expect(repo.find).toHaveBeenCalledTimes(count ? 1 : 0);
+          for (const [options] of repo.find.mock.calls) {
+            expect(options.select).toEqual(['id']);
+          }
+        }
+        expect(mockPermissionQB.getRawMany).not.toHaveBeenCalled();
+        expect(mockManager.save).toHaveBeenCalledTimes(1);
+        expect(mockManager.create).not.toHaveBeenCalled();
+      },
+    );
+
+    it('bounds large distinct-reference lookups and relation inserts without truncation', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      const ids = Array.from({ length: 5001 }, (_, index) => `activity-${index}`);
+      mockCareActivityRepo.find.mockImplementation(
+        ({ where }: { where: { id: FindOperator<string[]> } }) =>
+          Promise.resolve(where.id.value.map(id => ({ id }))),
+      );
+
+      await service.copyTemplateWithData(
+        'tmpl-1',
+        {
+          name: 'Copy',
+          selectedBundleIds: [],
+          selectedActivityIds: ids,
+          permissions: [],
+        },
+        'Fraser Health',
+      );
+
+      expect(mockCareActivityRepo.find.mock.calls.length).toBeGreaterThan(1);
+      const lookedUp = mockCareActivityRepo.find.mock.calls.flatMap(([options]) => {
+        expect(options.where.id.value.length).toBeLessThanOrEqual(5000);
+        return options.where.id.value;
+      });
+      expect(lookedUp).toEqual(ids);
+      const inserted = mockManager.query.mock.calls
+        .filter(([sql]) => String(sql).includes('INSERT INTO care_setting_template_activities'))
+        .flatMap(([, params]) => params.filter((_: unknown, index: number) => index % 2 === 1));
+      expect(inserted).toEqual(ids);
+    });
+
+    it('looks up overlapping selected and permission activities only once', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockBundleRepo.find.mockResolvedValue([mockBundle]);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity, { id: 'activity-2' }]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+
+      await service.copyTemplateWithData(
+        'tmpl-1',
+        {
+          name: 'Copy',
+          selectedBundleIds: ['bundle-1', 'bundle-1'],
+          selectedActivityIds: ['activity-1', 'activity-1'],
+          permissions: ['activity-1', 'activity-2'].map(activityId => ({
+            activityId,
+            occupationId: 'occ-1',
+            permission: Permissions.PERFORM,
+          })),
+        },
+        'Fraser Health',
+      );
+
+      expect(mockCareActivityRepo.find).toHaveBeenCalledTimes(1);
+      expect(mockCareActivityRepo.find.mock.calls[0][0].where.id.value).toEqual([
+        'activity-1',
+        'activity-2',
+      ]);
+      expect(mockManager.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO care_setting_template_activities'),
+        ['new-1', 'activity-1'],
+      );
+      expect(permissionWrites()[0][1]).toHaveLength(12);
+    });
+
+    it.each([false, true])(
+      'canonicalizes mixed-case UUID references, including legacy LC=%s',
+      async legacy => {
+        const activityId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+        const bundleId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        const occupationId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+        const limitId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+        mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+        mockBundleRepo.find.mockResolvedValue([{ id: bundleId }]);
+        mockCareActivityRepo.find.mockResolvedValue([{ id: activityId }]);
+        mockOccupationRepo.find.mockResolvedValue([{ id: occupationId }]);
+        mockLimitConditionRepo.find.mockResolvedValue([{ id: limitId }]);
+        mockPermissionQB.getRawMany.mockResolvedValue([
+          { care_activity_id: activityId, occupation_id: occupationId },
+        ]);
+        const dto = {
+          name: 'Copy',
+          selectedBundleIds: [bundleId.toUpperCase(), bundleId],
+          selectedActivityIds: [activityId.toUpperCase(), activityId],
+          permissions: [
+            {
+              activityId: activityId.toUpperCase(),
+              occupationId: occupationId.toUpperCase(),
+              permission: Permissions.LIMITS,
+              limitId: legacy ? null : limitId.toUpperCase(),
+            },
+          ],
+        };
+        const original = JSON.stringify(dto);
+
+        await service.copyTemplateWithData('tmpl-1', dto, 'Fraser Health');
+
+        expect(mockBundleRepo.find.mock.calls[0][0].where.id.value).toEqual([bundleId]);
+        expect(mockCareActivityRepo.find.mock.calls[0][0].where.id.value).toEqual([activityId]);
+        expect(mockOccupationRepo.find.mock.calls[0][0].where.id.value).toEqual([occupationId]);
+        expect(permissionWrites()[0][1]).toEqual([
+          'new-1',
+          activityId,
+          occupationId,
+          'LC',
+          legacy ? null : limitId,
+          null,
+        ]);
+        expect(mockManager.query).toHaveBeenCalledWith(
+          expect.stringContaining('INSERT INTO care_setting_template_activities'),
+          ['new-1', activityId],
+        );
+        expect(JSON.stringify(dto)).toBe(original);
+      },
+    );
+
+    it('rejects the same permission pair submitted with different UUID casing', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      const permission = {
+        activityId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        occupationId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        permission: Permissions.PERFORM,
+      };
+      await expect(
+        service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Copy',
+            selectedBundleIds: [],
+            selectedActivityIds: [],
+            permissions: [
+              permission,
+              {
+                ...permission,
+                activityId: permission.activityId.toUpperCase(),
+                occupationId: permission.occupationId.toUpperCase(),
+              },
+            ],
+          },
+          'Fraser Health',
+        ),
+      ).rejects.toThrow('Each permission can be included only once per copy.');
+      expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
+      expect(mockCareActivityRepo.find).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { isMaster: true, level: undefined, expectedLevel: TemplateLevel.HEALTH_AUTHORITY },
+      { isMaster: false, level: undefined, expectedLevel: TemplateLevel.SITE },
+      { isMaster: true, level: TemplateLevel.SITE, expectedLevel: TemplateLevel.SITE },
+    ])(
+      'preserves copy metadata for master=$isMaster and requested level=$level',
+      async ({ isMaster, level, expectedLevel }) => {
+        mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, isMaster });
+
+        await service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Named Copy',
+            level,
+            selectedBundleIds: [],
+            selectedActivityIds: [],
+            permissions: [],
+          },
+          'Fraser Health',
+        );
+
+        expect(mockTemplateRepo.create).toHaveBeenCalledWith({
+          name: 'Named Copy',
+          isMaster: false,
+          healthAuthority: 'Fraser Health',
+          level: expectedLevel,
+          unit: { id: mockUnit.id },
+          parent: { id: mockTemplate.id },
+        });
+      },
+    );
+
+    it('preserves LC details and clears them on non-LC direct API entries', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([
+        { id: 'occ-1' },
+        { id: 'occ-2' },
+        { id: 'occ-3' },
+      ]);
+      mockLimitConditionRepo.find.mockResolvedValue([
+        { id: 'limit-1', name: 'Limit', isActive: false },
+      ]);
+
+      await service.copyTemplateWithData(
+        'tmpl-1',
+        {
+          name: 'Copy',
+          selectedBundleIds: [],
+          selectedActivityIds: [],
+          permissions: [Permissions.LIMITS, Permissions.PERFORM, Permissions.NO].map(
+            (permission, index) => ({
+              activityId: 'activity-1',
+              occupationId: `occ-${index + 1}`,
+              permission,
+              limitId: 'limit-1',
+              restrictionDescription: '  Keep this condition  ',
+            }),
+          ),
+        },
+        'Fraser Health',
+      );
+
+      expect(permissionWrites()[0][1]).toEqual([
+        'new-1',
+        'activity-1',
+        'occ-1',
+        'LC',
+        'limit-1',
+        'Keep this condition',
+        'new-1',
+        'activity-1',
+        'occ-2',
+        'Y',
+        null,
+        null,
+        'new-1',
+        'activity-1',
+        'occ-3',
+        'N',
+        null,
+        null,
+      ]);
+    });
+
+    it.each(['bundle', 'activity', 'occupation'])(
+      'rejects an invalid %s reference before creating a copy',
+      async kind => {
+        mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+        mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+        const dto = {
+          name: 'Copy',
+          selectedBundleIds: kind === 'bundle' ? ['missing-bundle'] : [],
+          selectedActivityIds: kind === 'activity' ? ['missing-activity'] : [],
+          permissions:
+            kind === 'occupation'
+              ? [
+                  {
+                    activityId: 'activity-1',
+                    occupationId: 'missing-occupation',
+                    permission: Permissions.PERFORM,
+                  },
+                ]
+              : [],
+        };
+        await expect(service.copyTemplateWithData('tmpl-1', dto, 'Fraser Health')).rejects.toThrow(
+          BadRequestException,
+        );
+        expect(mockTemplateRepo.manager.transaction).not.toHaveBeenCalled();
+      },
+    );
+
+    it('rejects duplicate permission pairs rather than silently upserting them', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      const permission = {
+        activityId: 'activity-1',
+        occupationId: 'occ-1',
+        permission: Permissions.PERFORM,
+      };
+      await expect(
+        service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Copy',
+            selectedBundleIds: [],
+            selectedActivityIds: [],
+            permissions: [permission, { ...permission, permission: Permissions.NO }],
+          },
+          'Fraser Health',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockManager.save).not.toHaveBeenCalled();
+    });
+
+    it.each(['permission', 'relation'])(
+      'propagates a later %s batch failure from the transaction',
+      async kind => {
+        mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+        const ids = Array.from({ length: 5001 }, (_, index) => `activity-${index}`);
+        mockCareActivityRepo.find.mockImplementation(
+          ({ where }: { where: { id: FindOperator<string[]> } }) =>
+            Promise.resolve(where.id.value.map(id => ({ id }))),
+        );
+        mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+        const fragment =
+          kind === 'permission'
+            ? 'INSERT INTO care_setting_template_permission'
+            : 'INSERT INTO care_setting_template_activities';
+        const failure = new Error('Injected batch failure');
+        let batches = 0;
+        mockManager.query.mockImplementation(async sql => {
+          if (String(sql).includes(fragment) && ++batches === 2) throw failure;
+          return [];
+        });
+
+        await expect(
+          service.copyTemplateWithData(
+            'tmpl-1',
+            {
+              name: 'Copy',
+              selectedBundleIds: [],
+              selectedActivityIds: ids,
+              permissions: ids.map(activityId => ({
+                activityId,
+                occupationId: 'occ-1',
+                permission: Permissions.PERFORM,
+              })),
+            },
+            'Fraser Health',
+          ),
+        ).rejects.toThrow(failure);
+        expect(mockTemplateRepo.manager.transaction).toHaveBeenCalledTimes(1);
+        expect(mockTemplateRepo.findOne).toHaveBeenCalledTimes(1);
+      },
+    );
   });
 
   // ─── updateTemplate ────────────────────────────────────────────────

@@ -167,6 +167,93 @@ make seed-local-db
 npm run db:seed-care-activities --path="./path/to/custom.csv"
 ```
 
+### Local Care-Setting Copy Performance
+
+These opt-in diagnostics reproduce a permission-heavy copy of
+`Acute care medicine - Master`. **Never seed these synthetic clinical permissions
+into dev, test, or production.** They require the running local `tbcm_db`
+PostgreSQL 15 container, its directly published loopback port, and a database
+cluster identity matching that container. Remote Docker contexts, database
+tunnels, and alternate PostgreSQL routing are refused.
+
+The scripts load connection credentials from the root `.env` without printing
+them. They require the explicit diagnostic `NODE_ENV=local` setting (not
+`development`), disable migrations/synchronization/subscribers, and do not start
+the API. Use the repository-supported Node/Yarn versions and run from the root:
+
+```bash
+# Inspect the exact target and missing matrix entries; this makes no data changes.
+NODE_ENV=local POSTGRES_HOST=127.0.0.1 \
+  yarn workspace @tbcm/api db:copy-performance:fixture dry-run
+
+# After reviewing the dry-run, fill missing selected-activity/active-occupation pairs.
+NODE_ENV=local POSTGRES_HOST=127.0.0.1 \
+  yarn workspace @tbcm/api db:copy-performance:fixture apply
+
+# Capture comparable service-level dense, sparse, and empty measurements.
+NODE_ENV=local POSTGRES_HOST=127.0.0.1 \
+  yarn workspace @tbcm/api db:copy-performance:benchmark baseline 30
+
+# After changing copy persistence, include later-batch rollback and exact read-back.
+NODE_ENV=local POSTGRES_HOST=127.0.0.1 \
+  yarn workspace @tbcm/api db:copy-performance:benchmark optimized 30 --rollback
+
+# Also exercise the untouched wizard snapshot, including unselected-activity permissions.
+NODE_ENV=local POSTGRES_HOST=127.0.0.1 \
+  yarn workspace @tbcm/api db:copy-performance:benchmark optimized-full-wizard 30 --full-wizard-only
+
+# Remove only owned, unchanged synthetic rows and benchmark copies.
+NODE_ENV=local POSTGRES_HOST=127.0.0.1 \
+  yarn workspace @tbcm/api db:copy-performance:fixture cleanup
+```
+
+Setup preserves existing permissions, LC metadata, selections, and unrelated
+templates. It fails if the named master is ambiguous/missing or lacks base
+activities/occupations. Repeated setup is idempotent; run `dry-run` again before
+each `apply`. Preserved `N` rows count toward fixture matrix coverage but are
+omitted from copy payloads, matching the wizard. Reports identify them through
+`preservedMatrixNPermissions`.
+
+Reports and the durable ownership manifest live in the ignored
+`.build/copy-performance/` directory. **Do not delete the manifest to bypass a
+cleanup error.** Cleanup refuses changed owned rows or unexpected dependents.
+An interrupted HTTP request retains a pending entry for manual reconciliation;
+never infer successful creation solely from its name. Benchmark runs remove
+their exact owned copies, but leave the dense fixture until explicit cleanup.
+
+HTTP ownership is finalized only after validating and fingerprinting the copy
+under the same database transaction and content-table locks. A copy changed
+before validation remains pending for reconciliation; changes after fingerprint
+capture cause cleanup to refuse deletion.
+
+Compare the same snapshot hash, activity/occupation/permission counts, runtime,
+logging, and machine conditions before/after. Reports contain first-run data
+separately from 30 warm observations, median/p95 durations, request bytes, and
+aggregate query metrics without permission payloads. The selected-matrix
+benchmark is a customized snapshot; historical permissions outside that matrix
+are reported separately. `--full-wizard-only` includes every returned non-`N`
+permission without silently filtering missing/deleted references. It reports
+either exact persistence or an explicit 400 with no copy; use it separately from
+HTTP mode and rollback injection. Cumulative SQL durations can overlap during
+parallel lookups, so `sqlWallMs` merges query intervals for the non-SQL estimate.
+Service timings exclude HTTP validation/authentication,
+network transfer, browser rendering, and list navigation. Stubbed Playwright
+tests likewise cannot establish backend performance.
+
+The optional `--http-url http://127.0.0.1:4000/api/v1` mode requires a normal
+authenticated `COPY_BENCHMARK_BEARER_TOKEN` supplied securely through the
+environment and `COPY_BENCHMARK_HEALTH_AUTHORITY` matching the authenticated
+user's copy scope (`GLOBAL` for an ADMIN). It must verify that the local API can
+read a unique probe from the verified local database before posting any copy.
+Do not combine HTTP mode with `--rollback`; failure injection is service-only.
+Do not place tokens in source, command arguments, or reports.
+
+Measure the real dev workflow only after an approved deployment, with existing
+dev permissions and ordinary authorized copies. Record Create Copy-to-ready,
+final Save-to-response, and response-to-list separately, including warm and cold
+requests. The initial objective is warm p95 Save-to-list within five seconds;
+local service results do not establish that dev objective.
+
 ### Remote Database Access
 
 ```bash
