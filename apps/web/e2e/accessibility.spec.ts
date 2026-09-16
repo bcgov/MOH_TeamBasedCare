@@ -170,12 +170,18 @@ test.describe('template levels accessibility', () => {
     const badges = page.getByRole('button', { name: /^(Changes made|View details)$/ });
     await expect(badges.first()).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .include('div.overflow-x-auto')
-      .withTags(WCAG)
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    for (const state of ['default', 'hover', 'focus'] as const) {
+      if (state === 'hover') await badges.first().hover();
+      if (state === 'focus') {
+        await page.mouse.move(0, 0);
+        await badges.first().focus();
+      }
+      const results = await new AxeBuilder({ page })
+        .include('div.overflow-x-auto')
+        .withTags(WCAG)
+        .analyze();
+      expect(results.violations, `${state} badge accessibility`).toEqual([]);
+    }
   });
 });
 

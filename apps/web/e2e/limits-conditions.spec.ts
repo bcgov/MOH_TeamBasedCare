@@ -127,7 +127,7 @@ test.describe('limits and conditions', () => {
     // badge reads "View details" on amber, explains the change on hover, and is
     // the way back into the dialog on click.
     const badge = target.getByRole('button', { name: 'View details' });
-    await expect(badge).toHaveCSS('background-color', 'rgb(254, 243, 199)');
+    await expect(badge).toHaveCSS('background-color', 'rgba(252, 186, 25, 0.5)');
     await badge.hover();
     await expect(page.getByRole('tooltip')).toContainText(
       'Change made: Not permitted → Limits and conditions',

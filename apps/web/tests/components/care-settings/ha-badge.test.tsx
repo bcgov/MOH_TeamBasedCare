@@ -380,7 +380,7 @@ describe('permission badge rendering', () => {
     await openBundle();
 
     const badge = screen.getByRole('button', { name: 'Changes made' });
-    expect(badge).toHaveClass('bg-amber-100');
+    expect(badge).toHaveClass('bg-bcYellowPrimary/50');
     expect(screen.queryByRole('button', { name: 'View details' })).not.toBeInTheDocument();
 
     expect(hover(badge)).toHaveTextContent('Change made: Permitted → Not permitted');
@@ -407,7 +407,7 @@ describe('permission badge rendering', () => {
     await openBundle();
 
     const badge = screen.getByRole('button', { name: 'View details' });
-    expect(badge).toHaveClass('bg-green-100');
+    expect(badge).toHaveClass('bg-green-100', 'border-green-300', 'rounded-sm');
 
     const tooltip = hover(badge);
     expect(tooltip).toHaveTextContent('Limits and conditions');
@@ -428,7 +428,7 @@ describe('permission badge rendering', () => {
     await openBundle();
 
     const badge = screen.getByRole('button', { name: 'View details' });
-    expect(badge).toHaveClass('bg-amber-100');
+    expect(badge).toHaveClass('bg-bcYellowPrimary/50');
 
     const tooltip = hover(badge);
     expect(tooltip).toHaveTextContent('Change made: Permitted → Limits and conditions');
@@ -476,7 +476,7 @@ describe('permission badge rendering', () => {
     await openBundle();
 
     const badge = screen.getByRole('button', { name: 'View details' });
-    expect(badge).toHaveClass('bg-amber-100');
+    expect(badge).toHaveClass('bg-bcYellowPrimary/50');
     const tooltip = hover(badge);
     expect(tooltip).toHaveTextContent('Selected LC: Certification');
     expect(tooltip).toHaveTextContent('Restriction description changed:');
@@ -557,7 +557,7 @@ describe('permission badge rendering', () => {
     await openBundle();
 
     const badge = screen.getByRole('button', { name: 'View details' });
-    expect(badge).toHaveClass('bg-gray-100');
+    expect(badge).toHaveClass('bg-gray-100', 'border-gray-300', 'rounded-sm');
     const tooltip = hover(badge);
     expect(tooltip).toHaveTextContent('Parent comparison unavailable.');
     expect(tooltip).toHaveTextContent('Selected LC: Certification');
@@ -596,5 +596,101 @@ describe('permission badge rendering', () => {
     expect(ctx.getPermissionLimit(ACTIVITY, OCCUPATION)?.limitName).toBe('Retired certification');
     expect(ctx.getTemplateChanges().permissionUpserts).toEqual([]);
     expect(ctx.getPermissionsArray()[0]).not.toHaveProperty('limitName');
+  });
+});
+
+describe('permission badge layout', () => {
+  const renderFinalize = (permission: Permissions, parentPermission: Permissions) => {
+    render(
+      <CareSettingsProvider>
+        <Probe />
+        <Finalize />
+      </CareSettingsProvider>,
+    );
+    initialise({
+      bundles: [
+        {
+          id: 'bundle-1',
+          name: 'Assessment',
+          careActivities: [{ id: ACTIVITY, name: 'Vital signs' }],
+        },
+      ],
+      occupations: [{ id: OCCUPATION, name: 'Physiotherapist' }],
+      selectedBundleIds: new Set(['bundle-1']),
+      selectedActivityIds: new Set([ACTIVITY]),
+      permissions: new Map([[KEY, permission]]),
+      permissionLimits: new Map([[KEY, { limitId: 'limit-1' }]]),
+      hasParent: true,
+      parentPermissions: new Map([[KEY, { permission: parentPermission }]]),
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Assessment/ }));
+  };
+
+  it.each([Permissions.PERFORM, Permissions.NO, Permissions.LIMITS])(
+    'renders a bordered rectangular badge for a changed %s permission',
+    permission => {
+      renderFinalize(
+        permission,
+        permission === Permissions.PERFORM ? Permissions.NO : Permissions.PERFORM,
+      );
+
+      const badge = screen.getByRole('button', {
+        name: permission === Permissions.LIMITS ? 'View details' : 'Changes made',
+      });
+      expect(badge).toHaveAttribute('type', 'button');
+      expect(badge).toHaveClass(
+        'rounded-sm',
+        'border',
+        'border-bcYellowPrimary',
+        'bg-bcYellowPrimary/50',
+        'text-bcBlack',
+        'text-xs',
+        'font-normal',
+        'truncate',
+        'pointer-events-auto',
+      );
+      expect(badge).not.toHaveClass('rounded-full');
+      const select = screen.getByRole('combobox', { name: 'Physiotherapist' });
+      expect(select).toHaveValue(permission);
+      expect(select).toHaveClass('pr-[calc(100%-2.5rem)]');
+      const caret = select.parentElement?.querySelector('svg');
+      expect(caret).toHaveAttribute('aria-hidden', 'true');
+      expect(caret).toHaveAttribute('focusable', 'false');
+      expect(caret?.parentElement).toHaveClass('left-9', 'pointer-events-none');
+    },
+  );
+
+  it.each([Permissions.PERFORM, Permissions.NO])(
+    'keeps an unchanged %s permission unbadged with the caret at the right',
+    permission => {
+      renderFinalize(permission, permission);
+      expect(
+        screen.queryByRole('button', { name: /^(Changes made|View details)$/ }),
+      ).not.toBeInTheDocument();
+      const select = screen.getByRole('combobox', { name: 'Physiotherapist' });
+      expect(select).toHaveClass('pr-8');
+      expect(select.parentElement?.querySelector('svg')?.parentElement).toHaveClass('right-0');
+    },
+  );
+
+  it('keeps the non-LC badge comparison accessible without opening a dialog', async () => {
+    renderFinalize(Permissions.NO, Permissions.PERFORM);
+    const badge = screen.getByRole('button', { name: 'Changes made' });
+    fireEvent.mouseEnter(badge);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Change made: Permitted → Not permitted',
+    );
+    fireEvent.click(badge);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('reopens the LC dialog without changing the saved permission', async () => {
+    renderFinalize(Permissions.LIMITS, Permissions.NO);
+    fireEvent.click(screen.getByRole('button', { name: 'View details' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Limits and Conditions')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('combobox', { name: 'Physiotherapist' })).toHaveValue('LC');
+    expect(ctx.getPermissionLimit(ACTIVITY, OCCUPATION)?.limitId).toBe('limit-1');
   });
 });
