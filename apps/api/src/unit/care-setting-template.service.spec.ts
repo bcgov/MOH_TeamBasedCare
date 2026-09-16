@@ -1581,6 +1581,20 @@ describe('CareSettingTemplateService', () => {
       expect(mockPermissionQB.where).toHaveBeenCalledWith('cstp.template = :templateId', {
         templateId: 'tmpl-1',
       });
+      expect(mockPermissionQB.andWhere).toHaveBeenCalledWith(
+        'cstp.careActivity IN (:...activityIds)',
+        { activityIds: ['a-1'] },
+      );
+      expect(mockPermissionQB.andWhere).toHaveBeenCalledWith(
+        'cstp.occupation IN (:...occupationIds)',
+        { occupationIds: ['o-1'] },
+      );
+      expect(mockPermissionQB.leftJoin).toHaveBeenCalledWith('cstp.limitCondition', 'lc');
+      expect(mockPermissionQB.addSelect).toHaveBeenCalledWith('lc.name', 'limit_name');
+      expect(mockPermissionQB.addSelect).toHaveBeenCalledWith(
+        'cstp.restrictionDescription',
+        'restriction_description',
+      );
     });
 
     it('should return empty array when careActivityIds is empty', async () => {

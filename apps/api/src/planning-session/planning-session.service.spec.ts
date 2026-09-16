@@ -886,6 +886,188 @@ describe('PlanningSessionService', () => {
     });
 
     // ─── Occupation summary ───────────────────────────────────────
+    describe('LC permission details', () => {
+      it('should attach details to their activity, bundle and occupation without changing matrix codes', async () => {
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeGapSession({
+            careActivity: [
+              { id: 'ca-2', displayName: 'Activity Beta', bundle: { displayName: 'Bundle B' } },
+              { id: 'ca-1', displayName: 'Activity Alpha', bundle: { displayName: 'Bundle A' } },
+            ],
+            occupation: [
+              { id: 'occ-2', displayName: 'Doctor', displayOrder: 2 },
+              { id: 'occ-1', displayName: 'Nurse', displayOrder: 1 },
+            ],
+          }),
+        );
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+          {
+            permission: 'LC',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-1',
+            limit_name: 'Additional education',
+            restriction_description: 'Complete local training.\nRenew annually.',
+          },
+          {
+            permission: 'LC',
+            care_activity_id: 'ca-2',
+            occupation_id: 'occ-2',
+            limit_name: 'Organizational support',
+          },
+          {
+            permission: 'Y',
+            care_activity_id: 'ca-1',
+            occupation_id: 'occ-2',
+            limit_name: 'Stale limit',
+            restriction_description: 'Must not be shown',
+          },
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.permissionDetails).toHaveLength(2);
+        expect(result!.permissionDetails).toEqual(
+          expect.arrayContaining([
+            {
+              bundleName: 'Bundle A',
+              activityIndex: 0,
+              activityName: 'Activity Alpha',
+              occupationName: 'Nurse',
+              limitName: 'Additional education',
+              restrictionDescription: 'Complete local training.\nRenew annually.',
+            },
+            {
+              bundleName: 'Bundle B',
+              activityIndex: 0,
+              activityName: 'Activity Beta',
+              occupationName: 'Doctor',
+              limitName: 'Organizational support',
+            },
+          ]),
+        );
+        expect(result!.data[0].careActivities).toEqual([
+          { name: 'Activity Alpha', Nurse: 'LC', Doctor: 'Y' },
+        ]);
+        expect(result!.data[0].Nurse).toBe('LC');
+        expect(result!.overview).toEqual({ inScope: '25%', limits: '50%', outOfScope: '25%' });
+      });
+
+      it.each([
+        { limit_name: 'Additional education', restriction_description: null },
+        { limit_name: null, restriction_description: 'Local policy applies' },
+      ])('should include either detail independently: %j', async details => {
+        mockPlanningSessionRepo.findOne.mockResolvedValue(makeGapSession());
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+          { permission: 'LC', care_activity_id: 'ca-1', occupation_id: 'occ-1', ...details },
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.permissionDetails).toEqual([
+          {
+            bundleName: 'Bundle A',
+            activityIndex: 0,
+            activityName: 'Activity Alpha',
+            occupationName: 'Nurse',
+            limitName: details.limit_name ?? undefined,
+            restrictionDescription: details.restriction_description ?? undefined,
+          },
+        ]);
+      });
+
+      it.each([true, false])(
+        'should identify same-named activity rows after sorting (both have details: %s)',
+        async bothHaveDetails => {
+          mockPlanningSessionRepo.findOne.mockResolvedValue(
+            makeGapSession({
+              careActivity: [
+                { id: 'ca-2', displayName: 'Same activity', bundle: { displayName: 'Bundle A' } },
+                { id: 'ca-1', displayName: 'Same activity', bundle: { displayName: 'Bundle A' } },
+                { id: 'ca-3', displayName: 'Activity Alpha', bundle: { displayName: 'Bundle A' } },
+              ],
+            }),
+          );
+          mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+            {
+              permission: 'LC',
+              care_activity_id: 'ca-1',
+              occupation_id: 'occ-1',
+              limit_name: 'Additional education',
+              restriction_description: 'Annual training required',
+            },
+            {
+              permission: 'LC',
+              care_activity_id: 'ca-2',
+              occupation_id: 'occ-1',
+              limit_name: bothHaveDetails ? 'Organizational support' : null,
+              restriction_description: bothHaveDetails ? 'Supervisor required' : null,
+            },
+            { permission: 'Y', care_activity_id: 'ca-3', occupation_id: 'occ-1' },
+          ]);
+
+          const result = await service.getPlanningActivityGap('session-1');
+
+          expect(result!.data[0].careActivities).toEqual([
+            { name: 'Activity Alpha', Nurse: 'Y' },
+            { name: 'Same activity', Nurse: 'LC' },
+            { name: 'Same activity', Nurse: 'LC' },
+          ]);
+          expect(result!.permissionDetails).toEqual([
+            ...(bothHaveDetails
+              ? [
+                  {
+                    bundleName: 'Bundle A',
+                    activityIndex: 1,
+                    activityName: 'Same activity',
+                    occupationName: 'Nurse',
+                    limitName: 'Organizational support',
+                    restrictionDescription: 'Supervisor required',
+                  },
+                ]
+              : []),
+            {
+              bundleName: 'Bundle A',
+              activityIndex: 2,
+              activityName: 'Same activity',
+              occupationName: 'Nurse',
+              limitName: 'Additional education',
+              restrictionDescription: 'Annual training required',
+            },
+          ]);
+        },
+      );
+
+      it.each([
+        {},
+        { limit_name: null, restriction_description: null },
+        { limit_name: ' ', restriction_description: '\n ' },
+      ])('should omit empty LC details: %j', async details => {
+        mockPlanningSessionRepo.findOne.mockResolvedValue(makeGapSession());
+        mockCareSettingTemplateService.getPermissionsForGap.mockResolvedValue([
+          { permission: 'LC', care_activity_id: 'ca-1', occupation_id: 'occ-1', ...details },
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.permissionDetails).toEqual([]);
+        expect(result!.data[0].Nurse).toBe('LC');
+      });
+
+      it('should preserve legacy LC permissions without details', async () => {
+        mockPlanningSessionRepo.findOne.mockResolvedValue(
+          makeGapSession({ careSettingTemplateId: null, careSettingTemplate: null }),
+        );
+        mockQueryBuilder.getRawMany.mockResolvedValue([
+          { permission: 'LC', care_activity_id: 'ca-1', occupation_id: 'occ-1' },
+        ]);
+
+        const result = await service.getPlanningActivityGap('session-1');
+
+        expect(result!.permissionDetails).toEqual([]);
+        expect(result!.data[0].careActivities).toEqual([{ name: 'Activity Alpha', Nurse: 'LC' }]);
+      });
+    });
+
     describe('occupation summary', () => {
       it('should use single value when all cells are the same permission', async () => {
         const session = makeGapSession({

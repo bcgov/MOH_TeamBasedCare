@@ -111,6 +111,11 @@ This step displays the **Activity Gap Matrix** - a table showing which occupatio
 | Red X | Outside scope of practice - cannot perform |
 | Blue question mark | Some activities have restrictions |
 
+Open a yellow **LC** tooltip to see the saved **Limits and Conditions** and
+**Restriction Description**, when available. Expand a competency to view details for an
+individual activity; competency-level LC tooltips group the available details by activity.
+When no details are saved, the tooltip shows the general permission description.
+
 **Actions on this step:**
 
 - **Export** - Downloads the gap analysis as an Excel spreadsheet with:
