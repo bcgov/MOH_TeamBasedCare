@@ -15,7 +15,7 @@ import { PopoverPosition } from '../generic/Popover';
 import { ModalWrapper } from '../Modal';
 import { OccupationListDropdown } from '../OccupationListDropdown';
 import { SuggestionsModal } from './SuggestionsModal';
-import { ActivityGapCareActivity } from '@tbcm/common';
+import { ActivityGapCareActivity, ActivityGapPermissionDetail } from '@tbcm/common';
 import { CurrentSessionName } from './CurrentSessionName';
 
 export interface ActivitiesGapProps {
@@ -68,8 +68,19 @@ const TableHeader: React.FC = () => {
   );
 };
 
-const SwitchTooltip: React.FC<any> = props => {
-  const { item, positionBottomLeft, occupation } = props;
+interface SwitchTooltipProps {
+  item: string;
+  positionBottomLeft: boolean;
+  occupation: string;
+  permissionDetails?: ActivityGapPermissionDetail[];
+}
+
+const SwitchTooltip: React.FC<SwitchTooltipProps> = ({
+  item,
+  positionBottomLeft,
+  occupation,
+  permissionDetails = [],
+}) => {
   const position = positionBottomLeft ? PopoverPosition.BOTTOM_LEFT : PopoverPosition.BOTTOM_RIGHT;
   switch (item) {
     case 'MIXED':
@@ -94,6 +105,29 @@ const SwitchTooltip: React.FC<any> = props => {
           {...tooltipIcons[TooltipIconTypes.YELLOW_CAUTION]}
           position={position}
           occupation={occupation}
+          content={
+            permissionDetails.length > 0 ? (
+              <div className='max-h-80 overflow-y-auto space-y-3 whitespace-pre-wrap break-words'>
+                {permissionDetails.map((detail, index) => (
+                  <div key={index}>
+                    <p className='font-bold'>
+                      {detail.activityName} - {occupation}
+                    </p>
+                    {detail.limitName && (
+                      <p>
+                        <strong>Limits and Conditions:</strong> {detail.limitName}
+                      </p>
+                    )}
+                    {detail.restrictionDescription && (
+                      <p>
+                        <strong>Restriction Description:</strong> {detail.restrictionDescription}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : undefined
+          }
         />
       );
     case 'N': // Handle legacy "N" values in DB (should be empty, but render as red X)
@@ -169,6 +203,10 @@ const TableBody: React.FC = () => {
                         item={row[title] as string}
                         positionBottomLeft={index > initialValues.headers.length / 2}
                         occupation={title}
+                        permissionDetails={initialValues.permissionDetails?.filter(
+                          detail =>
+                            detail.bundleName === row.name && detail.occupationName === title,
+                        )}
                       />
                     </td>
                   )
@@ -176,9 +214,12 @@ const TableBody: React.FC = () => {
               })}
             </tr>
             {openRows.includes(index) &&
-              (row.careActivities as ActivityGapCareActivity[]).map((value, index: number) => {
+              (row.careActivities as ActivityGapCareActivity[]).map((value, activityIndex) => {
                 return (
-                  <tr key={`toggledRow${index}`} className='bg-white border-b table-row-fixed'>
+                  <tr
+                    key={`toggledRow${activityIndex}`}
+                    className='bg-white border-b table-row-fixed'
+                  >
                     {Object.keys(value).map((key, index) => {
                       return (
                         <td
@@ -189,6 +230,12 @@ const TableBody: React.FC = () => {
                             item={value[key]}
                             positionBottomLeft={index > Object.values(value).length / 2}
                             occupation={key}
+                            permissionDetails={initialValues.permissionDetails?.filter(
+                              detail =>
+                                detail.bundleName === row.name &&
+                                detail.activityIndex === activityIndex &&
+                                detail.occupationName === key,
+                            )}
                           />
                         </td>
                       );

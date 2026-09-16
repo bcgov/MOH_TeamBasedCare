@@ -1708,7 +1708,15 @@ export class CareSettingTemplateService {
     templateId: string,
     careActivityIds: string[],
     occupationIds: string[],
-  ): Promise<{ permission: string; care_activity_id: string; occupation_id: string }[]> {
+  ): Promise<
+    {
+      permission: string;
+      care_activity_id: string;
+      occupation_id: string;
+      limit_name?: string | null;
+      restriction_description?: string | null;
+    }[]
+  > {
     if (careActivityIds.length === 0 || occupationIds.length === 0) {
       return [];
     }
@@ -1717,6 +1725,9 @@ export class CareSettingTemplateService {
       .select('cstp.permission', 'permission')
       .addSelect('cstp.careActivity', 'care_activity_id')
       .addSelect('cstp.occupation', 'occupation_id')
+      .leftJoin('cstp.limitCondition', 'lc')
+      .addSelect('lc.name', 'limit_name')
+      .addSelect('cstp.restrictionDescription', 'restriction_description')
       .where('cstp.template = :templateId', { templateId })
       .andWhere('cstp.careActivity IN (:...activityIds)', { activityIds: careActivityIds })
       .andWhere('cstp.occupation IN (:...occupationIds)', { occupationIds: occupationIds })
