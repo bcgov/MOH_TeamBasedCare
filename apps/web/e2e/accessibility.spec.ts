@@ -87,7 +87,7 @@ test.describe('planning sessions table accessibility', () => {
 
 /**
  * Automated WCAG 2.1 A/AA checks for template levels, its four dialogs, and the
- * "Changes made by HA" badge.
+ * permission badge.
  *
  * Scoped the same way as the planning scans above: the surrounding page carries
  * pre-existing violations that predate this work, so scanning the whole
@@ -160,24 +160,28 @@ test.describe('template levels accessibility', () => {
     expect((await scanDialog(page)).violations).toEqual([]);
   });
 
-  test('the Changes made by HA badge is a real button with an accessible name', async ({
-    page,
-  }) => {
+  test('the permission badge is a real button with an accessible name', async ({ page }) => {
     // WCAG 4.1.2: the badge opens a dialog, so it has to be operable by
     // keyboard and exposed as a control rather than styled text.
     await page.goto('/care-settings/tpl-ha/edit');
     await page.getByRole('button', { name: 'Next', exact: true }).click();
     await page.getByRole('button', { name: 'Assessment' }).click();
 
-    const badges = page.getByRole('button', { name: 'Changes made by HA' });
+    const badges = page.getByRole('button', { name: /^(Changes made|View details)$/ });
     await expect(badges.first()).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .include('div.overflow-x-auto')
-      .withTags(WCAG)
-      .analyze();
-
-    expect(results.violations).toEqual([]);
+    for (const state of ['default', 'hover', 'focus'] as const) {
+      if (state === 'hover') await badges.first().hover();
+      if (state === 'focus') {
+        await page.mouse.move(0, 0);
+        await badges.first().focus();
+      }
+      const results = await new AxeBuilder({ page })
+        .include('div.overflow-x-auto')
+        .withTags(WCAG)
+        .analyze();
+      expect(results.violations, `${state} badge accessibility`).toEqual([]);
+    }
   });
 });
 

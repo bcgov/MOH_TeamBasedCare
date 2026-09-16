@@ -1,4 +1,5 @@
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { ReactNode } from 'react';
 import { PopoverPosition } from 'src/components/generic/Popover';
 export interface CommonDBItem {
   id: string;
@@ -26,6 +27,7 @@ export interface TooltipIconProps {
   position?: PopoverPosition;
   textWithOccupation?: string;
   occupation?: string;
+  content?: ReactNode;
 }
 
 export interface AllowedActivityByOccupation {

@@ -395,9 +395,12 @@ describe('CareSettingTemplateService', () => {
           occupationId: 'o-1',
           permission: 'Y',
           limitId: null,
+          limitName: null,
           restrictionDescription: null,
         },
       ]);
+      expect(result.parentPermissions).toEqual(result.permissions);
+      expect(mockPermissionQB.getRawMany).toHaveBeenCalledTimes(1);
     });
 
     it('should throw NotFoundException when not found', async () => {
@@ -421,14 +424,26 @@ describe('CareSettingTemplateService', () => {
       });
     });
 
-    it('should not consult the occupation scope for a non-master template', async () => {
+    it('keeps a non-master missing cell as N without consulting scope or ancestors', async () => {
       mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
       mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.LIMITS,
+        },
+      ]);
 
       const result = await service.getTemplateForCopy('tmpl-1');
 
       expect(mockAllowedActivityRepo.createQueryBuilder).not.toHaveBeenCalled();
       expect(result.permissions).toEqual([]);
+      expect(result.parentPermissions).toEqual([]);
+      expect(mockPermissionQB.where).toHaveBeenCalledTimes(1);
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'tmpl-1',
+      });
     });
 
     it('should fill a master template gaps from the occupation scope', async () => {
@@ -461,9 +476,45 @@ describe('CareSettingTemplateService', () => {
           occupationId: 'occ-1',
           permission: Permissions.PERFORM,
           limitId: null,
+          limitName: null,
           restrictionDescription: null,
         },
       ]);
+      expect(result.parentPermissions).toEqual([]);
+    });
+
+    it('keeps scope-only LC out of both copy and edit parent baselines', async () => {
+      const master = { ...mockTemplate, isMaster: true, parent: null };
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce(master)
+        .mockResolvedValueOnce({ ...mockTemplate, id: 'copy-1', parent: master });
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.LIMITS,
+        },
+      ]);
+
+      const copyData = await service.getTemplateForCopy(master.id);
+      const parentPermissions = await service.getParentPermissions('copy-1');
+
+      expect(copyData.permissions).toEqual([
+        {
+          activityId: 'activity-1',
+          occupationId: 'occ-1',
+          permission: Permissions.LIMITS,
+          limitId: null,
+          limitName: null,
+          restrictionDescription: null,
+        },
+      ]);
+      expect(copyData.parentPermissions).toEqual([]);
+      expect(parentPermissions).toEqual(copyData.parentPermissions);
+      expect(mockAllowedActivityQB.getRawMany).toHaveBeenCalledTimes(1);
+      expect(mockPermissionQB.where).toHaveBeenNthCalledWith(2, 'p.template_id = :templateId', {
+        templateId: master.id,
+      });
     });
 
     it('should let a master stored permission win over the occupation scope', async () => {
@@ -474,6 +525,7 @@ describe('CareSettingTemplateService', () => {
           occupation_id: 'occ-1',
           permission: Permissions.LIMITS,
           limit_condition_id: 'limit-1',
+          limit_name: 'Certification',
           restriction_description: 'Supervision required',
         },
       ]);
@@ -498,6 +550,7 @@ describe('CareSettingTemplateService', () => {
           occupationId: 'occ-1',
           permission: Permissions.LIMITS,
           limitId: 'limit-1',
+          limitName: 'Certification',
           restrictionDescription: 'Supervision required',
         },
         {
@@ -505,9 +558,95 @@ describe('CareSettingTemplateService', () => {
           occupationId: 'occ-2',
           permission: Permissions.PERFORM,
           limitId: null,
+          limitName: null,
           restrictionDescription: null,
         },
       ]);
+      expect(result.parentPermissions).toEqual([result.permissions[0]]);
+      expect(mockPermissionQB.getRawMany).toHaveBeenCalledTimes(1);
+
+      mockTemplateRepo.findOne.mockResolvedValue({
+        ...mockTemplate,
+        id: 'copy-1',
+        parent: { id: 'tmpl-1', isMaster: true },
+      });
+      await expect(service.getParentPermissions('copy-1')).resolves.toEqual(
+        result.parentPermissions,
+      );
+    });
+
+    it('includes inactive persisted LC names in initial data and the canonical parent baseline', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.LIMITS,
+          limit_condition_id: 'retired-limit',
+          limit_name: 'Retired certification',
+          restriction_description: '  needs certification  ',
+        },
+      ]);
+
+      const result = await service.getTemplateForCopy('tmpl-1');
+
+      expect(result.permissions).toEqual([
+        {
+          activityId: 'activity-1',
+          occupationId: 'occ-1',
+          permission: Permissions.LIMITS,
+          limitId: 'retired-limit',
+          limitName: 'Retired certification',
+          restrictionDescription: 'needs certification',
+        },
+      ]);
+      expect(result.parentPermissions).toEqual(result.permissions);
+      expect(mockPermissionQB.leftJoin).toHaveBeenCalledWith(
+        LimitCondition,
+        'lc',
+        'lc.id = p.limit_condition_id',
+      );
+      expect(mockPermissionQB.addSelect).toHaveBeenCalledWith('lc.name', 'limit_name');
+      expect(mockPermissionQB.andWhere).not.toHaveBeenCalled();
+      expect(mockLimitConditionRepo.find).not.toHaveBeenCalled();
+      expect(mockPermissionQB.getRawMany).toHaveBeenCalledTimes(1);
+
+      mockTemplateRepo.findOne.mockResolvedValue({
+        ...mockTemplate,
+        id: 'copy-1',
+        parent: { id: 'tmpl-1' },
+      });
+      await expect(service.getParentPermissions('copy-1')).resolves.toEqual(
+        result.parentPermissions,
+      );
+    });
+
+    it('discards stale LC details from non-LC initial data and the parent baseline', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          occupation_id: 'occ-1',
+          permission: Permissions.PERFORM,
+          limit_condition_id: 'retired-limit',
+          limit_name: 'Retired certification',
+          restriction_description: 'stale restriction',
+        },
+      ]);
+
+      const result = await service.getTemplateForCopy('tmpl-1');
+
+      expect(result.permissions).toEqual([
+        {
+          activityId: 'activity-1',
+          occupationId: 'occ-1',
+          permission: Permissions.PERFORM,
+          limitId: null,
+          limitName: null,
+          restrictionDescription: null,
+        },
+      ]);
+      expect(result.parentPermissions).toEqual(result.permissions);
     });
   });
 
@@ -1442,6 +1581,20 @@ describe('CareSettingTemplateService', () => {
       expect(mockPermissionQB.where).toHaveBeenCalledWith('cstp.template = :templateId', {
         templateId: 'tmpl-1',
       });
+      expect(mockPermissionQB.andWhere).toHaveBeenCalledWith(
+        'cstp.careActivity IN (:...activityIds)',
+        { activityIds: ['a-1'] },
+      );
+      expect(mockPermissionQB.andWhere).toHaveBeenCalledWith(
+        'cstp.occupation IN (:...occupationIds)',
+        { occupationIds: ['o-1'] },
+      );
+      expect(mockPermissionQB.leftJoin).toHaveBeenCalledWith('cstp.limitCondition', 'lc');
+      expect(mockPermissionQB.addSelect).toHaveBeenCalledWith('lc.name', 'limit_name');
+      expect(mockPermissionQB.addSelect).toHaveBeenCalledWith(
+        'cstp.restrictionDescription',
+        'restriction_description',
+      );
     });
 
     it('should return empty array when careActivityIds is empty', async () => {
@@ -2196,20 +2349,85 @@ describe('CareSettingTemplateService', () => {
       mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: null });
 
       await expect(service.getParentPermissions('tmpl-1')).resolves.toEqual([]);
+      expect(mockPermissionRepo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(mockAllowedActivityRepo.createQueryBuilder).not.toHaveBeenCalled();
     });
 
-    it('returns the parent permission triples without limits', async () => {
+    it('reads only the direct parent, never scope or a grandparent', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({
+        ...mockTemplate,
+        parent: { id: 'parent-1', parent: { id: 'grandparent-1', isMaster: true } },
+      });
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+
+      await expect(service.getParentPermissions('tmpl-1')).resolves.toEqual([]);
+
+      expect(mockTemplateRepo.findOne).toHaveBeenCalledTimes(1);
+      expect(mockTemplateRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 'tmpl-1' },
+        relations: ['parent'],
+      });
+      expect(mockPermissionQB.where).toHaveBeenCalledTimes(1);
+      expect(mockPermissionQB.where).toHaveBeenCalledWith('p.template_id = :templateId', {
+        templateId: 'parent-1',
+      });
+      expect(mockAllowedActivityRepo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('returns the parent permissions with LC details attached', async () => {
       mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: { id: 'parent-1' } });
       mockPermissionQB.getRawMany.mockResolvedValue([
-        { care_activity_id: 'a1', occupation_id: 'o1', permission: Permissions.LIMITS },
+        {
+          care_activity_id: 'a1',
+          occupation_id: 'o1',
+          permission: Permissions.LIMITS,
+          limit_condition_id: 'l1',
+          limit_name: 'Certification',
+          restriction_description: '  needs cert  ',
+        },
       ]);
 
       const result = await service.getParentPermissions('tmpl-1');
 
       expect(result).toEqual([
-        { activityId: 'a1', occupationId: 'o1', permission: Permissions.LIMITS },
+        {
+          activityId: 'a1',
+          occupationId: 'o1',
+          permission: Permissions.LIMITS,
+          limitId: 'l1',
+          limitName: 'Certification',
+          restrictionDescription: 'needs cert',
+        },
       ]);
-      expect(result[0]).not.toHaveProperty('limitId');
+    });
+
+    // A stale limit column left by an older write must not make a Y cell look
+    // like a limit change.
+    it('discards limit details on a non-LC parent permission', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, parent: { id: 'parent-1' } });
+      mockPermissionQB.getRawMany.mockResolvedValue([
+        {
+          care_activity_id: 'a1',
+          occupation_id: 'o1',
+          permission: Permissions.PERFORM,
+          limit_condition_id: 'l1',
+          limit_name: 'Certification',
+          restriction_description: 'stale',
+        },
+      ]);
+
+      const result = await service.getParentPermissions('tmpl-1');
+
+      expect(result).toEqual([
+        {
+          activityId: 'a1',
+          occupationId: 'o1',
+          permission: Permissions.PERFORM,
+          limitId: null,
+          limitName: null,
+          restrictionDescription: null,
+        },
+      ]);
     });
 
     it('throws when the template does not exist', async () => {

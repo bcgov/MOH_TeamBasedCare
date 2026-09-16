@@ -12,6 +12,7 @@ import {
   ActivityGapData,
   ActivityGapHeader,
   ActivityGapCareActivity,
+  ActivityGapPermissionDetail,
   BundleRO,
   SuggestionResponseRO,
   OccupationSuggestionRO,
@@ -496,7 +497,7 @@ export class PlanningSessionService {
         .map(e => ({ title: e.displayName, description: e.description || '' })),
     );
 
-    let query;
+    let query: Awaited<ReturnType<CareSettingTemplateService['getPermissionsForGap']>>;
     if (planningSession.careSettingTemplateId) {
       // Template-based: read from care_setting_template_permission
       const activityIds = planningSession.careActivity.map(ca => ca.id);
@@ -522,18 +523,19 @@ export class PlanningSessionService {
         .getRawMany();
     }
 
-    const groupedMappingActions: { [bundleId: string]: { [careActivityId: string]: string } } = {};
+    const groupedMappingActions: Record<string, Record<string, (typeof query)[number]>> = {};
 
     Object.entries(_.groupBy(query, 'care_activity_id')).forEach(([id, value]) => {
       groupedMappingActions[id] = Object.assign(
         {},
         ...value.map(each => {
-          return { [each.occupation_id]: each.permission };
+          return { [each.occupation_id]: each };
         }),
       );
     });
 
     const result: Array<ActivityGapData> = [];
+    const permissionDetails: ActivityGapPermissionDetail[] = [];
 
     Object.entries(groupedBundles).forEach(([name, value]) => {
       const data: ActivityGapData = {
@@ -548,7 +550,7 @@ export class PlanningSessionService {
 
       let numberOfGaps = 0;
       const careActivitiesForBundle: Array<ActivityGapCareActivity> = [];
-      _.sortBy(value, 'name').forEach(eachCA => {
+      _.sortBy(value, 'name').forEach((eachCA, activityIndex) => {
         const eachActivity: ActivityGapCareActivity = {
           name: eachCA.name,
         };
@@ -557,9 +559,25 @@ export class PlanningSessionService {
         }
         const groupedCAAction = groupedMappingActions[eachCA.id];
         occupations.forEach(eachMember => {
-          eachActivity[eachMember.displayName] =
-            groupedCAAction?.[eachMember.id] ?? ActivitiesActionType.RED;
+          const permission = groupedCAAction?.[eachMember.id];
+          eachActivity[eachMember.displayName] = permission?.permission ?? ActivitiesActionType.RED;
           occupationSummary[eachMember.displayName].add(eachActivity[eachMember.displayName]);
+
+          const limitName = permission?.limit_name?.trim() || undefined;
+          const restrictionDescription = permission?.restriction_description?.trim() || undefined;
+          if (
+            permission?.permission === Permissions.LIMITS &&
+            (limitName || restrictionDescription)
+          ) {
+            permissionDetails.push({
+              bundleName: name,
+              activityIndex,
+              activityName: eachCA.name,
+              occupationName: eachMember.displayName,
+              limitName,
+              restrictionDescription,
+            });
+          }
         });
 
         careActivitiesForBundle.push(eachActivity);
@@ -599,6 +617,7 @@ export class PlanningSessionService {
       data: _.sortBy(result, 'name'),
       overview,
       careSetting: planningSession.careLocation?.displayName,
+      permissionDetails,
     };
   }
 

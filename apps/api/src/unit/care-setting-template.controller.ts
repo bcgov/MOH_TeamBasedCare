@@ -36,12 +36,13 @@ import {
   BundleRO,
   CareSettingTemplateRO,
   CareSettingTemplateDetailRO,
+  CareSettingTemplateCopyRO,
   CreateCareSettingTemplateCopyDTO,
   CreateCareSettingTemplateCopyFullDTO,
   OccupationRO,
   PaginationRO,
   LimitConditionRO,
-  Permissions,
+  ParentPermissionRO,
   Role,
   UpdateCareSettingTemplateDTO,
 } from '@tbcm/common';
@@ -146,27 +147,14 @@ export class CareSettingTemplateController {
   }
 
   /**
-   * Get lightweight template data for copy wizard - returns IDs only
+   * Get lightweight copy data with initial permissions and the persisted source baseline.
    * Avoids loading full permission entities which can timeout on master templates
    */
   @Get(':id/copy-data')
   async getTemplateForCopy(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: IRequest,
-  ): Promise<{
-    id: string;
-    name: string;
-    unitId: string;
-    selectedBundleIds: string[];
-    selectedActivityIds: string[];
-    permissions: {
-      activityId: string;
-      occupationId: string;
-      permission: string;
-      limitId: string | null;
-      restrictionDescription: string | null;
-    }[];
-  }> {
+  ): Promise<CareSettingTemplateCopyRO> {
     const template = await this.templateService.getTemplateBasic(id);
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     this.validateTemplateAccess(template, req.user.organization, isAdmin);
@@ -189,8 +177,8 @@ export class CareSettingTemplateController {
   }
 
   /**
-   * Get the direct parent's permissions, used as the baseline for the
-   * "Changes made by HA" badge.
+   * Get the direct parent's permissions, including LC details, used as the
+   * baseline for the permission badge.
    *
    * Access is validated against the child template being viewed, not the
    * parent: an administrator entitled to edit the child is entitled to see
@@ -200,7 +188,7 @@ export class CareSettingTemplateController {
   async getParentPermissions(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: IRequest,
-  ): Promise<{ activityId: string; occupationId: string; permission: Permissions }[]> {
+  ): Promise<ParentPermissionRO[]> {
     const template = await this.templateService.getTemplateBasic(id);
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     this.validateTemplateAccess(template, req.user.organization, isAdmin);

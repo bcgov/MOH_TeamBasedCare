@@ -33,6 +33,7 @@ import {
   CareSettingsCMSFindSortKeys,
   CareSettingTemplateRO,
   CareSettingTemplateDetailRO,
+  CareSettingTemplateCopyRO,
   BundleSelectionRO,
   TemplatePermissionRO,
   CreateCareSettingTemplateCopyDTO,
@@ -52,6 +53,7 @@ import {
   getTemplatePermissionKey,
   MAX_TEMPLATE_CHANGE_ITEMS,
   normalizeRestrictionDescription,
+  ParentPermissionRO,
 } from '@tbcm/common';
 import _ from 'lodash';
 
@@ -323,39 +325,7 @@ export class CareSettingTemplateService {
     // Build bundle selections with activity counts
     const selectedBundles = await this.buildBundleSelections(template);
 
-    // Load permissions as flat data (no entity relations) - major performance improvement
-    // Use snake_case column names for raw query
-    // The limit is joined in rather than fetched later so a single load gives
-    // the wizard everything it needs; the limits dialog then opens pre-filled
-    // without a request of its own, and a limit that has since been
-    // deactivated still resolves by name.
-    const rawPermissions = await this.permissionRepo
-      .createQueryBuilder('p')
-      .leftJoin(LimitCondition, 'lc', 'lc.id = p.limit_condition_id')
-      .select('p.care_activity_id', 'care_activity_id')
-      .addSelect('p.occupation_id', 'occupation_id')
-      .addSelect('p.permission', 'permission')
-      .addSelect('p.limit_condition_id', 'limit_condition_id')
-      .addSelect('p.restriction_description', 'restriction_description')
-      .addSelect('lc.name', 'limit_name')
-      .where('p.template_id = :templateId', { templateId: id })
-      .getRawMany();
-
-    const permissions = rawPermissions.map(
-      p =>
-        new TemplatePermissionRO({
-          activityId: p.care_activity_id,
-          occupationId: p.occupation_id,
-          permission: p.permission,
-          // Limits describe an LC cell only. Never surface them for other
-          // permissions, so a stale column left by an older write cannot be
-          // read back as an active limit by the editor.
-          limitId: p.permission === Permissions.LIMITS ? p.limit_condition_id ?? null : null,
-          limitName: p.permission === Permissions.LIMITS ? p.limit_name ?? null : null,
-          restrictionDescription:
-            p.permission === Permissions.LIMITS ? p.restriction_description ?? null : null,
-        }),
-    );
+    const permissions = await this.getPersistedPermissions(id);
 
     // Note: We do NOT load parent permissions here.
     // Permission inheritance happens only at copy time (copyTemplate).
@@ -370,23 +340,10 @@ export class CareSettingTemplateService {
   }
 
   /**
-   * Lightweight template fetch for copy wizard - returns IDs only
+   * Lightweight copy data with initial permissions and the persisted source baseline.
    * Avoids loading full permission entities which can timeout on master templates
    */
-  async getTemplateForCopy(id: string): Promise<{
-    id: string;
-    name: string;
-    unitId: string;
-    selectedBundleIds: string[];
-    selectedActivityIds: string[];
-    permissions: {
-      activityId: string;
-      occupationId: string;
-      permission: string;
-      limitId: string | null;
-      restrictionDescription: string | null;
-    }[];
-  }> {
+  async getTemplateForCopy(id: string): Promise<CareSettingTemplateCopyRO> {
     const template = await this.templateRepo.findOne({
       where: { id },
       relations: ['unit', 'selectedBundles', 'selectedActivities'],
@@ -396,33 +353,13 @@ export class CareSettingTemplateService {
       throw new NotFoundException({ message: 'Care Setting Template not found' });
     }
 
-    // Load permissions as flat data (no entity relations)
-    // Use snake_case column names for raw query
-    const permissions = await this.permissionRepo
-      .createQueryBuilder('p')
-      .select('p.care_activity_id', 'care_activity_id')
-      .addSelect('p.occupation_id', 'occupation_id')
-      .addSelect('p.permission', 'permission')
-      .addSelect('p.limit_condition_id', 'limit_condition_id')
-      .addSelect('p.restriction_description', 'restriction_description')
-      .where('p.template_id = :templateId', { templateId: id })
-      .getRawMany();
-
-    const copied = new Map<
-      string,
-      {
-        activityId: string;
-        occupationId: string;
-        permission: string;
-        limitId: string | null;
-        restrictionDescription: string | null;
-      }
-    >();
+    const permissions = await this.getPersistedPermissions(id);
+    const copied = new Map<string, TemplatePermissionRO>();
 
     // A master is read-only, so it has no deliberately removed cells: any pair
     // it is missing is a gap left by an earlier sync, not an admin decision.
-    // The occupation scope is therefore laid down first as the baseline, and
-    // the template's own rows are applied over it below.
+    // Fill initial copy data from scope, but keep it out of the persisted
+    // parent baseline so badges compare the same rows before and after saving.
     if (template.isMaster) {
       for (const scoped of await this.getUnitScopePermissions(template)) {
         copied.set(getTemplatePermissionKey(scoped.activityId, scoped.occupationId), scoped);
@@ -430,23 +367,18 @@ export class CareSettingTemplateService {
     }
 
     for (const p of permissions) {
-      copied.set(getTemplatePermissionKey(p.care_activity_id, p.occupation_id), {
-        activityId: p.care_activity_id,
-        occupationId: p.occupation_id,
-        permission: p.permission,
-        limitId: p.limit_condition_id ?? null,
-        restrictionDescription: p.restriction_description ?? null,
-      });
+      copied.set(getTemplatePermissionKey(p.activityId, p.occupationId), p);
     }
 
-    return {
+    return new CareSettingTemplateCopyRO({
       id: template.id,
       name: template.name,
       unitId: template.unit.id,
       selectedBundleIds: template.selectedBundles.map(b => b.id),
       selectedActivityIds: template.selectedActivities.map(a => a.id),
       permissions: Array.from(copied.values()),
-    };
+      parentPermissions: permissions.map(p => new ParentPermissionRO(p)),
+    });
   }
 
   /**
@@ -457,15 +389,9 @@ export class CareSettingTemplateService {
    * without one, and syncOccupationToAllTemplates likewise matches on activity
    * alone, so excluding them would drop every permission added that way.
    */
-  private async getUnitScopePermissions(template: CareSettingTemplate): Promise<
-    {
-      activityId: string;
-      occupationId: string;
-      permission: string;
-      limitId: null;
-      restrictionDescription: null;
-    }[]
-  > {
+  private async getUnitScopePermissions(
+    template: CareSettingTemplate,
+  ): Promise<TemplatePermissionRO[]> {
     const activityIds = template.selectedActivities.map(activity => activity.id);
 
     if (activityIds.length === 0) return [];
@@ -479,13 +405,19 @@ export class CareSettingTemplateService {
       .andWhere('(aa.unit_id = :unitId OR aa.unit_id IS NULL)', { unitId: template.unit.id })
       // The column's enum only holds Y and LC, so there is no N to filter out:
       // absence of a row is what records N here.
-      .getRawMany();
+      .getRawMany<{
+        care_activity_id: string;
+        occupation_id: string;
+        permission: Permissions;
+      }>();
 
     return rows.map(r => ({
       activityId: r.care_activity_id,
       occupationId: r.occupation_id,
       permission: r.permission,
+      // Occupation scope stores no selected limit or restriction description.
       limitId: null,
+      limitName: null,
       restrictionDescription: null,
     }));
   }
@@ -1169,16 +1101,14 @@ export class CareSettingTemplateService {
   }
 
   /**
-   * The direct parent's permissions, used as the baseline for the
-   * "Changes made by HA" badge. Limits are deliberately omitted: the badge
-   * compares permission levels only.
+   * The direct parent's permissions, used as the baseline for the permission
+   * badge. The selected limit and the restriction description are included
+   * because an LC cell only counts as unchanged when those match too.
    *
    * Returns an empty array when the template has no parent, so a master or an
-   * orphan simply shows no badges.
+   * orphan simply shows no override badges.
    */
-  async getParentPermissions(
-    id: string,
-  ): Promise<{ activityId: string; occupationId: string; permission: Permissions }[]> {
+  async getParentPermissions(id: string): Promise<ParentPermissionRO[]> {
     const template = await this.templateRepo.findOne({
       where: { id },
       relations: ['parent'],
@@ -1190,19 +1120,48 @@ export class CareSettingTemplateService {
 
     if (!template.parent) return [];
 
+    return (await this.getPersistedPermissions(template.parent.id)).map(
+      permission => new ParentPermissionRO(permission),
+    );
+  }
+
+  /** One flat read, including inactive LC names, without scope or ancestor inheritance. */
+  private async getPersistedPermissions(templateId: string): Promise<TemplatePermissionRO[]> {
     const rows = await this.permissionRepo
       .createQueryBuilder('p')
+      .leftJoin(LimitCondition, 'lc', 'lc.id = p.limit_condition_id')
       .select('p.care_activity_id', 'care_activity_id')
       .addSelect('p.occupation_id', 'occupation_id')
       .addSelect('p.permission', 'permission')
-      .where('p.template_id = :templateId', { templateId: template.parent.id })
-      .getRawMany();
+      .addSelect('p.limit_condition_id', 'limit_condition_id')
+      .addSelect('p.restriction_description', 'restriction_description')
+      .addSelect('lc.name', 'limit_name')
+      .where('p.template_id = :templateId', { templateId })
+      .getRawMany<{
+        care_activity_id: string;
+        occupation_id: string;
+        permission: Permissions;
+        limit_condition_id: string | null;
+        limit_name: string | null;
+        restriction_description: string | null;
+      }>();
 
-    return rows.map(r => ({
-      activityId: r.care_activity_id,
-      occupationId: r.occupation_id,
-      permission: r.permission,
-    }));
+    return rows.map(r => {
+      // Limits describe an LC cell only, so a stale column left by an older
+      // write cannot make a Y cell look like a limit change.
+      const isLimits = r.permission === Permissions.LIMITS;
+
+      return new TemplatePermissionRO({
+        activityId: r.care_activity_id,
+        occupationId: r.occupation_id,
+        permission: r.permission,
+        limitId: isLimits ? r.limit_condition_id ?? null : null,
+        limitName: isLimits ? r.limit_name ?? null : null,
+        restrictionDescription: isLimits
+          ? normalizeRestrictionDescription(r.restriction_description)
+          : null,
+      });
+    });
   }
 
   /**
@@ -1749,7 +1708,15 @@ export class CareSettingTemplateService {
     templateId: string,
     careActivityIds: string[],
     occupationIds: string[],
-  ): Promise<{ permission: string; care_activity_id: string; occupation_id: string }[]> {
+  ): Promise<
+    {
+      permission: string;
+      care_activity_id: string;
+      occupation_id: string;
+      limit_name?: string | null;
+      restriction_description?: string | null;
+    }[]
+  > {
     if (careActivityIds.length === 0 || occupationIds.length === 0) {
       return [];
     }
@@ -1758,6 +1725,9 @@ export class CareSettingTemplateService {
       .select('cstp.permission', 'permission')
       .addSelect('cstp.careActivity', 'care_activity_id')
       .addSelect('cstp.occupation', 'occupation_id')
+      .leftJoin('cstp.limitCondition', 'lc')
+      .addSelect('lc.name', 'limit_name')
+      .addSelect('cstp.restrictionDescription', 'restriction_description')
       .where('cstp.template = :templateId', { templateId })
       .andWhere('cstp.careActivity IN (:...activityIds)', { activityIds: careActivityIds })
       .andWhere('cstp.occupation IN (:...occupationIds)', { occupationIds: occupationIds })

@@ -123,13 +123,17 @@ test.describe('limits and conditions', () => {
     const target = cell(page, 'Vital signs', 'Registered Nurse');
     await expect(target.locator('select')).toHaveValue('LC');
 
-    // The parent (the master) has no entry for this pair, so it differs and the
-    // badge presents the comparison on hover and is the way back into the dialog on click.
-    const badge = target.getByRole('button', { name: 'Changes made by HA' });
+    // The parent (the master) has no entry for this pair, so it differs: the
+    // badge reads "View details" on amber, explains the change on hover, and is
+    // the way back into the dialog on click.
+    const badge = target.getByRole('button', { name: 'View details' });
+    await expect(badge).toHaveCSS('background-color', 'rgba(252, 186, 25, 0.5)');
     await badge.hover();
-    await expect(page.getByRole('tooltip')).toHaveText(
-      'Changes made by HA — Parent: Not permitted → This template: Limits and conditions',
+    await expect(page.getByRole('tooltip')).toContainText(
+      'Change made: Not permitted → Limits and conditions',
     );
+    await expect(page.getByRole('tooltip')).toContainText(`Selected LC: ${STUB_LIMITS[1].name}`);
+    await expect(page.getByRole('tooltip')).toContainText('Nights only');
 
     await badge.click();
 
@@ -146,17 +150,14 @@ test.describe('limits and conditions', () => {
     const target = cell(page, 'Initial assessment', 'Registered Nurse');
     await target.locator('select').selectOption('N');
 
-    await target.getByRole('button', { name: 'Changes made by HA' }).hover();
+    await target.getByRole('button', { name: 'Changes made' }).hover();
 
     const tooltip = page.getByRole('tooltip');
-    await expect(tooltip).toHaveText(
-      'Changes made by HA — Parent: Perform → This template: Not permitted',
-    );
+    await expect(tooltip).toHaveText('Change made: Permitted → Not permitted');
     await expect(tooltip).toHaveCSS('background-color', 'rgb(56, 89, 138)');
-    await expect(tooltip.locator('span')).toHaveCSS('white-space', 'normal');
-    expect(
-      await tooltip.locator('span').evaluate(element => element.scrollWidth <= element.clientWidth),
-    ).toBe(true);
+    const line = tooltip.locator('span').last();
+    await expect(line).toHaveCSS('white-space', 'normal');
+    expect(await line.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
 
     // The limits dialog is never opened for a non-LC cell.
     await expect(page.getByRole('heading', { name: 'Limits and Conditions' })).toHaveCount(0);
@@ -166,13 +167,13 @@ test.describe('limits and conditions', () => {
     await openFinalizeStep(page, 'tpl-ha');
 
     const target = cell(page, 'Initial assessment', 'Registered Nurse');
-    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+    await expect(target.getByRole('button', { name: 'Changes made' })).toHaveCount(0);
 
     await target.locator('select').selectOption('N');
-    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toBeVisible();
+    await expect(target.getByRole('button', { name: 'Changes made' })).toBeVisible();
 
     await target.locator('select').selectOption('Y');
-    await expect(target.getByRole('button', { name: 'Changes made by HA' })).toHaveCount(0);
+    await expect(target.getByRole('button', { name: 'Changes made' })).toHaveCount(0);
   });
 
   test('moving a cell away from LC drops its limit from the saved payload (UI case 14)', async ({

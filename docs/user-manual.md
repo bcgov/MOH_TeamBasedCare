@@ -111,6 +111,11 @@ This step displays the **Activity Gap Matrix** - a table showing which occupatio
 | Red X | Outside scope of practice - cannot perform |
 | Blue question mark | Some activities have restrictions |
 
+Open a yellow **LC** tooltip to see the saved **Limits and Conditions** and
+**Restriction Description**, when available. Expand a competency to view details for an
+individual activity; competency-level LC tooltips group the available details by activity.
+When no details are saved, the tooltip shows the general permission description.
+
 **Actions on this step:**
 
 - **Export** - Downloads the gap analysis as an Excel spreadsheet with:
@@ -230,6 +235,37 @@ Manage care setting templates that define which occupations can perform which ac
 3. Click **Save Changes** and confirm
 
 **Note:** A warning dialog appears if you try to navigate away with unsaved changes.
+
+### Permission Changes and LC Details
+
+Permission badges compare against the template's **direct parent**, both while copying and
+after saving. Copying a master can add occupational-scope defaults; these are still marked as
+changes when the master has no corresponding saved permission.
+
+Badges have slightly rounded rectangular corners and a matching border; changed
+permissions use a light-yellow fill with a gold border. Inside the field, the
+permission value comes first, followed by the dropdown arrow and then the badge.
+Fields without a badge keep the arrow on the right. In narrow columns, badge text
+may be shortened with an ellipsis; hover or focus the badge to read its details.
+
+| Badge | Meaning |
+| --- | --- |
+| Amber **Changes made** | A Y/N permission differs from the parent |
+| Green **View details** | LC and its selected limit and restriction description match the parent, or the template has no parent |
+| Amber **View details** | The LC permission, selected limit, or restriction description differs from the parent |
+| Gray **View details** | LC details are available, but the parent comparison is not yet available |
+
+Hover over or focus a badge to read the comparison and LC details. Click **View details** to
+open the Limits and Conditions dialog. When an LC restriction description differs from the
+parent, the tooltip shows **From** (parent) and **To** (this template), using **None** for an
+empty description. Saved conditions remain identifiable even when removed
+from the active catalogue. Long descriptions can be scrolled within the details panel.
+With a badge focused, press **Down Arrow** to enter the scrollable details and **Escape** to
+close them and return to the badge.
+
+If parent permissions cannot be loaded, the wizard shows a warning and **Retry parent
+permissions**. It does not mark permissions as changed or unchanged until the comparison data
+is available; LC details remain accessible.
 
 ### Deleting a Template
 

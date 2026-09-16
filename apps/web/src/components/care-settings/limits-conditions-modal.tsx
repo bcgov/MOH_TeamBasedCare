@@ -16,6 +16,7 @@ import { Label } from '../Label';
 
 export interface PermissionLimitValue {
   limitId: string;
+  limitName?: string | null;
   restrictionDescription?: string;
 }
 
@@ -56,6 +57,14 @@ export const LimitsConditionsModal: React.FC<LimitsConditionsModalProps> = ({
 
   const options = [
     { value: '', label: PLACEHOLDER, disabled: true },
+    ...(initialValue?.limitId && !limits.some(limit => limit.id === initialValue.limitId)
+      ? [
+          {
+            value: initialValue.limitId,
+            label: initialValue.limitName ?? 'Previously selected limit',
+          },
+        ]
+      : []),
     ...limits.map(limit => ({ value: limit.id, label: limit.name })),
   ];
 
@@ -127,6 +136,9 @@ export const LimitsConditionsModal: React.FC<LimitsConditionsModalProps> = ({
           limitId &&
           onConfirm({
             limitId,
+            limitName:
+              limits.find(limit => limit.id === limitId)?.name ??
+              (limitId === initialValue?.limitId ? initialValue.limitName : undefined),
             restrictionDescription: restrictionDescription.trim() || undefined,
           }),
       }}

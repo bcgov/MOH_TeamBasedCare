@@ -20,7 +20,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import { Stepper, Button } from '@components';
-import { CareSettingsProvider, useCareSettingsContext } from './CareSettingsContext';
+import {
+  CareSettingsProvider,
+  useCareSettingsContext,
+  ParentPermissionEntry,
+  PermissionLimit,
+} from './CareSettingsContext';
 import { SelectCompetencies } from './select-competencies';
 import { Finalize } from './finalize';
 import { SaveNameModal } from './save-name-modal';
@@ -42,6 +47,7 @@ import { Spinner } from '../generic/Spinner';
 import { Card } from '../generic/Card';
 import {
   CareSettingTemplateDetailRO,
+  getTemplatePermissionKey,
   Permissions,
   Role,
   TemplateLevel,
@@ -79,7 +85,12 @@ const EditContent: React.FC = () => {
   } = useCareSettingOccupations(id);
   const { handleUpdateWithConflict, isLoading: isUpdating } = useCareSettingTemplateUpdate();
   const { handleUpdateDetails, isLoading: isUpdatingDetails } = useUpdateTemplateDetails();
-  const { parentPermissions } = useParentPermissions(id);
+  const {
+    parentPermissions,
+    isLoading: isLoadingParent,
+    error: parentError,
+    onRefresh: refreshParentPermissions,
+  } = useParentPermissions(template?.parentId ? id : undefined);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showEditDetailsModal, setShowEditDetailsModal] = useState(false);
@@ -128,16 +139,14 @@ const EditContent: React.FC = () => {
       // from parent would silently override intentional N decisions.
       // Permission inheritance happens only at copy time (copyTemplate).
       const permissions = new Map<string, Permissions>();
-      const permissionLimits = new Map<
-        string,
-        { limitId: string; restrictionDescription?: string }
-      >();
+      const permissionLimits = new Map<string, PermissionLimit>();
       source.permissions?.forEach(p => {
-        const key = `${p.activityId}::${p.occupationId}`;
+        const key = getTemplatePermissionKey(p.activityId, p.occupationId);
         permissions.set(key, p.permission);
         if (p.limitId) {
           permissionLimits.set(key, {
             limitId: p.limitId,
+            limitName: p.limitName,
             restrictionDescription: p.restrictionDescription ?? undefined,
           });
         }
@@ -174,13 +183,14 @@ const EditContent: React.FC = () => {
   }, [template, bundles, occupations, isInitialized, initializeFromTemplate]);
 
   // Feed the parent baseline in separately: it arrives on its own request and
-  // must not delay initialising the wizard.
+  // must not delay initialising the wizard. LC details come with it so a
+  // limit-only change is still detected as an override.
   useEffect(() => {
-    if (!parentPermissions) return;
-    const map = new Map<string, Permissions>();
-    parentPermissions.forEach(p => {
-      map.set(`${p.activityId}::${p.occupationId}`, p.permission);
-    });
+    const map = parentPermissions
+      ? new Map<string, ParentPermissionEntry>(
+          parentPermissions.map(p => [getTemplatePermissionKey(p.activityId, p.occupationId), p]),
+        )
+      : null;
     dispatch({ type: 'SET_PARENT_PERMISSIONS', payload: map });
   }, [parentPermissions, dispatch]);
 
@@ -408,6 +418,28 @@ const EditContent: React.FC = () => {
 
       <div className='flex-1 flex flex-col min-h-0'>
         {state.currentStep === 1 && <SelectCompetencies />}
+        {state.currentStep === 2 && state.hasParent && (parentError || isLoadingParent) && (
+          <div
+            role={parentError ? 'alert' : 'status'}
+            className='mb-3 rounded border border-gray-300 bg-gray-50 p-3 text-sm text-gray-800'
+          >
+            {parentError ? (
+              <>
+                <p>Parent permissions could not be loaded. Changes cannot be compared.</p>
+                <Button
+                  type='button'
+                  variant='outline'
+                  classes='mt-2'
+                  onClick={() => refreshParentPermissions()}
+                >
+                  Retry parent permissions
+                </Button>
+              </>
+            ) : (
+              <p>Loading parent permissions. Changes will be compared when loading finishes.</p>
+            )}
+          </div>
+        )}
         {state.currentStep === 2 && <Finalize />}
       </div>
 
