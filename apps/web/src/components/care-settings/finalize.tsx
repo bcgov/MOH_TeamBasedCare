@@ -57,7 +57,7 @@ const PermissionSelect: React.FC<{
   id: string;
   value: Permissions;
   onChange: (value: Permissions) => void;
-  /** Rendered on top of the closed select, left of the caret. */
+  /** Rendered on top of the closed select, after the value and caret. */
   badge?: React.ReactNode;
 }> = ({ id, value, onChange, badge }) => {
   return (
@@ -76,7 +76,7 @@ const PermissionSelect: React.FC<{
           }
         }}
         className={`appearance-none border border-gray-300 rounded px-3 py-2 text-sm w-full bg-white cursor-pointer ${
-          badge ? 'pr-16' : 'pr-8'
+          badge ? 'pr-[calc(100%-2.5rem)]' : 'pr-8'
         }`}
       >
         <option value={Permissions.PERFORM}>Y</option>
@@ -84,12 +84,23 @@ const PermissionSelect: React.FC<{
         <option value={Permissions.LIMITS}>LC</option>
       </select>
       {badge && (
-        <div className='absolute inset-y-0 right-7 flex min-w-0 max-w-[calc(100%-4.5rem)] items-center'>
+        <div className='pointer-events-none absolute inset-y-0 left-16 right-2 flex min-w-0 items-center'>
           {badge}
         </div>
       )}
-      <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500'>
-        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+      <div
+        className={`pointer-events-none absolute inset-y-0 flex items-center justify-center ${
+          badge ? 'left-9 w-6 text-bcBlack' : 'right-0 px-2 text-gray-500'
+        }`}
+      >
+        <svg
+          aria-hidden='true'
+          focusable='false'
+          className='h-4 w-4'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
         </svg>
       </div>
@@ -124,12 +135,12 @@ const PermissionBadge: React.FC<{
   // The badge shares the cell with the select, and cells can be as narrow as
   // 150px, so it is allowed to shrink and clip to an ellipsis rather than push
   // the permission value out of view. The tooltip restores the wording.
-  const badgeClasses = `block min-w-0 max-w-full truncate rounded-full text-[10px] font-semibold leading-none px-1.5 py-1 ${
+  const badgeClasses = `pointer-events-auto block min-w-0 max-w-full truncate rounded-sm border text-xs font-normal leading-4 px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bcBluePrimary ${
     isUnavailable
-      ? 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+      ? 'border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200'
       : isUnchanged
-        ? 'bg-green-100 text-green-800 hover:bg-green-200'
-        : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+        ? 'border-green-300 bg-green-100 text-green-800 hover:bg-green-200'
+        : 'border-bcYellowPrimary bg-bcYellowPrimary/50 text-bcBlack hover:bg-bcYellowPrimary/60'
   }`;
 
   const label = isLc ? 'View details' : 'Changes made';

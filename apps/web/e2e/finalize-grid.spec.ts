@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedAuth, stubApi, stubCareSettings } from './fixtures';
+import { expectPermissionControlLayout } from './permission-control-assertions';
 
 /**
  * The finalize grid used fixed column breakpoints while its cells carried a
@@ -19,6 +20,8 @@ test.describe('finalize permission grid', () => {
     await page.getByRole('button', { name: 'Next', exact: true }).click();
     await page.getByRole('button', { name: 'Assessment' }).click();
     await expect(page.locator('select').first()).toBeVisible();
+    let sawTruncatedBadge = false;
+    let sawTruncatedOccupation = false;
 
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -35,6 +38,16 @@ test.describe('finalize permission grid', () => {
       });
 
       expect(overlaps, `dropdowns overlap at ${width}px`).toBe(0);
+      const controls = await expectPermissionControlLayout(page);
+      expect(controls.some(control => control.badge)).toBe(true);
+      sawTruncatedBadge ||= controls.some(control => control.badge?.truncated);
+      const occupation = page.locator('label[for="permission-activity-1-occ-2"]');
+      sawTruncatedOccupation ||= await occupation.evaluate(
+        element => element.scrollWidth > element.clientWidth,
+      );
     }
+    expect(sawTruncatedBadge).toBe(true);
+    expect(sawTruncatedOccupation).toBe(true);
+    await expect(page.getByRole('button', { name: 'View details' })).toBeVisible();
   });
 });

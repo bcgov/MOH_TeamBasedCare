@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { CareSettingsStub, seedAuth, STUB_LIMITS, stubApi, stubCareSettings } from './fixtures';
+import { expectPermissionControlLayout } from './permission-control-assertions';
 
 const openFinalize = async (page: Page, path: string) => {
   await page.goto(path);
@@ -73,6 +74,9 @@ test.describe('permission badge regressions', () => {
     await expect(warning).toContainText('Changes cannot be compared.');
     const badge = lcBadge(page);
     await expect(badge).toHaveClass(/bg-gray-100/);
+    await expect(badge).toHaveCSS('border-top-color', 'rgb(209, 213, 219)');
+    await expect(badge).toHaveCSS('border-radius', '2px');
+    await expectPermissionControlLayout(page);
     await badge.hover();
     await expect(page.getByRole('tooltip')).toContainText(`Selected LC: ${STUB_LIMITS[1].name}`);
     await expect(page.getByRole('tooltip')).not.toContainText('Change made:');
@@ -82,6 +86,9 @@ test.describe('permission badge regressions', () => {
     await page.getByRole('button', { name: 'Retry parent permissions' }).click();
 
     await expect(badge).toHaveClass(/bg-green-100/);
+    await expect(badge).toHaveCSS('border-top-color', 'rgb(134, 239, 172)');
+    await expect(badge).toHaveCSS('border-radius', '2px');
+    await expectPermissionControlLayout(page);
     await expect(warning).toHaveCount(0);
     expect(requests).toBe(2);
   });
@@ -101,7 +108,7 @@ test.describe('permission badge regressions', () => {
       },
     ];
     await openFinalize(page, '/care-settings/copy?sourceId=tpl-master');
-    await expect(lcBadge(page)).toHaveClass(/bg-amber-100/);
+    await expect(lcBadge(page)).toHaveClass(/bg-bcYellowPrimary\/50/);
     await lcBadge(page).hover();
     await expect(page.getByRole('tooltip')).toContainText(
       'Change made: Not permitted → Limits and conditions',
@@ -112,7 +119,7 @@ test.describe('permission badge regressions', () => {
     await page.locator('#limits-conditions-list').click();
     await page.getByRole('option', { name: STUB_LIMITS[1].name, exact: true }).click();
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await expect(lcBadge(page)).toHaveClass(/bg-amber-100/);
+    await expect(lcBadge(page)).toHaveClass(/bg-bcYellowPrimary\/50/);
 
     await page.getByRole('button', { name: 'Save & Close', exact: true }).click();
     await page.locator('#edit-details-name').fill('Scope-enriched copy');
@@ -122,7 +129,7 @@ test.describe('permission badge regressions', () => {
 
     await openFinalize(page, '/care-settings/tpl-copy-1/edit');
     await expect(page.locator('#permission-activity-2-occ-1')).toHaveValue('LC');
-    await expect(lcBadge(page)).toHaveClass(/bg-amber-100/);
+    await expect(lcBadge(page)).toHaveClass(/bg-bcYellowPrimary\/50/);
     await lcBadge(page).hover();
     await expect(page.getByRole('tooltip')).toContainText(
       'Change made: Not permitted → Limits and conditions',
@@ -144,7 +151,7 @@ test.describe('permission badge regressions', () => {
       await badge.click();
       await page.locator('#restriction-description').fill('Days only\nWith supervision');
       await page.getByRole('button', { name: 'Save', exact: true }).click();
-      await expect(badge).toHaveClass(/bg-amber-100/);
+      await expect(badge).toHaveClass(/bg-bcYellowPrimary\/50/);
       await badge.hover();
       const tooltip = page.getByRole('tooltip');
       await expect(tooltip).toContainText('Restriction description changed:');
@@ -199,7 +206,7 @@ test.describe('permission badge regressions', () => {
       await page.locator('#limits-conditions-list').click();
       await page.getByRole('option', { name: STUB_LIMITS[0].name, exact: true }).click();
       await page.getByRole('button', { name: 'Save', exact: true }).click();
-      await expect(badge).toHaveClass(/bg-amber-100/);
+      await expect(badge).toHaveClass(/bg-bcYellowPrimary\/50/);
       await badge.hover();
       await expect(page.getByRole('tooltip')).toContainText(`Selected LC: ${STUB_LIMITS[0].name}`);
       await expect(page.getByRole('tooltip')).not.toContainText(

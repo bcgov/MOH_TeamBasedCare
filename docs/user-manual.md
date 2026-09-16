@@ -237,6 +237,12 @@ Permission badges compare against the template's **direct parent**, both while c
 after saving. Copying a master can add occupational-scope defaults; these are still marked as
 changes when the master has no corresponding saved permission.
 
+Badges have slightly rounded rectangular corners and a matching border; changed
+permissions use a light-yellow fill with a gold border. Inside the field, the
+permission value comes first, followed by the dropdown arrow and then the badge.
+Fields without a badge keep the arrow on the right. In narrow columns, badge text
+may be shortened with an ellipsis; hover or focus the badge to read its details.
+
 | Badge | Meaning |
 | --- | --- |
 | Amber **Changes made** | A Y/N permission differs from the parent |
