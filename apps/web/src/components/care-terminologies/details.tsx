@@ -1,5 +1,6 @@
 import { faBookOpen, faClipboardList, faList } from '@fortawesome/free-solid-svg-icons';
 import { CareActivityCMSDetailRO } from '@tbcm/common';
+import Link from 'next/link';
 import { AllowedPath } from 'src/common';
 import { BackButtonLink } from '../BackButtonLink';
 import { Disclosure } from '../Disclosure';
@@ -59,7 +60,14 @@ export const CareTerminologyDetails: React.FC<CareTerminologyDetailsProps> = ({ 
             relatedActivities.length > 0 ? (
               <ul className='list-disc space-y-2 p-2 pt-0 pl-7 text-sm text-gray-700'>
                 {relatedActivities.map(activity => (
-                  <li key={activity.id}>{activity.name}</li>
+                  <li key={activity.id}>
+                    <Link
+                      href={AllowedPath.CARE_TERMINOLOGIES_ID.replace(':id', activity.id)}
+                      className='text-bcBlueLink underline hover:text-bcBluePrimary'
+                    >
+                      {activity.name}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             ) : (
