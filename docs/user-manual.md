@@ -209,9 +209,17 @@ Manage care setting templates that define which occupations can perform which ac
 ### Viewing Templates
 
 1. Navigate to **Care Settings** from the sidebar
-2. View the list showing template name, parent template, and last modified date
+2. View the list showing template name, level, parent template, and last modified date
 3. Use search to find specific templates
-4. Sort by clicking column headers
+4. Use **Template level** and **Unit** to narrow the list. Unit refers to the care
+   location type associated with a template. **All units** is selected by default.
+5. Sort by clicking column headers
+
+Search, template level, and unit filters work together. Changing or clearing a
+filter returns to page 1 without clearing the other filters or the sort order.
+Choose **All units** to remove only the unit filter. Available unit choices remain
+the same across result pages, and filtering does not change which Health
+Authority templates you can access.
 
 ### Copying a Template
 

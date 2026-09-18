@@ -37,6 +37,7 @@ export const useCareSettingsFind = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [searchText, setSearchText] = useState('');
   const [level, setLevel] = useState<TemplateLevelFilter>(TemplateLevelFilter.ALL);
+  const [unitId, setUnitId] = useState('');
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {
     if (size !== pageSize) {
@@ -77,11 +78,15 @@ export const useCareSettingsFind = () => {
     resetPageIndex();
   };
 
-  // Narrowing the list can leave the current page out of range, so a filter
-  // change returns to page 1. The search text is deliberately untouched: the
-  // two filters compose.
+  // Narrowing the list can leave the current page out of range, so filter
+  // changes return to page 1 without clearing the other filters.
   const onLevelChange = (value: TemplateLevelFilter) => {
     setLevel(value);
+    resetPageIndex();
+  };
+
+  const onUnitChange = (value: string) => {
+    setUnitId(value);
     resetPageIndex();
   };
 
@@ -94,6 +99,7 @@ export const useCareSettingsFind = () => {
         sortOrder,
         searchText,
         level,
+        unitId,
       }),
     };
 
@@ -101,7 +107,7 @@ export const useCareSettingsFind = () => {
       setCareSettings(data.result);
       setTotal(data.total);
     });
-  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText, level]);
+  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText, level, unitId]);
 
   useEffect(() => {
     onRefreshList();
@@ -120,6 +126,8 @@ export const useCareSettingsFind = () => {
     onSearchTextChange,
     level,
     onLevelChange,
+    unitId,
+    onUnitChange,
     isLoading,
     onRefreshList,
   };

@@ -103,19 +103,35 @@ test.describe('template levels accessibility', () => {
     await stubCareSettings(page);
   });
 
-  test('the level filter and Level column have no WCAG A/AA violations', async ({ page }) => {
+  test('the level and unit filters and Level column have no WCAG A/AA violations', async ({
+    page,
+  }) => {
     await page.goto('/care-settings');
     await expect(page.getByRole('columnheader', { name: /Level/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unit: All units' })).toBeEnabled();
 
     // Covers the whole table, Delete links included: their red used to fall
     // below the 4.5:1 contrast minimum and was darkened as part of this work.
     const results = await new AxeBuilder({ page })
       .include('#template-level-filter')
+      .include('#template-unit-filter')
       .include('table')
       .withTags(WCAG)
       .analyze();
 
     expect(results.violations).toEqual([]);
+
+    for (const filter of ['#template-level-filter', '#template-unit-filter']) {
+      await page.locator(filter).click();
+      await expect(page.getByRole('listbox')).toBeVisible();
+      const menuResults = await new AxeBuilder({ page })
+        .include(filter)
+        .include('[role="listbox"]')
+        .withTags(WCAG)
+        .analyze();
+      expect(menuResults.violations).toEqual([]);
+      await page.keyboard.press('Escape');
+    }
   });
 
   test('the Edit Details dialog has no WCAG A/AA violations', async ({ page }) => {

@@ -10,6 +10,7 @@ import {
   SITE_LEVEL_LABEL,
   TemplateLevelFilter,
 } from '@tbcm/common';
+import { FilterDropdown } from '../FilterDropdown';
 
 interface LevelFilterProps {
   value: TemplateLevelFilter;
@@ -29,21 +30,13 @@ export const LevelFilter: React.FC<LevelFilterProps> = ({ value, onChange }) => 
       <span className='font-bold text-sm' aria-hidden='true'>
         Filter by:
       </span>
-      <label htmlFor='template-level-filter' className='sr-only'>
-        Filter by template level
-      </label>
-      <select
+      <FilterDropdown
         id='template-level-filter'
+        label='Template level'
+        options={OPTIONS}
         value={value}
-        onChange={e => onChange(e.target.value as TemplateLevelFilter)}
-        className='px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-bcBluePrimary focus:border-transparent'
-      >
-        {OPTIONS.map(option => (
-          <option key={option.value} value={option.value}>
-            {`Template level: ${option.label}`}
-          </option>
-        ))}
-      </select>
+        onChange={onChange}
+      />
     </div>
   );
 };

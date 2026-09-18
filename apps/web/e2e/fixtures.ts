@@ -347,6 +347,8 @@ export async function expectNoRuntimeOverlay(page: Page) {
 export interface StubTemplate {
   id: string;
   name: string;
+  unitId: string;
+  unitName: string;
   isMaster: boolean;
   level: 'health authority' | 'site' | null;
   parentId: string | null;
@@ -372,10 +374,17 @@ const SITE_LABEL = 'Site / Care Settings';
 const levelLabelOf = (t: StubTemplate) =>
   t.isMaster ? PROVINCIAL_LABEL : t.level === 'health authority' ? HA_LABEL : SITE_LABEL;
 
+export const STUB_UNITS = [
+  { id: '11111111-1111-4111-8111-111111111111', displayName: 'Medical Unit' },
+  { id: '22222222-2222-4222-8222-222222222222', displayName: 'Emergency Department' },
+];
+
 export const buildTemplates = (): StubTemplate[] => [
   {
     id: 'tpl-master',
     name: 'Provincial Medical Unit',
+    unitId: STUB_UNITS[0].id,
+    unitName: STUB_UNITS[0].displayName,
     isMaster: true,
     level: null,
     parentId: null,
@@ -387,6 +396,8 @@ export const buildTemplates = (): StubTemplate[] => [
   {
     id: 'tpl-ha',
     name: 'Island Health Medical Unit',
+    unitId: STUB_UNITS[0].id,
+    unitName: STUB_UNITS[0].displayName,
     isMaster: false,
     level: 'health authority',
     parentId: 'tpl-master',
@@ -398,6 +409,8 @@ export const buildTemplates = (): StubTemplate[] => [
   {
     id: 'tpl-site',
     name: 'Victoria General Medical Unit',
+    unitId: STUB_UNITS[0].id,
+    unitName: STUB_UNITS[0].displayName,
     isMaster: false,
     level: 'site',
     parentId: 'tpl-ha',
@@ -501,6 +514,14 @@ export async function stubCareSettings(
     nextConflict: null,
   };
 
+  await page.route('**/api/v1/carelocations', route =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(STUB_UNITS),
+    }),
+  );
+
   await page.route('**/api/v1/care-settings/**', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -517,13 +538,20 @@ export async function stubCareSettings(
     if (path.endsWith('/care-settings/cms/find')) {
       const searchText = (url.searchParams.get('searchText') ?? '').trim().toLowerCase();
       const level = url.searchParams.get('level') ?? 'all';
+      const unitId = url.searchParams.get('unitId');
+      const pageIndex = Number(url.searchParams.get('page') ?? 1);
+      const pageSize = Number(url.searchParams.get('pageSize') ?? 10);
 
       let rows = stub.templates.filter(t => t.name.toLowerCase().includes(searchText));
       if (level === 'provincial') rows = rows.filter(t => t.isMaster);
       else if (level !== 'all') rows = rows.filter(t => !t.isMaster && t.level === level);
+      if (unitId) rows = rows.filter(t => t.unitId === unitId);
 
+      const start = (pageIndex - 1) * pageSize;
       return json({
-        result: rows.map(t => ({ ...t, levelLabel: levelLabelOf(t) })),
+        result: rows
+          .slice(start, start + pageSize)
+          .map(t => ({ ...t, levelLabel: levelLabelOf(t) })),
         total: rows.length,
       });
     }
@@ -558,7 +586,7 @@ export async function stubCareSettings(
       return json({
         id: template?.id,
         name: template?.name,
-        unitId: 'unit-1',
+        unitId: template?.unitId,
         selectedBundleIds: [STUB_BUNDLE.id],
         selectedActivityIds: STUB_BUNDLE.careActivities.map(a => a.id),
         permissions:
@@ -571,13 +599,16 @@ export async function stubCareSettings(
     if (copyFullMatch && method === 'POST') {
       const body = request.postDataJSON();
       stub.copies.push({ sourceId: copyFullMatch[1], body });
+      const source = stub.templates.find(t => t.id === copyFullMatch[1]);
       const created: StubTemplate = {
         id: `tpl-copy-${stub.copies.length}`,
         name: body.name,
+        unitId: source?.unitId ?? STUB_UNITS[0].id,
+        unitName: source?.unitName ?? STUB_UNITS[0].displayName,
         isMaster: false,
         level: body.level ?? 'site',
         parentId: copyFullMatch[1],
-        parentName: stub.templates.find(t => t.id === copyFullMatch[1])?.name ?? null,
+        parentName: source?.name ?? null,
         healthAuthority: 'Island Health',
         version: 0,
         updatedAt: new Date().toISOString(),

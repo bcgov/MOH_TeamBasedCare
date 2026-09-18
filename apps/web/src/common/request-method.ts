@@ -31,6 +31,7 @@ export interface EndpointQueryParams<T> {
   filterByPermission?: Permissions;
   bundleId?: string;
   level?: TemplateLevelFilter;
+  unitId?: string;
 }
 
 const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<T>) => {
@@ -48,6 +49,7 @@ const appendQueryParams = <T>(endpoint: string, listParams: EndpointQueryParams<
   // `all` is the server default, so it is omitted to keep the URL clean
   if (listParams.level && listParams.level !== TemplateLevelFilter.ALL)
     params.set('level', listParams.level);
+  if (listParams.unitId) params.set('unitId', listParams.unitId);
 
   const queryString = params.toString();
   return queryString ? `${endpoint}?${queryString}` : endpoint;

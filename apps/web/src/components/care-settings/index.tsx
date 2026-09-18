@@ -14,6 +14,7 @@ export * from './finalize';
 export * from './save-name-modal';
 export * from './save-confirm-modal';
 export * from './level-filter';
+export * from './unit-filter';
 export * from './template-details-card';
 export * from './template-level-options';
 export * from './edit-details-modal';
