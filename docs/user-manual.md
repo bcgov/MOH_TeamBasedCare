@@ -428,6 +428,14 @@ For adding multiple care activities at once:
 
 ## 8. Common Features
 
+### Regulatory Terminologies
+
+Open **Regulatory terminologies** from the sidebar and select **View details** for a care
+activity. The terminology page displays its description, requirements and considerations,
+and **Related Activities** from the same care bundle, excluding the current activity.
+Click a related activity's name to open its terminology page. If there are no other
+activities in the bundle, the page displays "No related activities available."
+
 ### Search
 
 All list views include a search box. Type your search term and the list will filter automatically after a brief delay. The page resets to page 1 when searching.
