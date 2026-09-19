@@ -305,6 +305,79 @@ describe('CareSettingTemplateService', () => {
       expect(mockTemplateQB.leftJoinAndSelect).toHaveBeenCalledWith('t.unit', 't_unit');
       expect(mockTemplateQB.leftJoinAndSelect).toHaveBeenCalledWith('t.parent', 't_parent');
     });
+
+    it.each([null, 'Fraser Health', ''])(
+      'should compose unit, level and search filters with HA scope %p',
+      async healthAuthority => {
+        const unitId = '11111111-1111-4111-8111-111111111111';
+        await service.findTemplates(
+          {
+            page: 1,
+            pageSize: 10,
+            unitId,
+            level: TemplateLevelFilter.SITE,
+            searchText: 'acute',
+          },
+          healthAuthority,
+        );
+
+        expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t_unit.id = :unitId', { unitId });
+        expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.name ILIKE :name', {
+          name: '%acute%',
+        });
+        expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.isMaster = false');
+        expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t.level = :level', {
+          level: TemplateLevel.SITE,
+        });
+        if (healthAuthority === null) {
+          expect(mockTemplateQB.where).not.toHaveBeenCalled();
+        } else if (healthAuthority) {
+          expect(mockTemplateQB.where).toHaveBeenCalledWith(
+            '(t.healthAuthority = :healthAuthority OR t.healthAuthority = :global)',
+            { healthAuthority, global: 'GLOBAL' },
+          );
+        } else {
+          expect(mockTemplateQB.where).toHaveBeenCalledWith('t.healthAuthority = :global', {
+            global: 'GLOBAL',
+          });
+        }
+      },
+    );
+
+    it('should not constrain units when unitId is omitted', async () => {
+      await service.findTemplates({ page: 1, pageSize: 10 }, null);
+
+      expect(mockTemplateQB.andWhere).not.toHaveBeenCalled();
+    });
+
+    it('should apply the unit filter before pagination and return the filtered total', async () => {
+      mockTemplateQB.getManyAndCount.mockResolvedValue([[mockTemplate], 11]);
+      const unitId = '11111111-1111-4111-8111-111111111111';
+
+      const [results, total] = await service.findTemplates({ page: 2, pageSize: 10, unitId }, null);
+
+      expect(mockTemplateQB.andWhere).toHaveBeenCalledWith('t_unit.id = :unitId', { unitId });
+      expect(mockTemplateQB.andWhere.mock.invocationCallOrder[0]).toBeLessThan(
+        mockTemplateQB.skip.mock.invocationCallOrder[0],
+      );
+      expect(mockTemplateQB.skip).toHaveBeenCalledWith(10);
+      expect(mockTemplateQB.take).toHaveBeenCalledWith(10);
+      expect(mockTemplateQB.getManyAndCount).toHaveBeenCalledTimes(1);
+      expect(results).toHaveLength(1);
+      expect(total).toBe(11);
+      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
+    });
+
+    it('should return an empty result when the unit has no visible templates', async () => {
+      mockTemplateQB.getManyAndCount.mockResolvedValue([[], 0]);
+
+      await expect(
+        service.findTemplates(
+          { page: 1, pageSize: 10, unitId: '11111111-1111-4111-8111-111111111111' },
+          'Fraser Health',
+        ),
+      ).resolves.toEqual([[], 0]);
+    });
   });
 
   // ─── getTemplateById ───────────────────────────────────────────────

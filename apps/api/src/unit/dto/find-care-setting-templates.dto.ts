@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, IsEnum, Length, Max } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsEnum, IsUUID, Length, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { CareSettingsCMSFindSortKeys, SortOrder, TemplateLevelFilter } from '@tbcm/common';
@@ -64,4 +64,14 @@ export class FindCareSettingTemplatesDto {
   @IsEnum(TemplateLevelFilter)
   @IsOptional()
   readonly level?: TemplateLevelFilter = TemplateLevelFilter.ALL;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+    format: 'uuid',
+    description: 'Filter templates by their care location (unit).',
+  })
+  @IsUUID()
+  @IsOptional()
+  readonly unitId?: string;
 }

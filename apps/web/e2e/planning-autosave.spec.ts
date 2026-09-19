@@ -49,6 +49,10 @@ test.describe('saving a draft on navigation', () => {
       .poll(() => stub.careActivitySaves.map(save => save.body['bundle-1']?.slice().sort()))
       .toEqual([[STUB_PLANNING_SAVED_ACTIVITY, 'activity-1'].sort()]);
     expect(stub.careActivitySaves[0].id).toBe(DRAFT_ID);
+    await expect(page.getByRole('button', { name: 'Unit: All units' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Unit: All units' }).click();
+    await expect(page.getByRole('option', { name: 'Medical Unit', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
     await expectNoRuntimeOverlay(page);
   });
 
@@ -76,6 +80,7 @@ test.describe('saving a draft on navigation', () => {
     await expect
       .poll(() => stub.careActivitySaves.map(save => save.body['bundle-1']?.slice().sort()))
       .toEqual([[STUB_PLANNING_SAVED_ACTIVITY, 'activity-1'].sort()]);
+    await expect(page.getByRole('button', { name: 'Unit: All units' })).toBeEnabled();
     await expectNoRuntimeOverlay(page);
   });
 
@@ -89,8 +94,10 @@ test.describe('saving a draft on navigation', () => {
     // early to catch the regression it guards.
     await expect(page.getByRole('heading', { name: 'Care Settings', level: 1 })).toBeVisible();
     await expect(page.getByText('No care settings found')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unit: All units' })).toBeEnabled();
     await page.waitForLoadState('networkidle');
 
     expect(stub.careActivitySaves).toEqual([]);
+    await expectNoRuntimeOverlay(page);
   });
 });

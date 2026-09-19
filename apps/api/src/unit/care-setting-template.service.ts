@@ -202,6 +202,10 @@ export class CareSettingTemplateService {
       });
     }
 
+    if (query.unitId) {
+      queryBuilder.andWhere('t_unit.id = :unitId', { unitId: query.unitId });
+    }
+
     // Filter by level. "Provincial" is not a stored value - it is the master
     // flag - so it is matched on isMaster rather than on the level column.
     // Composes with the search predicate above rather than replacing it.

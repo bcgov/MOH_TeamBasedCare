@@ -88,6 +88,23 @@ describe('CareSettingTemplateController', () => {
 
       expect(mockTemplateService.findTemplates).toHaveBeenCalledWith({}, '');
     });
+
+    it.each([Role.ADMIN, Role.CONTENT_ADMIN, Role.USER])(
+      'should pass unitId through without changing the HA scope for %s',
+      async role => {
+        const query = {
+          page: 1,
+          pageSize: 10,
+          unitId: '11111111-1111-4111-8111-111111111111',
+        };
+        await controller.findTemplates(query, createMockRequest({ roles: [role] }));
+
+        expect(mockTemplateService.findTemplates).toHaveBeenCalledWith(
+          query,
+          role === Role.ADMIN ? null : 'Fraser Health',
+        );
+      },
+    );
   });
 
   // ─── getTemplatesForCMSFilter ──────────────────────────────────────

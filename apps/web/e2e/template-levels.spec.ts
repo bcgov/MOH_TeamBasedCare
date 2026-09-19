@@ -42,7 +42,8 @@ test.describe('template levels', () => {
       'Victoria General Medical Unit',
     ]);
 
-    await page.locator('#template-level-filter').selectOption('health authority');
+    await page.locator('#template-level-filter').click();
+    await page.getByRole('option', { name: 'Health Authority', exact: true }).click();
     await expect(names).toHaveText(['Island Health Medical Unit']);
 
     // The search text is deliberately untouched by a filter change, so the two
@@ -50,7 +51,8 @@ test.describe('template levels', () => {
     await page.getByPlaceholder('Search by care setting name').fill('Victoria');
     await expect(page.getByText('No care settings found')).toBeVisible();
 
-    await page.locator('#template-level-filter').selectOption('site');
+    await page.locator('#template-level-filter').click();
+    await page.getByRole('option', { name: 'Site / Care Settings', exact: true }).click();
     await expect(names).toHaveText(['Victoria General Medical Unit']);
 
     await expectNoRuntimeOverlay(page);
