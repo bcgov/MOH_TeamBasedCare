@@ -9,6 +9,11 @@ import { expect, Page } from '@playwright/test';
 
 const ONE_HOUR = 60 * 60 * 1000;
 
+export const STUB_UNITS = [
+  { id: '11111111-1111-4111-8111-111111111111', displayName: 'Medical Unit' },
+  { id: '22222222-2222-4222-8222-222222222222', displayName: 'Emergency Department' },
+];
+
 export interface StubSession {
   id: string;
   name: string;
@@ -160,6 +165,10 @@ export async function stubApi(page: Page, initial = buildSessions()): Promise<Ap
         roles: ['ADMIN'],
         status: 'ACTIVE',
       });
+    }
+
+    if (path.endsWith('/carelocations')) {
+      return json(STUB_UNITS);
     }
 
     if (path.endsWith('/sessions/find')) {
@@ -374,11 +383,6 @@ const SITE_LABEL = 'Site / Care Settings';
 const levelLabelOf = (t: StubTemplate) =>
   t.isMaster ? PROVINCIAL_LABEL : t.level === 'health authority' ? HA_LABEL : SITE_LABEL;
 
-export const STUB_UNITS = [
-  { id: '11111111-1111-4111-8111-111111111111', displayName: 'Medical Unit' },
-  { id: '22222222-2222-4222-8222-222222222222', displayName: 'Emergency Department' },
-];
-
 export const buildTemplates = (): StubTemplate[] => [
   {
     id: 'tpl-master',
@@ -513,14 +517,6 @@ export async function stubCareSettings(
     copies: [],
     nextConflict: null,
   };
-
-  await page.route('**/api/v1/carelocations', route =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(STUB_UNITS),
-    }),
-  );
 
   await page.route('**/api/v1/care-settings/**', async route => {
     const request = route.request();
