@@ -483,6 +483,33 @@ describe('CareSettingTemplateService', () => {
       await expect(service.getTemplateForCopy('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
+    it('excludes deleted occupations from the persisted permission read', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+
+      await service.getTemplateForCopy('tmpl-1');
+
+      expect(mockPermissionQB.innerJoin).toHaveBeenCalledWith(
+        Occupation,
+        'o',
+        'o.id = p.occupation_id AND o.deleted_at IS NULL',
+      );
+    });
+
+    it('excludes deleted occupations from the master scope seed', async () => {
+      mockTemplateRepo.findOne.mockResolvedValue({ ...mockTemplate, isMaster: true });
+      mockPermissionQB.getRawMany.mockResolvedValue([]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([]);
+
+      await service.getTemplateForCopy('tmpl-1');
+
+      expect(mockAllowedActivityQB.innerJoin).toHaveBeenCalledWith(
+        Occupation,
+        'o',
+        'o.id = aa.occupation_id AND o.deleted_at IS NULL',
+      );
+    });
+
     it('should query permissions with snake_case column names', async () => {
       mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
       mockPermissionQB.getRawMany.mockResolvedValue([]);
