@@ -6,7 +6,7 @@ import { usePlanningContext } from './usePlanningContext';
 
 export const usePlanningProfile = () => {
   const {
-    state: { sessionId },
+    state: { sessionId, profileOption },
     updateProceedToNext,
     updateSessionId,
     updateSessionName,
@@ -20,8 +20,13 @@ export const usePlanningProfile = () => {
    */
   const [failedSave, setFailedSave] = useState<SaveProfileDTO>();
 
+  /**
+   * Seeded from the wizard, not from a constant: this stage unmounts whenever the planner
+   * moves on, so a hard-coded default put them back on "start from scratch" every time
+   * they came back to it — closing the draft they were working on along the way.
+   */
   const [initialValues] = useState<SaveProfileDTO>({
-    profileOption: ProfileOptions.FROM_SCRATCH,
+    profileOption: profileOption || ProfileOptions.FROM_SCRATCH,
     careLocation: '',
   });
 

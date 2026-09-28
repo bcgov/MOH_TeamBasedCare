@@ -1,6 +1,7 @@
 import { createContext, useCallback, useEffect, useReducer, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { ProfileOptions } from '@tbcm/common';
-import { PlanningSteps } from '../../common/constants';
+import { AllowedPath, PlanningSteps } from '../../common/constants';
 
 export interface PlanningContextStateProps {
   isNextTriggered: boolean;
@@ -70,6 +71,7 @@ const enum PlanningActions {
   REFRESH_SESSIONS = 'REFRESH_SESSIONS',
   PROMPT_SESSION_NAME = 'PROMPT_SESSION_NAME',
   CLEAR_SESSION_NAME_PROMPT = 'CLEAR_SESSION_NAME_PROMPT',
+  RETURN_TO_HOME = 'RETURN_TO_HOME',
 }
 
 function reducer(state: any, action: any): PlanningContextStateProps {
@@ -131,6 +133,20 @@ function reducer(state: any, action: any): PlanningContextStateProps {
         ...state,
         sessionToName: null,
       };
+    case PlanningActions.RETURN_TO_HOME:
+      // Already home: nothing to reset, and no draft can have been left with a save in
+      // flight, so the drafts listing is not stale either.
+      if (state.currentStep === 1) return state;
+
+      return {
+        ...state,
+        currentStep: 1,
+        isNextTriggered: false,
+        canProceedToNext: false,
+        // The stage on the way out saves itself, so the listing's "Latest Modified" is
+        // behind by the time the home renders.
+        sessionsRefreshToken: state.sessionsRefreshToken + 1,
+      };
     case PlanningActions.REFRESH_SESSIONS:
       return {
         ...state,
@@ -152,6 +168,7 @@ export const PlanningContext = createContext<PlanningContextType | null>(null);
 
 export const PlanningProvider = ({ children }: { children: React.ReactElement }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const router = useRouter();
 
   // Claims last until submission settles, even if navigation is cancelled first.
   const pendingLeaveSaves = useRef(new Set<symbol>());
@@ -205,6 +222,31 @@ export const PlanningProvider = ({ children }: { children: React.ReactElement })
       payload: { currentStep: state.currentStep + 1 },
     });
   }, [state.proceedToken]);
+
+  /**
+   * The planning home is the Profile stage, not a route of its own, so asking for
+   * `/planning` from an open draft lands on the URL the wizard is already on and would
+   * otherwise leave the planner stranded in the draft.
+   *
+   * Handled on completion rather than on start so the departing stage is still mounted
+   * while it saves itself, which it does from `routeChangeStart`.
+   */
+  useEffect(() => {
+    const returnToHome = (url: string) => {
+      // `as` carries the query and, depending on how the app is served, a trailing slash.
+      const path = url.split('?')[0].replace(/\/$/, '');
+
+      if (path !== AllowedPath.PLANNING) return;
+
+      dispatch({ type: PlanningActions.RETURN_TO_HOME });
+    };
+
+    router.events?.on('routeChangeComplete', returnToHome);
+
+    return () => {
+      router.events?.off('routeChangeComplete', returnToHome);
+    };
+  }, [router.events]);
 
   return (
     <PlanningContext.Provider
