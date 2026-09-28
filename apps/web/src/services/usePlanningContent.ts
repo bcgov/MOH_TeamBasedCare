@@ -53,7 +53,7 @@ export const usePlanningContent = ({ persistedFields }: UsePlanningContentOption
     savedValues.current = cloneDeep(initialValues);
   }, [initialValues]);
 
-  const pendingSave = useRef<Promise<void> | null>(null);
+  const pendingSave = useRef<Promise<boolean> | null>(null);
   const save = useCallback(() => {
     if (pendingSave.current) return pendingSave.current;
     const submittedValues = cloneDeep(latest.current.values);
@@ -65,6 +65,7 @@ export const usePlanningContent = ({ persistedFields }: UsePlanningContentOption
         if (saved === true) {
           savedValues.current = submittedValues;
         }
+        return saved === true;
       } finally {
         latest.current.setSubmitting(false);
         pendingSave.current = null;
@@ -115,34 +116,38 @@ export const usePlanningContent = ({ persistedFields }: UsePlanningContentOption
   }, [isNextTriggered]);
 
   // Deduplicate a departure, not the lifetime of a stage that may survive cancellation.
-  const hasLeft = useRef(false);
+  const departure = useRef<symbol | null>(null);
 
   useEffect(() => {
     const saveOnLeave = async () => {
-      if (hasLeft.current) return;
+      if (departure.current) return;
       // Without a draft there is nothing to update: the first save belongs to Next, which
       // also names the draft, so navigating away must not create records on its own.
       if (!latest.current.sessionId) return;
 
       if (!hasUnsavedChanges() && !pendingSave.current) return;
 
-      hasLeft.current = true;
+      const currentDeparture = Symbol();
+      departure.current = currentDeparture;
       // The stage is on its way out, so the advance this save asks for on success must not
       // move the wizard on. Claimed before submitting because the result outlives both this
       // component and the route change, cancelled or not.
       const endLeaveSave = beginLeaveSave();
+      let saved = false;
       try {
         if (pendingSave.current) {
-          await pendingSave.current;
-          if (!hasLeft.current || !hasUnsavedChanges()) return;
+          saved = await pendingSave.current;
+          if (departure.current !== currentDeparture || (saved && !hasUnsavedChanges())) return;
         }
-        await save();
+        saved = await save();
       } finally {
-        endLeaveSave();
+        const superseded = departure.current !== currentDeparture;
+        if (!superseded) departure.current = null;
+        endLeaveSave(superseded || (saved && !hasUnsavedChanges()));
       }
     };
     const cancelDeparture = () => {
-      hasLeft.current = false;
+      departure.current = null;
     };
 
     router.events?.on('routeChangeStart', saveOnLeave);

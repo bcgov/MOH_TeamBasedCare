@@ -108,7 +108,7 @@ describe('saving a draft when the planner leaves the page', () => {
   });
 
   it('does not save the same edit twice when leaving again', async () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn().mockResolvedValue(true);
     renderStage(onSubmit);
 
     act(() => {

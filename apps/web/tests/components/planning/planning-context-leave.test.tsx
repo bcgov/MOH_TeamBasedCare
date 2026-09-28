@@ -38,7 +38,7 @@ const emit = (event: string) =>
 
 const Consumer = () => {
   const planning = useContext(PlanningContext);
-  const finishSaves = useRef<(() => void)[]>([]);
+  const finishSaves = useRef<((saved: boolean) => void)[]>([]);
   if (!planning) return null;
 
   return (
@@ -50,7 +50,7 @@ const Consumer = () => {
       <button type='button' onClick={() => finishSaves.current.push(planning.beginLeaveSave())}>
         Leave save
       </button>
-      <button type='button' onClick={() => finishSaves.current.shift()?.()}>
+      <button type='button' onClick={() => finishSaves.current.shift()?.(true)}>
         Finish save
       </button>
     </div>
