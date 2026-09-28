@@ -255,7 +255,7 @@ describe('CareSettingTemplateService', () => {
       });
     });
 
-    it('should sort by isMaster DESC then PARENT_NAME', async () => {
+    it('should sort all templates by displayed parent name regardless of master status', async () => {
       await service.findTemplates(
         {
           page: 1,
@@ -266,23 +266,43 @@ describe('CareSettingTemplateService', () => {
         null,
       );
 
-      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
-      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t_parent.name', 'ASC');
+      expect(mockTemplateQB.addSelect).toHaveBeenCalledWith(
+        "LOWER(COALESCE(t_parent.name, CASE WHEN t.is_master THEN 'Master' ELSE '-' END))",
+        'sort_parent_name',
+      );
+      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('sort_parent_name', SortOrder.ASC);
+      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.id', SortOrder.ASC);
+      expect(mockTemplateQB.orderBy).not.toHaveBeenCalledWith('t.isMaster', SortOrder.DESC);
     });
 
-    it('should sort by isMaster DESC then custom field', async () => {
+    it.each([SortOrder.ASC, SortOrder.DESC])(
+      'should sort all templates by name case-insensitively in %s order',
+      async sortOrder => {
+        await service.findTemplates(
+          {
+            page: 1,
+            pageSize: 10,
+            sortBy: CareSettingsCMSFindSortKeys.NAME,
+            sortOrder,
+          } as any,
+          null,
+        );
+
+        expect(mockTemplateQB.addSelect).toHaveBeenCalledWith('LOWER(t.name)', 'sort_name');
+        expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('sort_name', sortOrder);
+        expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.id', SortOrder.ASC);
+        expect(mockTemplateQB.orderBy).not.toHaveBeenCalledWith('t.isMaster', SortOrder.DESC);
+      },
+    );
+
+    it('should sort all templates by modified date without grouping masters first', async () => {
       await service.findTemplates(
-        {
-          page: 1,
-          pageSize: 10,
-          sortBy: CareSettingsCMSFindSortKeys.NAME,
-          sortOrder: SortOrder.DESC,
-        } as any,
+        { sortBy: CareSettingsCMSFindSortKeys.UPDATED_AT, sortOrder: SortOrder.DESC } as any,
         null,
       );
 
-      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.isMaster', 'DESC');
-      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.name', 'DESC');
+      expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('t.updatedAt', SortOrder.DESC);
+      expect(mockTemplateQB.orderBy).not.toHaveBeenCalledWith('t.isMaster', SortOrder.DESC);
     });
 
     it('should default sort by isMaster DESC then createdAt DESC', async () => {
@@ -2524,15 +2544,23 @@ describe('CareSettingTemplateService', () => {
       expect(whereClauses()).toContain('t.isMaster = false');
     });
 
-    it('sorts masters into the provincial tier when sorting by level', async () => {
-      await service.findTemplates(
-        { sortBy: CareSettingsCMSFindSortKeys.LEVEL, sortOrder: SortOrder.ASC } as any,
-        null,
-      );
+    it.each([SortOrder.ASC, SortOrder.DESC])(
+      'sorts levels alphabetically by displayed label in %s order',
+      async sortOrder => {
+        await service.findTemplates(
+          { page: 1, pageSize: 10, sortBy: CareSettingsCMSFindSortKeys.LEVEL, sortOrder },
+          null,
+        );
 
-      expect(mockTemplateQB.addSelect).toHaveBeenCalledWith(expect.any(String), 'level_rank');
-      expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('level_rank', SortOrder.ASC);
-    });
+        expect(mockTemplateQB.addSelect).toHaveBeenCalledWith(
+          "CASE WHEN t.is_master THEN 1 WHEN t.level = 'health authority' THEN 0 ELSE 2 END",
+          'level_rank',
+        );
+        expect(mockTemplateQB.orderBy).toHaveBeenCalledWith('level_rank', sortOrder);
+        expect(mockTemplateQB.addOrderBy).toHaveBeenCalledWith('t.id', SortOrder.ASC);
+        expect(mockTemplateQB.orderBy).not.toHaveBeenCalledWith('t.isMaster', SortOrder.DESC);
+      },
+    );
 
     it('filters by level as one predicate on the existing query, not a per-row lookup', async () => {
       await service.findTemplates({ level: TemplateLevelFilter.SITE } as any, null);

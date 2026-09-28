@@ -44,7 +44,7 @@ describe('care settings unit filter state', () => {
       searchText: 'medical',
       level: TemplateLevelFilter.SITE,
       sortBy: CareSettingsCMSFindSortKeys.NAME,
-      sortOrder: SortOrder.DESC,
+      sortOrder: SortOrder.ASC,
       unitId: 'unit-1',
     });
     expect(result.current.unitId).toBe('unit-1');
@@ -59,7 +59,21 @@ describe('care settings unit filter state', () => {
     expect(lastQuery().get('searchText')).toBe('medical');
     expect(lastQuery().get('level')).toBe(TemplateLevelFilter.SITE);
     expect(lastQuery().get('sortBy')).toBe(CareSettingsCMSFindSortKeys.NAME);
+    expect(lastQuery().get('sortOrder')).toBe(SortOrder.ASC);
+  });
+
+  it('starts each column ascending and reverses on a second click', () => {
+    const { result } = renderHook(() => useCareSettingsFind());
+
+    act(() => result.current.onSortChange({ key: CareSettingsCMSFindSortKeys.NAME }));
+    expect(lastQuery().get('sortOrder')).toBe(SortOrder.ASC);
+
+    act(() => result.current.onSortChange({ key: CareSettingsCMSFindSortKeys.NAME }));
     expect(lastQuery().get('sortOrder')).toBe(SortOrder.DESC);
+
+    act(() => result.current.onSortChange({ key: CareSettingsCMSFindSortKeys.PARENT_NAME }));
+    expect(lastQuery().get('sortBy')).toBe(CareSettingsCMSFindSortKeys.PARENT_NAME);
+    expect(lastQuery().get('sortOrder')).toBe(SortOrder.ASC);
   });
 
   it('retains the unit when search, level, sorting, pagination or refresh changes', () => {
