@@ -132,7 +132,7 @@ test.describe('care settings unit filter', () => {
     const query = new URL((await filteredRequest).url()).searchParams;
     expect(query.get('page')).toBe('1');
     expect(query.get('sortBy')).toBe('name');
-    expect(query.get('sortOrder')).toBe('DESC');
+    expect(query.get('sortOrder')).toBe('ASC');
     await expect(page.getByText('1 - 3 of 3 items')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Next page' })).toBeDisabled();
 
