@@ -213,7 +213,10 @@ Manage care setting templates that define which occupations can perform which ac
 3. Use search to find specific templates
 4. Use **Template level** and **Unit** to narrow the list. Unit refers to the care
    location type associated with a template. **All units** is selected by default.
-5. Sort by clicking column headers
+5. Click a column's sort icon to sort the entire list in ascending order; click
+   again to reverse it. Before sorting, master templates appear first.
+   **Level** sorts alphabetically: **Health Authority**, **Provincial**, then
+   **Site / Care Settings** (or the reverse when descending).
 
 Search, template level, and unit filters work together. Changing or clearing a
 filter returns to page 1 without clearing the other filters or the sort order.

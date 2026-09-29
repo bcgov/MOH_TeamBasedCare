@@ -67,7 +67,7 @@ export const useCareSettingsFind = () => {
       setSortOrder(updatedSortOrder);
     } else {
       setSortKey(key);
-      setSortOrder(SortOrder.DESC);
+      setSortOrder(SortOrder.ASC);
     }
 
     resetPageIndex();

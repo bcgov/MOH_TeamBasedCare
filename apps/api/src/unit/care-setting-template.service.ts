@@ -228,27 +228,32 @@ export class CareSettingTemplateService {
         break;
     }
 
-    // Sort - always put masters first, then by requested sort
+    // Keep masters first only for the unsorted default; a selected column
+    // orders the entire result set.
     const sortOrder = query.sortOrder || SortOrder.ASC;
 
     if (query.sortBy) {
       let orderBy = `t.${query.sortBy}`;
 
-      if (query.sortBy === CareSettingsCMSFindSortKeys.PARENT_NAME) {
-        orderBy = 't_parent.name';
-      }
-
-      if (query.sortBy === CareSettingsCMSFindSortKeys.LEVEL) {
-        // Masters have no stored level; sort them as the provincial tier so the
-        // column orders the way it reads: provincial, health authority, site.
+      if (query.sortBy === CareSettingsCMSFindSortKeys.NAME) {
+        queryBuilder.addSelect('LOWER(t.name)', 'sort_name');
+        orderBy = 'sort_name';
+      } else if (query.sortBy === CareSettingsCMSFindSortKeys.PARENT_NAME) {
         queryBuilder.addSelect(
-          `CASE WHEN t.is_master THEN 0 WHEN t.level = '${TemplateLevel.HEALTH_AUTHORITY}' THEN 1 ELSE 2 END`,
+          "LOWER(COALESCE(t_parent.name, CASE WHEN t.is_master THEN 'Master' ELSE '-' END))",
+          'sort_parent_name',
+        );
+        orderBy = 'sort_parent_name';
+      } else if (query.sortBy === CareSettingsCMSFindSortKeys.LEVEL) {
+        // Alphabetical display-label order: Health Authority, Provincial, Site.
+        queryBuilder.addSelect(
+          `CASE WHEN t.is_master THEN 1 WHEN t.level = '${TemplateLevel.HEALTH_AUTHORITY}' THEN 0 ELSE 2 END`,
           'level_rank',
         );
         orderBy = 'level_rank';
       }
 
-      queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy(orderBy, sortOrder as SortOrder);
+      queryBuilder.orderBy(orderBy, sortOrder as SortOrder).addOrderBy('t.id', SortOrder.ASC);
     } else {
       // Default: masters first, then newest first
       queryBuilder.orderBy('t.isMaster', 'DESC').addOrderBy('t.createdAt', 'DESC');
