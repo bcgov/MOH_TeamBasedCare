@@ -398,6 +398,9 @@ export class CareSettingTemplateService {
    * Rows carrying no unit are included: the CMS records an occupation's scope
    * without one, and syncOccupationToAllTemplates likewise matches on activity
    * alone, so excluding them would drop every permission added that way.
+   *
+   * Soft-deleted occupations are excluded: deleteOccupation leaves their scope
+   * rows behind, and those occupations are no longer selectable in a copy.
    */
   private async getUnitScopePermissions(
     template: CareSettingTemplate,
@@ -408,6 +411,9 @@ export class CareSettingTemplateService {
 
     const rows = await this.allowedActivityRepo
       .createQueryBuilder('aa')
+      // Deleting an occupation leaves its scope rows in place, so without this
+      // the seed would offer permissions the copy endpoint then rejects.
+      .innerJoin(Occupation, 'o', 'o.id = aa.occupation_id AND o.deleted_at IS NULL')
       .select('aa.care_activity_id', 'care_activity_id')
       .addSelect('aa.occupation_id', 'occupation_id')
       .addSelect('aa.permission', 'permission')
@@ -1132,6 +1138,9 @@ export class CareSettingTemplateService {
   private async getPersistedPermissions(templateId: string): Promise<TemplatePermissionRO[]> {
     const rows = await this.permissionRepo
       .createQueryBuilder('p')
+      // Deleted occupations have no column in the grid and are rejected by copy
+      // validation, so rows left behind by an older delete must not be returned.
+      .innerJoin(Occupation, 'o', 'o.id = p.occupation_id AND o.deleted_at IS NULL')
       .leftJoin(LimitCondition, 'lc', 'lc.id = p.limit_condition_id')
       .select('p.care_activity_id', 'care_activity_id')
       .addSelect('p.occupation_id', 'occupation_id')
