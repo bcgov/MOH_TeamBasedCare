@@ -35,9 +35,11 @@ function reducer(state: AppContextStateProps, action: ReducerAction): AppContext
   switch (action.type) {
     case AppContextActions.UPDATE_ACTIVE_PATH:
       if (action.payload?.path) {
-        if (action.payload?.router && action.payload?.path !== action.payload?.router?.pathname) {
-          action.payload.router.push(action.payload.path);
-        }
+        // Pushed even when the path is already the current route. The planning wizard
+        // keeps its stage in React state, so returning to the planning home from an open
+        // draft is a same-route navigation, and skipping the push left that menu item
+        // doing nothing at all.
+        action.payload?.router?.push(action.payload.path);
 
         return {
           ...state,

@@ -131,6 +131,7 @@ When no details are saved, the tooltip shows the general permission description.
 - Your progress is automatically saved as a draft
 - You can navigate between steps using the Previous and Next buttons
 - Leaving Planning for another page (for example Care Settings) also saves the step you were editing
+- Clicking **Planning** in the sidebar returns to the drafts list after pending edits are saved. If saving fails or validation needs attention, the editor stays open so you can correct the issue and try again.
 - If navigation is cancelled, you can keep editing and saving; a save already in progress will not move you to another step
 - Only one active draft is maintained at a time
 

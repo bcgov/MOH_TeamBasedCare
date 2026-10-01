@@ -1,6 +1,7 @@
 import { createContext, useCallback, useEffect, useReducer, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { ProfileOptions } from '@tbcm/common';
-import { PlanningSteps } from '../../common/constants';
+import { AllowedPath, PlanningSteps } from '../../common/constants';
 
 export interface PlanningContextStateProps {
   isNextTriggered: boolean;
@@ -53,9 +54,9 @@ export type PlanningContextType = {
   clearSessionNamePrompt: () => void;
   /**
    * Suppress advancement for a departure's submissions. Release the returned claim
-   * when submission settles, including validation or API failure.
+   * when submission settles, reporting whether all edits were persisted.
    */
-  beginLeaveSave: () => () => void;
+  beginLeaveSave: () => (saved: boolean) => void;
 };
 
 const enum PlanningActions {
@@ -70,6 +71,7 @@ const enum PlanningActions {
   REFRESH_SESSIONS = 'REFRESH_SESSIONS',
   PROMPT_SESSION_NAME = 'PROMPT_SESSION_NAME',
   CLEAR_SESSION_NAME_PROMPT = 'CLEAR_SESSION_NAME_PROMPT',
+  RETURN_TO_HOME = 'RETURN_TO_HOME',
 }
 
 function reducer(state: any, action: any): PlanningContextStateProps {
@@ -131,6 +133,21 @@ function reducer(state: any, action: any): PlanningContextStateProps {
         ...state,
         sessionToName: null,
       };
+    case PlanningActions.RETURN_TO_HOME:
+      // Already home, so there is no stage to leave and nothing to reset.
+      if (state.currentStep === 1) return state;
+
+      return {
+        ...state,
+        currentStep: 1,
+        isNextTriggered: false,
+        canProceedToNext: false,
+        // Marks the listing stale because the departing stage saved itself. Only dispatched
+        // once that save has landed, so the listing cannot be refreshed ahead of the write.
+        // Today the home remounts the table and refetches anyway; the token keeps the
+        // listing correct should the drafts query ever be hoisted above the stage boundary.
+        sessionsRefreshToken: state.sessionsRefreshToken + 1,
+      };
     case PlanningActions.REFRESH_SESSIONS:
       return {
         ...state,
@@ -152,17 +169,30 @@ export const PlanningContext = createContext<PlanningContextType | null>(null);
 
 export const PlanningProvider = ({ children }: { children: React.ReactElement }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const router = useRouter();
 
   // Claims last until submission settles, even if navigation is cancelled first.
   const pendingLeaveSaves = useRef(new Set<symbol>());
+  const homeRequested = useRef(false);
+  const leaveSaveFailed = useRef(false);
+
+  const finishReturnToHome = useCallback(() => {
+    if (!homeRequested.current || pendingLeaveSaves.current.size > 0) return;
+    homeRequested.current = false;
+    if (!leaveSaveFailed.current) {
+      dispatch({ type: PlanningActions.RETURN_TO_HOME });
+    }
+  }, []);
 
   const beginLeaveSave = useCallback(() => {
     const claim = Symbol();
     pendingLeaveSaves.current.add(claim);
-    return () => {
-      pendingLeaveSaves.current.delete(claim);
+    return (saved: boolean) => {
+      if (!pendingLeaveSaves.current.delete(claim)) return;
+      if (!saved) leaveSaveFailed.current = true;
+      finishReturnToHome();
     };
-  }, []);
+  }, [finishReturnToHome]);
 
   const updateNextTriggered = () => dispatch({ type: PlanningActions.NEXT_TRIGGERED });
   const updateProceedToNext = () => {
@@ -205,6 +235,42 @@ export const PlanningProvider = ({ children }: { children: React.ReactElement })
       payload: { currentStep: state.currentStep + 1 },
     });
   }, [state.proceedToken]);
+
+  /**
+   * The planning home is the Profile stage, not a route of its own, so asking for
+   * `/planning` from an open draft lands on the URL the wizard is already on and would
+   * otherwise leave the planner stranded in the draft.
+   *
+   * Route events do not await the stage's save. Keep its form mounted until both the
+   * navigation and every leave save succeed, so a draft cannot be reopened with stale data.
+   */
+  useEffect(() => {
+    const startNavigation = () => {
+      homeRequested.current = false;
+      leaveSaveFailed.current = false;
+    };
+    const cancelNavigation = () => {
+      homeRequested.current = false;
+    };
+    const returnToHome = (url: string) => {
+      // `as` carries the query and, depending on how the app is served, a trailing slash.
+      const path = url.split('?')[0].replace(/\/$/, '');
+
+      homeRequested.current = path === AllowedPath.PLANNING;
+      finishReturnToHome();
+    };
+
+    router.events?.on('routeChangeStart', startNavigation);
+    router.events?.on('routeChangeError', cancelNavigation);
+    router.events?.on('routeChangeComplete', returnToHome);
+
+    return () => {
+      homeRequested.current = false;
+      router.events?.off('routeChangeStart', startNavigation);
+      router.events?.off('routeChangeError', cancelNavigation);
+      router.events?.off('routeChangeComplete', returnToHome);
+    };
+  }, [router.events, finishReturnToHome]);
 
   return (
     <PlanningContext.Provider
