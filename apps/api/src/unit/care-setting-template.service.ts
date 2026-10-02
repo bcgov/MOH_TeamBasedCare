@@ -534,7 +534,7 @@ export class CareSettingTemplateService {
   /**
    * Read the (activity, occupation) pairs currently stored as LC with no limit.
    */
-  private async getLegacyLcPairs(templateId: string): Promise<Set<string>> {
+  private async getSourceLimitlessLcPairs(templateId: string): Promise<Set<string>> {
     const rows = await this.permissionRepo
       .createQueryBuilder('p')
       .select('p.care_activity_id', 'care_activity_id')
@@ -545,6 +545,36 @@ export class CareSettingTemplateService {
       .getRawMany();
 
     return new Set(rows.map(r => getTemplatePermissionKey(r.care_activity_id, r.occupation_id)));
+  }
+
+  /**
+   * Read limit-less LC pairs inherited from master occupation scope. Explicit
+   * template permissions take precedence over scope and must not use this exemption.
+   */
+  private async getMasterScopeLcPairs(template: CareSettingTemplate): Promise<Set<string>> {
+    const activityIds = (template.selectedActivities ?? []).map(activity => activity.id);
+    if (!template.isMaster || activityIds.length === 0) return new Set();
+
+    const rows = await this.allowedActivityRepo
+      .createQueryBuilder('aa')
+      .innerJoin(Occupation, 'o', 'o.id = aa.occupation_id AND o.deleted_at IS NULL')
+      .leftJoin(
+        CareSettingTemplatePermission,
+        'p',
+        'p.template_id = :templateId AND p.care_activity_id = aa.care_activity_id AND p.occupation_id = aa.occupation_id',
+        { templateId: template.id },
+      )
+      .select('aa.care_activity_id', 'care_activity_id')
+      .addSelect('aa.occupation_id', 'occupation_id')
+      .where('aa.permission = :permission', { permission: Permissions.LIMITS })
+      .andWhere('aa.care_activity_id IN (:...activityIds)', { activityIds })
+      .andWhere('(aa.unit_id = :unitId OR aa.unit_id IS NULL)', { unitId: template.unit.id })
+      .andWhere('p.id IS NULL')
+      .getRawMany<{ care_activity_id: string; occupation_id: string }>();
+
+    return new Set(
+      rows.map(row => getTemplatePermissionKey(row.care_activity_id, row.occupation_id)),
+    );
   }
 
   /**
@@ -1268,7 +1298,7 @@ export class CareSettingTemplateService {
   ): Promise<CareSettingTemplateRO> {
     const source = await this.templateRepo.findOne({
       where: { id: sourceId },
-      relations: ['unit'],
+      relations: ['unit', 'selectedActivities'],
     });
 
     if (!source) {
@@ -1307,21 +1337,27 @@ export class CareSettingTemplateService {
       p => p.permission === Permissions.LIMITS && !p.limitId,
     );
 
-    const [bundles, activities, occupations, limits, legacyLcPairs] = await Promise.all([
-      this.findReferencesInBatches(selectedBundleIds, ids =>
-        this.bundleRepo.find({ select: ['id'], where: { id: In(ids) } }),
-      ),
-      this.findReferencesInBatches(activityIds, ids =>
-        this.careActivityRepo.find({ select: ['id'], where: { id: In(ids) } }),
-      ),
-      this.findReferencesInBatches(occupationIds, ids =>
-        this.occupationRepo.find({ select: ['id'], where: { id: In(ids) } }),
-      ),
-      this.findReferencesInBatches(limitIds, ids =>
-        this.limitConditionRepo.find({ select: ['id'], where: { id: In(ids) } }),
-      ),
-      needsLegacyLcPairs ? this.getLegacyLcPairs(sourceId) : Promise.resolve(new Set<string>()),
-    ]);
+    const [bundles, activities, occupations, limits, legacyLcPairs, masterScopeLcPairs] =
+      await Promise.all([
+        this.findReferencesInBatches(selectedBundleIds, ids =>
+          this.bundleRepo.find({ select: ['id'], where: { id: In(ids) } }),
+        ),
+        this.findReferencesInBatches(activityIds, ids =>
+          this.careActivityRepo.find({ select: ['id'], where: { id: In(ids) } }),
+        ),
+        this.findReferencesInBatches(occupationIds, ids =>
+          this.occupationRepo.find({ select: ['id'], where: { id: In(ids) } }),
+        ),
+        this.findReferencesInBatches(limitIds, ids =>
+          this.limitConditionRepo.find({ select: ['id'], where: { id: In(ids) } }),
+        ),
+        needsLegacyLcPairs
+          ? this.getSourceLimitlessLcPairs(sourceId)
+          : Promise.resolve(new Set<string>()),
+        needsLegacyLcPairs
+          ? this.getMasterScopeLcPairs(source)
+          : Promise.resolve(new Set<string>()),
+      ]);
 
     const validBundleIds = new Set(bundles.map(bundle => bundle.id));
     const validActivityIds = new Set(activities.map(activity => activity.id));
@@ -1347,7 +1383,9 @@ export class CareSettingTemplateService {
         'One or more permission occupations are not valid options.' + retryHint,
       );
     }
-    // Limit-less LC compatibility is inherited from the source, never from the new copy.
+    // Limit-less LC compatibility comes from source permission rows or, for
+    // masters, scope rows with no explicit template override.
+    masterScopeLcPairs.forEach(key => legacyLcPairs.add(key));
     const resolvedLimits = await this.resolvePermissionLimitsFromCatalogue(
       permissionInputs,
       legacyLcPairs,

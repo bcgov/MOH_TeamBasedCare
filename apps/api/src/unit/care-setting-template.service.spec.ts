@@ -1115,6 +1115,69 @@ describe('CareSettingTemplateService', () => {
       expect(permissionWrites()[0][1]).toEqual(['new-1', 'activity-1', 'occ-1', 'LC', null, null]);
     });
 
+    it('carries a limit-less LC cell inherited from a master occupation scope', async () => {
+      const master = {
+        ...mockTemplate,
+        isMaster: true,
+        selectedActivities: [mockActivity],
+      };
+      mockTemplateRepo.findOne
+        .mockResolvedValueOnce(master)
+        .mockResolvedValueOnce({ ...master, id: 'new-1' });
+      mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+      mockAllowedActivityQB.getRawMany.mockResolvedValue([
+        { care_activity_id: 'activity-1', occupation_id: 'occ-1' },
+      ]);
+
+      await service.copyTemplateWithData(
+        'tmpl-1',
+        {
+          name: 'Copy',
+          selectedBundleIds: [],
+          selectedActivityIds: ['activity-1'],
+          permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'LC' }],
+        } as any,
+        'Fraser Health',
+      );
+
+      expect(mockAllowedActivityQB.leftJoin).toHaveBeenCalledWith(
+        CareSettingTemplatePermission,
+        'p',
+        expect.stringContaining('p.template_id = :templateId'),
+        { templateId: 'tmpl-1' },
+      );
+      expect(mockAllowedActivityQB.andWhere).toHaveBeenCalledWith('p.id IS NULL');
+      expect(permissionWrites()[0][1]).toEqual(['new-1', 'activity-1', 'occ-1', 'LC', null, null]);
+    });
+
+    it('does not exempt a limit-less LC outside the master occupation scope', async () => {
+      const master = {
+        ...mockTemplate,
+        isMaster: true,
+        selectedActivities: [mockActivity],
+      };
+      mockTemplateRepo.findOne.mockResolvedValue(master);
+      mockCareActivityRepo.find.mockResolvedValue([mockActivity]);
+      mockOccupationRepo.find.mockResolvedValue([mockOccupation]);
+
+      await expect(
+        service.copyTemplateWithData(
+          'tmpl-1',
+          {
+            name: 'Copy',
+            selectedBundleIds: [],
+            selectedActivityIds: ['activity-1'],
+            permissions: [{ activityId: 'activity-1', occupationId: 'occ-1', permission: 'LC' }],
+          } as any,
+          'Fraser Health',
+        ),
+      ).rejects.toThrow(
+        'A limit must be selected for every permission set to limits and conditions.',
+      );
+    });
+
     it('still rejects a cell newly set to LC when the source exempts a different cell', async () => {
       mockTemplateRepo.findOne.mockResolvedValue(mockTemplate);
       mockTemplateRepo.create.mockReturnValue({ id: 'new-1' });
