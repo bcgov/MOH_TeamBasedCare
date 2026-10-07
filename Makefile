@@ -2,7 +2,13 @@
 # Default Environments
 -include ./.env
 
+ifneq (,$(wildcard ./.env))
 export $(shell sed 's/=.*//' ./.env)
+endif
+
+# Use a project-local Yarn entrypoint when a global Yarn binary is not installed.
+YARN_BIN := $(shell if command -v yarn >/dev/null 2>&1; then printf '%s' yarn; elif command -v corepack >/dev/null 2>&1; then printf '%s' 'corepack yarn'; else printf '%s' 'corepack enable && corepack yarn'; fi)
+DOCKER_COMPOSE_BIN := $(shell if command -v docker-compose >/dev/null 2>&1; then printf '%s' docker-compose; else printf '%s' 'docker compose'; fi)
 
 # Project
 export PROJECT := tbcm
@@ -19,8 +25,9 @@ export COMMIT_SHA:=$(shell git rev-parse --short=7 HEAD)
 export LAST_COMMIT_MESSAGE:=$(shell git log -1 --oneline --decorate=full --no-color --format="%h, %cn, %f, %D" | sed 's/->/:/')
 export GIT_LOCAL_BRANCH:=$(shell git rev-parse --abbrev-ref HEAD)
 
-# TF Token
-export TFCTK:=$(shell cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token')
+# Terraform Cloud token (optional for local Docker workflows)
+TF_TOKEN_FILE := $(HOME)/.terraform.d/credentials.tfrc.json
+TFCTK ?= $(shell if [ -f "$(TF_TOKEN_FILE)" ]; then jq -r '.credentials."app.terraform.io".token // empty' "$(TF_TOKEN_FILE)" 2>/dev/null; fi)
 
 # FE Env Vars
 export NEXT_PUBLIC_API_URL ?= /api/v1
@@ -129,10 +136,10 @@ build-terraform-artifact: clean-yarn print-env pre-build build-api
 # ===================================
 
 build-artifact-local: build-terraform-artifact
-	@yarn
+	@$(YARN_BIN)
 clean-yarn: 
 	@rm -rf node_modules
-	@yarn
+	@$(YARN_BIN)
 print-env:
 	@echo "\n**** ENVIRONMENTS ****\n"
 	@echo "\nProject: $(PROJECT)"
@@ -149,17 +156,17 @@ print-env:
 
 watch: print-env start-local-db
 	@echo "++\n***** Running api + web in local Node server\n++"
-	@yarn
-	@yarn watch
+	@$(YARN_BIN)
+	@$(YARN_BIN) watch
 
 start-local: print-env start-local-db
 	@echo "++\n***** Running api + web in local Node server\n++"
-	@yarn 
-	@yarn start:local
+	@$(YARN_BIN)
+	@$(YARN_BIN) start:local
 
 run-local-db:
 	@echo "++\n***** Starting local database\n++"
-	@docker-compose up -d db 
+	@$(DOCKER_COMPOSE_BIN) up -d db
 	@echo "++\n*****"
 
 stop-local-db:
@@ -169,28 +176,28 @@ stop-local-db:
 
 docker-build:
 	@echo "++\n***** Running docker-compose\n++"
-	@docker-compose build
+	@$(DOCKER_COMPOSE_BIN) build
 	@echo "++\n*****"
 
 seed-local-db:
 	@echo "++\n***** Seeding local database\n++"
-	npm_config_path="$(PWD)/scripts/care-activities.csv" yarn run db:seed-care-activities
+	npm_config_path="$(PWD)/scripts/care-activities.csv" $(YARN_BIN) run db:seed-care-activities
 	@echo "++\n*****"
 
 run-local:
 	@echo "++\n***** Running docker-compose\n++"
-	@yarn
-	@docker-compose up --build
+	@$(YARN_BIN)
+	@$(DOCKER_COMPOSE_BIN) up --build
 	@echo "++\n*****"
 
 run-local-server:
 	@echo "++\n***** Starting local server\n++"
-	@docker-compose up -d api 
+	@$(DOCKER_COMPOSE_BIN) up -d api
 	@echo "++\n*****"
 
 run-local-client:
 	@echo "++\n***** Starting local client\n++"
-	@docker-compose up -d web 
+	@$(DOCKER_COMPOSE_BIN) up -d web
 	@echo "++\n*****"
 
 local-client-logs:
@@ -213,12 +220,12 @@ local-server-workspace:
 
 test-api:
 	@echo "++\n***** Running API Jest tests\n++"
-	@cd apps/api && yarn exec jest --silent
+	@cd apps/api && $(YARN_BIN) exec jest --silent
 	@echo "++\n*****"
 
 test-web:
 	@echo "++\n***** Running Web Jest tests\n++"
-	@yarn workspace @tbcm/web e2e
+	@$(YARN_BIN) workspace @tbcm/web e2e
 	@echo "++\n*****"
 
 test-jest:
@@ -229,20 +236,20 @@ test-jest:
 
 test-pa11y:
 	@make start-test-db
-	@yarn build
+	@$(YARN_BIN) build
 	@echo "++\n***** Running front end accessibility tests\n++"
-	@NODE_ENV=test yarn test:pa11y
+	@NODE_ENV=test $(YARN_BIN) test:pa11y
 	@make stop-test-db
 	@echo "++\n*****"
 
 debug-pa11y:
 	@echo "++\n***** Running front end accessibility tests\n++"
-	@yarn workspace @tbcm/accessibility debug
+	@$(YARN_BIN) workspace @tbcm/accessibility debug
 	@echo "++\n*****"
 
 generate-accessibility-results:
 	@echo "++\n***** Generating Github Comment from Test Results\n++"
-	@yarn workspace @tbcm/accessibility generate-accessibility-results
+	@$(YARN_BIN) workspace @tbcm/accessibility generate-accessibility-results
 	@echo "++\n*****"
 
 # ===================================
@@ -266,10 +273,10 @@ build-api:
 	@echo "++\n***** Building API for AWS\n++"
 	@rm -rf ./apps/api/dist || true
 	@echo 'Building api package... \n' 
-	@yarn workspace @tbcm/api build
+	@$(YARN_BIN) workspace @tbcm/api build
 	@make sed-common-module
 	@echo 'Updating prod dependencies...\n'
-	@yarn workspaces focus @tbcm/api --production
+	@$(YARN_BIN) workspaces focus @tbcm/api --production
 	@echo 'Deleting existing build dir...\n'
 	@rm -rf ./.build || true
 	@echo 'Creating build dir...\n'
@@ -288,7 +295,7 @@ build-api:
 
 build-web:
 	@echo "++\n***** Building Web for AWS\n++"
-	@yarn workspace @tbcm/web build
+	@$(YARN_BIN) workspace @tbcm/web build
 	@mv ./apps/web/out ./terraform/build/app
 	@echo "++\n*****"
 
@@ -392,16 +399,16 @@ migration-run:
 	@docker exec $(LOCAL_API_CONTAINER_NAME) yarn workspace @tbcm/api typeorm migration:run
 
 migration-local-create:
-	@yarn workspace @tbcm/api typeorm migration:create $(name) -- -d src/ormconfig.ts
+	@$(YARN_BIN) workspace @tbcm/api typeorm migration:create $(name) -- -d src/ormconfig.ts
 
 migration-local-run:
-	@yarn workspace @tbcm/api migration:run
+	@$(YARN_BIN) workspace @tbcm/api migration:run
 
 migration-local-revert:
-	@yarn workspace @tbcm/api migration:revert
+	@$(YARN_BIN) workspace @tbcm/api migration:revert
 
 migration-local-show:
-	@yarn workspace @tbcm/api migration:show
+	@$(YARN_BIN) workspace @tbcm/api migration:show
 
 # ===================================
 # DB Tunneling

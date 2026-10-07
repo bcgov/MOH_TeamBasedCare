@@ -137,7 +137,6 @@ export const CareTerminologiesList: React.FC<CareTerminologiesListProps> = ({
 
   return (
     <div className='max-h-full w-full flex-1 flex flex-col overflow-auto gap-3 p-4 bg-white'>
-      <div>Filter By Alphabet, and you can change the setting based on preferences</div>
       <table className='w-full table-fixed'>
         <colgroup>
           <col style={{ width: '75%' }} />

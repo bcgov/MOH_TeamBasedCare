@@ -26,26 +26,35 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
   const tdStyles =
     'table-header item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-2 border-[#FCBA19]';
 
-  const headers = [
+  const headers: {
+    label: string;
+    name?: CareSettingsCMSFindSortKeys;
+    /** Column of row actions: the label is for assistive tech only, not the visual design */
+    srOnly?: boolean;
+  }[] = [
     { label: 'Care Setting Name', name: CareSettingsCMSFindSortKeys.NAME },
     { label: 'Level', name: CareSettingsCMSFindSortKeys.LEVEL },
     { label: 'Parent', name: CareSettingsCMSFindSortKeys.PARENT_NAME },
     { label: 'Date Modified', name: CareSettingsCMSFindSortKeys.UPDATED_AT },
-    { label: '' },
+    { label: 'Actions', srOnly: true },
   ];
 
   return (
     <thead className='border-b table-row-fixed table-header'>
       <tr className='w-full'>
-        {headers.map(({ label, name }, index: number) => (
-          <th key={`th${index}`} className={tdStyles}>
-            <SortButton<CareSettingsCMSFindSortKeys>
-              label={label}
-              name={name}
-              sortKey={sortKey}
-              sortOrder={sortOrder}
-              onChange={onSortChange}
-            />
+        {headers.map(({ label, name, srOnly }, index: number) => (
+          <th key={`th${index}`} scope='col' className={tdStyles}>
+            {srOnly ? (
+              <span className='sr-only'>{label}</span>
+            ) : (
+              <SortButton<CareSettingsCMSFindSortKeys>
+                label={label}
+                name={name}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+                onChange={onSortChange}
+              />
+            )}
           </th>
         ))}
       </tr>
@@ -108,11 +117,16 @@ const TableBody: React.FC<TableBodyProps> = ({
             <div className='flex justify-end gap-4'>
               {!template.isMaster && canModify?.(template) && (
                 <>
-                  <Button variant='link' onClick={() => onEditClick(template)}>
+                  <Button
+                    variant='link'
+                    aria-label={`Edit ${template.name}`}
+                    onClick={() => onEditClick(template)}
+                  >
                     Edit
                   </Button>
                   <Button
                     variant='link'
+                    aria-label={`Delete ${template.name}`}
                     onClick={() => onDeleteClick(template)}
                     classes='text-red-700 hover:text-red-900'
                   >
@@ -120,7 +134,11 @@ const TableBody: React.FC<TableBodyProps> = ({
                   </Button>
                 </>
               )}
-              <Button variant='link' onClick={() => onCopyClick(template)}>
+              <Button
+                variant='link'
+                aria-label={`Create Copy of ${template.name}`}
+                onClick={() => onCopyClick(template)}
+              >
                 Create Copy
               </Button>
             </div>
