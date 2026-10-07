@@ -20,7 +20,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
     { label: 'Care Setting', name: CareActivitiesCMSFindSortKeys.CARE_SETTING_NAME },
     { label: 'Care Competencies', name: CareActivitiesCMSFindSortKeys.BUNDLE_NAME },
     { label: 'Last updated by', name: CareActivitiesCMSFindSortKeys.UPDATED_BY },
-    { label: '' },
+    { label: 'Actions' },
   ];
 
   return (
@@ -28,13 +28,17 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
       <tr className='w-full'>
         {headers.map(({ label, name }, index: number) => (
           <th key={`th${index}`} className={tdStyles}>
-            <SortButton<CareActivitiesCMSFindSortKeys>
-              label={label}
-              name={name}
-              sortKey={sortKey}
-              sortOrder={sortOrder}
-              onChange={onSortChange}
-            />
+            {name ? (
+              <SortButton<CareActivitiesCMSFindSortKeys>
+                label={label}
+                name={name}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+                onChange={onSortChange}
+              />
+            ) : (
+              label
+            )}
           </th>
         ))}
       </tr>

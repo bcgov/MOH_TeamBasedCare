@@ -30,11 +30,9 @@ const renderList = (careSettings: CareSettingTemplateRO[]) =>
   );
 
 describe('CareSettingsList', () => {
-  it('names the row-actions column so it is not an empty header', () => {
+  it('shows the row-actions column header', () => {
     renderList([template()]);
 
-    // WCAG 1.3.1: every column needs a programmatic name, even the actions column
-    // whose label is deliberately not painted on screen.
     expect(screen.getAllByRole('columnheader').map(header => header.textContent)).toEqual([
       'Care Setting Name',
       'Level',
@@ -42,7 +40,7 @@ describe('CareSettingsList', () => {
       'Date Modified',
       'Actions',
     ]);
-    expect(screen.getByRole('columnheader', { name: 'Actions' }).firstChild).toHaveClass('sr-only');
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeVisible();
   });
 
   it('distinguishes the repeated row actions by care setting name', () => {

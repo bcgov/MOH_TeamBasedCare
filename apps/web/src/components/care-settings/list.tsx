@@ -29,24 +29,20 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
   const headers: {
     label: string;
     name?: CareSettingsCMSFindSortKeys;
-    /** Column of row actions: the label is for assistive tech only, not the visual design */
-    srOnly?: boolean;
   }[] = [
     { label: 'Care Setting Name', name: CareSettingsCMSFindSortKeys.NAME },
     { label: 'Level', name: CareSettingsCMSFindSortKeys.LEVEL },
     { label: 'Parent', name: CareSettingsCMSFindSortKeys.PARENT_NAME },
     { label: 'Date Modified', name: CareSettingsCMSFindSortKeys.UPDATED_AT },
-    { label: 'Actions', srOnly: true },
+    { label: 'Actions' },
   ];
 
   return (
     <thead className='border-b table-row-fixed table-header'>
       <tr className='w-full'>
-        {headers.map(({ label, name, srOnly }, index: number) => (
+        {headers.map(({ label, name }, index: number) => (
           <th key={`th${index}`} scope='col' className={tdStyles}>
-            {srOnly ? (
-              <span className='sr-only'>{label}</span>
-            ) : (
+            {name ? (
               <SortButton<CareSettingsCMSFindSortKeys>
                 label={label}
                 name={name}
@@ -54,6 +50,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
                 sortOrder={sortOrder}
                 onChange={onSortChange}
               />
+            ) : (
+              label
             )}
           </th>
         ))}
