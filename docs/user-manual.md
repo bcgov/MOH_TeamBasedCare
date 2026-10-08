@@ -101,6 +101,8 @@ The Planning tool guides you through a 4-step process to create team-based care 
 ### Step 4: Gaps, Optimizations & Suggestions
 
 This step displays the **Activity Gap Matrix** - a table showing which occupations can perform which activities.
+The table stays within the planning pane, and its header remains visible while you scroll through the matrix.
+Use the expand icon above the matrix to open it in full view; select the icon again to return to the planning pane.
 
 **Permission Indicators:**
 

@@ -1,6 +1,12 @@
 import { PageTitle, Button, ActivitiesGapLegend } from '@components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown, faCaretUp, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCaretDown,
+  faCaretUp,
+  faCompress,
+  faExpand,
+  faLightbulb,
+} from '@fortawesome/free-solid-svg-icons';
 import React, { useState } from 'react';
 import { tooltipIcons, TooltipIconTypes, API_ENDPOINT, REQUEST_METHOD } from '../../common';
 import { TooltipIcon } from '../generic/TooltipIcon';
@@ -250,12 +256,27 @@ const TableBody: React.FC = () => {
 };
 
 const ActivityGapTable: React.FC = () => {
+  const [isFullView, setIsFullView] = useState(false);
+
   return (
-    <div className='activity-gap-table'>
-      <table className='min-w-full text-center'>
-        <TableHeader />
-        <TableBody />
-      </table>
+    <div
+      className={`activity-gap-table-shell relative flex min-h-0 flex-1 flex-col ${isFullView ? 'activity-gap-table-full-view' : ''}`}
+    >
+      <Button
+        variant='link'
+        type='button'
+        classes={`absolute z-10 p-1 bg-white no-underline ${isFullView ? 'left-4 top-2' : 'left-0 top-0'}`}
+        aria-label={isFullView ? 'Exit full view' : 'Enter full view'}
+        onClick={() => setIsFullView(!isFullView)}
+      >
+        <FontAwesomeIcon icon={isFullView ? faCompress : faExpand} className='h-4 w-4' />
+      </Button>
+      <div className='activity-gap-table min-h-0 flex-1'>
+        <table className='min-w-full text-center'>
+          <TableHeader />
+          <TableBody />
+        </table>
+      </div>
     </div>
   );
 };
@@ -295,7 +316,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
   };
 
   return (
-    <div>
+    <div className='flex-1 flex flex-col min-h-0'>
       <div className='planning-form-box overflow-visible'>
         <CurrentSessionName />
         <div className='flex flex-row space-x-8 items-start justify-between'>
@@ -317,7 +338,7 @@ export const ActivitiesGap: React.FC<ActivitiesGapProps> = () => {
           <OverviewCards />
         </div>
 
-        <div className='mt-4'>
+        <div className='mt-4 flex-1 flex flex-col min-h-0'>
           <ActivityGapTable />
         </div>
       </div>

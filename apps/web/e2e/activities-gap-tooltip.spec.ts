@@ -96,4 +96,33 @@ test.describe('gaps, optimizations and suggestions tooltips', () => {
     expect(box!.x).toBeGreaterThanOrEqual(0);
     expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
   });
+
+  test('the gap matrix can be expanded to the viewport and restored', async ({ page }) => {
+    const shell = page.locator('.activity-gap-table-shell');
+    await page.getByRole('button', { name: 'Enter full view' }).click();
+
+    await expect(shell).toHaveCSS('position', 'fixed');
+    await expect(page.getByRole('button', { name: 'Exit full view' })).toBeVisible();
+
+    const box = await shell.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBe(0);
+    expect(box!.y).toBe(0);
+    expect(box!.width).toBe(viewport!.width);
+    expect(box!.height).toBe(viewport!.height);
+
+    await page.getByRole('button', { name: 'Exit full view' }).click();
+    await expect(shell).not.toHaveCSS('position', 'fixed');
+  });
+
+  test('occupation descriptions remain accessible in full view', async ({ page }) => {
+    await page.getByRole('button', { name: 'Enter full view' }).click();
+    await page.getByRole('columnheader', { name: RN.name }).click();
+
+    const description = page.getByRole('dialog', { name: RN.name });
+    await expect(description).toBeVisible();
+    await description.getByRole('button', { name: 'Ok' }).click();
+    await expect(description).toBeHidden();
+  });
 });
