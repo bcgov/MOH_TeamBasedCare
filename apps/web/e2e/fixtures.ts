@@ -107,6 +107,20 @@ export const STUB_PLANNING_OCCUPATIONS = [
 
 export const GAP_ACTIVITY_COLUMN = 'Care Competencies and Corresponding Activities';
 
+/** Options offered by the care setting dropdown filters. The master suffix is stripped client-side. */
+export const STUB_CARE_SETTING_TEMPLATES = [
+  { id: 'tpl-medical', name: 'Medical Unit', isMaster: false },
+  { id: 'tpl-emergency', name: 'Emergency Department', isMaster: false },
+  { id: 'tpl-acute', name: 'Acute Care - Master', isMaster: true },
+];
+
+/** Care terminologies listing, with the templates that selected each activity. */
+export const STUB_TERMINOLOGY_ACTIVITIES = [
+  { id: 'activity-1', name: 'Take vital signs', templateIds: ['tpl-medical', 'tpl-emergency'] },
+  { id: 'activity-2', name: 'Record intake', templateIds: ['tpl-medical'] },
+  { id: 'activity-3', name: 'Triage patients', templateIds: ['tpl-emergency'] },
+];
+
 /**
  * The Gaps, Optimizations and Suggestions grid. The bundle row rolls up to MIXED for the RN
  * because its activities disagree (Y vs LC), which is exactly the pairing whose tooltips need
@@ -301,6 +315,28 @@ export async function stubApi(page: Page, initial = buildSessions()): Promise<Ap
           .filter(Boolean)
           .map(cs => ({ id: cs!.id, name: cs!.name, isMaster: false })),
       );
+    }
+
+    // The care setting dropdown filters expect a bare array, not a paginated envelope
+    if (path.endsWith('/care-settings/cms/templates-for-filter')) {
+      return json(STUB_CARE_SETTING_TEMPLATES);
+    }
+
+    // Care terminologies listing, filtered by the care setting dropdown
+    if (path.endsWith('/care-activity/find')) {
+      const searchText = (url.searchParams.get('searchText') ?? '').trim().toLowerCase();
+      const careSetting = url.searchParams.get('careSetting') ?? '';
+      const pageIndex = Number(url.searchParams.get('page') ?? 1);
+      const pageSize = Number(url.searchParams.get('pageSize') ?? 10);
+
+      const rows = STUB_TERMINOLOGY_ACTIVITIES.filter(
+        activity =>
+          activity.name.toLowerCase().includes(searchText) &&
+          (!careSetting || activity.templateIds.includes(careSetting)),
+      ).map(({ id, name }) => ({ id, name }));
+
+      const start = (pageIndex - 1) * pageSize;
+      return json({ result: rows.slice(start, start + pageSize), total: rows.length });
     }
 
     return json({ result: [], total: 0 });

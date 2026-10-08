@@ -1,6 +1,10 @@
 import { NextPage } from 'next';
 import AppLayout from 'src/components/AppLayout';
-import { CareTerminologiesList, CareTerminologiesSearch } from 'src/components/care-terminologies';
+import {
+  CareTerminologiesCareSettingFilter,
+  CareTerminologiesList,
+  CareTerminologiesSearch,
+} from 'src/components/care-terminologies';
 import { useCareActivitiesFind } from 'src/services/useCareActivitiesFind';
 
 const CareTerminologies: NextPage = () => {
@@ -14,6 +18,8 @@ const CareTerminologies: NextPage = () => {
     sortOrder,
     onSortChange,
     onSearchTextChange,
+    careSetting,
+    onCareSettingChange,
     isLoading,
   } = useCareActivitiesFind();
 
@@ -21,6 +27,9 @@ const CareTerminologies: NextPage = () => {
     <AppLayout>
       <div className='flex flex-1 flex-col gap-0 mt-5'>
         <CareTerminologiesSearch onSearchTextChange={onSearchTextChange} />
+        <div className='flex flex-wrap items-center gap-3 px-4 pb-4 bg-white'>
+          <CareTerminologiesCareSettingFilter value={careSetting} onChange={onCareSettingChange} />
+        </div>
         <div className='flex-1'>
           <CareTerminologiesList
             careActivities={careActivities}
