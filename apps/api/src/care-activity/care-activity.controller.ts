@@ -103,7 +103,6 @@ export class CareActivityController {
   }
 
   @Get('cms/:id')
-  @AllowRoles({ roles: [Role.ADMIN] })
   async getCareActivityCMSById(@Param('id') id: string): Promise<CareActivityCMSDetailRO> {
     const { entity, templateNames } = await this.careActivityService.getCareActivityByIdCMS(id);
     return new CareActivityCMSDetailRO({ ...entity, templateNames });
