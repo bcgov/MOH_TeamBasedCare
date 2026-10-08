@@ -136,10 +136,6 @@ thead th {
   text-align: left;
 }
 
-.activity-gap-table tbody {
-  overflow: scroll;
-}
-
 /* MAKE LEFT COLUMN FIXED */
 .activity-gap-table tr > :first-child {
   position: -webkit-sticky;
@@ -154,7 +150,16 @@ thead th {
   background: #fff;
 }
 .activity-gap-table {
+  min-width: 0;
   overflow: auto;
+}
+.activity-gap-table-full-view {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  min-height: 0;
+  padding: 1rem;
+  background: #fff;
 }
 .firstTDinsideRow {
   background: #fff !important;
