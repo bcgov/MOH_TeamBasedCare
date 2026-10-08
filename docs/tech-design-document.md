@@ -318,7 +318,7 @@ The application maintains two coexisting permission systems:
 |------|-------------|
 | ADMIN | Full system access (except Planning), all Health Authorities |
 | USER | Planning tool access, Occupational Scope, scoped to own HA |
-| CONTENT_ADMIN | Content editing, care settings for own HA, dashboard |
+| CONTENT_ADMIN | Care settings for own HA, dashboard, read-only Occupational Scope |
 
 **Implementation:**
 - `@AllowRoles({ roles: [Role.ADMIN] })` decorator on controllers/handlers
@@ -363,14 +363,14 @@ Base URL: `/api/v1`
 | GET | `/common-search-terms` | User | Popular search terms |
 | GET | `/:id` | User | Activity detail |
 | PATCH | `/:id` | Admin | Update activity |
-| DELETE | `/:id/:unitName` | Content Admin | Delete activity by unit |
-| GET | `/cms/find` | Content Admin | CMS search |
-| GET | `/cms/:id` | Content Admin | CMS detail |
-| PATCH | `/cms/:id` | Content Admin | CMS update |
-| DELETE | `/cms/:id` | Admin/Content Admin | CMS delete |
-| GET | `/cms/download` | Content Admin | Export activities |
-| POST | `/cms/bulk/validate` | Content Admin | Validate bulk upload |
-| POST | `/cms/bulk/upload` | Content Admin | Execute bulk upload |
+| DELETE | `/:id/:unitName` | Admin | Delete activity by unit |
+| GET | `/cms/find` | Admin | CMS search |
+| GET | `/cms/:id` | Admin | CMS detail |
+| PATCH | `/cms/:id` | Admin | CMS update |
+| DELETE | `/cms/:id` | Admin | CMS delete |
+| GET | `/cms/download` | Admin | Export activities |
+| POST | `/cms/bulk/validate` | Admin | Validate bulk upload |
+| POST | `/cms/bulk/upload` | Admin | Execute bulk upload |
 
 ### Occupations (`/occupations`)
 
@@ -378,11 +378,11 @@ Base URL: `/api/v1`
 |--------|----------|--------|-------------|
 | GET | `/` | User | List all occupations |
 | GET | `/find` | User | Search (paginated) |
-| GET | `/cms/find` | Content Admin | CMS search |
-| GET | `/cms/:id` | Content Admin | CMS detail |
-| POST | `/cms` | Content Admin | Create occupation |
-| PATCH | `/cms/:id` | Content Admin | Update occupation |
-| DELETE | `/cms/:id` | Content Admin | Soft delete occupation |
+| GET | `/cms/find` | Admin | CMS search |
+| GET | `/cms/:id` | Admin | CMS detail |
+| POST | `/cms` | Admin | Create occupation |
+| PATCH | `/cms/:id` | Admin | Update occupation |
+| DELETE | `/cms/:id` | Admin | Soft delete occupation |
 
 ### Care Setting Templates (`/care-settings`)
 
@@ -465,9 +465,9 @@ deprecated simple-copy endpoint and ordinary edit semantics are unchanged.
 | `/care-settings/copy` | Admin, Content Admin | Copy template wizard |
 | `/user-management` | Admin | User management |
 | `/dashboard` | Admin, Content Admin | KPI dashboard |
-| `/content-management` | Content Admin | CMS (occupations + activities) |
-| `/content-management/occupation/[id]` | Content Admin | Edit occupation |
-| `/content-management/care-activity/[id]` | Content Admin | Edit care activity |
+| `/content-management` | Admin | CMS (occupations + activities) |
+| `/content-management/occupation/[id]` | Admin | Edit occupation |
+| `/content-management/care-activity/[id]` | Admin | Edit care activity |
 
 ### Data Fetching Pattern
 

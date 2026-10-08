@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { Role } from '@tbcm/common';
 import { OccupationController } from './occupation.controller';
 import { OccupationService } from './occupation.service';
 
@@ -47,6 +48,18 @@ describe('OccupationController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it.each([
+    'findOccupationsCMS',
+    'getOccupationCMSById',
+    'createOccupation',
+    'updateOccupationCMS',
+    'deleteOccupation',
+  ] as const)('%s should be admin-only', method => {
+    expect(Reflect.getMetadata('roles', OccupationController.prototype[method])).toEqual([
+      Role.ADMIN,
+    ]);
   });
 
   describe('getAllOccupations', () => {

@@ -105,7 +105,7 @@ export const sidebarNavItems: SidebarButtonProps[] = [
     icon: <ContentManagementIcon />,
     path: AllowedPath.CONTENT_MANAGEMENT,
     hidden: false,
-    roles: [Role.CONTENT_ADMIN],
+    roles: [Role.ADMIN],
   },
 ];
 

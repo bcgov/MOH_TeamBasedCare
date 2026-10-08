@@ -55,7 +55,7 @@ export class OccupationController {
    * Returns extended data including regulation status and last editor.
    */
   @Get('cms/find')
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async findOccupationsCMS(
     @Query() query: FindOccupationsCMSDto,
   ): Promise<PaginationRO<OccupationCMSRO[]>> {
@@ -71,7 +71,7 @@ export class OccupationController {
    * Includes all relations needed to populate scope permissions.
    */
   @Get('cms/:id')
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async getOccupationCMSById(@Param('id') id: string): Promise<OccupationDetailRO> {
     const occupation = await this.occupationService.getOccupationDetailById(id);
 
@@ -86,7 +86,7 @@ export class OccupationController {
    * CMS endpoint: Create a new occupation.
    */
   @Post('cms')
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async createOccupation(@Body() data: CreateOccupationDTO): Promise<OccupationRO> {
     const occupation = await this.occupationService.createOccupation(data);
     return new OccupationRO(occupation);
@@ -97,7 +97,7 @@ export class OccupationController {
    */
   @Patch('cms/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async updateOccupationCMS(
     @Param('id') id: string,
     @Body() data: EditOccupationCMSDTO,
@@ -110,7 +110,7 @@ export class OccupationController {
    */
   @Delete('cms/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async deleteOccupation(@Param('id') id: string): Promise<void> {
     await this.occupationService.deleteOccupation(id);
   }
