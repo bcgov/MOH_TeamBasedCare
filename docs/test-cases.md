@@ -255,8 +255,8 @@
 | Field | Value |
 |-------|-------|
 | **ID** | OCC-005 |
-| **Description** | Content Admin can create a new occupation |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Description** | Admin can create a new occupation |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Navigate to Content Management > Occupations tab<br>2. Click Create<br>3. Fill in name, description, regulation status<br>4. Save |
 | **Expected Result** | New occupation appears in list. Success notification. |
 | **Status** | Pass |
@@ -266,8 +266,8 @@
 | Field | Value |
 |-------|-------|
 | **ID** | OCC-006 |
-| **Description** | Content Admin can edit an existing occupation |
-| **Preconditions** | Logged in as CONTENT_ADMIN, occupation exists |
+| **Description** | Admin can edit an existing occupation |
+| **Preconditions** | Logged in as ADMIN, occupation exists |
 | **Steps** | 1. Navigate to Content Management > Occupations tab<br>2. Click Edit on an occupation<br>3. Modify fields<br>4. Save |
 | **Expected Result** | Occupation details updated. Success notification. |
 | **Status** | Pass |
@@ -277,8 +277,8 @@
 | Field | Value |
 |-------|-------|
 | **ID** | OCC-007 |
-| **Description** | Content Admin can delete an occupation (soft delete) |
-| **Preconditions** | Logged in as CONTENT_ADMIN, occupation exists |
+| **Description** | Admin can delete an occupation (soft delete) |
+| **Preconditions** | Logged in as ADMIN, occupation exists |
 | **Steps** | 1. Navigate to Content Management > Occupations tab<br>2. Click Delete on an occupation<br>3. Confirm deletion |
 | **Expected Result** | Occupation removed from list (soft deleted with `deletedAt` timestamp). |
 | **Status** | Pass |
@@ -294,7 +294,7 @@
 | **ID** | CA-001 |
 | **Description** | User can view paginated list of care activities |
 | **Preconditions** | Logged in, care activities exist |
-| **Steps** | 1. Navigate to Care Terminologies or Content Management > Care Activities |
+| **Steps** | 1. Navigate to Care Terminologies |
 | **Expected Result** | Paginated list with activity name, type, and bundle. |
 | **Status** | Pass |
 
@@ -325,8 +325,8 @@
 | Field | Value |
 |-------|-------|
 | **ID** | CA-004 |
-| **Description** | Content Admin can edit a care activity |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Description** | Admin can edit a care activity |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Navigate to Content Management > Care Activities<br>2. Click on an activity<br>3. Modify fields<br>4. Save |
 | **Expected Result** | Activity updated successfully. |
 | **Status** | Pass |
@@ -336,8 +336,8 @@
 | Field | Value |
 |-------|-------|
 | **ID** | CA-005 |
-| **Description** | Content Admin can delete a care activity |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Description** | Admin can delete a care activity |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Navigate to Content Management > Care Activities<br>2. Click Delete on an activity<br>3. Confirm |
 | **Expected Result** | Activity removed. Cascade deletes associated AllowedActivity records. |
 | **Status** | Pass |
@@ -347,8 +347,8 @@
 | Field | Value |
 |-------|-------|
 | **ID** | CA-006 |
-| **Description** | Content Admin can bulk upload care activities via Excel |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Description** | Admin can bulk upload care activities via Excel |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Navigate to Content Management > Care Activities<br>2. Click Bulk Upload<br>3. Download template<br>4. Fill in data<br>5. Upload file<br>6. Review validation results<br>7. Confirm upload |
 | **Expected Result** | Activities created/updated. Success summary displayed. |
 | **Status** | Pass |
@@ -359,7 +359,7 @@
 |-------|-------|
 | **ID** | CA-007 |
 | **Description** | Bulk upload shows validation errors for invalid data |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Upload Excel with missing required fields<br>2. Review validation results |
 | **Expected Result** | Errors displayed with expandable details: missing IDs, duplicates, conflicts. Upload blocked until resolved. |
 | **Status** | Pass |
@@ -370,7 +370,7 @@
 |-------|-------|
 | **ID** | CA-008 |
 | **Description** | Bulk upload handles empty file gracefully |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Click Bulk Upload<br>2. Upload an empty Excel file (headers only, no data rows) |
 | **Expected Result** | Validation returns an appropriate error message. Upload is not executed. |
 | **Status** | Pass |
@@ -381,7 +381,7 @@
 |-------|-------|
 | **ID** | CA-009 |
 | **Description** | Bulk upload handles special characters in activity names |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Upload Excel with activities containing accented characters, ampersands, and quotes<br>2. Review and confirm |
 | **Expected Result** | Activities created with correct special characters preserved. No encoding issues. |
 | **Status** | Pass |
@@ -392,7 +392,7 @@
 |-------|-------|
 | **ID** | CA-010 |
 | **Description** | CMS care activities can be filtered by care setting |
-| **Preconditions** | Logged in as CONTENT_ADMIN, activities linked to care settings |
+| **Preconditions** | Logged in as ADMIN, activities linked to care settings |
 | **Steps** | 1. Navigate to Content Management > Care Activities<br>2. Select a care setting filter |
 | **Expected Result** | List shows only activities associated with selected care setting. |
 | **Status** | Pass |
@@ -403,7 +403,7 @@
 |-------|-------|
 | **ID** | CA-011 |
 | **Description** | Bulk upload handles large files gracefully |
-| **Preconditions** | Logged in as CONTENT_ADMIN |
+| **Preconditions** | Logged in as ADMIN |
 | **Steps** | 1. Click Bulk Upload<br>2. Upload an Excel file with 1000+ rows |
 | **Expected Result** | File is processed without timeout. Validation results displayed. If file exceeds size limits, an appropriate error message is shown. |
 | **Status** | Pass |
@@ -754,8 +754,8 @@
 | **ID** | XC-003 |
 | **Description** | Sidebar shows only role-appropriate menu items |
 | **Preconditions** | Users of different roles |
-| **Steps** | 1. Log in as USER -> see Planning, Occupational Scope<br>2. Log in as ADMIN -> see Dashboard, Care Settings, User Management, Occupational Scope<br>3. Log in as CONTENT_ADMIN -> see Dashboard, Care Settings, Content Management, Occupational Scope |
-| **Expected Result** | Each role sees only permitted menu items. |
+| **Steps** | 1. Log in as USER -> see Planning, Occupational Scope<br>2. Log in as ADMIN -> see Dashboard, Care Settings, User Management, Content Management, Occupational Scope<br>3. Log in as CONTENT_ADMIN -> see Dashboard, Care Settings, Occupational Scope, but not User Management or Content Management<br>4. As CONTENT_ADMIN, navigate directly to a Content Management URL |
+| **Expected Result** | Each role sees only permitted menu items. Direct Content Management access is denied to CONTENT_ADMIN. |
 | **Status** | Pass |
 
 ### XC-004: Responsive Loading States

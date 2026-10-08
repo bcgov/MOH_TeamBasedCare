@@ -70,21 +70,19 @@ export class CareActivityController {
   }
 
   @Get('cms/download')
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async downloadCareActivities() {
     return this.careActivityBulkService.downloadCareActivities();
   }
 
   @Get('cms/find')
-  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async findCareActivitiesCMS(
     @Query() query: FindCareActivitiesCMSDto,
     @Req() req: IRequest,
   ): Promise<PaginationRO<CareActivityCMSRO[]>> {
-    // Admins (ADMIN or CONTENT_ADMIN) see all templates; others see their HA + GLOBAL
-    const hasFullVisibility = req.user.roles?.some(
-      r => r === Role.ADMIN || r === Role.CONTENT_ADMIN,
-    );
+    // CMS access is admin-only; admins see all templates.
+    const hasFullVisibility = req.user.roles?.some(r => r === Role.ADMIN);
     const healthAuthority = hasFullVisibility ? null : req.user.organization ?? '';
 
     const [careActivities, total] = await this.careActivityService.findCareActivitiesCMS(
@@ -105,7 +103,7 @@ export class CareActivityController {
   }
 
   @Get('cms/:id')
-  @AllowRoles({ roles: [Role.ADMIN, Role.USER, Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async getCareActivityCMSById(@Param('id') id: string): Promise<CareActivityCMSDetailRO> {
     const { entity, templateNames } = await this.careActivityService.getCareActivityByIdCMS(id);
     return new CareActivityCMSDetailRO({ ...entity, templateNames });
@@ -113,7 +111,7 @@ export class CareActivityController {
 
   @Patch('cms/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async updateCareActivityCMS(
     @Param('id') id: string,
     @Body() data: EditCareActivityCMSDTO,
@@ -140,7 +138,7 @@ export class CareActivityController {
 
   @Delete('cms/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @AllowRoles({ roles: [Role.ADMIN, Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async removeCareActivityCMS(@Param('id') id: string, @Req() req: IRequest) {
     const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
     const healthAuthority = isAdmin ? null : req.user.organization ?? '';
@@ -149,7 +147,7 @@ export class CareActivityController {
 
   @Delete(':id/:unitName')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   async removeCareActivity(@Param('id') id: string, @Param('unitName') unitName: string) {
     await this.careActivityService.removeCareActivity(id, unitName);
   }
@@ -159,7 +157,7 @@ export class CareActivityController {
   // validate
   @Post('cms/bulk/validate')
   @HttpCode(HttpStatus.OK)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   validateCareActivitiesCMS(@Body() careActivitiesBulkDto: CareActivityBulkDTO) {
     return this.careActivityBulkService.validateCareActivitiesBulk(careActivitiesBulkDto);
   }
@@ -167,7 +165,7 @@ export class CareActivityController {
   // confirm and upload
   @Post('cms/bulk/upload')
   @HttpCode(HttpStatus.OK)
-  @AllowRoles({ roles: [Role.CONTENT_ADMIN] })
+  @AllowRoles({ roles: [Role.ADMIN] })
   uploadCareActivitiesCMS(@Body() careActivitiesBulkDto: CareActivityBulkDTO) {
     return this.careActivityBulkService.uploadCareActivitiesBulk(careActivitiesBulkDto);
   }

@@ -53,7 +53,7 @@ Your role determines which features you can access:
 | Dashboard / KPIs | - | Yes | Yes |
 | Care Settings | - | Yes | Yes (own HA) |
 | User Management | - | Yes | - |
-| Content Management | - | - | Yes |
+| Content Management | - | Yes | - |
 
 **Note:** Admins do not have access to the Planning tool. Planning is exclusively available to users with the User role.
 
@@ -321,7 +321,7 @@ Manage user accounts, roles, and access permissions.
 3. Select a role:
    - **Admin** - Full system access
    - **User** - Planning tool access
-   - **Content Editor** - Content management access
+   - **Content Editor** - Dashboard, care settings for their Health Authority, and read-only Occupational Scope access. Content Management is admin-only.
 4. Select the user's Health Authority
 5. Click **Submit**
 
@@ -358,9 +358,10 @@ The user's status changes back to "Active" and they can log in again.
 
 ## 7. Content Management
 
-**Available to:** Content Admin only
+**Available to:** Admin only
 
 Manage the master data for occupations and care activities.
+Content Admins can still view Occupational Scope, but cannot access this management page or change activities and occupation scope data.
 
 ### Accessing Content Management
 
