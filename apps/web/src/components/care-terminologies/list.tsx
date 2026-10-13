@@ -21,6 +21,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
 
   const headers = [
     { label: 'Care activities', name: CareActivitiesFindSortKeys.DISPLAY_NAME },
+    { label: 'Care settings' },
     { label: '' },
   ];
 
@@ -28,14 +29,18 @@ const TableHeader: React.FC<TableHeaderProps> = ({ sortKey, sortOrder, onSortCha
     <thead className='border-b table-row-fixed table-header'>
       <tr className='w-full'>
         {headers.map(({ label, name }, index: number) => (
-          <th key={`th${index}`} className={tdStyles}>
-            <SortButton<CareActivitiesFindSortKeys>
-              label={label}
-              name={name}
-              sortKey={sortKey}
-              sortOrder={sortOrder}
-              onChange={onSortChange}
-            />
+          <th key={`th${index}`} scope='col' className={tdStyles}>
+            {name ? (
+              <SortButton<CareActivitiesFindSortKeys>
+                label={label}
+                name={name}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+                onChange={onSortChange}
+              />
+            ) : (
+              label
+            )}
           </th>
         ))}
       </tr>
@@ -60,6 +65,18 @@ const TableBody: React.FC<TableBodyProps> = ({ careActivities = [] }) => {
       {careActivities?.map((careActivity: CareActivityRO, index: number) => (
         <tr className={`${isOdd(index) ? 'item-box-gray' : 'item-box-white'}`} key={`row${index}`}>
           <td className={tdStyles}>{careActivity.name}</td>
+          <td className={tdStyles}>
+            {careActivity.careSettingNames?.length ? (
+              <span
+                className='block truncate whitespace-nowrap'
+                title={careActivity.careSettingNames.join(', ')}
+              >
+                {careActivity.careSettingNames.join(', ')}
+              </span>
+            ) : (
+              '-'
+            )}
+          </td>
           <td className={`${tdStyles} whitespace-nowrap`}>
             <div className='flex justify-end'>
               <Button
@@ -95,7 +112,7 @@ const TableFooter: React.FC<TableFooterProps> = ({
   return (
     <tfoot>
       <tr>
-        <td colSpan={2}>
+        <td colSpan={3}>
           <Pagination
             id='tbcm-care-terminologies-list-table'
             pageOptions={{ pageIndex, pageSize, total }}
@@ -139,8 +156,9 @@ export const CareTerminologiesList: React.FC<CareTerminologiesListProps> = ({
     <div className='max-h-full w-full flex-1 flex flex-col overflow-auto gap-3 p-4 bg-white'>
       <table className='w-full table-fixed'>
         <colgroup>
-          <col style={{ width: '75%' }} />
-          <col style={{ width: '25%' }} />
+          <col style={{ width: '45%' }} />
+          <col style={{ width: '35%' }} />
+          <col style={{ width: '20%' }} />
         </colgroup>
         <TableHeader sortKey={sortKey} sortOrder={sortOrder} onSortChange={onSortChange} />
         <TableBody careActivities={careActivities} />

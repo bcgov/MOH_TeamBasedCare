@@ -24,6 +24,15 @@ test.describe('care terminologies care setting filter', () => {
     await expect(filter).toBeEnabled();
     await expect(filter).toHaveAccessibleName('Care Setting: All care settings');
     await expect(names(page)).toHaveText(['Take vital signs', 'Record intake', 'Triage patients']);
+    const careSettings = page
+      .getByRole('row', { name: /Take vital signs/ })
+      .locator('td')
+      .nth(1)
+      .locator('span');
+    await expect(careSettings).toHaveText('Emergency Department, Medical Unit');
+    await expect(careSettings).toHaveAttribute('title', 'Emergency Department, Medical Unit');
+    await expect(careSettings).toHaveCSS('white-space', 'nowrap');
+    await expect(careSettings).toHaveCSS('text-overflow', 'ellipsis');
 
     await page.locator(FILTER).click();
     // sorted by label, with the master suffix stripped

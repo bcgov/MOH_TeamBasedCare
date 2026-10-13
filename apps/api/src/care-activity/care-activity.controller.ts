@@ -61,12 +61,15 @@ export class CareActivityController {
   @Get('find')
   async findCareActivities(
     @Query() query: FindCareActivitiesDto,
+    @Req() req: IRequest,
   ): Promise<PaginationRO<CareActivityRO[]>> {
-    const [careActivities, total] = await this.careActivityService.findCareActivities(query);
-    return new PaginationRO([
-      careActivities.map(careActivity => new CareActivityRO(careActivity)),
-      total,
-    ]);
+    const isAdmin = req.user.roles?.some(r => r === Role.ADMIN);
+    const healthAuthority = isAdmin ? null : req.user.organization ?? '';
+    const [careActivities, total] = await this.careActivityService.findCareActivities(
+      query,
+      healthAuthority,
+    );
+    return new PaginationRO([careActivities, total]);
   }
 
   @Get('cms/download')

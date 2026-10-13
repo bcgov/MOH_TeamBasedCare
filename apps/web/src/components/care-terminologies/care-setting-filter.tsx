@@ -33,6 +33,7 @@ export const CareTerminologiesCareSettingFilter: React.FC<CareSettingFilterProps
         value={value}
         onChange={onChange}
         disabled={!data}
+        buttonClassName='h-[42px]'
       />
       {isLoading && (
         <span role='status' className='text-sm'>

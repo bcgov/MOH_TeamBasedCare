@@ -190,22 +190,33 @@ describe('CareActivityService CMS details', () => {
       return queryBuilder;
     };
 
-    it('narrows results to the activities selected by the chosen template', async () => {
+    it('narrows results to visible templates and the selected care setting', async () => {
       const queryBuilder = buildQueryBuilder();
       mockCareActivityRepo.createQueryBuilder.mockReturnValue(queryBuilder);
 
-      await service.findCareActivities({
-        page: 1,
-        pageSize: 10,
-        careSetting: 'a1f1b2a0-0000-4000-8000-000000000000',
-      });
+      await service.findCareActivities(
+        {
+          page: 1,
+          pageSize: 10,
+          careSetting: 'a1f1b2a0-0000-4000-8000-000000000000',
+        },
+        'HEALTH_AUTHORITY',
+      );
 
-      // a sub-query, not a join: the junction table would otherwise multiply rows
-      // and corrupt both the page contents and the total
-      const [clause, params] = queryBuilder.andWhere.mock.calls[0];
-      expect(clause).toContain('care_setting_template_activities');
-      expect(clause).toContain(':careSettingTemplateId');
-      expect(params).toEqual({ careSettingTemplateId: 'a1f1b2a0-0000-4000-8000-000000000000' });
+      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(2);
+      const [visibilityClause, visibilityParams] = queryBuilder.andWhere.mock.calls[0];
+      expect(visibilityClause).toContain('care_setting_template_activities');
+      expect(visibilityClause).toContain("cst.health_authority = 'GLOBAL'");
+      expect(visibilityParams).toEqual({ healthAuthority: 'HEALTH_AUTHORITY' });
+
+      // Subqueries avoid multiplying rows and corrupting pagination counts.
+      const [filterClause, filterParams] = queryBuilder.andWhere.mock.calls[1];
+      expect(filterClause).toContain(':careSettingTemplateId');
+      expect(filterClause).toContain("cst.health_authority = 'GLOBAL'");
+      expect(filterParams).toEqual({
+        careSettingTemplateId: 'a1f1b2a0-0000-4000-8000-000000000000',
+        healthAuthority: 'HEALTH_AUTHORITY',
+      });
       expect(queryBuilder.where).not.toHaveBeenCalled();
     });
 
@@ -213,28 +224,80 @@ describe('CareActivityService CMS details', () => {
       const queryBuilder = buildQueryBuilder();
       mockCareActivityRepo.createQueryBuilder.mockReturnValue(queryBuilder);
 
-      await service.findCareActivities({
-        page: 1,
-        pageSize: 10,
-        searchText: 'Screen',
-        careSetting: 'a1f1b2a0-0000-4000-8000-000000000000',
-      });
+      await service.findCareActivities(
+        {
+          page: 1,
+          pageSize: 10,
+          searchText: 'Screen',
+          careSetting: 'a1f1b2a0-0000-4000-8000-000000000000',
+        },
+        'HEALTH_AUTHORITY',
+      );
 
       // both filters have to be `andWhere`, otherwise the second one replaces the first
       expect(queryBuilder.where).not.toHaveBeenCalled();
-      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(2);
-      expect(queryBuilder.andWhere.mock.calls[0][0]).toContain('ca.displayName ILIKE');
-      expect(queryBuilder.andWhere.mock.calls[1][0]).toContain('care_setting_template_activities');
+      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(3);
+      expect(queryBuilder.andWhere.mock.calls[0][0]).toContain('cst.health_authority');
+      expect(queryBuilder.andWhere.mock.calls[1][0]).toContain('ca.displayName ILIKE');
+      expect(queryBuilder.andWhere.mock.calls[2][0]).toContain('care_setting_template_activities');
     });
 
     it('does not filter when no care setting is selected', async () => {
       const queryBuilder = buildQueryBuilder();
       mockCareActivityRepo.createQueryBuilder.mockReturnValue(queryBuilder);
 
-      await service.findCareActivities({ page: 1, pageSize: 10, careSetting: '' });
+      await service.findCareActivities({ page: 1, pageSize: 10, careSetting: '' }, null);
 
-      expect(queryBuilder.andWhere).not.toHaveBeenCalled();
+      expect(queryBuilder.andWhere).toHaveBeenCalledTimes(1);
+      expect(queryBuilder.andWhere.mock.calls[0][0]).toContain('WHERE TRUE');
+      expect(queryBuilder.andWhere.mock.calls[0][1]).toEqual({});
       expect(queryBuilder.where).not.toHaveBeenCalled();
+    });
+
+    it('does not bind a null health authority for admins', async () => {
+      const queryBuilder = buildQueryBuilder();
+      mockCareActivityRepo.createQueryBuilder.mockReturnValue(queryBuilder);
+
+      await service.findCareActivities(
+        {
+          page: 1,
+          pageSize: 10,
+          careSetting: 'a1f1b2a0-0000-4000-8000-000000000000',
+        },
+        null,
+      );
+
+      expect(queryBuilder.andWhere.mock.calls[0][0]).toContain('WHERE TRUE');
+      expect(queryBuilder.andWhere.mock.calls[0][1]).toEqual({});
+      expect(queryBuilder.andWhere.mock.calls[1][0]).toContain('cst.id = :careSettingTemplateId');
+      expect(queryBuilder.andWhere.mock.calls[1][1]).toEqual({
+        careSettingTemplateId: 'a1f1b2a0-0000-4000-8000-000000000000',
+      });
+      expect(JSON.stringify(queryBuilder.andWhere.mock.calls)).not.toContain('null');
+    });
+
+    it('returns visible care setting names for the paged activities', async () => {
+      const activity = { id: 'activity-1', displayName: 'Take vital signs' } as CareActivity;
+      const queryBuilder = buildQueryBuilder();
+      queryBuilder.getManyAndCount.mockResolvedValue([[activity], 1]);
+      mockCareActivityRepo.createQueryBuilder.mockReturnValue(queryBuilder);
+      mockCareActivityRepo.manager.query.mockResolvedValue([
+        {
+          care_activity_id: 'activity-1',
+          care_setting_names: ['Emergency Department', 'Medical Unit'],
+        },
+      ]);
+
+      const [activities] = await service.findCareActivities(
+        { page: 1, pageSize: 10 },
+        'HEALTH_AUTHORITY',
+      );
+
+      expect(mockCareActivityRepo.manager.query).toHaveBeenCalledWith(
+        expect.stringContaining('cst.health_authority = $2'),
+        [['activity-1'], 'HEALTH_AUTHORITY', expect.any(String)],
+      );
+      expect(activities[0].careSettingNames).toEqual(['Emergency Department', 'Medical Unit']);
     });
   });
 });

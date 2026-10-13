@@ -26,10 +26,15 @@ const CareTerminologies: NextPage = () => {
   return (
     <AppLayout>
       <div className='flex flex-1 flex-col gap-0 mt-5'>
-        <CareTerminologiesSearch onSearchTextChange={onSearchTextChange} />
-        <div className='flex flex-wrap items-center gap-3 px-4 pb-4 bg-white'>
-          <CareTerminologiesCareSettingFilter value={careSetting} onChange={onCareSettingChange} />
-        </div>
+        <CareTerminologiesSearch
+          onSearchTextChange={onSearchTextChange}
+          careSettingFilter={
+            <CareTerminologiesCareSettingFilter
+              value={careSetting}
+              onChange={onCareSettingChange}
+            />
+          }
+        />
         <div className='flex-1'>
           <CareTerminologiesList
             careActivities={careActivities}

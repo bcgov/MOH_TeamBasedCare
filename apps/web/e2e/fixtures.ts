@@ -333,7 +333,15 @@ export async function stubApi(page: Page, initial = buildSessions()): Promise<Ap
         activity =>
           activity.name.toLowerCase().includes(searchText) &&
           (!careSetting || activity.templateIds.includes(careSetting)),
-      ).map(({ id, name }) => ({ id, name }));
+      ).map(({ id, name, templateIds }) => ({
+        id,
+        name,
+        careSettingNames: templateIds
+          .map(id => STUB_CARE_SETTING_TEMPLATES.find(template => template.id === id)?.name)
+          .filter((name): name is string => Boolean(name))
+          .map(name => name.replace(/ - Master$/, ''))
+          .sort((a, b) => a.localeCompare(b)),
+      }));
 
       const start = (pageIndex - 1) * pageSize;
       return json({ result: rows.slice(start, start + pageSize), total: rows.length });

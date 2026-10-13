@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SWRConfig } from 'swr';
 import { CareTerminologiesCareSettingFilter } from 'src/components/care-terminologies/care-setting-filter';
+import { CareTerminologiesSearch } from 'src/components/care-terminologies/search';
 
 const mockAxios = jest.fn();
 
@@ -34,6 +35,7 @@ describe('CareTerminologiesCareSettingFilter', () => {
 
     const button = screen.getByRole('button', { name: 'Care Setting: All care settings' });
     await waitFor(() => expect(button).toBeEnabled());
+    expect(button).toHaveClass('h-[42px]');
     openFilter();
     await screen.findByRole('option', { name: 'Emergency Department' });
 
@@ -75,5 +77,17 @@ describe('CareTerminologiesCareSettingFilter', () => {
 
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Care Setting: All care settings' })).toBeEnabled();
+  });
+
+  it('renders the filter next to the search field', () => {
+    render(
+      <CareTerminologiesSearch
+        onSearchTextChange={jest.fn()}
+        careSettingFilter={<div>Care Setting Filter</div>}
+      />,
+    );
+
+    expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
+    expect(screen.getByText('Care Setting Filter')).toBeInTheDocument();
   });
 });
