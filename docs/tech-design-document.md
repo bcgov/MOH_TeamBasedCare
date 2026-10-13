@@ -359,7 +359,7 @@ Base URL: `/api/v1`
 |--------|----------|--------|-------------|
 | GET | `/bundles` | User | List all bundles |
 | GET | `/by-bundles` | User | Bundles with activities |
-| GET | `/find` | User | Search activities (paginated) |
+| GET | `/find` | User | Search activities (paginated, optional `careSetting` template filter) |
 | GET | `/common-search-terms` | User | Popular search terms |
 | GET | `/:id` | User | Activity detail |
 | PATCH | `/:id` | Admin | Update activity |
@@ -459,6 +459,7 @@ deprecated simple-copy endpoint and ordinary edit semantics are unchanged.
 | `/planning` | User | Planning workflow |
 | `/occupational-scope` | User, Content Admin | Occupation list |
 | `/occupational-scope/[id]` | User, Content Admin | Occupation detail |
+| `/care-terminologies` | User | Care activity list (search + care setting filter) |
 | `/care-terminologies/[id]` | User | Care activity detail |
 | `/care-settings` | Admin, Content Admin | Template list |
 | `/care-settings/[id]/edit` | Admin, Content Admin | Edit template wizard |

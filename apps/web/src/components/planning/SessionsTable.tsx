@@ -28,7 +28,7 @@ const headers: { label: string; name?: PlanningSessionsFindSortKeys }[] = [
   { label: 'Care Setting', name: PlanningSessionsFindSortKeys.CARE_SETTING_NAME },
   { label: 'Latest Modified', name: PlanningSessionsFindSortKeys.UPDATED_AT },
   { label: 'Created on', name: PlanningSessionsFindSortKeys.CREATED_AT },
-  { label: '' },
+  { label: 'Actions' },
 ];
 
 type SessionsTableProps = {
@@ -189,15 +189,21 @@ export const SessionsTable = ({ drafts }: SessionsTableProps) => {
                 <th
                   key={`th${index}`}
                   scope='col'
-                  className='table-header item-box-gray px-6 py-4 text-left font-strong text-bcBluePrimary border-b-2 border-[#FCBA19]'
+                  className={`table-header item-box-gray px-6 py-4 ${
+                    name ? 'text-left' : 'text-center'
+                  } font-strong text-bcBluePrimary border-b-2 border-[#FCBA19]`}
                 >
-                  <SortButton<PlanningSessionsFindSortKeys>
-                    label={label}
-                    name={name}
-                    sortKey={sortKey}
-                    sortOrder={sortOrder}
-                    onChange={onSortChange}
-                  />
+                  {name ? (
+                    <SortButton<PlanningSessionsFindSortKeys>
+                      label={label}
+                      name={name}
+                      sortKey={sortKey}
+                      sortOrder={sortOrder}
+                      onChange={onSortChange}
+                    />
+                  ) : (
+                    label
+                  )}
                 </th>
               ))}
             </tr>
@@ -215,8 +221,8 @@ export const SessionsTable = ({ drafts }: SessionsTableProps) => {
                 <td className={tdStyles}>{formatShortDateTime(session.updatedAt)}</td>
                 <td className={tdStyles}>{formatShortDateTime(session.createdAt)}</td>
                 {/* the flex row lives inside the cell so the cell keeps table-cell alignment */}
-                <td className={tdStyles}>
-                  <div className='flex justify-end gap-6'>
+                <td className={`${tdStyles} text-center`}>
+                  <div className='flex justify-center gap-6'>
                     <Button
                       variant='link'
                       classes='text-[15px]'

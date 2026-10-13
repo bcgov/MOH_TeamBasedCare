@@ -93,10 +93,28 @@ export class CareActivityService {
     });
   }
 
-  async findCareActivities(query: FindCareActivitiesDto): Promise<[CareActivity[], number]> {
+  async findCareActivities(
+    query: FindCareActivitiesDto,
+    healthAuthority: string | null,
+  ): Promise<[CareActivityRO[], number]> {
     const queryBuilder = this.careActivityRepo
       .createQueryBuilder('ca')
       .leftJoinAndSelect('ca.bundle', 'ca_b');
+
+    const visibleTemplateCondition =
+      healthAuthority === null
+        ? 'TRUE'
+        : "(cst.health_authority = :healthAuthority OR cst.health_authority = 'GLOBAL')";
+    const visibleTemplateParameters = healthAuthority === null ? {} : { healthAuthority };
+    queryBuilder.andWhere(
+      `ca.id IN (
+        SELECT csta.care_activity_id
+        FROM care_setting_template_activities csta
+        INNER JOIN care_setting_template cst ON cst.id = csta.care_setting_template_id
+        WHERE ${visibleTemplateCondition}
+      )`,
+      visibleTemplateParameters,
+    );
 
     // Search logic below
     if (query.searchText) {
@@ -104,7 +122,22 @@ export class CareActivityService {
       this.createCareActivitySearchTerm(query.searchText);
 
       // add where clause to the query
-      queryBuilder.where('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+      queryBuilder.andWhere('ca.displayName ILIKE :name', { name: `%${query.searchText}%` }); // care activity name matching
+    }
+
+    // Restrict the selected template to the caller's visible care settings as well.
+    // Keeping this as a sub-query avoids multiplying rows and corrupting the count.
+    if (query.careSetting) {
+      queryBuilder.andWhere(
+        `ca.id IN (
+          SELECT csta.care_activity_id
+          FROM care_setting_template_activities csta
+          INNER JOIN care_setting_template cst ON cst.id = csta.care_setting_template_id
+          WHERE cst.id = :careSettingTemplateId
+            AND ${visibleTemplateCondition}
+        )`,
+        { careSettingTemplateId: query.careSetting, ...visibleTemplateParameters },
+      );
     }
 
     // Sort logic below
@@ -113,10 +146,39 @@ export class CareActivityService {
     if (query.sortBy) queryBuilder.orderBy(`ca.${query.sortBy}`, sortOrder as SortOrder); // add sort if requested, else default sort order applies as mentioned in the entity [displayOrder]
 
     // return the paginated response
-    return queryBuilder
+    const [careActivities, total] = await queryBuilder
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();
+
+    let careSettingNamesByActivity = new Map<string, string[]>();
+    if (careActivities.length > 0) {
+      const careSettingRows: Array<{ care_activity_id: string; care_setting_names: string[] }> =
+        await this.careActivityRepo.manager.query(
+          `SELECT csta.care_activity_id,
+                  ARRAY_AGG(DISTINCT REPLACE(cst.name, $3, '') ORDER BY REPLACE(cst.name, $3, '')) AS care_setting_names
+           FROM care_setting_template_activities csta
+           INNER JOIN care_setting_template cst ON cst.id = csta.care_setting_template_id
+           WHERE csta.care_activity_id = ANY($1::uuid[])
+             AND ($2::text IS NULL OR cst.health_authority = $2 OR cst.health_authority = 'GLOBAL')
+           GROUP BY csta.care_activity_id`,
+          [careActivities.map(activity => activity.id), healthAuthority, MASTER_TEMPLATE_SUFFIX],
+        );
+      careSettingNamesByActivity = new Map(
+        careSettingRows.map(row => [row.care_activity_id, row.care_setting_names]),
+      );
+    }
+
+    return [
+      careActivities.map(
+        activity =>
+          new CareActivityRO({
+            ...activity,
+            careSettingNames: careSettingNamesByActivity.get(activity.id) ?? [],
+          }),
+      ),
+      total,
+    ];
   }
 
   /**
@@ -201,10 +263,14 @@ export class CareActivityService {
       queryBuilder.orderBy(orderBy, sortOrder as SortOrder);
     }
 
-    const all = await queryBuilder.getRawMany();
-    const count = all.length;
     const skip = (query.page - 1) * query.pageSize;
-    const result = all.slice(skip, skip + query.pageSize).map(raw => ({
+    // This grouped join query returns raw rows; TypeORM only applies skip/take
+    // pagination automatically when hydrating entities, so use SQL limit/offset.
+    queryBuilder.limit(query.pageSize).offset(skip);
+
+    const count = await queryBuilder.getCount();
+    const rows = await queryBuilder.getRawMany();
+    const result = rows.map(raw => ({
       id: raw.ca_id,
       name: raw.ca_display_name,
       activityType: raw.ca_activity_type,

@@ -85,13 +85,18 @@ describe('SessionsTable', () => {
 
   // FR-028: all four columns
   it('renders the four columns for every draft', () => {
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     expect(screen.getByRole('heading', { name: 'Draft Plans' })).toBeInTheDocument();
     expect(screen.getByText('Planning name')).toBeInTheDocument();
     expect(screen.getByText('Care Setting')).toBeInTheDocument();
     expect(screen.getByText('Latest Modified')).toBeInTheDocument();
     expect(screen.getByText('Created on')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeVisible();
+    expect(screen.getByRole('columnheader', { name: 'Actions' })).toHaveClass('text-center');
+    expect(
+      screen.getByRole('button', { name: 'Continue Emergency draft one' }).parentElement,
+    ).toHaveClass('justify-center');
 
     expect(screen.getByText('Emergency draft one')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Emergency draft one' })).not.toBeInTheDocument();
@@ -100,14 +105,14 @@ describe('SessionsTable', () => {
 
   // FR-049: legacy row with no care setting renders an em dash
   it('renders an em dash when a draft has no care setting', () => {
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   // FR-036: Continue loads the draft at the Care Competencies stage
   it('loads the draft at the Care Competencies stage on Continue', async () => {
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     await click(screen.getAllByRole('button', { name: /^Continue / })[1]);
 
@@ -118,7 +123,7 @@ describe('SessionsTable', () => {
 
   // FR-037 / FR-039: discard always confirms first
   it('requires confirmation before discarding', async () => {
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     await click(screen.getAllByRole('button', { name: /^Discard / })[0]);
 
@@ -130,7 +135,7 @@ describe('SessionsTable', () => {
   });
 
   it('does nothing when the discard confirmation is cancelled', async () => {
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     await click(screen.getAllByRole('button', { name: /^Discard / })[0]);
     await click(screen.getByRole('button', { name: 'Cancel' }));
@@ -140,7 +145,7 @@ describe('SessionsTable', () => {
 
   // US4 scenario 4: discarding the open draft returns the wizard to the Profile stage
   it('discards on confirmation and resets the wizard when the open draft is removed', async () => {
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     await click(screen.getAllByRole('button', { name: /^Discard / })[0]);
 
@@ -167,7 +172,7 @@ describe('SessionsTable', () => {
       onPageOptionsChange,
     });
 
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     await click(screen.getByRole('button', { name: /^Discard / }));
 
@@ -192,7 +197,7 @@ describe('SessionsTable', () => {
       onPageOptionsChange,
     });
 
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     await waitFor(() => {
       expect(onPageOptionsChange).toHaveBeenCalledWith({ pageIndex: 2, pageSize: 10, total: 11 });
@@ -202,7 +207,7 @@ describe('SessionsTable', () => {
   // FR-031: no drafts at all
   it('shows the empty state when the planner has no drafts', () => {
     mockFindState = buildFindState({ sessions: [], total: 0 });
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     expect(screen.getByText("You don't have any saved drafts yet.")).toBeInTheDocument();
   });
@@ -210,7 +215,7 @@ describe('SessionsTable', () => {
   // FR-044: a search that excludes everything is a distinct state, with a way back
   it('shows the no-results state with a way to clear the search', async () => {
     mockFindState = buildFindState({ sessions: [], total: 0, searchText: 'zzz' });
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     expect(screen.getByText('No drafts found matching your search.')).toBeInTheDocument();
 
@@ -227,7 +232,7 @@ describe('SessionsTable', () => {
       error: 'This draft is no longer available. It may have already been discarded.',
     });
 
-    render(<SessionsTable />);
+    render(<SessionsTable drafts={mockFindState} />);
 
     const [continueButton] = screen.getAllByRole('button', { name: /^Continue / });
     await click(continueButton);

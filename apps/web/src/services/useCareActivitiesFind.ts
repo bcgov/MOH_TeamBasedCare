@@ -16,6 +16,7 @@ export const useCareActivitiesFind = () => {
   const [sortKey, setSortKey] = useState<CareActivitiesFindSortKeys>();
   const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [searchText, setSearchText] = useState('');
+  const [careSetting, setCareSetting] = useState('');
 
   const onPageOptionsChange = ({ pageIndex: pgIndex, pageSize: size }: PageOptions) => {
     if (size !== pageSize) {
@@ -61,6 +62,13 @@ export const useCareActivitiesFind = () => {
     resetPageIndex();
   };
 
+  const onCareSettingChange = (value: string) => {
+    setCareSetting(value);
+
+    // reset to first page
+    resetPageIndex();
+  };
+
   useEffect(() => {
     const config = {
       endpoint: API_ENDPOINT.findCareActivities({
@@ -69,6 +77,7 @@ export const useCareActivitiesFind = () => {
         sortKey,
         sortOrder,
         searchText,
+        careSetting,
       }),
     };
 
@@ -76,7 +85,7 @@ export const useCareActivitiesFind = () => {
       setCareActivities(data.result);
       setTotal(data.total);
     });
-  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText]);
+  }, [fetchData, pageIndex, pageSize, sortKey, sortOrder, searchText, careSetting]);
 
   return {
     careActivities,
@@ -89,6 +98,8 @@ export const useCareActivitiesFind = () => {
     onSortChange,
     searchText,
     onSearchTextChange,
+    careSetting,
+    onCareSettingChange,
     isLoading,
   };
 };

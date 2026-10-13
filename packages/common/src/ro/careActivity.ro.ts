@@ -10,9 +10,13 @@ export class CareActivityRO extends BaseRO {
   @Expose()
   clinicalType!: ClinicalType;
 
+  @Expose()
+  careSettingNames?: string[];
+
   constructor(data: any) {
     super(data);
     Object.assign(this, data);
     this.name = data.displayName ?? data.name;
+    this.careSettingNames = data.careSettingNames ?? [];
   }
 }

@@ -26,7 +26,7 @@ export interface ActivitiesGapProps {
 const TableHeader: React.FC = () => {
   const { initialValues, isLoading } = usePlanningActivitiesGap();
   const tdStyles =
-    'table-td table-header cursor-pointer px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
+    'table-td table-header px-6 py-4 text-center text-sm font-strong text-bcBluePrimary border-b-4';
 
   const [showModal, setShowModal] = useState(false);
   const [selectedOccupation, setSelectedOccupation] = useState({ title: '', description: '' });
@@ -42,16 +42,24 @@ const TableHeader: React.FC = () => {
         {initialValues.headers &&
           initialValues.headers.map(
             ({ title, description }: { title: string; description: string }, index: number) => (
-              <th
-                key={`th${index}`}
-                className={tdStyles}
-                onClick={() => {
-                  if (index === 0) return; // no description modal to be shown for the first column header - Care Competencies
-                  setSelectedOccupation({ title, description });
-                  setShowModal(true);
-                }}
-              >
-                {title}
+              <th key={`th${index}`} scope='col' className={tdStyles}>
+                {/* the first column lists the competencies, the rest are occupations whose
+                    description opens in a modal - that needs a real, focusable control */}
+                {index === 0 ? (
+                  title
+                ) : (
+                  <button
+                    type='button'
+                    className='cursor-pointer underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-bcBluePrimary'
+                    aria-label={`View ${title} description`}
+                    onClick={() => {
+                      setSelectedOccupation({ title, description });
+                      setShowModal(true);
+                    }}
+                  >
+                    {title}
+                  </button>
+                )}
               </th>
             ),
           )}
@@ -187,6 +195,9 @@ const TableBody: React.FC = () => {
                   classes='flex inline-flex items-center justify-end h-4 w-4 !p-0 overflow-hidden rounded-full bg-white ml-4'
                   variant='default'
                   type='button'
+                  aria-label={`${openRows.includes(index) ? 'Collapse' : 'Expand'} ${
+                    Array.isArray(row.name) ? row.name.map(item => item.name).join(', ') : row.name
+                  }`}
                   onClick={() => handleSelectRow(index)}
                 >
                   <FontAwesomeIcon
@@ -253,6 +264,10 @@ const ActivityGapTable: React.FC = () => {
   return (
     <div className='activity-gap-table'>
       <table className='min-w-full text-center'>
+        <caption className='sr-only'>
+          Care competencies and corresponding activities by occupation, showing whether each
+          occupation may perform the activity
+        </caption>
         <TableHeader />
         <TableBody />
       </table>
