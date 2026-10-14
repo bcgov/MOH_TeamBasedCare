@@ -554,6 +554,7 @@ The engine queries permissions from the session's `CareSettingTemplate` via `Car
 | **S3** | Static hosting for Next.js build |
 | **CloudFront** | CDN + SSL termination |
 | **RDS Aurora** | PostgreSQL 15 database |
+| **RDS Proxy** | Pools Lambda database connections to Aurora PostgreSQL |
 | **IAM / OIDC** | GitHub Actions deployment auth |
 
 ### Deployment Pipeline
@@ -636,6 +637,7 @@ Four services via `docker-compose.yml`:
 - **XSS** - React's built-in output encoding; no dangerouslySetInnerHTML usage
 - **CORS** - Configured in NestJS app bootstrap
 - **Secrets** - Environment variables, never committed; GitHub Secrets for CI/CD
+- **Database Transport Security** - TLS is required for API connections to RDS Proxy
 - **Audit Trail** - All entity mutations tracked with user reference and timestamp
 - **Security Scanning** - Monthly npm audit + OWASP ZAP scans via GitHub Actions
 - **Soft Deletes** - User revocation and occupation deletion are reversible
