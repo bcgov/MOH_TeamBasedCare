@@ -3,7 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
 import { AxiosPublic } from '../utils';
 import { REQUEST_METHOD } from '../common';
-import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
+import { clearAuthAndRedirectToLogin } from 'src/utils/token';
 
 export interface RequestConfig extends AxiosRequestConfig {
   endpoint: string;
@@ -18,7 +18,8 @@ export const useHttp = () => {
     } else {
       switch (err?.response?.status) {
         case 401:
-          clearStorageAndRedirectToLandingPage();
+          // For expired or invalid sessions, redirect to login (do not perform a full Common Logon logout)
+          clearAuthAndRedirectToLogin();
           break;
         case 400:
           const errorMsg =

@@ -21,7 +21,7 @@ export const getAuthTokens = (): AppTokensDTO => {
 };
 
 export const clearStorageAndRedirectToLandingPage = () => {
-  // fetch environment
+  // existing explicit logout: clear storage and redirect to Common Logon logout
   const isTest = isTestEnv();
 
   // clear all app storage
@@ -37,6 +37,16 @@ export const clearStorageAndRedirectToLandingPage = () => {
 
   // redirect and logout
   if (typeof window != 'undefined') window.location.href = isTest ? testLogoutUrl : logoutUrl;
+};
+
+// Clear auth storage and redirect to the app login route (used for expired sessions)
+export const clearAuthAndRedirectToLogin = () => {
+  AppStorage.clear();
+
+  if (typeof window !== 'undefined') {
+    const loginUrl = process.env.NEXT_PUBLIC_API_URL + API_ENDPOINT.AUTH_LOGIN;
+    window.location.href = loginUrl;
+  }
 };
 
 export const isTestEnv = () => {
@@ -70,12 +80,44 @@ export const refreshAuthTokens = async () => {
       data: getAuthTokens(),
     };
 
-    const { data }: { data: KeycloakToken } = await AxiosPublic(API_ENDPOINT.AUTH_REFRESH, config);
+    try {
+      const { data }: { data: KeycloakToken } = await AxiosPublic(
+        API_ENDPOINT.AUTH_REFRESH,
+        config,
+      );
 
-    storeAuthTokens(data);
+      storeAuthTokens(data);
 
-    response.accessToken = data?.access_token;
+      response.accessToken = data?.access_token;
+    } catch (e) {
+      // treat as refresh failed
+      response.isRefreshTokenExpired = true;
+      response.accessToken = '';
+    }
   }
 
   return response;
+};
+
+// Helpers for expiry checks
+export const isAccessTokenExpired = (marginMs = 60_000) => {
+  try {
+    const expiry = AppStorage.getItem(StorageKeys.ACCESS_TOKEN_EXPIRY);
+    if (!expiry) return true;
+    const now = +new Date();
+    return +expiry <= now + marginMs;
+  } catch (e) {
+    return true;
+  }
+};
+
+export const isRefreshTokenExpired = () => {
+  try {
+    const expiry = AppStorage.getItem(StorageKeys.REFRESH_TOKEN_EXPIRY);
+    if (!expiry) return true;
+    const now = +new Date();
+    return +expiry <= now;
+  } catch (e) {
+    return true;
+  }
 };
