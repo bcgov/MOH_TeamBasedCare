@@ -1,9 +1,9 @@
 # Disaster Recovery Plan - Team Based Care Mapping (TBCM)
 
-**Status:** Draft - operational approval required  
-**Service owner:** To be assigned  
-**Plan owner:** To be assigned  
-**Last reviewed:** October 15, 2026  
+**Status:** Draft - operational approval required
+**Service owner:** To be assigned
+**Plan owner:** To be assigned
+**Last reviewed:** October 15, 2026
 **Review cadence:** At least annually and after a recovery exercise or significant architecture change
 
 ---
