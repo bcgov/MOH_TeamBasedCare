@@ -20,7 +20,6 @@
 10. [Infrastructure & Deployment](#10-infrastructure--deployment)
 11. [Non-Functional Requirements](#11-non-functional-requirements)
 12. [Security Considerations](#12-security-considerations)
-13. [Recent Mainline Changes](#13-recent-mainline-changes)
 
 ---
 
@@ -68,6 +67,10 @@ The Team Based Care Mapping (TBCM) application is a web-based tool designed for 
                +---------------------+          |   Logon / OAuth2)   |
                                                 +---------------------+
 ```
+
+Detailed application data-flow and AWS network diagrams are maintained in
+[Architecture Diagrams](./architecture-diagrams.md) and the
+[Network Diagram](./network-diagram.md).
 
 ### Design Principles
 
@@ -289,26 +292,29 @@ The application maintains two coexisting permission systems:
   be hard-deleted. Existing LC rows were not assigned invented catalogue values
   during migration; legacy/inherited LC rows without a selected limit remain valid.
 
-### Database Changes in the Current Schema
+### Database Constraints and Behavior
 
-TypeORM migrations are the source of truth for schema evolution. The following
-changes are present in the current model; the latest schema migrations landed
-August 31–September 8, 2026. No database migration was merged from September 17
-through October 15, 2026.
-
-| Area | Schema change | Design implications |
-|------|---------------|---------------------|
-| Planning sessions | Added required `planning_session.name` (`varchar(100)`). Existing rows are backfilled from the care-setting template or unit and creation date. | A unique index enforces owner-scoped uniqueness on `created_by_id` and `LOWER(TRIM(name))`; another index on `(created_by_id, status)` supports the owner/status draft listing. Users can keep multiple named drafts. |
-| Care-setting template classification | Added `template_level_enum` with `health authority` and `site`, nullable `level`, a level index, and a check constraint tying null level to master templates. | Master templates display as **Provincial** and persist `level = NULL`; non-master templates require a level. Existing direct copies of masters were backfilled as Health Authority; other non-master templates as Site. |
-| Care-setting concurrent edits | Added `care_setting_template.version`, a non-null integer defaulting to 0. | The service claims/increments the version in the same transaction as template and permission writes, rejecting stale updates. It is deliberately managed explicitly rather than relying on TypeORM `@VersionColumn`, because permission-only edits may not update a scalar template field. |
-| LC catalogue | Added `limit_condition` with UUID, timestamps, name, optional description, sort order, and active flag. | A case-insensitive unique index protects catalogue names; an index supports active-entry filtering. Inactive entries are retained so existing permissions continue resolving. The migration seeds the approved catalogue entries. |
-| LC permission details | Added nullable `limit_condition_id` and `restriction_description` to `care_setting_template_permission`; the catalogue FK uses `ON DELETE RESTRICT`. | A permission can reference at most one catalogue item plus optional explanatory text. Existing LC rows were not automatically backfilled. |
-| Care activity content | Added nullable `care_activity.requirements_and_considerations` (`varchar(3000)`). | This field supplements, rather than replaces, the existing activity description. |
-
-The `CareSettingTemplatePermission` unique key remains
-`(template, care_activity, occupation)`, and permission batches in full template
-copy are written transactionally in bounded batches. Full-copy requests reject
-duplicate pairs and invalid/deleted references instead of silently omitting rows.
+- Planning session names are unique per owner after trimming whitespace and
+  ignoring case. An index on `(created_by_id, status)` supports the owner's
+  draft listing.
+- Master care-setting templates display as **Provincial** and have no level.
+  Non-master templates require either **Health Authority** or **Site** as their
+  level. A check constraint enforces this distinction.
+- Care-setting template versions are managed explicitly. The service claims and
+  increments the version in the same transaction as template and permission
+  writes, rejecting stale updates. This also covers permission-only edits.
+- `LimitCondition` names are unique without regard to case, and active entries
+  can be filtered efficiently. Inactive entries remain available to permissions
+  that already reference them.
+- A care-setting permission can reference at most one limit-condition catalogue
+  entry plus optional explanatory text. Its catalogue foreign key uses
+  `ON DELETE RESTRICT`.
+- The `CareSettingTemplatePermission` unique key remains
+  `(template, care_activity, occupation)`. Full-template permission copies are
+  written transactionally in bounded batches and reject duplicate pairs and
+  invalid or deleted references.
+- `CareActivity.requirementsAndConsiderations` is optional, limited to 3,000
+  characters, and supplements rather than replaces the activity description.
 
 ---
 
@@ -689,20 +695,3 @@ Four services via `docker-compose.yml`:
 - **Sensitive Data Logging** - Password and payload fields stripped from error logs
 
 ---
-
-## 13. Recent Mainline Changes
-
-The following pull requests were merged to `main` between September 17 and
-October 15, 2026. These changes did not add database migrations; current schema
-additions are summarized in
-[Database Changes in the Current Schema](#database-changes-in-the-current-schema).
-
-| Merged | PR | Change |
-|--------|----|--------|
-| Sep 18 | [#315](https://github.com/bcgov/MOH_TeamBasedCare/pull/315) | Related activity names on terminology pages link to the corresponding activity detail pages. |
-| Sep 19 | [#316](https://github.com/bcgov/MOH_TeamBasedCare/pull/316) | Added a unit filter to the care-setting list. Unit, level, and search filters are applied together before pagination; the filter dropdown is shared with the dashboard. |
-| Sep 29 | [#317](https://github.com/bcgov/MOH_TeamBasedCare/pull/317) | Care-setting copy seeds exclude soft-deleted occupations. This avoids returning stale permission rows that copy validation cannot resolve; no data migration was needed. |
-| Sep 29 | [#319](https://github.com/bcgov/MOH_TeamBasedCare/pull/319) | Care-setting results use stable alphabetical sorting when a column is selected, with a masters-first default before sorting. |
-| Oct 1 | [#318](https://github.com/bcgov/MOH_TeamBasedCare/pull/318) | Planning navigation can return to the draft list from an open draft; pending save-on-leave completes and the saved-draft choice is retained. |
-| Oct 2 | [#321](https://github.com/bcgov/MOH_TeamBasedCare/pull/321) | Full template copy accepts inherited legacy LC permissions without a catalogue limit, while still rejecting invalid, non-inherited limit-less LC cells. |
-| Oct 8 | [#323](https://github.com/bcgov/MOH_TeamBasedCare/pull/323) | Occupation and care-activity Content Management UI and API mutations are Admin-only; Content Admin continues to manage care settings and use read-only Occupational Scope. |
