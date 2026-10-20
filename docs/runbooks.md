@@ -16,7 +16,6 @@
 7. [Environment Variables](#7-environment-variables)
 8. [Incident Response](#8-incident-response)
 9. [Common Troubleshooting](#9-common-troubleshooting)
-10. [Disaster Recovery Plan](./disaster-recovery-plan.md)
 
 ---
 
