@@ -160,7 +160,6 @@ flowchart TB
     Lambda -->|OAuth2/OIDC over HTTPS| Keycloak
     GitHub -->|Terraform and deployment via IAM/OIDC| S3
     GitHub -->|Deploys| Lambda
-    GitHub -->|Invalidates| CloudFront
 ```
 
 CloudFront serves the S3-hosted web application and forwards `/api/*`
@@ -727,7 +726,6 @@ Developer pushes code
                     │  2. Build web (S3)  │
                     │  3. Build API (Lambda) │
                     │  4. Deploy all      │
-                    │  5. CloudFront invalidation │
                     └─────────────────────┘
 ```
 
