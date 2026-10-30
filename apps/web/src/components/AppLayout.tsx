@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import React, { PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 import { UserStatus } from '@tbcm/common';
 import { useAuth, useMe } from '@services';
-import { clearStorageAndRedirectToLandingPage } from 'src/utils/token';
+import { clearAuthAndRedirectToLogin } from 'src/utils/token';
 import { Alert } from './Alert';
 import { useAppContext } from './AppContext';
 import { Header } from './Header';
@@ -43,8 +43,8 @@ const AppLayout: React.FC<PropsWithChildren<AppLayoutProps>> = ({ children, titl
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      // if the user is not authenticated anymore, clear storage and return to landing page
-      clearStorageAndRedirectToLandingPage();
+      // if the user is not authenticated anymore, clear storage and redirect to login flow
+      clearAuthAndRedirectToLogin();
     }
 
     // update sidebar buttons activeness
