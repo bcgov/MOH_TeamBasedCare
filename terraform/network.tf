@@ -100,12 +100,46 @@ resource "aws_security_group" "data" {
 	vpc_id 	= data.aws_vpc.main.id
 }
 
+resource "aws_security_group" "rds_proxy" {
+  name        = "${local.db_name}-proxy-sg"
+  description = "Database proxy traffic for ${local.namespace}"
+  vpc_id      = data.aws_vpc.main.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "rds_proxy_from_app" {
+  description                  = "PostgreSQL from application Lambda"
+  security_group_id            = aws_security_group.rds_proxy.id
+  referenced_security_group_id = data.aws_security_group.app.id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+}
+
+resource "aws_vpc_security_group_egress_rule" "rds_proxy_to_data" {
+  description                  = "PostgreSQL to Aurora"
+  security_group_id            = aws_security_group.rds_proxy.id
+  referenced_security_group_id = aws_security_group.data.id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+}
+
 resource "aws_security_group_rule" "data_sg_ingress_rule" {
-  description = "Postgres DB Traffic Inbound from Lambda"
-  type = "ingress"
-  security_group_id = aws_security_group.data.id
+  description              = "PostgreSQL from the shared application security group"
+  type                     = "ingress"
+  security_group_id        = aws_security_group.data.id
   source_security_group_id = data.aws_security_group.app.id
-  protocol = "tcp"
-  to_port = 5432
-  from_port = 5432
+  protocol                 = "tcp"
+  to_port                  = 5432
+  from_port                = 5432
+}
+
+resource "aws_security_group_rule" "data_from_rds_proxy" {
+  description              = "PostgreSQL from RDS Proxy"
+  type                     = "ingress"
+  security_group_id        = aws_security_group.data.id
+  source_security_group_id = aws_security_group.rds_proxy.id
+  protocol                 = "tcp"
+  to_port                  = 5432
+  from_port                = 5432
 }

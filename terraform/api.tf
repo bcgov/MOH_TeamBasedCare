@@ -11,7 +11,7 @@ resource "aws_s3_bucket" "api" {
     rule {
       apply_server_side_encryption_by_default {
         kms_master_key_id = aws_kms_key.api_kms_key.arn
-        sse_algorithm = "aws:kms"
+        sse_algorithm     = "aws:kms"
       }
     }
   }
@@ -28,11 +28,11 @@ resource "aws_s3_bucket_policy" "api_s3_policy_deny_http" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Sid = "IPAllow"
-      Effect = "Deny"
+      Sid       = "IPAllow"
+      Effect    = "Deny"
       Principal = "*"
-      Action = "s3:*"
-      Resource = [ "${aws_s3_bucket.api.arn}/*" ]
+      Action    = "s3:*"
+      Resource  = ["${aws_s3_bucket.api.arn}/*"]
       Condition = {
         Bool = {
           "aws:SecureTransport" = "false"
@@ -43,13 +43,13 @@ resource "aws_s3_bucket_policy" "api_s3_policy_deny_http" {
 }
 
 resource "aws_lambda_function" "api" {
-  description      = "API for ${local.namespace}"
-  function_name    = local.api_name
-  role             = aws_iam_role.lambda.arn
-  runtime          = "nodejs22.x"
-  handler          = "api/lambda.handler" # TODO update 
-  memory_size      = var.function_memory_mb
-  timeout          = 900
+  description   = "API for ${local.namespace}"
+  function_name = local.api_name
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs22.x"
+  handler       = "api/lambda.handler" # TODO update
+  memory_size   = var.function_memory_mb
+  timeout       = 900
 
   source_code_hash = aws_s3_bucket_object.api_lambda.etag
   s3_bucket        = aws_s3_bucket.api.bucket
@@ -73,29 +73,30 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      NODE_ENV          = "production"
-      RUNTIME_ENV       = "hosted"
-      TARGET_ENV        = var.target_env
-      AWS_S3_REGION     = var.region
-      BUILD_ID          = var.build_id
-      BUILD_INFO        = var.build_info
-      POSTGRES_USERNAME = var.db_username
-      POSTGRES_PASSWORD = data.aws_ssm_parameter.postgres_password.value
-      POSTGRES_HOST     = aws_rds_cluster.pgsql.endpoint
-      POSTGRES_DATABASE = aws_rds_cluster.pgsql.database_name
-      DOCS_BUCKET       = var.docs_bucket
-      KEYCLOAK_AUTH_SERVER_URI  = var.keycloak_auth_server_uri
-      KEYCLOAK_RESPONSE_TYPE    = var.keycloak_response_type
-      KEYCLOAK_CLIENT_ID        = var.keycloak_client_id
-      KEYCLOAK_REALM            = var.keycloak_realm
-      KEYCLOAK_CONFIDENTIAL_PORT= var.keycloak_confidential_port
-      KEYCLOAK_SSL_REQUIRED     = var.keycloak_ssl_required
-      KEYCLOAK_RESOURCE         = var.keycloak_resource
-      KEYCLOAK_CLIENT_SECRET    = data.aws_ssm_parameter.keycloak_client_secret.value
-      KEYCLOAK_REDIRECT_URI     = var.keycloak_redirect_uri
-      KEYCLOAK_USER_INFO_URI    = var.keycloak_user_info_uri
-      KEYCLOAK_TOKEN_URI        = var.keycloak_token_uri
-      KEYCLOAK_LOGOUT_URI       = var.keycloak_logout_uri
+      NODE_ENV                   = "production"
+      RUNTIME_ENV                = "hosted"
+      TARGET_ENV                 = var.target_env
+      AWS_S3_REGION              = var.region
+      BUILD_ID                   = var.build_id
+      BUILD_INFO                 = var.build_info
+      POSTGRES_USERNAME          = var.db_username
+      POSTGRES_PASSWORD          = data.aws_ssm_parameter.postgres_password.value
+      POSTGRES_HOST              = aws_db_proxy.pgsql.endpoint
+      POSTGRES_SSL               = "true"
+      POSTGRES_DATABASE          = aws_rds_cluster.pgsql.database_name
+      DOCS_BUCKET                = var.docs_bucket
+      KEYCLOAK_AUTH_SERVER_URI   = var.keycloak_auth_server_uri
+      KEYCLOAK_RESPONSE_TYPE     = var.keycloak_response_type
+      KEYCLOAK_CLIENT_ID         = var.keycloak_client_id
+      KEYCLOAK_REALM             = var.keycloak_realm
+      KEYCLOAK_CONFIDENTIAL_PORT = var.keycloak_confidential_port
+      KEYCLOAK_SSL_REQUIRED      = var.keycloak_ssl_required
+      KEYCLOAK_RESOURCE          = var.keycloak_resource
+      KEYCLOAK_CLIENT_SECRET     = data.aws_ssm_parameter.keycloak_client_secret.value
+      KEYCLOAK_REDIRECT_URI      = var.keycloak_redirect_uri
+      KEYCLOAK_USER_INFO_URI     = var.keycloak_user_info_uri
+      KEYCLOAK_TOKEN_URI         = var.keycloak_token_uri
+      KEYCLOAK_LOGOUT_URI        = var.keycloak_logout_uri
       # MAIL_FROM                = var.mail_from
       # CHES_CLIENT_ID           = var.ches_client_id
       # CHES_CLIENT_SECRET       = data.aws_ssm_parameter.ches_client_secret.value
@@ -103,9 +104,11 @@ resource "aws_lambda_function" "api" {
       # CHES_AUTH_URL            = data.aws_ssm_parameter.ches_auth_url.value
       # SLACK_ALERTS_WEBHOOK_URL = data.aws_ssm_parameter.slack_alerts_webhook_url.value
       # POSTGRES_HOST     = aws_rds_cluster.pgsql_backup.endpoint
-      
+
     }
   }
+
+  depends_on = [aws_db_proxy_target.pgsql]
 }
 
 resource "aws_apigatewayv2_api" "api" {
