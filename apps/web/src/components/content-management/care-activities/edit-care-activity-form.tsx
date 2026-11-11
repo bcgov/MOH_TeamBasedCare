@@ -107,7 +107,7 @@ export const EditCareActivityForm = ({ careActivity }: EditCareActivityFormProps
               <div>
                 <BasicSelect<string>
                   id='activityType'
-                  label='Care Category'
+                  label='Care category'
                   value={values.activityType ?? ''}
                   onChange={value => setFieldValue('activityType', value)}
                   options={activityTypeOptions}
