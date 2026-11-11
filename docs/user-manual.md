@@ -380,7 +380,7 @@ Content Admins can still view Occupational Scope, but cannot access this managem
 #### Editing a Care Activity
 
 1. Click on a care activity in the list
-2. Modify the fields (name, description, type, classification)
+2. Modify the fields (name, description, care category, classification)
 3. Click **Save**
 
 #### Deleting a Care Activity
